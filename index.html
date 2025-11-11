@@ -75,7 +75,7 @@
 <script>
 /* ========= CẤU HÌNH: Thay 2 giá trị sau ========= */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby8P3Mxy_EcfuGCltFIguGxj8lw-kDVccnU43AdEYm8SVChTeGNp4qwvP-ms5dveJOBHw/exec'; // <-- Thay bằng URL Apps Script web app bạn deploy
-const GITHUB_BASE = 'https://github.com/MrLongv/KiemKeMayVH/'; // <-- Thay bằng GitHub Pages URL
+const GITHUB_BASE = 'https://mrlongv.github.io/KiemKeMayVH/'; // <-- Thay bằng GitHub Pages URL
 /* ============================================== */
 
 const qrInput = document.getElementById('qrInput');
@@ -245,23 +245,32 @@ uploadBtn.onclick = async ()=>{
   const arr = [];
   tableBody.querySelectorAll('tr').forEach(r=>{
     const t = r.querySelectorAll('td');
-    arr.push({ soThe: t[2].innerText, soMay: t[3].innerText, loaiMay: t[4].innerText, viTri: t[5].innerText, ghiChu: t[6].innerText });
+    arr.push({
+      soThe: t[2].innerText,
+      soMay: t[3].innerText,
+      loaiMay: t[4].innerText,
+      viTri: t[5].innerText,
+      ghiChu: t[6].innerText
+    });
   });
-  try{
+
+  try {
     syncStatus.innerText = 'Đang gửi lên Google Sheet...';
-    const dataStr = encodeURIComponent(JSON.stringify(arr));
-    // Gọi endpoint: action=save&data=...
-    const res = await fetch(GAS_URL + '?action=save&data=' + dataStr);
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', data: arr })
+    });
     const j = await res.json();
-    if(j && j.success){
-      syncStatus.innerText = 'Đã đồng bộ lên Google Sheet';
+    if (j && j.success) {
+      syncStatus.innerText = '✅ Đã đồng bộ lên Google Sheet';
       alert('Đã đồng bộ ' + j.written + ' dòng');
     } else {
-      syncStatus.innerText = 'Lỗi khi đồng bộ';
+      syncStatus.innerText = '❌ Lỗi khi đồng bộ';
       alert('Lỗi: ' + (j && j.message));
     }
-  }catch(err){
-    syncStatus.innerText = 'Lỗi kết nối khi upload';
+  } catch(err) {
+    syncStatus.innerText = '❌ Lỗi kết nối khi upload';
     alert('Không thể kết nối tới GAS: ' + err);
   }
 };
