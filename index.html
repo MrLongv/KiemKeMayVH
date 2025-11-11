@@ -3,144 +3,171 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📋 Kiểm Kê Máy May - Vĩnh Hưng</title>
+<title>📋 Kiểm kê máy may - Online Sync</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f3f6f9; }
-  h2 { background: #2e86de; color: #fff; padding: 10px 20px; margin: 0; }
-  .container { padding: 20px; }
-  button { padding: 6px 12px; border: none; background: #2e86de; color: white; border-radius: 4px; cursor: pointer; }
-  button:hover { background: #1b4f9c; }
-  input, select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-  th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-  th { background: #e9ecef; }
-  .actions button { margin-right: 4px; }
-  .success { color: green; font-weight: bold; }
-  .error { color: red; font-weight: bold; }
-  #msg { margin-top: 10px; }
-  #importInput { display: none; }
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f3f6f9; }
+h2 { background: #2e86de; color: #fff; padding: 10px 20px; margin: 0; }
+.container { padding: 20px; }
+button { padding: 6px 12px; border: none; background: #2e86de; color: white; border-radius: 4px; cursor: pointer; margin-right:5px;}
+button:hover { background: #1b4f9c; }
+input, select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+th { background: #e9ecef; }
+.actions button { margin-right: 4px; }
+.success { color: green; font-weight: bold; }
+.error { color: red; font-weight: bold; }
+#msg { margin-top: 10px; }
+#importInput { display: none; }
 </style>
 </head>
 <body>
-  <h2>📋 Quản Lý Kiểm Kê Máy May</h2>
-  <div class="container">
+<h2>📋 Quản Lý Kiểm Kê Máy May</h2>
+<div class="container">
 
-    <div style="margin-bottom:10px;">
-      <button onclick="syncData()">🔄 Đồng bộ từ Google Sheet</button>
-      <button onclick="addRow()">➕ Thêm dòng</button>
-      <button onclick="exportExcel()">⬇️ Xuất Excel</button>
-      <button onclick="document.getElementById('importInput').click()">⬆️ Nhập Excel</button>
-      <input type="file" id="importInput" accept=".xlsx" onchange="importExcel(event)">
-    </div>
-
-    <div>
-      <label>Tìm kiếm: </label>
-      <input type="text" id="searchBox" oninput="renderTable()" placeholder="Nhập số thẻ, số máy hoặc vị trí...">
-    </div>
-
-    <div id="msg"></div>
-
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Số thẻ</th>
-          <th>Số máy</th>
-          <th>Loại máy</th>
-          <th>Vị trí</th>
-          <th>Ghi chú</th>
-          <th>Thao tác</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div style="margin-bottom:10px;">
+    <button onclick="syncData()">🔄 Đồng bộ từ Google Sheet</button>
+    <button onclick="saveToGoogleSheet()">💾 Lưu lên Google Sheet</button>
+    <button onclick="addRow()">➕ Thêm dòng</button>
+    <button onclick="exportExcel()">⬇️ Xuất Excel</button>
+    <button onclick="document.getElementById('importInput').click()">⬆️ Nhập Excel</button>
+    <input type="file" id="importInput" accept=".xlsx" onchange="importExcel(event)">
   </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
+  <div>
+    <label>Tìm kiếm: </label>
+    <input type="text" id="searchBox" oninput="renderTable()" placeholder="Nhập số thẻ, số máy hoặc vị trí...">
+  </div>
+
+  <div id="msg"></div>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Số thẻ</th>
+        <th>Số máy</th>
+        <th>Loại máy</th>
+        <th>Vị trí</th>
+        <th>Ghi chú</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
 let data = [];
 
+// ---------- Đồng bộ từ Google Sheet ----------
 async function syncData() {
   const msg = document.getElementById('msg');
   msg.textContent = '⏳ Đang tải dữ liệu...';
   msg.className = '';
   try {
     const res = await fetch(GAS_URL);
-    const json = await res.json();
-    if (json.success && Array.isArray(json.data)) {
-      data = json.data;
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); } catch(e) { throw new Error('GAS trả về không phải JSON'); }
+    if(j.success && Array.isArray(j.data)){
+      data = j.data;
       renderTable();
-      msg.textContent = '✅ Đồng bộ thành công!';
+      msg.textContent = '✅ Đồng bộ thành công (' + j.data.length + ' dòng)';
       msg.className = 'success';
-    } else {
-      throw new Error('Dữ liệu trả về không hợp lệ');
-    }
-  } catch (err) {
-    msg.textContent = '❌ Không thể kết nối tới GAS: ' + err.message;
+    } else throw new Error(j.message || 'Không có dữ liệu hợp lệ');
+  } catch(err){
+    msg.textContent = '❌ Lỗi: ' + err.message;
     msg.className = 'error';
   }
 }
 
+// ---------- Lưu dữ liệu lên Google Sheet ----------
+async function saveToGoogleSheet() {
+  const msg = document.getElementById('msg');
+  msg.textContent = '⏳ Đang lưu dữ liệu lên Google Sheet...';
+  msg.className = '';
+  try {
+    const formData = new URLSearchParams();
+    formData.append('data', JSON.stringify(data));
+
+    const res = await fetch(GAS_URL, { method:'POST', body: formData });
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); } catch(e) { throw new Error('GAS trả về không phải JSON'); }
+    if(j.success){
+      msg.textContent = '✅ Đã lưu thành công ' + j.written + ' dòng!';
+      msg.className = 'success';
+    } else throw new Error(j.message || 'Lỗi không xác định');
+  } catch(err){
+    msg.textContent = '❌ Lỗi khi lưu: ' + err.message;
+    msg.className = 'error';
+  }
+}
+
+// ---------- Hiển thị bảng ----------
 function renderTable() {
   const tbody = document.querySelector('#dataTable tbody');
   tbody.innerHTML = '';
   const keyword = document.getElementById('searchBox').value.toLowerCase();
-  const filtered = data.filter(row =>
-    Object.values(row).some(v => String(v).toLowerCase().includes(keyword))
-  );
+  const filtered = data.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(keyword)));
 
-  filtered.forEach((row, i) => {
+  filtered.forEach((row,i)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td contenteditable oninput="updateField(${i}, 'soThe', this.innerText)">${row.soThe}</td>
-      <td contenteditable oninput="updateField(${i}, 'soMay', this.innerText)">${row.soMay}</td>
-      <td contenteditable oninput="updateField(${i}, 'loaiMay', this.innerText)">${row.loaiMay}</td>
-      <td contenteditable oninput="updateField(${i}, 'viTri', this.innerText)">${row.viTri}</td>
-      <td contenteditable oninput="updateField(${i}, 'ghiChu', this.innerText)">${row.ghiChu}</td>
-      <td class="actions">
-        <button onclick="deleteRow(${i})">🗑️ Xóa</button>
-      </td>`;
+      <td contenteditable oninput="updateField(${i},'soThe',this.innerText)">${row.soThe}</td>
+      <td contenteditable oninput="updateField(${i},'soMay',this.innerText)">${row.soMay}</td>
+      <td contenteditable oninput="updateField(${i},'loaiMay',this.innerText)">${row.loaiMay}</td>
+      <td contenteditable oninput="updateField(${i},'viTri',this.innerText)">${row.viTri}</td>
+      <td contenteditable oninput="updateField(${i},'ghiChu',this.innerText)">${row.ghiChu}</td>
+      <td class="actions"><button onclick="deleteRow(${i})">🗑️ Xóa</button></td>
+    `;
     tbody.appendChild(tr);
   });
 }
 
-function updateField(index, field, value) {
+// ---------- Cập nhật dữ liệu trong mảng ----------
+function updateField(index, field, value){
   data[index][field] = value;
 }
 
-function addRow() {
-  data.push({ soThe: '', soMay: '', loaiMay: '', viTri: '', ghiChu: '' });
+// ---------- Thêm / xóa dòng ----------
+function addRow(){
+  data.push({soThe:'',soMay:'',loaiMay:'',viTri:'',ghiChu:''});
   renderTable();
 }
-
-function deleteRow(index) {
-  if (confirm('Bạn có chắc muốn xóa dòng này?')) {
-    data.splice(index, 1);
+function deleteRow(index){
+  if(confirm('Bạn có chắc muốn xóa dòng này?')){
+    data.splice(index,1);
     renderTable();
   }
 }
 
-// Xuất Excel
-function exportExcel() {
+// ---------- Xuất Excel ----------
+function exportExcel(){
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "DanhSachMay");
   XLSX.writeFile(wb, "DanhSachMay.xlsx");
 }
 
-// Nhập Excel
-function importExcel(evt) {
+// ---------- Nhập Excel ----------
+function importExcel(evt){
   const file = evt.target.files[0];
-  if (!file) return;
+  if(!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    const wb = XLSX.read(e.target.result, { type: 'binary' });
+  reader.onload = e=>{
+    const wb = XLSX.read(e.target.result,{type:'binary'});
     const ws = wb.Sheets[wb.SheetNames[0]];
     data = XLSX.utils.sheet_to_json(ws);
     renderTable();
   };
   reader.readAsBinaryString(file);
 }
+
+// ---------- Khi mở trang, tự load dữ liệu ----------
+window.addEventListener('load', syncData);
 </script>
 </body>
 </html>
