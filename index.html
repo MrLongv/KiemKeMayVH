@@ -1,130 +1,167 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>📋 Kiểm kê máy may - Online Sync</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kiểm kê máy may</title>
 <style>
-  body { font-family: Arial; margin: 20px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-  th, td { border: 1px solid #333; padding: 6px; text-align: center; }
-  th { background: #eee; }
-  .highlight { background: yellow; }
-  #qrInput { width: 250px; margin-bottom: 10px; font-size: 16px; }
-  button { margin: 3px; padding: 5px 10px; cursor: pointer; }
-  .qr { width: 60px; height: 60px; margin: auto; }
+  body {
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    background: #f3f4f6;
+    color: #333;
+  }
+  header {
+    background: #007bff;
+    color: white;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  main {
+    padding: 16px;
+  }
+  button {
+    margin: 4px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #007bff;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover {
+    opacity: 0.9;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: left;
+  }
+  th {
+    background: #f8f9fa;
+  }
+  tr:nth-child(even) {
+    background: #fafafa;
+  }
+  #syncStatus {
+    margin-top: 10px;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
 
-<h2>📋 Danh sách máy may (Sync với Google Sheet)</h2>
-<div>
-  <input type="text" id="qrInput" placeholder="🔍 Quét QR hoặc nhập Số thẻ" autofocus>
-  <button id="uploadBtn">☁️ Đồng bộ lên Google Sheet</button>
-  <button id="downloadBtn">💾 Xuất Excel</button>
-</div>
+<header>📋 Kiểm kê máy may</header>
 
-<table id="machineTable">
-  <thead>
-    <tr>
-      <th>STT</th>
-      <th>Mã QR</th>
-      <th>Số thẻ</th>
-      <th>Số máy</th>
-      <th>Loại máy</th>
-      <th>Vị trí</th>
-      <th>Ghi chú</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+<main>
+  <div>
+    <button id="loadBtn">📥 Tải từ Google Sheet</button>
+    <button id="uploadBtn">☁️ Đồng bộ lên Google Sheet</button>
+    <span id="syncStatus"></span>
+  </div>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Số thẻ</th>
+        <th>Số máy</th>
+        <th>Loại máy</th>
+        <th>Vị trí</th>
+        <th>Ghi chú</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Dữ liệu hiển thị ở đây -->
+    </tbody>
+  </table>
+</main>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec'; // thay link thật
-const GITHUB_BASE = 'https://mrlongv.github.io/KiemKeMayVH/';
-const tableBody = document.querySelector('#machineTable tbody');
-const qrInput = document.getElementById('qrInput');
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyU_BsEvfaphUdDR_AlqGpM3ZZzjdRGSzJm--W2Yeqvd8Q3t0elZ3Vlu87WZV5ziR7R/exec';
+const tableBody = document.getElementById('tableBody');
+const syncStatus = document.getElementById('syncStatus');
+const loadBtn = document.getElementById('loadBtn');
+const uploadBtn = document.getElementById('uploadBtn');
 
-// -------- Thêm hàng --------
-function addRow(soThe, soMay, loaiMay, viTri, ghiChu){
-  const row = document.createElement('tr');
-  row.dataset.id = soThe;
-  row.innerHTML = `
-    <td></td>
-    <td class="qr"></td>
-    <td>${soThe}</td>
-    <td>${soMay}</td>
-    <td>${loaiMay}</td>
-    <td>${viTri}</td>
-    <td>${ghiChu}</td>
-  `;
-  tableBody.appendChild(row);
-}
-function updateSTT(){ tableBody.querySelectorAll('tr').forEach((r,i)=> r.children[0].innerText = i+1); }
-function generateQRs(){
-  tableBody.querySelectorAll('tr').forEach(row=>{
-    const id = row.dataset.id;
-    const qrCell = row.querySelector('.qr');
-    qrCell.innerHTML = '';
-    const url = GITHUB_BASE + '?id=' + encodeURIComponent(id);
-    new QRCode(qrCell, { text: url, width:60, height:60 });
-  });
-}
-function highlightRow(val){
-  document.querySelectorAll('.highlight').forEach(e=> e.classList.remove('highlight'));
-  const row = tableBody.querySelector(`tr[data-id="${val}"]`);
-  if(row){ row.classList.add('highlight'); row.scrollIntoView({behavior:'smooth', block:'center'}); }
-  else alert('Không tìm thấy: ' + val);
-}
-
-async function loadFromSheet(){
+// --- Tải dữ liệu từ Google Sheet ---
+loadBtn.onclick = async () => {
+  syncStatus.innerText = '⏳ Đang tải dữ liệu...';
   try {
     const res = await fetch(GAS_URL);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
-    console.log('Raw response:', text);
+    console.log('GET response:', text);
     const data = JSON.parse(text);
+    if (!data.success) throw new Error(data.message);
+
     tableBody.innerHTML = '';
-    data.forEach(d => addRow(d.soThe, d.soMay, d.loaiMay, d.viTri, d.ghiChu));
-    updateSTT(); generateQRs();
-
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    if(id) setTimeout(()=>highlightRow(id), 600);
-  } catch(err){
-    alert('Không thể kết nối tới GAS: ' + err.message);
+    data.data.forEach((r, i) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${i + 1}</td>
+        <td contenteditable="true">${r.soThe}</td>
+        <td contenteditable="true">${r.soMay}</td>
+        <td contenteditable="true">${r.loaiMay}</td>
+        <td contenteditable="true">${r.viTri}</td>
+        <td contenteditable="true">${r.ghiChu}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+    syncStatus.innerText = '✅ Đã tải ' + data.data.length + ' dòng từ Google Sheet';
+  } catch (err) {
+    console.error(err);
+    syncStatus.innerText = '❌ Lỗi khi tải dữ liệu: ' + err.message;
   }
-}
+};
 
-
-// -------- Gửi dữ liệu ngược lên Sheet --------
-async function uploadToSheet(){
+// --- Gửi dữ liệu lên Google Sheet ---
+uploadBtn.onclick = async () => {
   const arr = [];
-  tableBody.querySelectorAll('tr').forEach(r=>{
+  tableBody.querySelectorAll('tr').forEach(r => {
     const t = r.querySelectorAll('td');
     arr.push({
-      soThe: t[2].innerText,
-      soMay: t[3].innerText,
-      loaiMay: t[4].innerText,
-      viTri: t[5].innerText,
-      ghiChu: t[6].innerText
+      soThe: t[1]?.innerText || '',
+      soMay: t[2]?.innerText || '',
+      loaiMay: t[3]?.innerText || '',
+      viTri: t[4]?.innerText || '',
+      ghiChu: t[5]?.innerText || ''
     });
   });
-  const formData = new URLSearchParams();
-  formData.append('data', JSON.stringify(arr));
-  const res = await fetch(GAS_URL, { method:'POST', body:formData });
-  const j = await res.json();
-  if(j.success) alert('✅ Đồng bộ thành công ' + j.written + ' dòng');
-  else alert('❌ Lỗi: ' + j.message);
-}
 
-// -------- Sự kiện --------
-document.getElementById('uploadBtn').onclick = uploadToSheet;
-qrInput.addEventListener('change', ()=>{ const v=qrInput.value.trim(); if(v) highlightRow(v); qrInput.value=''; });
+  syncStatus.innerText = '☁️ Đang đồng bộ lên Google Sheet...';
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(JSON.stringify(arr))
+    });
 
-// -------- Khi mở trang --------
-window.addEventListener('load', loadFromSheet);
+    const text = await res.text();
+    console.log('POST response:', text);
+    const j = JSON.parse(text);
+
+    if (j.success) {
+      syncStatus.innerText = '✅ Đã đồng bộ ' + j.written + ' dòng lên Google Sheet';
+      alert('Đồng bộ thành công!');
+    } else {
+      throw new Error(j.message);
+    }
+  } catch (err) {
+    console.error(err);
+    syncStatus.innerText = '❌ Không thể kết nối tới GAS: ' + err.message;
+  }
+};
 </script>
 
 </body>
