@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📋 Kiểm kê máy may - QR + Full Features</title>
+<title>📋 Kiểm kê máy may - QR + Camera Scan</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f3f6f9; }
 h2 { background:#2e86de; color:#fff; padding:12px 20px; margin:0; }
@@ -28,6 +29,9 @@ th { background:#e9ecef; }
 .modal-content label{display:block;margin-top:8px;font-weight:600;}
 .modal-content input, .modal-content textarea{width:100%;padding:6px;margin-top:4px;}
 .modal-buttons{text-align:right;margin-top:12px;}
+
+/* Camera QR */
+#qrScanner { width:100%; max-width:400px; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -55,6 +59,8 @@ th { background:#e9ecef; }
   </div>
 
   <div id="msg"></div>
+
+  <div id="qrScanner"></div>
 
   <div id="tableContainer">
     <table id="dataTable">
@@ -98,7 +104,6 @@ const GITHUB_BASE = 'https://mrlongv.github.io/KiemKeMayVH/';
 let data = [];
 let filteredData = [];
 let editingIndex = null;
-
 const tbody = document.querySelector('#dataTable tbody');
 
 // ---------- Đồng bộ từ Google Sheet ----------
@@ -159,7 +164,6 @@ function renderTable() {
     `;
     tbody.appendChild(tr);
 
-    // QR code
     const qrText = GITHUB_BASE + '?id=' + encodeURIComponent(row.soThe);
     new QRCode(document.getElementById('qr-'+i), { text: qrText, width:60, height:60 });
   });
@@ -173,15 +177,15 @@ function updateFiltered() {
 }
 
 // ---------- Highlight theo QR / Số thẻ ----------
-function highlightQR(){
-  const val = document.getElementById('qrInput').value.trim().toLowerCase();
+function highlightQR(val=null){
+  val = val || document.getElementById('qrInput').value.trim().toLowerCase();
   filteredData.forEach(r=> r.highlight = false);
   const idx = filteredData.findIndex(r => r.soThe.toLowerCase() === val);
   if(idx !== -1){
     filteredData[idx].highlight = true;
     document.querySelectorAll('#dataTable tbody tr')[idx].scrollIntoView({behavior:'smooth', block:'center'});
     renderTable();
-  } else alert('Không tìm thấy: ' + val);
+  }
   document.getElementById('qrInput').value = '';
 }
 
@@ -189,10 +193,7 @@ function highlightQR(){
 function checkURLQR(){
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  if(id){
-    document.getElementById('qrInput').value = id;
-    highlightQR();
-  }
+  if(id) highlightQR(id);
 }
 
 // ---------- Chỉnh sửa dòng ----------
@@ -259,8 +260,21 @@ function importExcel(evt){
   reader.readAsBinaryString(file);
 }
 
+// ---------- Camera QR Scan ----------
+function startCameraScan(){
+  const qrScanner = new Html5Qrcode("qrScanner");
+  qrScanner.start(
+    { facingMode: "environment" },
+    { fps:10, qrbox:250 },
+    qrCodeMessage => { highlightQR(qrCodeMessage); }
+  ).catch(err=> console.log(err));
+}
+
 // ---------- Khi mở trang ----------
-window.addEventListener('load', syncData);
+window.addEventListener('load', ()=>{
+  syncData();
+  startCameraScan();
+});
 </script>
 
 </body>
