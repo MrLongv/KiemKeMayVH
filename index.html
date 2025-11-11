@@ -1,168 +1,171 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Kiểm kê máy may</title>
-<style>
-  body {
-    font-family: "Segoe UI", sans-serif;
-    margin: 0;
-    background: #f3f4f6;
-    color: #333;
-  }
-  header {
-    background: #007bff;
-    color: white;
-    padding: 10px 16px;
-    text-align: center;
-    font-size: 20px;
-    font-weight: 600;
-  }
-  main {
-    padding: 16px;
-  }
-  button {
-    margin: 4px;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    background: #007bff;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button:hover {
-    opacity: 0.9;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 6px 8px;
-    text-align: left;
-  }
-  th {
-    background: #f8f9fa;
-  }
-  tr:nth-child(even) {
-    background: #fafafa;
-  }
-  #syncStatus {
-    margin-top: 10px;
-    font-weight: 600;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 Quản lý Kiểm Kê Máy May</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f8fa;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #0066cc;
+    }
+    button {
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      margin: 5px 0;
+    }
+    button:hover {
+      background: #004999;
+    }
+    input, select {
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background: #0066cc;
+      color: #fff;
+    }
+    #status {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    #fileInput {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
+  <h1>📋 Quản lý Kiểm Kê Máy May</h1>
 
-<header>📋 Kiểm kê máy may</header>
+  <input type="file" id="fileInput" accept=".xlsx, .xls" />
+  <button onclick="uploadExcel()">📤 Nhập Excel lên</button>
+  <button onclick="syncToGoogleSheet()">🔄 Đồng bộ lên Google Sheet</button>
+  <button onclick="loadFromGoogleSheet()">📥 Tải dữ liệu từ Google Sheet</button>
 
-<main>
-  <div>
-    <button id="loadBtn">📥 Tải từ Google Sheet</button>
-    <button id="uploadBtn">☁️ Đồng bộ lên Google Sheet</button>
-    <span id="syncStatus"></span>
-  </div>
+  <div id="status"></div>
 
   <table id="dataTable">
     <thead>
       <tr>
-        <th>#</th>
-        <th>Số thẻ</th>
-        <th>Số máy</th>
-        <th>Loại máy</th>
-        <th>Vị trí</th>
-        <th>Ghi chú</th>
+        <th>Số Thẻ</th>
+        <th>Số Máy</th>
+        <th>Loại Máy</th>
+        <th>Vị Trí</th>
+        <th>Ghi Chú</th>
       </tr>
     </thead>
-    <tbody id="tableBody">
-      <!-- Dữ liệu hiển thị ở đây -->
-    </tbody>
+    <tbody></tbody>
   </table>
-</main>
 
-<script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyU_BsEvfaphUdDR_AlqGpM3ZZzjdRGSzJm--W2Yeqvd8Q3t0elZ3Vlu87WZV5ziR7R/exec';
-const tableBody = document.getElementById('tableBody');
-const syncStatus = document.getElementById('syncStatus');
-const loadBtn = document.getElementById('loadBtn');
-const uploadBtn = document.getElementById('uploadBtn');
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
+    let excelData = [];
 
-// --- Tải dữ liệu từ Google Sheet ---
-loadBtn.onclick = async () => {
-  syncStatus.innerText = '⏳ Đang tải dữ liệu...';
-  try {
-    const res = await fetch(GAS_URL);
-    const text = await res.text();
-    console.log('GET response:', text);
-    const data = JSON.parse(text);
-    if (!data.success) throw new Error(data.message);
-
-    tableBody.innerHTML = '';
-    data.data.forEach((r, i) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${i + 1}</td>
-        <td contenteditable="true">${r.soThe}</td>
-        <td contenteditable="true">${r.soMay}</td>
-        <td contenteditable="true">${r.loaiMay}</td>
-        <td contenteditable="true">${r.viTri}</td>
-        <td contenteditable="true">${r.ghiChu}</td>
-      `;
-      tableBody.appendChild(row);
-    });
-    syncStatus.innerText = '✅ Đã tải ' + data.data.length + ' dòng từ Google Sheet';
-  } catch (err) {
-    console.error(err);
-    syncStatus.innerText = '❌ Lỗi khi tải dữ liệu: ' + err.message;
-  }
-};
-
-// --- Gửi dữ liệu lên Google Sheet ---
-uploadBtn.onclick = async () => {
-  const arr = [];
-  tableBody.querySelectorAll('tr').forEach(r => {
-    const t = r.querySelectorAll('td');
-    arr.push({
-      soThe: t[1]?.innerText || '',
-      soMay: t[2]?.innerText || '',
-      loaiMay: t[3]?.innerText || '',
-      viTri: t[4]?.innerText || '',
-      ghiChu: t[5]?.innerText || ''
-    });
-  });
-
-  syncStatus.innerText = '☁️ Đang đồng bộ lên Google Sheet...';
-  try {
-    const res = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'data=' + encodeURIComponent(JSON.stringify(arr))
-    });
-
-    const text = await res.text();
-    console.log('POST response:', text);
-    const j = JSON.parse(text);
-
-    if (j.success) {
-      syncStatus.innerText = '✅ Đã đồng bộ ' + j.written + ' dòng lên Google Sheet';
-      alert('Đồng bộ thành công!');
-    } else {
-      throw new Error(j.message);
+    // 📤 Đọc file Excel
+    function uploadExcel() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return alert('Vui lòng chọn file Excel!');
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        excelData = rows.slice(1).map(r => ({
+          soThe: r[0] || '',
+          soMay: r[1] || '',
+          loaiMay: r[2] || '',
+          viTri: r[3] || '',
+          ghiChu: r[4] || ''
+        }));
+        renderTable();
+        showStatus('✅ Đã tải dữ liệu từ file Excel!');
+      };
+      reader.readAsArrayBuffer(file);
     }
-  } catch (err) {
-    console.error(err);
-    syncStatus.innerText = '❌ Không thể kết nối tới GAS: ' + err.message;
-  }
-};
-</script>
 
+    // 📋 Hiển thị dữ liệu ra bảng
+    function renderTable() {
+      const tbody = document.querySelector('#dataTable tbody');
+      tbody.innerHTML = excelData.map(r => `
+        <tr>
+          <td>${r.soThe}</td>
+          <td>${r.soMay}</td>
+          <td>${r.loaiMay}</td>
+          <td>${r.viTri}</td>
+          <td>${r.ghiChu}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 🔄 Gửi dữ liệu lên Google Sheet
+    async function syncToGoogleSheet() {
+      if (excelData.length === 0) return alert('Chưa có dữ liệu để đồng bộ!');
+      showStatus('⏳ Đang đồng bộ lên Google Sheet...');
+
+      try {
+        const res = await fetch(gasUrl, {
+          method: 'POST',
+          body: new URLSearchParams({ data: JSON.stringify(excelData) })
+        });
+        const result = await res.json();
+        if (result.success) {
+          showStatus(`✅ Đã đồng bộ ${result.written} dòng dữ liệu lên Google Sheet.`);
+        } else {
+          showStatus('❌ Lỗi: ' + result.message);
+        }
+      } catch (err) {
+        showStatus('❌ Không thể kết nối tới Google Apps Script: ' + err.message);
+      }
+    }
+
+    // 📥 Tải dữ liệu từ Google Sheet
+    async function loadFromGoogleSheet() {
+      showStatus('⏳ Đang tải dữ liệu từ Google Sheet...');
+      try {
+        const res = await fetch(gasUrl);
+        const result = await res.json();
+        if (result.success) {
+          excelData = result.data;
+          renderTable();
+          showStatus('✅ Đã tải dữ liệu từ Google Sheet.');
+        } else {
+          showStatus('❌ Lỗi tải dữ liệu: ' + result.message);
+        }
+      } catch (err) {
+        showStatus('❌ Không thể kết nối tới Google Apps Script: ' + err.message);
+      }
+    }
+
+    function showStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+  </script>
 </body>
 </html>
