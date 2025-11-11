@@ -45,7 +45,7 @@ th { background:#e9ecef; }
     <button onclick="addRow()">➕ Thêm dòng</button>
     <button onclick="exportExcel()">⬇️ Xuất Excel</button>
     <button onclick="document.getElementById('importInput').click()">⬆️ Nhập Excel</button>
-    <input type="file" id="importInput" accept=".xlsx" onchange="importExcel(event)">
+    <input type="file" id="importInput" accept=".xlsx" style="display:none" onchange="importExcel(event)">
   </div>
 
   <div style="margin-bottom:10px;">
