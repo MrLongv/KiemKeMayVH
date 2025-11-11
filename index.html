@@ -79,19 +79,25 @@ function highlightRow(val){
   else alert('Không tìm thấy: ' + val);
 }
 
-// -------- Tải dữ liệu từ Google Sheet --------
 async function loadFromSheet(){
-  const res = await fetch(GAS_URL);
-  const data = await res.json();
-  tableBody.innerHTML = '';
-  data.forEach(d => addRow(d.soThe, d.soMay, d.loaiMay, d.viTri, d.ghiChu));
-  updateSTT(); generateQRs();
+  try {
+    const res = await fetch(GAS_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    console.log('Raw response:', text);
+    const data = JSON.parse(text);
+    tableBody.innerHTML = '';
+    data.forEach(d => addRow(d.soThe, d.soMay, d.loaiMay, d.viTri, d.ghiChu));
+    updateSTT(); generateQRs();
 
-  // Nếu có tham số id trên URL thì highlight
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  if(id) setTimeout(()=>highlightRow(id), 600);
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if(id) setTimeout(()=>highlightRow(id), 600);
+  } catch(err){
+    alert('Không thể kết nối tới GAS: ' + err.message);
+  }
 }
+
 
 // -------- Gửi dữ liệu ngược lên Sheet --------
 async function uploadToSheet(){
