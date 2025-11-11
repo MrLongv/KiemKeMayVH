@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📋 Kiểm kê máy may - Online Sync</title>
+<title>📋 Kiểm kê máy may - Virtual Scroll</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f3f6f9; }
@@ -12,14 +12,12 @@ h2 { background: #2e86de; color: #fff; padding: 10px 20px; margin: 0; }
 button { padding: 6px 12px; border: none; background: #2e86de; color: white; border-radius: 4px; cursor: pointer; margin-right:5px;}
 button:hover { background: #1b4f9c; }
 input, select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+#msg { margin-top: 10px; }
+#tableContainer { height: 600px; overflow-y: auto; border:1px solid #ccc; background:white; }
+table { width: 100%; border-collapse: collapse; }
 th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
 th { background: #e9ecef; }
 .actions button { margin-right: 4px; }
-.success { color: green; font-weight: bold; }
-.error { color: red; font-weight: bold; }
-#msg { margin-top: 10px; }
-#importInput { display: none; }
 
 /* Popup chỉnh sửa */
 .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
@@ -30,7 +28,7 @@ th { background: #e9ecef; }
 </style>
 </head>
 <body>
-<h2>📋 Quản Lý Kiểm Kê Máy May</h2>
+<h2>📋 Quản Lý Kiểm Kê Máy May (Virtual Scroll)</h2>
 <div class="container">
 
   <div style="margin-bottom:10px;">
@@ -44,24 +42,27 @@ th { background: #e9ecef; }
 
   <div>
     <label>Tìm kiếm: </label>
-    <input type="text" id="searchBox" oninput="renderTable()" placeholder="Nhập số thẻ, số máy hoặc vị trí...">
+    <input type="text" id="searchBox" oninput="updateFiltered()" placeholder="Nhập số thẻ, số máy hoặc vị trí...">
   </div>
 
   <div id="msg"></div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Số thẻ</th>
-        <th>Số máy</th>
-        <th>Loại máy</th>
-        <th>Vị trí</th>
-        <th>Ghi chú</th>
-        <th>Thao tác</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div id="tableContainer">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Số thẻ</th>
+          <th>Số máy</th>
+          <th>Loại máy</th>
+          <th>Vị trí</th>
+          <th>Ghi chú</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
 </div>
 
 <!-- Popup chỉnh sửa -->
@@ -83,7 +84,12 @@ th { background: #e9ecef; }
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
 let data = [];
+let filteredData = [];
 let editingIndex = null;
+
+const tableContainer = document.getElementById('tableContainer');
+const tbody = document.querySelector('#dataTable tbody');
+const ROW_HEIGHT = 35; // chiều cao mỗi dòng
 
 // ---------- Đồng bộ từ Google Sheet ----------
 async function syncData() {
@@ -97,7 +103,7 @@ async function syncData() {
     try { j = JSON.parse(text); } catch(e) { throw new Error('GAS trả về không phải JSON'); }
     if(j.success && Array.isArray(j.data)){
       data = j.data;
-      renderTable();
+      updateFiltered();
       msg.textContent = '✅ Đồng bộ thành công (' + j.data.length + ' dòng)';
       msg.className = 'success';
     } else throw new Error(j.message || 'Không có dữ liệu hợp lệ');
@@ -130,15 +136,21 @@ async function saveToGoogleSheet() {
   }
 }
 
-// ---------- Hiển thị bảng ----------
-function renderTable() {
-  const tbody = document.querySelector('#dataTable tbody');
+// ---------- Render Virtual Scroll ----------
+function renderVirtual() {
   tbody.innerHTML = '';
-  const keyword = document.getElementById('searchBox').value.toLowerCase();
-  const filtered = data.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(keyword)));
+  const scrollTop = tableContainer.scrollTop;
+  const startIndex = Math.floor(scrollTop / ROW_HEIGHT);
+  const endIndex = Math.min(startIndex + Math.ceil(tableContainer.clientHeight / ROW_HEIGHT) + 5, filteredData.length);
 
-  filtered.forEach((row,i)=>{
+  tbody.style.height = filteredData.length * ROW_HEIGHT + 'px'; // tạo không gian ảo
+
+  for(let i=startIndex;i<endIndex;i++){
+    const row = filteredData[i];
     const tr = document.createElement('tr');
+    tr.style.position = 'absolute';
+    tr.style.top = i*ROW_HEIGHT + 'px';
+    tr.style.height = ROW_HEIGHT + 'px';
     tr.innerHTML = `
       <td>${row.soThe}</td>
       <td>${row.soMay}</td>
@@ -151,30 +163,46 @@ function renderTable() {
       </td>
     `;
     tbody.appendChild(tr);
-  });
+  }
+}
+
+tableContainer.addEventListener('scroll', renderVirtual);
+
+// ---------- Filter dữ liệu ----------
+function updateFiltered() {
+  const keyword = document.getElementById('searchBox').value.toLowerCase();
+  filteredData = data.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(keyword)));
+  renderVirtual();
 }
 
 // ---------- Chỉnh sửa dòng ----------
 function editRow(index){
   editingIndex = index;
-  document.getElementById('editSoThe').value = data[index].soThe;
-  document.getElementById('editSoMay').value = data[index].soMay;
-  document.getElementById('editLoaiMay').value = data[index].loaiMay;
-  document.getElementById('editViTri').value = data[index].viTri;
-  document.getElementById('editGhiChu').value = data[index].ghiChu;
+  const row = filteredData[index];
+  document.getElementById('editSoThe').value = row.soThe;
+  document.getElementById('editSoMay').value = row.soMay;
+  document.getElementById('editLoaiMay').value = row.loaiMay;
+  document.getElementById('editViTri').value = row.viTri;
+  document.getElementById('editGhiChu').value = row.ghiChu;
   document.getElementById('editModal').style.display = 'block';
 }
 
 function saveEdit(){
   if(editingIndex === null) return;
-  data[editingIndex].soThe = document.getElementById('editSoThe').value;
-  data[editingIndex].soMay = document.getElementById('editSoMay').value;
-  data[editingIndex].loaiMay = document.getElementById('editLoaiMay').value;
-  data[editingIndex].viTri = document.getElementById('editViTri').value;
-  data[editingIndex].ghiChu = document.getElementById('editGhiChu').value;
+  const row = filteredData[editingIndex];
+  row.soThe = document.getElementById('editSoThe').value;
+  row.soMay = document.getElementById('editSoMay').value;
+  row.loaiMay = document.getElementById('editLoaiMay').value;
+  row.viTri = document.getElementById('editViTri').value;
+  row.ghiChu = document.getElementById('editGhiChu').value;
+
+  // cập nhật data gốc
+  const originalIndex = data.indexOf(row);
+  if(originalIndex !== -1) data[originalIndex] = row;
+
   editingIndex = null;
   document.getElementById('editModal').style.display = 'none';
-  renderTable();
+  renderVirtual();
 }
 
 function closeModal(){
@@ -184,13 +212,16 @@ function closeModal(){
 
 // ---------- Thêm / xóa dòng ----------
 function addRow(){
-  data.push({soThe:'',soMay:'',loaiMay:'',viTri:'',ghiChu:''});
-  renderTable();
+  const newRow = {soThe:'',soMay:'',loaiMay:'',viTri:'',ghiChu:''};
+  data.push(newRow);
+  updateFiltered();
 }
 function deleteRow(index){
   if(confirm('Bạn có chắc muốn xóa dòng này?')){
-    data.splice(index,1);
-    renderTable();
+    const row = filteredData[index];
+    const originalIndex = data.indexOf(row);
+    if(originalIndex !== -1) data.splice(originalIndex,1);
+    updateFiltered();
   }
 }
 
@@ -211,13 +242,14 @@ function importExcel(evt){
     const wb = XLSX.read(e.target.result,{type:'binary'});
     const ws = wb.Sheets[wb.SheetNames[0]];
     data = XLSX.utils.sheet_to_json(ws);
-    renderTable();
+    updateFiltered();
   };
   reader.readAsBinaryString(file);
 }
 
-// ---------- Khi mở trang, tự load dữ liệu ----------
+// ---------- Khi mở trang ----------
 window.addEventListener('load', syncData);
+
 </script>
 </body>
 </html>
