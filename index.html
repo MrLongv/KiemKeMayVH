@@ -130,10 +130,34 @@
       showStatus('⏳ Đang đồng bộ lên Google Sheet...');
 
       try {
-        const res = await fetch(gasUrl, {
-          method: 'POST',
-          body: new URLSearchParams({ data: JSON.stringify(excelData) })
-        });
+        async function loadFromGoogleSheet() {
+  showStatus('⏳ Đang tải dữ liệu từ Google Sheet...');
+  try {
+    const res = await fetch(GAS_URL);
+    const text = await res.text();
+    console.log('GAS trả về:', text);
+
+    let j;
+    try {
+      j = JSON.parse(text);
+    } catch (err) {
+      showStatus('❌ Dữ liệu trả về không phải JSON hợp lệ!');
+      return;
+    }
+
+    if (j.success && Array.isArray(j.data)) {
+      // ✅ Gán dữ liệu đúng cách
+      excelData = j.data;
+      renderTable();
+      showStatus('✅ Đã tải dữ liệu thành công (' + j.data.length + ' dòng)');
+    } else {
+      showStatus('❌ Lỗi: ' + (j.message || 'Không có dữ liệu hợp lệ'));
+    }
+  } catch (err) {
+    showStatus('❌ Không thể kết nối tới Google Apps Script: ' + err.message);
+  }
+}
+
         const result = await res.json();
         if (result.success) {
           showStatus(`✅ Đã đồng bộ ${result.written} dòng dữ liệu lên Google Sheet.`);
