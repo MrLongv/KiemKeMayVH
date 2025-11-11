@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📋 Kiểm kê máy may - QR + Virtual Scroll</title>
+<title>📋 Kiểm kê máy may - QR + Full Features</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f3f6f9; }
-h2 { background: #2e86de; color: #fff; padding: 10px 20px; margin: 0; }
-.container { padding: 20px; }
-button { padding: 6px 12px; border: none; background: #2e86de; color: white; border-radius: 4px; cursor: pointer; margin-right:5px;}
-button:hover { background: #1b4f9c; }
-input, select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-#msg { margin-top: 10px; }
-#tableContainer { height: 600px; overflow-y: auto; border:1px solid #ccc; background:white; position: relative; }
-table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-th { background: #e9ecef; }
-.actions button { margin-right: 4px; }
-.qr-cell { width: 70px; height:70px; }
-.highlight { background: #ffeaa7 !important; }
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f3f6f9; }
+h2 { background:#2e86de; color:#fff; padding:12px 20px; margin:0; }
+.container { padding:20px; }
+button { padding:6px 12px; border:none; background:#2e86de; color:white; border-radius:4px; cursor:pointer; margin-right:5px; }
+button:hover { background:#1b4f9c; }
+input, select { padding:5px; border:1px solid #ccc; border-radius:4px; }
+#msg { margin-top:10px; }
+#tableContainer { height:600px; overflow-y:auto; border:1px solid #ccc; background:white; }
+table { width:100%; border-collapse: collapse; }
+th, td { border:1px solid #ccc; padding:6px; text-align:center; }
+th { background:#e9ecef; }
+.actions button { margin-right:4px; }
+.qr-cell { width:70px; height:70px; }
+.highlight { background:#ffeaa7 !important; }
 
 /* Popup chỉnh sửa */
-.modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
+.modal { display:none; position: fixed; z-index:999; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4);}
 .modal-content { background:#fff; border-radius:8px; padding:16px; width:400px; margin:8% auto; box-shadow:0 6px 20px rgba(0,0,0,0.2);}
 .modal-content label{display:block;margin-top:8px;font-weight:600;}
 .modal-content input, .modal-content textarea{width:100%;padding:6px;margin-top:4px;}
@@ -31,7 +31,8 @@ th { background: #e9ecef; }
 </style>
 </head>
 <body>
-<h2>📋 Quản Lý Kiểm Kê Máy May (QR + Virtual Scroll)</h2>
+
+<h2>📋 Quản lý Kiểm kê Máy May</h2>
 <div class="container">
 
   <div style="margin-bottom:10px;">
@@ -98,30 +99,24 @@ let data = [];
 let filteredData = [];
 let editingIndex = null;
 
-const tableContainer = document.getElementById('tableContainer');
 const tbody = document.querySelector('#dataTable tbody');
-const ROW_HEIGHT = 80; // QR code cao hơn
 
 // ---------- Đồng bộ từ Google Sheet ----------
 async function syncData() {
   const msg = document.getElementById('msg');
   msg.textContent = '⏳ Đang tải dữ liệu...';
-  msg.className = '';
   try {
     const res = await fetch(GAS_URL);
     const text = await res.text();
-    let j;
-    try { j = JSON.parse(text); } catch(e) { throw new Error('GAS trả về không phải JSON'); }
+    let j = JSON.parse(text);
     if(j.success && Array.isArray(j.data)){
       data = j.data;
       updateFiltered();
       msg.textContent = '✅ Đồng bộ thành công (' + j.data.length + ' dòng)';
-      msg.className = 'success';
       checkURLQR();
     } else throw new Error(j.message || 'Không có dữ liệu hợp lệ');
   } catch(err){
     msg.textContent = '❌ Lỗi: ' + err.message;
-    msg.className = 'error';
   }
 }
 
@@ -129,40 +124,26 @@ async function syncData() {
 async function saveToGoogleSheet() {
   const msg = document.getElementById('msg');
   msg.textContent = '⏳ Đang lưu dữ liệu lên Google Sheet...';
-  msg.className = '';
   try {
     const formData = new URLSearchParams();
     formData.append('data', JSON.stringify(data));
 
     const res = await fetch(GAS_URL, { method:'POST', body: formData });
     const text = await res.text();
-    let j;
-    try { j = JSON.parse(text); } catch(e) { throw new Error('GAS trả về không phải JSON'); }
+    let j = JSON.parse(text);
     if(j.success){
       msg.textContent = '✅ Đã lưu thành công ' + j.written + ' dòng!';
-      msg.className = 'success';
     } else throw new Error(j.message || 'Lỗi không xác định');
   } catch(err){
     msg.textContent = '❌ Lỗi khi lưu: ' + err.message;
-    msg.className = 'error';
   }
 }
 
-// ---------- Render Virtual Scroll + QR ----------
-function renderVirtual() {
+// ---------- Render bảng ----------
+function renderTable() {
   tbody.innerHTML = '';
-  const scrollTop = tableContainer.scrollTop;
-  const startIndex = Math.floor(scrollTop / ROW_HEIGHT);
-  const endIndex = Math.min(startIndex + Math.ceil(tableContainer.clientHeight / ROW_HEIGHT) + 5, filteredData.length);
-
-  tbody.style.height = filteredData.length * ROW_HEIGHT + 'px';
-
-  for(let i=startIndex;i<endIndex;i++){
-    const row = filteredData[i];
+  filteredData.forEach((row, i)=>{
     const tr = document.createElement('tr');
-    tr.style.position = 'absolute';
-    tr.style.top = i*ROW_HEIGHT + 'px';
-    tr.style.height = ROW_HEIGHT + 'px';
     tr.className = row.highlight ? 'highlight' : '';
     tr.innerHTML = `
       <td class="qr-cell" id="qr-${i}"></td>
@@ -178,19 +159,17 @@ function renderVirtual() {
     `;
     tbody.appendChild(tr);
 
-    // Tạo QR code
+    // QR code
     const qrText = GITHUB_BASE + '?id=' + encodeURIComponent(row.soThe);
     new QRCode(document.getElementById('qr-'+i), { text: qrText, width:60, height:60 });
-  }
+  });
 }
-
-tableContainer.addEventListener('scroll', renderVirtual);
 
 // ---------- Filter dữ liệu ----------
 function updateFiltered() {
   const keyword = document.getElementById('searchBox').value.toLowerCase();
   filteredData = data.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(keyword)));
-  renderVirtual();
+  renderTable();
 }
 
 // ---------- Highlight theo QR / Số thẻ ----------
@@ -200,9 +179,8 @@ function highlightQR(){
   const idx = filteredData.findIndex(r => r.soThe.toLowerCase() === val);
   if(idx !== -1){
     filteredData[idx].highlight = true;
-    const scrollPos = idx * ROW_HEIGHT - tableContainer.clientHeight/2 + ROW_HEIGHT/2;
-    tableContainer.scrollTop = scrollPos;
-    renderVirtual();
+    document.querySelectorAll('#dataTable tbody tr')[idx].scrollIntoView({behavior:'smooth', block:'center'});
+    renderTable();
   } else alert('Không tìm thấy: ' + val);
   document.getElementById('qrInput').value = '';
 }
@@ -228,7 +206,6 @@ function editRow(index){
   document.getElementById('editGhiChu').value = row.ghiChu;
   document.getElementById('editModal').style.display = 'block';
 }
-
 function saveEdit(){
   if(editingIndex === null) return;
   const row = filteredData[editingIndex];
@@ -243,15 +220,11 @@ function saveEdit(){
 
   editingIndex = null;
   document.getElementById('editModal').style.display = 'none';
-  renderVirtual();
+  renderTable();
 }
+function closeModal(){ editingIndex = null; document.getElementById('editModal').style.display='none'; }
 
-function closeModal(){
-  editingIndex = null;
-  document.getElementById('editModal').style.display = 'none';
-}
-
-// ---------- Thêm / xóa dòng ----------
+// ---------- Thêm / Xóa dòng ----------
 function addRow(){
   const newRow = {soThe:'',soMay:'',loaiMay:'',viTri:'',ghiChu:''};
   data.push(newRow);
@@ -273,7 +246,6 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb, ws, "DanhSachMay");
   XLSX.writeFile(wb, "DanhSachMay.xlsx");
 }
-
 function importExcel(evt){
   const file = evt.target.files[0];
   if(!file) return;
@@ -290,5 +262,6 @@ function importExcel(evt){
 // ---------- Khi mở trang ----------
 window.addEventListener('load', syncData);
 </script>
+
 </body>
 </html>
