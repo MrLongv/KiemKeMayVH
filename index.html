@@ -20,6 +20,13 @@ th { background: #e9ecef; }
 .error { color: red; font-weight: bold; }
 #msg { margin-top: 10px; }
 #importInput { display: none; }
+
+/* Popup chỉnh sửa */
+.modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
+.modal-content { background:#fff; border-radius:8px; padding:16px; width:400px; margin:8% auto; box-shadow:0 6px 20px rgba(0,0,0,0.2);}
+.modal-content label{display:block;margin-top:8px;font-weight:600;}
+.modal-content input, .modal-content textarea{width:100%;padding:6px;margin-top:4px;}
+.modal-buttons{text-align:right;margin-top:12px;}
 </style>
 </head>
 <body>
@@ -57,9 +64,26 @@ th { background: #e9ecef; }
   </table>
 </div>
 
+<!-- Popup chỉnh sửa -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Chỉnh sửa thông tin dòng</h3>
+    <label>Số thẻ:</label><input id="editSoThe">
+    <label>Số máy:</label><input id="editSoMay">
+    <label>Loại máy:</label><input id="editLoaiMay">
+    <label>Vị trí:</label><input id="editViTri">
+    <label>Ghi chú:</label><textarea id="editGhiChu" rows="3"></textarea>
+    <div class="modal-buttons">
+      <button onclick="closeModal()">Hủy</button>
+      <button onclick="saveEdit()">Cập nhật</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
 let data = [];
+let editingIndex = null;
 
 // ---------- Đồng bộ từ Google Sheet ----------
 async function syncData() {
@@ -116,20 +140,46 @@ function renderTable() {
   filtered.forEach((row,i)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td contenteditable oninput="updateField(${i},'soThe',this.innerText)">${row.soThe}</td>
-      <td contenteditable oninput="updateField(${i},'soMay',this.innerText)">${row.soMay}</td>
-      <td contenteditable oninput="updateField(${i},'loaiMay',this.innerText)">${row.loaiMay}</td>
-      <td contenteditable oninput="updateField(${i},'viTri',this.innerText)">${row.viTri}</td>
-      <td contenteditable oninput="updateField(${i},'ghiChu',this.innerText)">${row.ghiChu}</td>
-      <td class="actions"><button onclick="deleteRow(${i})">🗑️ Xóa</button></td>
+      <td>${row.soThe}</td>
+      <td>${row.soMay}</td>
+      <td>${row.loaiMay}</td>
+      <td>${row.viTri}</td>
+      <td>${row.ghiChu}</td>
+      <td class="actions">
+        <button onclick="editRow(${i})">✏️ Chỉnh sửa</button>
+        <button onclick="deleteRow(${i})">🗑️ Xóa</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// ---------- Cập nhật dữ liệu trong mảng ----------
-function updateField(index, field, value){
-  data[index][field] = value;
+// ---------- Chỉnh sửa dòng ----------
+function editRow(index){
+  editingIndex = index;
+  document.getElementById('editSoThe').value = data[index].soThe;
+  document.getElementById('editSoMay').value = data[index].soMay;
+  document.getElementById('editLoaiMay').value = data[index].loaiMay;
+  document.getElementById('editViTri').value = data[index].viTri;
+  document.getElementById('editGhiChu').value = data[index].ghiChu;
+  document.getElementById('editModal').style.display = 'block';
+}
+
+function saveEdit(){
+  if(editingIndex === null) return;
+  data[editingIndex].soThe = document.getElementById('editSoThe').value;
+  data[editingIndex].soMay = document.getElementById('editSoMay').value;
+  data[editingIndex].loaiMay = document.getElementById('editLoaiMay').value;
+  data[editingIndex].viTri = document.getElementById('editViTri').value;
+  data[editingIndex].ghiChu = document.getElementById('editGhiChu').value;
+  editingIndex = null;
+  document.getElementById('editModal').style.display = 'none';
+  renderTable();
+}
+
+function closeModal(){
+  editingIndex = null;
+  document.getElementById('editModal').style.display = 'none';
 }
 
 // ---------- Thêm / xóa dòng ----------
