@@ -1,195 +1,146 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📋 Quản lý Kiểm Kê Máy May</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f8fa;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #0066cc;
-    }
-    button {
-      background: #0066cc;
-      color: #fff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-      margin: 5px 0;
-    }
-    button:hover {
-      background: #004999;
-    }
-    input, select {
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      width: 100%;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      background: #fff;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: center;
-    }
-    th {
-      background: #0066cc;
-      color: #fff;
-    }
-    #status {
-      text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    #fileInput {
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📋 Kiểm Kê Máy May - Vĩnh Hưng</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f3f6f9; }
+  h2 { background: #2e86de; color: #fff; padding: 10px 20px; margin: 0; }
+  .container { padding: 20px; }
+  button { padding: 6px 12px; border: none; background: #2e86de; color: white; border-radius: 4px; cursor: pointer; }
+  button:hover { background: #1b4f9c; }
+  input, select { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+  th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+  th { background: #e9ecef; }
+  .actions button { margin-right: 4px; }
+  .success { color: green; font-weight: bold; }
+  .error { color: red; font-weight: bold; }
+  #msg { margin-top: 10px; }
+  #importInput { display: none; }
+</style>
 </head>
 <body>
-  <h1>📋 Quản lý Kiểm Kê Máy May</h1>
+  <h2>📋 Quản Lý Kiểm Kê Máy May</h2>
+  <div class="container">
 
-  <input type="file" id="fileInput" accept=".xlsx, .xls" />
-  <button onclick="uploadExcel()">📤 Nhập Excel lên</button>
-  <button onclick="syncToGoogleSheet()">🔄 Đồng bộ lên Google Sheet</button>
-  <button onclick="loadFromGoogleSheet()">📥 Tải dữ liệu từ Google Sheet</button>
+    <div style="margin-bottom:10px;">
+      <button onclick="syncData()">🔄 Đồng bộ từ Google Sheet</button>
+      <button onclick="addRow()">➕ Thêm dòng</button>
+      <button onclick="exportExcel()">⬇️ Xuất Excel</button>
+      <button onclick="document.getElementById('importInput').click()">⬆️ Nhập Excel</button>
+      <input type="file" id="importInput" accept=".xlsx" onchange="importExcel(event)">
+    </div>
 
-  <div id="status"></div>
+    <div>
+      <label>Tìm kiếm: </label>
+      <input type="text" id="searchBox" oninput="renderTable()" placeholder="Nhập số thẻ, số máy hoặc vị trí...">
+    </div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Số Thẻ</th>
-        <th>Số Máy</th>
-        <th>Loại Máy</th>
-        <th>Vị Trí</th>
-        <th>Ghi Chú</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div id="msg"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
-    let excelData = [];
-
-    // 📤 Đọc file Excel
-    function uploadExcel() {
-      const file = document.getElementById('fileInput').files[0];
-      if (!file) return alert('Vui lòng chọn file Excel!');
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-        excelData = rows.slice(1).map(r => ({
-          soThe: r[0] || '',
-          soMay: r[1] || '',
-          loaiMay: r[2] || '',
-          viTri: r[3] || '',
-          ghiChu: r[4] || ''
-        }));
-        renderTable();
-        showStatus('✅ Đã tải dữ liệu từ file Excel!');
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    // 📋 Hiển thị dữ liệu ra bảng
-    function renderTable() {
-      const tbody = document.querySelector('#dataTable tbody');
-      tbody.innerHTML = excelData.map(r => `
+    <table id="dataTable">
+      <thead>
         <tr>
-          <td>${r.soThe}</td>
-          <td>${r.soMay}</td>
-          <td>${r.loaiMay}</td>
-          <td>${r.viTri}</td>
-          <td>${r.ghiChu}</td>
+          <th>Số thẻ</th>
+          <th>Số máy</th>
+          <th>Loại máy</th>
+          <th>Vị trí</th>
+          <th>Ghi chú</th>
+          <th>Thao tác</th>
         </tr>
-      `).join('');
-    }
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-    // 🔄 Gửi dữ liệu lên Google Sheet
-    async function syncToGoogleSheet() {
-      if (excelData.length === 0) return alert('Chưa có dữ liệu để đồng bộ!');
-      showStatus('⏳ Đang đồng bộ lên Google Sheet...');
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
+let data = [];
 
-      try {
-        async function loadFromGoogleSheet() {
-  showStatus('⏳ Đang tải dữ liệu từ Google Sheet...');
+async function syncData() {
+  const msg = document.getElementById('msg');
+  msg.textContent = '⏳ Đang tải dữ liệu...';
+  msg.className = '';
   try {
     const res = await fetch(GAS_URL);
-    const text = await res.text();
-    console.log('GAS trả về:', text);
-
-    let j;
-    try {
-      j = JSON.parse(text);
-    } catch (err) {
-      showStatus('❌ Dữ liệu trả về không phải JSON hợp lệ!');
-      return;
-    }
-
-    if (j.success && Array.isArray(j.data)) {
-      // ✅ Gán dữ liệu đúng cách
-      excelData = j.data;
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      data = json.data;
       renderTable();
-      showStatus('✅ Đã tải dữ liệu thành công (' + j.data.length + ' dòng)');
+      msg.textContent = '✅ Đồng bộ thành công!';
+      msg.className = 'success';
     } else {
-      showStatus('❌ Lỗi: ' + (j.message || 'Không có dữ liệu hợp lệ'));
+      throw new Error('Dữ liệu trả về không hợp lệ');
     }
   } catch (err) {
-    showStatus('❌ Không thể kết nối tới Google Apps Script: ' + err.message);
+    msg.textContent = '❌ Không thể kết nối tới GAS: ' + err.message;
+    msg.className = 'error';
   }
 }
 
-        const result = await res.json();
-        if (result.success) {
-          showStatus(`✅ Đã đồng bộ ${result.written} dòng dữ liệu lên Google Sheet.`);
-        } else {
-          showStatus('❌ Lỗi: ' + result.message);
-        }
-      } catch (err) {
-        showStatus('❌ Không thể kết nối tới Google Apps Script: ' + err.message);
-      }
-    }
+function renderTable() {
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML = '';
+  const keyword = document.getElementById('searchBox').value.toLowerCase();
+  const filtered = data.filter(row =>
+    Object.values(row).some(v => String(v).toLowerCase().includes(keyword))
+  );
 
-    // 📥 Tải dữ liệu từ Google Sheet
-    async function loadFromGoogleSheet() {
-      showStatus('⏳ Đang tải dữ liệu từ Google Sheet...');
-      try {
-        const res = await fetch(gasUrl);
-        const result = await res.json();
-        if (result.success) {
-          excelData = result.data;
-          renderTable();
-          showStatus('✅ Đã tải dữ liệu từ Google Sheet.');
-        } else {
-          showStatus('❌ Lỗi tải dữ liệu: ' + result.message);
-        }
-      } catch (err) {
-        showStatus('❌ Không thể kết nối tới Google Apps Script: ' + err.message);
-      }
-    }
+  filtered.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td contenteditable oninput="updateField(${i}, 'soThe', this.innerText)">${row.soThe}</td>
+      <td contenteditable oninput="updateField(${i}, 'soMay', this.innerText)">${row.soMay}</td>
+      <td contenteditable oninput="updateField(${i}, 'loaiMay', this.innerText)">${row.loaiMay}</td>
+      <td contenteditable oninput="updateField(${i}, 'viTri', this.innerText)">${row.viTri}</td>
+      <td contenteditable oninput="updateField(${i}, 'ghiChu', this.innerText)">${row.ghiChu}</td>
+      <td class="actions">
+        <button onclick="deleteRow(${i})">🗑️ Xóa</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
 
-    function showStatus(msg) {
-      document.getElementById('status').textContent = msg;
-    }
-  </script>
+function updateField(index, field, value) {
+  data[index][field] = value;
+}
+
+function addRow() {
+  data.push({ soThe: '', soMay: '', loaiMay: '', viTri: '', ghiChu: '' });
+  renderTable();
+}
+
+function deleteRow(index) {
+  if (confirm('Bạn có chắc muốn xóa dòng này?')) {
+    data.splice(index, 1);
+    renderTable();
+  }
+}
+
+// Xuất Excel
+function exportExcel() {
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "DanhSachMay");
+  XLSX.writeFile(wb, "DanhSachMay.xlsx");
+}
+
+// Nhập Excel
+function importExcel(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, { type: 'binary' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    data = XLSX.utils.sheet_to_json(ws);
+    renderTable();
+  };
+  reader.readAsBinaryString(file);
+}
+</script>
 </body>
 </html>
