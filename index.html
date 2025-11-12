@@ -6,6 +6,7 @@
 <title>📋 Kiểm kê máy may - Sync</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
+/* (style giống như bạn gửi, giữ nguyên) */
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
 header{background:#0b74d1;color:#fff;padding:12px 16px;font-size:18px}
 .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
@@ -18,7 +19,6 @@ table{width:100%;border-collapse:collapse;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;word-break:break-word}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
-/* modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
 .modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%}
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -87,7 +87,8 @@ tr.highlight{background:#ffeaa7 !important}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* ======= Cấu hình ======= */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwn7mvBQHufefX2AHqFlXYwfRkeIWxW1GEmrAKlGm9nl0eGJ8WxzTt466ryZBOxJIsq/exec';
+// Thay bằng URL Web App (deployment) của bạn (kết thúc bằng /exec)
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoBtTtZC-Qn6jtaHRLKGBexuuDkuxcZt5sOQu8MUCoKSHe_bKW6auWSomkBjLuvfS0/exec';
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex=null;
@@ -95,14 +96,18 @@ let allData = [], editingIndex=null;
 /* ======= Utils ======= */
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt; statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return (v===null||v===undefined)?'':String(v);}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-/* ======= Load dữ liệu ======= */
+/* ======= Load dữ liệu (thử fetch rồi fallback JSONP) ======= */
 async function loadData(){
   setStatus('Đang tải dữ liệu...');
+  // Thử fetch bình thường (nếu deploy đúng và CORS ok)
   try{
-    const res = await fetch(GAS_URL);
+    const res = await fetch(GAS_URL, {cache:'no-store'});
+    // nếu status không phải 200 thì throw để thử JSONP
+    if(!res || !res.ok) throw new Error('HTTP '+(res?res.status:'no response'));
     const j = await res.json();
-    if(j.success && Array.isArray(j.data)){
+    if(j && j.success && Array.isArray(j.data)){
       allData = j.data.map(r=>({
         soThe:safeText(r.soThe),
         soMay:safeText(r.soMay),
@@ -115,11 +120,56 @@ async function loadData(){
       }));
       setStatus('Đã tải từ Sheet ('+allData.length+' dòng)');
       renderTable();
-    } else throw new Error(j.message||'Dữ liệu không hợp lệ');
+      return;
+    } else {
+      throw new Error(j && j.message ? j.message : 'Dữ liệu không hợp lệ');
+    }
   }catch(err){
-    console.error(err);
-    setStatus('Lỗi kết nối',false);
+    console.warn('Fetch JSON thất bại, thử JSONP...', err.message);
+    // Fallback: JSONP (để tránh CORS nếu trang của bạn host ở nơi khác)
+    return loadDataJsonp();
   }
+}
+
+function loadDataJsonp(){
+  return new Promise((resolve, reject)=>{
+    const cbName = '__gs_cb_' + Date.now();
+    window[cbName] = function(response){
+      try {
+        if(response && response.success && Array.isArray(response.data)){
+          allData = response.data.map(r=>({
+            soThe:safeText(r.soThe),
+            soMay:safeText(r.soMay),
+            loaiMay:safeText(r.loaiMay),
+            viTri:safeText(r.viTri),
+            ghiChu:safeText(r.ghiChu),
+            daKiemKe:!!r.daKiemKe,
+            chonIn:!!r.chonIn,
+            ngayMua:r.ngayMua
+          }));
+          setStatus('Đã tải từ Sheet (JSONP) ('+allData.length+' dòng)');
+          renderTable();
+          resolve();
+        } else {
+          setStatus('Lỗi tải dữ liệu', false);
+          reject(new Error(response && response.message ? response.message : 'JSONP trả về không hợp lệ'));
+        }
+      } finally {
+        // cleanup
+        delete window[cbName];
+        script.remove();
+      }
+    };
+    const script = document.createElement('script');
+    script.src = GAS_URL + '?callback=' + cbName + '&_=' + Date.now();
+    script.onerror = function(e){
+      setStatus('Không thể tải dữ liệu (JSONP)', false);
+      delete window[cbName];
+      script.remove();
+      reject(new Error('JSONP load error'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 /* ======= Render bảng ======= */
@@ -146,9 +196,6 @@ function renderTable(){
     tbody.appendChild(tr);
   });
 }
-
-/* escape html minimal */
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* ======= Event trong bảng ======= */
 tbody.addEventListener('click',e=>{
@@ -252,28 +299,48 @@ document.getElementById('btnExport').onclick=()=>{
   XLSX.writeFile(wb,'DanhSachMay.xlsx');
 };
 
-/* ======= Đồng bộ Google Sheet ======= */
+/* ======= Đồng bộ Google Sheet =======
+   Sử dụng JSONP "save=1&data=encodeURIComponent(JSON.stringify(...))"
+   vì POST từ trang khác có thể bị CORS.
+*/
 document.getElementById('btnSync').onclick=async()=>{
+  if(!confirm('Bạn muốn đồng bộ toàn bộ dữ liệu hiện có lên Google Sheet? (ghi đè dữ liệu trên sheet)')) return;
   setStatus('Đang đồng bộ...');
   try{
-    const res=await fetch(GAS_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(allData)
-    });
-    const j=await res.json();
-    if(j.success){
-      setStatus('Đã đồng bộ '+j.written+' dòng');
-      alert('Đồng bộ thành công!');
-      loadData();
-    }else{
-      setStatus('Lỗi server',false);
-      alert(j.message||'Lỗi server');
-    }
+    const payload = allData;
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    // tạo callback
+    const cbName = '__gs_save_cb_' + Date.now();
+    window[cbName] = function(response){
+      try{
+        if(response && response.success){
+          setStatus('Đã đồng bộ '+(response.written||0)+' dòng');
+          alert('Đồng bộ thành công!');
+          // tải lại dữ liệu thực tế từ sheet
+          loadData();
+        } else {
+          setStatus('Lỗi server', false);
+          alert('Lỗi server: ' + (response && response.message ? response.message : 'Không xác định'));
+        }
+      } finally {
+        delete window[cbName];
+        script.remove();
+      }
+    };
+    const script = document.createElement('script');
+    // dùng JSONP save (GAS xử lý param save=1 & data=...)
+    script.src = GAS_URL + '?save=1&callback=' + cbName + '&data=' + encoded + '&_=' + Date.now();
+    script.onerror = function(){
+      delete window[cbName];
+      script.remove();
+      setStatus('Lỗi kết nối khi ghi', false);
+      alert('Lỗi kết nối khi ghi (JSONP). Hãy kiểm tra lại URL web app và quyền truy cập (Anyone).');
+    };
+    document.head.appendChild(script);
   }catch(err){
     console.error(err);
-    setStatus('Lỗi kết nối',false);
-    alert('Lỗi kết nối: '+err.message);
+    setStatus('Lỗi nội bộ', false);
+    alert('Lỗi nội bộ: ' + err.message);
   }
 };
 
@@ -287,15 +354,20 @@ document.getElementById('btnPrint').onclick=()=>{
   const w=window.open('','_blank');
   w.document.write('<html><head><title>In Tem QR</title><style>body{font-family:Arial;margin:0;padding:0} .tem{width:48%;height:180px;margin:1%;float:left;border:1px solid #000;padding:4px;box-sizing:border-box;text-align:center;} canvas{margin-top:8px}</style></head><body>');
   printData.forEach(r=>{
-    w.document.write('<div class="tem"><b>Số thẻ:</b>'+r.soThe+'<br><b>Số máy:</b>'+r.soMay+'<br><b>Ngày mua:</b>'+r.ngayMua+'<div id="qr_'+r.soThe+'"></div></div>');
+    const safe = (r.soThe || ('item'+Math.random().toString(36).slice(2,8)));
+    w.document.write('<div class="tem"><b>Số thẻ:</b>'+escapeHtml(r.soThe)+'<br><b>Số máy:</b>'+escapeHtml(r.soMay)+'<br><b>Ngày mua:</b>'+escapeHtml(r.ngayMua||'')+'<div id="qr_'+safe+'"></div></div>');
   });
   w.document.write('</body></html>');
   w.document.close();
-  printData.forEach(r=>{
-    const qrDiv=w.document.getElementById('qr_'+r.soThe);
-    new QRCode(qrDiv, {text:r.soThe,width:80,height:80});
-  });
-  w.focus(); w.print();
+  // tạo QR sau khi nội dung sẵn
+  w.onload = function(){
+    printData.forEach(r=>{
+      const safe = (r.soThe || ('item'+Math.random().toString(36).slice(2,8)));
+      const qrDiv = w.document.getElementById('qr_'+safe);
+      if(qrDiv) new QRCode(qrDiv, {text: r.soThe || '', width:80, height:80});
+    });
+    w.focus(); w.print();
+  };
 };
 
 /* ======= Load khi mở ======= */
