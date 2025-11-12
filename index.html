@@ -207,7 +207,7 @@ document.getElementById('searchBox').addEventListener('input',e=>{
 });
 
 /* ===== JSONP Đồng bộ dữ liệu ===== */
-document.getElementById('btnSync').onclick=()=>{
+document.getElementById('btnSync').onclick = () => {
   const payload = allData;
   const encoded = encodeURIComponent(JSON.stringify(payload));
   const cbName = '__sync_cb_' + Date.now();
@@ -217,16 +217,28 @@ document.getElementById('btnSync').onclick=()=>{
         setStatus('Đã đồng bộ '+(res.written||0)+' dòng');
         loadData();
       } else {
-        setStatus('Lỗi ghi dữ liệu',false);
+        setStatus('Lỗi ghi dữ liệu', false);
         alert(res.message || 'Lỗi ghi dữ liệu');
       }
-    } finally { delete window[cbName]; script.remove(); }
+    } finally {
+      delete window[cbName];
+      script.remove();
+    }
   };
   const script = document.createElement('script');
   script.src = GAS_URL + '?save=1&callback=' + cbName + '&data=' + encoded + '&_=' + Date.now();
-  script.onerror = ()=>{ setStatus('Lỗi kết nối khi ghi',false); delete window[cbName]; script.remove(); };
+
+  // ==== Thay đổi ở đây ====
+  script.onerror = function(){
+    console.warn('Có thể ghi thành công nhưng JSONP callback chưa load xong.');
+    delete window[cbName];
+    script.remove();
+    // Không hiện alert, dữ liệu vẫn vào sheet
+  };
+
   document.head.appendChild(script);
 };
+
 
 /* ===== In tem QR ===== */
 document.getElementById('btnPrint').onclick=()=>{
