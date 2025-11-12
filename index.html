@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📋 Kiểm kê máy may - Full</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📋 Kiểm kê máy may - Sync & QR</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
 body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f4f6f8}
@@ -17,7 +17,7 @@ header{background:#0b74d1;color:#fff;padding:12px 16px;font-size:18px}
 .note{padding:8px 12px;color:#666;font-size:13px}
 .table-wrap{padding:12px;overflow:auto}
 table{width:100%;border-collapse:collapse;background:#fff}
-th,td{border:1px solid #ddd;padding:6px;text-align:center;word-break:break-word;font-size:13px}
+th,td{border:1px solid #ddd;padding:6px;text-align:center;word-break:break-word}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background: #ffeaa7 !important}
 /* modal */
@@ -31,22 +31,23 @@ tr.highlight{background: #ffeaa7 !important}
 </head>
 <body>
 
-<header>📋 Kiểm kê máy may — Full</header>
+<header>📋 Kiểm kê máy may — QR + In tem + Đồng bộ Google Sheet</header>
 
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
   <button id="btnImport" class="ghost">📂 Nhập Excel</button>
   <button id="btnExport">💾 Xuất Excel</button>
   <button id="btnAdd">➕ Thêm</button>
-  <button id="btnSync">☁️ Đồng bộ Google Sheet</button>
+  <button id="btnSync">☁️ Đồng bộ Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
-  <button id="btnPrintQR">🖨️ In tem QR</button>
-  <label><input type="checkbox" id="filterChecked"/> Chỉ hiển thị đã kiểm kê</label>
+  <button id="btnPrint">🖨 In tem QR</button>
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
   <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none" />
 </div>
 
-<div class="note">Ghi chú: Khi GAS thất bại, web tự fallback về data.json.</div>
+<div class="note">
+Ghi chú: Checkbox "Đã kiểm kê" để theo dõi, checkbox "Chọn để in" để in QR. Ngày mua hiển thị dd/mm/yyyy. 
+</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -54,13 +55,13 @@ tr.highlight{background: #ffeaa7 !important}
       <tr>
         <th>STT</th>
         <th>Chọn để in</th>
-        <th>Đã kiểm kê</th>
         <th>Số thẻ</th>
         <th>Số máy</th>
         <th>Loại máy</th>
         <th>Vị trí</th>
-        <th>Ngày mua</th>
         <th>Ghi chú</th>
+        <th>Đã kiểm kê</th>
+        <th>Ngày mua</th>
         <th>Hành động</th>
       </tr>
     </thead>
@@ -76,9 +77,9 @@ tr.highlight{background: #ffeaa7 !important}
     <label>Số máy</label><input id="m_soMay" />
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
-    <label>Ngày mua</label><input id="m_ngayMua" type="date"/>
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <label><input type="checkbox" id="m_daKiemKe"/> Đã kiểm kê</label>
+    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
+    <label>Ngày mua</label><input type="date" id="m_ngayMua" />
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
@@ -90,253 +91,253 @@ tr.highlight{background: #ffeaa7 !important}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxma15HtD6m0MdVDrl8fXtL2jFOLPywF4_OGdVMgniVRhJSEEWLiy96lACDaYrjz08/exec'; // <== Thay URL deploy GAS
+/* ====== CẤU HÌNH ====== */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw3S0botMbBfzxqwXCRwBkKZI6Gu6QijJNUABHoTQE3LJxnJleb2pFA5et5sThjOW6k/exec'; 
 const DATA_JSON = 'data.json';
+
+/* ====== TRẠNG THÁI & DỮ LIỆU ====== */
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
-let allData = [], editingIndex = null;
+let allData = [];
+let editingIndex = null;
 
+/* ====== HỖ TRỢ ====== */
 function setStatus(text, ok=true){
-  statusEl.innerText = 'Trạng thái: '+text;
-  statusEl.style.color=ok?'#0b74d1':'#c0392b';
+  statusEl.innerText = 'Trạng thái: ' + text;
+  statusEl.style.color = ok ? '#0b74d1' : '#c0392b';
 }
-function safeText(v){ return (v==null)?'':String(v); }
-function safeId(s){ return 'qr_'+String(s).replace(/[^\w\-]/g,'_'); }
-function formatDate(d){ if(!d) return ''; if(d instanceof Date) return d.toLocaleDateString('vi-VN'); return d; }
-function parseDate(v){ if(!v) return null; const d=new Date(v); return isNaN(d)?null:d; }
 
+function safeText(v){ return (v===null||v===undefined)?'':String(v); }
+
+function formatDate(d){
+  if(!d) return '';
+  const date = new Date(d);
+  const dd = String(date.getDate()).padStart(2,'0');
+  const mm = String(date.getMonth()+1).padStart(2,'0');
+  const yyyy = date.getFullYear();
+  return dd+'/'+mm+'/'+yyyy;
+}
+
+/* ====== Load dữ liệu từ GAS / fallback data.json ====== */
 async function loadData(){
   setStatus('Đang tải dữ liệu...');
-  try {
+  try{
     const res = await fetch(GAS_URL);
+    if(!res.ok) throw new Error('GAS trả lỗi '+res.status);
     const j = await res.json();
-    if(j.success && Array.isArray(j.data)){
+    if(j && j.success && Array.isArray(j.data)){
       allData = j.data.map(r=>({
         soThe: safeText(r.soThe),
         soMay: safeText(r.soMay),
         loaiMay: safeText(r.loaiMay),
         viTri: safeText(r.viTri),
         ghiChu: safeText(r.ghiChu),
-        daKiemKe: !!r.daKiemKe,
-        ngayMua: parseDate(r.ngayMua)
+        daKiemKe: r.daKiemKe===true,
+        ngayMua: r.ngayMua ? new Date(r.ngayMua) : null,
+        inTem: false
       }));
       setStatus('Đã tải từ Google Sheet ('+allData.length+' dòng)');
-      renderTable(); return;
-    }
-    throw new Error('Dữ liệu GAS không hợp lệ');
-  } catch(e){
-    console.warn('Load GAS thất bại:',e);
-    try{
-      const res2=await fetch(DATA_JSON+'?_='+Date.now());
-      const arr=await res2.json();
-      allData=arr.map(r=>({
-        soThe: safeText(r.soThe),
-        soMay: safeText(r.soMay),
-        loaiMay: safeText(r.loaiMay),
-        viTri: safeText(r.viTri),
-        ghiChu: safeText(r.ghiChu),
-        daKiemKe: !!r.daKiemKe,
-        ngayMua: parseDate(r.ngayMua)
-      }));
-      setStatus('Đã tải dự phòng từ data.json ('+allData.length+' dòng)');
       renderTable();
-    }catch(e2){ console.error('Load data.json thất bại:',e2); setStatus('Không thể tải dữ liệu',false); allData=[]; renderTable(); }
+      return;
+    } else throw new Error('Dữ liệu không hợp lệ');
+  }catch(err){
+    console.warn('Load GAS thất bại:',err);
+    setStatus('Không thể tải dữ liệu',false);
   }
 }
 
+/* ====== Render bảng ====== */
 function renderTable(){
   tbody.innerHTML='';
   allData.forEach((r,idx)=>{
-    const tr=document.createElement('tr');
+    const tr = document.createElement('tr');
     tr.dataset.index=idx;
-    const idChkPrint = 'chkPrint_'+idx;
+    tr.dataset.id=r.soThe||'';
     tr.innerHTML=`
       <td>${idx+1}</td>
-      <td><input type="checkbox" class="chkPrint" id="${idChkPrint}"/></td>
-      <td><input type="checkbox" class="chkDaKiemKe" ${r.daKiemKe?'checked':''}/></td>
+      <td><input type="checkbox" class="chkPrint" ${r.inTem?'checked':''}></td>
       <td>${escapeHtml(r.soThe)}</td>
       <td>${escapeHtml(r.soMay)}</td>
       <td>${escapeHtml(r.loaiMay)}</td>
       <td>${escapeHtml(r.viTri)}</td>
-      <td>${formatDate(r.ngayMua)}</td>
       <td>${escapeHtml(r.ghiChu)}</td>
+      <td><input type="checkbox" class="chkKiemKe" ${r.daKiemKe?'checked':''}></td>
+      <td>${r.ngayMua?formatDate(r.ngayMua):''}</td>
       <td>
         <button data-act="edit" data-i="${idx}">✏️</button>
-        <button data-act="del" data-i="${idx}">🗑️</button>
         <button data-act="qr" data-i="${idx}">🔗</button>
       </td>`;
     tbody.appendChild(tr);
   });
 }
 
-/* ===== Sự kiện bảng ===== */
-tbody.addEventListener('click',ev=>{
-  const btn=ev.target.closest('button'); if(!btn) return;
-  const act=btn.dataset.act; const i=Number(btn.dataset.i);
-  if(act==='edit'){ openEditModal(i); }
-  else if(act==='del'){ if(confirm('Xóa dòng '+allData[i].soThe+'?')){ allData.splice(i,1); renderTable(); } }
-  else if(act==='qr'){ const id=encodeURIComponent(allData[i].soThe); prompt('Link QR:', location.href.split('#')[0].split('?')[0]+'#'+id); }
-});
-tbody.addEventListener('change',ev=>{
-  if(ev.target.classList.contains('chkDaKiemKe')){
-    const idx = Number(ev.target.closest('tr').dataset.index);
-    allData[idx].daKiemKe = ev.target.checked;
+/* escape html */
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ====== Bảng: sự kiện checkbox ====== */
+tbody.addEventListener('change',e=>{
+  const tr = e.target.closest('tr');
+  const idx = Number(tr.dataset.index);
+  if(e.target.classList.contains('chkKiemKe')){
+    allData[idx].daKiemKe = e.target.checked;
+  }
+  if(e.target.classList.contains('chkPrint')){
+    allData[idx].inTem = e.target.checked;
   }
 });
 
-/* ===== Modal chỉnh sửa ===== */
-const modal = document.getElementById('editModal');
-const m_soThe = document.getElementById('m_soThe');
-const m_soMay = document.getElementById('m_soMay');
-const m_loaiMay = document.getElementById('m_loaiMay');
-const m_viTri = document.getElementById('m_viTri');
-const m_ghiChu = document.getElementById('m_ghiChu');
-const m_daKiemKe = document.getElementById('m_daKiemKe');
-const m_ngayMua = document.getElementById('m_ngayMua');
+/* ====== Bảng: sự kiện nút edit / qr ====== */
+tbody.addEventListener('click',e=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const act = btn.dataset.act;
+  const i = Number(btn.dataset.i);
+  if(act==='edit') openEditModal(i);
+  else if(act==='qr'){
+    const url = location.href.split('#')[0]+'#'+encodeURIComponent(allData[i].soThe);
+    prompt('Link QR (copy & in tem):',url);
+  }
+});
+
+/* ====== Modal chỉnh sửa ====== */
+const modal=document.getElementById('editModal');
+const m_soThe=document.getElementById('m_soThe');
+const m_soMay=document.getElementById('m_soMay');
+const m_loaiMay=document.getElementById('m_loaiMay');
+const m_viTri=document.getElementById('m_viTri');
+const m_ghiChu=document.getElementById('m_ghiChu');
+const m_daKiemKe=document.getElementById('m_daKiemKe');
+const m_ngayMua=document.getElementById('m_ngayMua');
 const cancelBtn=document.getElementById('cancelBtn');
 const saveBtn=document.getElementById('saveBtn');
 
 function openEditModal(idx){
-  editingIndex=(typeof idx==='number')?idx:null;
+  editingIndex=typeof idx==='number'?idx:null;
   if(editingIndex===null){
-    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value=''; m_daKiemKe.checked=false; m_ngayMua.value='';
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
+    m_daKiemKe.checked=false; m_ngayMua.value='';
   }else{
     const r=allData[editingIndex];
-    m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
-    m_daKiemKe.checked=!!r.daKiemKe;
-    m_ngayMua.value=r.ngayMua?r.ngayMua.toISOString().slice(0,10):'';
+    m_soThe.value=r.soThe||'';
+    m_soMay.value=r.soMay||'';
+    m_loaiMay.value=r.loaiMay||'';
+    m_viTri.value=r.viTri||'';
+    m_ghiChu.value=r.ghiChu||'';
+    m_daKiemKe.checked=r.daKiemKe;
+    m_ngayMua.value=r.ngayMua?r.ngayMua.toISOString().split('T')[0]:'';
   }
-  modal.style.display='flex'; m_soThe.focus();
+  modal.style.display='flex';
+  m_soThe.focus();
 }
-cancelBtn.onclick=()=>{ modal.style.display='none'; editingIndex=null; };
+
+cancelBtn.onclick=()=>{modal.style.display='none'; editingIndex=null;};
+
 saveBtn.onclick=()=>{
   const obj={
-    soThe:m_soThe.value.trim(), soMay:m_soMay.value.trim(), loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(), ghiChu:m_ghiChu.value.trim(),
+    soThe:m_soThe.value.trim(),
+    soMay:m_soMay.value.trim(),
+    loaiMay:m_loaiMay.value.trim(),
+    viTri:m_viTri.value.trim(),
+    ghiChu:m_ghiChu.value.trim(),
     daKiemKe:m_daKiemKe.checked,
-    ngayMua:m_ngayMua.value?new Date(m_ngayMua.value):null
+    ngayMua:m_ngayMua.value?new Date(m_ngayMua.value):null,
+    inTem:false
   };
-  if(!obj.soThe){ alert('Số thẻ không được để trống'); return; }
-  if(editingIndex===null) allData.push(obj); else allData[editingIndex]=obj;
-  modal.style.display='none'; editingIndex=null; renderTable();
+  if(!obj.soThe){alert('Số thẻ không được để trống');return;}
+  if(editingIndex===null) allData.push(obj);
+  else allData[editingIndex]=obj;
+  modal.style.display='none';
+  editingIndex=null;
+  renderTable();
 };
 
-/* ===== Nút điều khiển ===== */
+/* ====== Nút điều khiển ====== */
 document.getElementById('btnAdd').addEventListener('click',()=>openEditModal(null));
-document.getElementById('btnExport').addEventListener('click',exportExcel);
-document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('btnRefresh').addEventListener('click',loadData);
-document.getElementById('filterChecked').addEventListener('change',()=>filterChecked());
-document.getElementById('fileInput').addEventListener('change',e=>{
+
+/* Import/Export Excel */
+const fileInput=document.getElementById('fileInput');
+document.getElementById('btnImport').addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;
   const reader=new FileReader();
-  reader.onload=ev=>{
+  reader.onload=(ev)=>{
     const data=new Uint8Array(ev.target.result);
     const wb=XLSX.read(data,{type:'array'});
     const sheet=wb.Sheets[wb.SheetNames[0]];
     const arr=XLSX.utils.sheet_to_json(sheet);
     allData=arr.map(r=>({
       soThe:safeText(r.soThe||r['Số thẻ']||r['MaMay']||r['Ma']),
-      soMay:safeText(r.soMay||r['Số máy']||r['SoMay']||''),
+      soMay:safeText(r.soMay||r['Số máy']||r['SoMay']),
       loaiMay:safeText(r.loaiMay||r['Loại máy']||''),
       viTri:safeText(r.viTri||r['Vị trí']||''),
       ghiChu:safeText(r.ghiChu||r['Ghi chú']||''),
       daKiemKe:!!r.daKiemKe,
-      ngayMua:parseDate(r.ngayMua)
+      ngayMua:r.ngayMua?r.ngayMua:new Date(),
+      inTem:false
     }));
     renderTable();
   };
   reader.readAsArrayBuffer(f);
 });
 
-/* ===== Export Excel ===== */
-function exportExcel(){
-  const ws=XLSX.utils.json_to_sheet(allData.map(r=>({
-    ...r, ngayMua:r.ngayMua?formatDate(r.ngayMua):''
-  })));
+document.getElementById('btnExport').addEventListener('click',()=>{
+  const ws=XLSX.utils.json_to_sheet(allData);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'DanhSachMay');
   XLSX.writeFile(wb,'DanhSachMay.xlsx');
-}
+});
 
-/* ===== Đồng bộ GAS ===== */
-async function syncToSheet(){
-  setStatus('Đang đồng bộ Google Sheet...');
+/* ====== Đồng bộ Google Sheet ====== */
+document.getElementById('btnSync').addEventListener('click',async ()=>{
+  setStatus('Đang đồng bộ lên Google Sheet...');
   try{
-    const res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(allData)});
+    const res=await fetch(GAS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(allData)
+    });
     const txt=await res.text();
-    let parsed=null; try{ parsed=txt?JSON.parse(txt):null; }catch(e){ parsed=null; }
-    if(!res.ok){ setStatus('Thất bại HTTP '+res.status,false); alert('Lỗi: '+txt); return; }
-    if(parsed && parsed.success){ setStatus('Đã đồng bộ'); alert('Đồng bộ thành công'); setTimeout(()=>loadData(),500); }
-    else{ setStatus('Server trả về'); alert('Server: '+txt); }
-  }catch(err){ console.error(err); setStatus('Lỗi kết nối',false); alert('Không thể kết nối: '+err.message); }
-}
-document.getElementById('btnSync').addEventListener('click',syncToSheet);
+    let parsed=null;
+    try{parsed=JSON.parse(txt);}catch(e){parsed=null;}
+    if(!res.ok){setStatus('HTTP '+res.status,false); alert('Lỗi: '+txt); return;}
+    if(parsed && parsed.success){setStatus('Đã đồng bộ '+allData.length+' dòng'); alert('Đồng bộ thành công!'); loadData();}
+    else alert('Server trả: '+txt);
+  }catch(err){console.error(err); setStatus('Lỗi kết nối',false); alert('Không thể kết nối: '+err.message);}
+});
 
-/* ===== Filter checkbox ===== */
-function filterChecked(){
-  const only= document.getElementById('filterChecked').checked;
-  Array.from(tbody.children).forEach(tr=>{
-    const idx=Number(tr.dataset.index);
-    if(only && !allData[idx].daKiemKe) tr.style.display='none';
-    else tr.style.display='';
-  });
-}
-
-/* ===== Highlight QR ===== */
-function getQRfromUrl(){ const u=new URL(window.location.href); let c=u.searchParams.get('q'); if(!c)c=decodeURIComponent((window.location.hash||'').replace(/^#/,'')||null); return c?String(c):null; }
-function attemptHighlight(code){
-  if(!code) return; let tries=0;
-  const i=setInterval(()=>{
-    const idx=allData.findIndex(d=>d.soThe===code||d.soMay===code);
-    if(idx>=0){
-      const rows=document.querySelectorAll('#dataTable tbody tr');
-      rows.forEach(r=>r.classList.remove('highlight'));
-      const target=rows[idx]; if(target){target.classList.add('highlight'); target.scrollIntoView({behavior:'smooth',block:'center'});}
-      clearInterval(i);
-    }else if(++tries>12) clearInterval(i);
-  },250);
-}
-
-/* ===== Print QR Tem ===== */
-document.getElementById('btnPrintQR').addEventListener('click',printSelected);
-function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function printSelected(){
-  const sel=Array.from(tbody.querySelectorAll('.chkPrint')).map((chk,i)=>chk.checked?allData[i]:null).filter(Boolean);
-  if(sel.length===0){ alert('Chọn ít nhất 1 dòng để in'); return; }
-  const w=window.open('','_blank');
-  w.document.write('<html><head><title>In tem QR</title><style>body{font-family:sans-serif} .tem{border:1px solid #000;padding:8px;margin:4px;display:inline-block;width:45%;height:120px;text-align:center;}</style></head><body>');
-  sel.forEach(r=>{
-    const id = safeId(r.soThe);
-    w.document.write('<div class="tem">');
-    w.document.write('<div>Số thẻ: '+escapeHtml(r.soThe)+'</div>');
-    w.document.write('<div>Số máy: '+escapeHtml(r.soMay)+'</div>');
-    w.document.write(`<div id="${id}"></div>`);
-    w.document.write('</div>');
-  });
-  w.document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>');
-  sel.forEach(r=>{
-    const id = safeId(r.soThe);
-    const qrText = JSON.stringify(r.soThe);
-    w.document.write(`new QRCode(document.getElementById('${id}'), { text: ${qrText}, width:64, height:64 });`);
-  });
-  w.document.write('</script></body></html>');
-  w.document.close();
-}
-
-/* ===== Search ===== */
+/* ====== Search ====== */
 document.getElementById('searchBox').addEventListener('input',e=>{
   const v=e.target.value.toLowerCase();
   Array.from(tbody.children).forEach(tr=>{
     const idx=Number(tr.dataset.index);
     const r=allData[idx];
-    if(r.soThe.toLowerCase().includes(v)||r.soMay.toLowerCase().includes(v)) tr.style.display='';
-    else tr.style.display='none';
+    const text=(r.soThe+' '+r.soMay).toLowerCase();
+    tr.style.display=text.includes(v)?'':'none';
   });
 });
 
-loadData();
-attemptHighlight(getQRfromUrl());
+/* ====== In tem QR ====== */
+document.getElementById('btnPrint').addEventListener('click',()=>{
+  const selected=allData.filter(r=>r.inTem);
+  if(selected.length===0){alert('Chưa chọn dòng nào để in'); return;}
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>In tem QR</title><style>body{font-family:Arial;margin:0;padding:10px} .tem{width:180px;height:100px;border:1px solid #000;display:inline-block;margin:5px;padding:5px;text-align:center;}</style></head><body>');
+  selected.forEach(r=>{
+    w.document.write('<div class="tem">');
+    w.document.write('<b>'+escapeHtml(r.soThe)+'</b><br>');
+    w.document.write('<b>'+escapeHtml(r.soMay)+'</b><br>');
+    const qrDiv='qrd'+Math.random().toString(36).substring(2,8);
+    w.document.write('<div id="'+qrDiv+'"></div>');
+    w.document.write('</div>');
+    setTimeout(()=>{new QRCode(w.document.getElementById(qrDiv),{text:r.soThe,width:80,height:80});},100);
+  });
+  w.document.write('</body></html>');
+  w.document.close();
+});
+
+/* ====== Khởi động ====== */
+window.addEventListener('load',()=>loadData());
 </script>
 </body>
 </html>
