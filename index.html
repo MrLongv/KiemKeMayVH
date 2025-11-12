@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📋 Kiểm kê máy may - Sync JSONP</title>
+<title>📋 Kiểm kê máy may - Sync 2025</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
@@ -18,6 +18,7 @@ table{width:100%;border-collapse:collapse;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;word-break:break-word}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
+/* modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
 .modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%}
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -27,7 +28,7 @@ tr.highlight{background:#ffeaa7 !important}
 </style>
 </head>
 <body>
-<header>📋 Kiểm kê máy may — Sync JSONP</header>
+<header>📋 Kiểm kê máy may — Sync 2025</header>
 
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
@@ -81,51 +82,14 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-/* ======= Cấu hình ======= */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzIHjo9oqT09hg_4iPmAp06rGlIUzjAZKKting9r2zAAw25tO9bPAcSwUrNg4wShgKe/exec'; // <-- đổi thành WebApp URL của bạn
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzIHjo9oqT09hg_4iPmAp06rGlIUzjAZKKting9r2zAAw25tO9bPAcSwUrNg4wShgKe/exec'; // <-- thay bằng URL Web App
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
-let allData = [], editingIndex = null;
+let allData = [], editingIndex=null;
 
-function setStatus(txt, ok=true){
-  statusEl.innerText='Trạng thái: '+txt; 
-  statusEl.style.color = ok?'#0b74d1':'#c0392b';
-}
+/* ======= Utils ======= */
+function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt; statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return (v===null||v===undefined)?'':String(v);}
-
-/* ======= Load dữ liệu từ Sheet (JSONP) ======= */
-function loadData(){
-  setStatus('Đang tải dữ liệu...');
-  const cbName = '__gs_load_cb_' + Date.now();
-  window[cbName] = function(response){
-    try{
-      if(response && response.success && Array.isArray(response.data)){
-        allData = response.data.map(r=>({
-          soThe: safeText(r.soThe),
-          soMay: safeText(r.soMay),
-          loaiMay: safeText(r.loaiMay),
-          viTri: safeText(r.viTri),
-          ghiChu: safeText(r.ghiChu),
-          daKiemKe: !!r.daKiemKe,
-          chonIn: !!r.chonIn,
-          ngayMua: r.ngayMua || ''
-        }));
-        setStatus('Đã tải ' + allData.length + ' dòng');
-        renderTable();
-      } else {
-        setStatus('Lỗi tải dữ liệu', false);
-      }
-    } finally { delete window[cbName]; script.remove(); }
-  };
-  const script = document.createElement('script');
-  script.src = GAS_URL+'?callback='+cbName+'&_='+Date.now();
-  script.onerror = function(){
-    delete window[cbName];
-    script.remove();
-    setStatus('Lỗi tải dữ liệu', false);
-  };
-  document.head.appendChild(script);
-}
 
 /* ======= Render bảng ======= */
 function renderTable(){
@@ -151,28 +115,72 @@ function renderTable(){
     tbody.appendChild(tr);
   });
 }
-
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-/* ======= Bảng - sự kiện ======= */
-tbody.addEventListener('click', e=>{
-  const btn=e.target.closest('button');
-  if(!btn) return;
-  const act=btn.dataset.act, i=Number(btn.dataset.i);
-  if(act==='edit') openEditModal(i);
-  else if(act==='qr'){
-    const code=encodeURIComponent(allData[i].soThe||'');
-    const url=location.href.split('#')[0]+'#'+code;
-    prompt('Link QR (copy & in tem):', url);
-  }
-});
-tbody.addEventListener('change', e=>{
-  const tr=e.target.closest('tr'); const idx=Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
-  if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
-});
+/* ======= Tải dữ liệu JSONP ======= */
+function loadData(){
+  setStatus('Đang tải dữ liệu...');
+  const cbName = '__gs_cb_' + Date.now();
+  window[cbName] = function(response){
+    try {
+      if(response && response.success && Array.isArray(response.data)){
+        allData = response.data.map(r=>({
+          soThe: safeText(r.soThe),
+          soMay: safeText(r.soMay),
+          loaiMay: safeText(r.loaiMay),
+          viTri: safeText(r.viTri),
+          ghiChu: safeText(r.ghiChu),
+          daKiemKe: !!r.daKiemKe,
+          chonIn: !!r.chonIn,
+          ngayMua: r.ngayMua
+        }));
+        renderTable();
+        setStatus('Đã tải dữ liệu ('+allData.length+' dòng)');
+      } else {
+        setStatus('Lỗi server', false);
+        alert(response && response.message ? response.message : 'Lỗi server');
+      }
+    } finally {
+      delete window[cbName];
+      script.remove();
+    }
+  };
+  const script = document.createElement('script');
+  script.src = GAS_URL + '?callback=' + cbName + '&_=' + Date.now();
+  script.onerror = function(){
+    setStatus('Lỗi kết nối', false);
+    delete window[cbName];
+    script.remove();
+    alert('Lỗi kết nối khi tải dữ liệu JSONP. Hãy kiểm tra URL Web App và quyền truy cập (Anyone)');
+  };
+  document.head.appendChild(script);
+}
 
-/* ======= Modal ======= */
+/* ======= Đồng bộ dữ liệu POST ======= */
+async function syncData(){
+  setStatus('Đang đồng bộ...');
+  try{
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(allData)
+    });
+    const j = await res.json();
+    if(j.success){
+      setStatus('Đã đồng bộ '+(j.written||0)+' dòng');
+      loadData(); // reload data
+    } else {
+      setStatus('Lỗi server', false);
+      alert(j.message || 'Lỗi server khi ghi');
+    }
+  }catch(err){
+    console.error(err);
+    setStatus('Lỗi kết nối', false);
+    alert('Lỗi kết nối khi ghi: '+err.message);
+  }
+}
+
+/* ======= Modal chỉnh sửa ======= */
 const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe');
 const m_soMay=document.getElementById('m_soMay');
@@ -182,6 +190,21 @@ const m_ghiChu=document.getElementById('m_ghiChu');
 const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_chonIn=document.getElementById('m_chonIn');
 const m_ngayMua=document.getElementById('m_ngayMua');
+function openEditModal(idx){
+  editingIndex=(typeof idx==='number')?idx:null;
+  if(editingIndex===null){
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
+    m_daKiemKe.checked=m_chonIn.checked=false;
+    m_ngayMua.value='';
+  }else{
+    const r=allData[editingIndex];
+    m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay;
+    m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
+    m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
+    m_ngayMua.value=r.ngayMua ? new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10) : '';
+  }
+  modal.style.display='flex'; m_soThe.focus();
+}
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none';editingIndex=null;}
 document.getElementById('saveBtn').onclick=()=>{
@@ -199,24 +222,28 @@ document.getElementById('saveBtn').onclick=()=>{
   if(editingIndex===null) allData.push(obj); else allData[editingIndex]=obj;
   modal.style.display='none'; editingIndex=null; renderTable();
 };
-function openEditModal(idx){
-  editingIndex=(typeof idx==='number')?idx:null;
-  if(editingIndex===null){
-    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
-    m_daKiemKe.checked=m_chonIn.checked=false;
-    m_ngayMua.value='';
-  }else{
-    const r=allData[editingIndex];
-    m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay;
-    m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
-    m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
-    m_ngayMua.value=r.ngayMua ? new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10) : '';
+
+/* ======= Event bảng ======= */
+tbody.addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  if(!btn) return;
+  const act=btn.dataset.act, i=Number(btn.dataset.i);
+  if(act==='edit') openEditModal(i);
+  else if(act==='qr'){
+    const code=encodeURIComponent(allData[i].soThe||'');
+    const url=location.href.split('#')[0]+'#'+code;
+    prompt('Link QR (copy & in tem):',url);
   }
-  modal.style.display='flex'; m_soThe.focus();
-}
+});
+tbody.addEventListener('change',e=>{
+  const tr=e.target.closest('tr');
+  const idx=Number(tr.dataset.index);
+  if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
+  if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
+});
 
 /* ======= Search ======= */
-document.getElementById('searchBox').addEventListener('input', e=>{
+document.getElementById('searchBox').addEventListener('input',e=>{
   const v=e.target.value.toLowerCase();
   Array.from(tbody.children).forEach(tr=>{
     const idx=Number(tr.dataset.index); const r=allData[idx];
@@ -225,43 +252,12 @@ document.getElementById('searchBox').addEventListener('input', e=>{
   });
 });
 
-/* ======= Đồng bộ JSONP ======= */
-document.getElementById('btnSync').onclick=()=>{
-  setStatus('Đang đồng bộ...');
-  try{
-    const payload = allData;
-    const encoded = encodeURIComponent(JSON.stringify(payload));
-    const cbName = '__gs_save_cb_' + Date.now();
-    window[cbName] = function(response){
-      try{
-        if(response && response.success){
-          setStatus('Đã đồng bộ '+(response.written||0)+' dòng');
-          loadData();
-        } else {
-          setStatus('Lỗi server', false);
-          alert('Lỗi server: '+(response && response.message?response.message:''));
-        }
-      } finally { delete window[cbName]; script.remove(); }
-    };
-    const script = document.createElement('script');
-    script.src = GAS_URL+'?save=1&callback='+cbName+'&data='+encoded+'&_='+Date.now();
-    script.onerror = function(){
-      delete window[cbName]; script.remove();
-      setStatus('Lỗi kết nối khi ghi', false);
-    };
-    document.head.appendChild(script);
-  }catch(err){
-    console.error(err);
-    setStatus('Lỗi nội bộ', false);
-  }
-};
-
-/* ======= Tải lại dữ liệu ======= */
+/* ======= Nút ======= */
 document.getElementById('btnRefresh').onclick = loadData;
+document.getElementById('btnSync').onclick = syncData;
 
-/* ======= In tem QR ======= */
 document.getElementById('btnPrint').onclick=()=>{
-  const printData = allData.filter(r=>r.chonIn);
+  const printData=allData.filter(r=>r.chonIn);
   if(printData.length===0){alert('Chọn ít nhất 1 dòng để in'); return;}
   const w=window.open('','_blank');
   w.document.write('<html><head><title>In Tem QR</title><style>body{font-family:Arial;margin:0;padding:0} .tem{width:48%;height:180px;margin:1%;float:left;border:1px solid #000;padding:4px;box-sizing:border-box;text-align:center;} canvas{margin-top:8px}</style></head><body>');
@@ -272,7 +268,7 @@ document.getElementById('btnPrint').onclick=()=>{
   w.document.close();
   printData.forEach(r=>{
     const qrDiv=w.document.getElementById('qr_'+r.soThe);
-    new QRCode(qrDiv,{text:r.soThe,width:80,height:80});
+    new QRCode(qrDiv, {text:r.soThe,width:80,height:80});
   });
   w.focus(); w.print();
 };
