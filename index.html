@@ -1,261 +1,229 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📋 Kiểm kê máy may - Online Sync</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📋 Kiểm kê máy may</title>
 <style>
-  body { font-family: Arial; margin: 20px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 10px; table-layout: fixed; }
-  th, td { border: 1px solid #333; padding: 6px; text-align: center; word-wrap: break-word; }
-  th { background: #eee; }
-  .highlight { background-color: yellow !important; }
-  #qrInput { width: 250px; margin-bottom: 10px; font-size: 16px; }
-  button { margin: 3px; padding: 5px 10px; cursor: pointer; }
-  .qr { width: 60px; height: 60px; margin: auto; }
-  .status { margin-left:10px; font-size: 14px; color:#555; }
-  .topbar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-  .note { color:#666; font-size:13px; }
-
-  /* Popup */
-  .modal { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4); }
-  .modal-content { background:#fff; border-radius:8px; padding:16px; width:420px; margin:8% auto; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
-  .modal-content label{display:block;margin-top:8px;font-weight:600;}
-  .modal-content input, .modal-content textarea{width:100%;padding:6px;margin-top:4px;}
-  .modal-buttons{text-align:right;margin-top:12px;}
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background: #0078d7;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-size: 20px;
+}
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+#controls button {
+  background: #0078d7;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#controls button:hover {
+  background: #005fa3;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+th {
+  background: #0078d7;
+  color: white;
+}
+tr.highlight {
+  background: yellow !important;
+}
+input[type="text"] {
+  padding: 6px;
+  width: 160px;
+}
+@media (max-width: 768px) {
+  table { font-size: 13px; }
+  #controls { flex-direction: column; align-items: stretch; }
+}
 </style>
 </head>
 <body>
+<header>📋 Kiểm kê Máy May</header>
 
-<h2>📋 Danh sách máy may (Load từ data.json + Sync Google Sheet)</h2>
-
-<div class="topbar">
-  <input type="text" id="qrInput" placeholder="🔍 Nhập hoặc quét Số thẻ" autofocus>
-  <button id="addBtn">➕ Thêm</button>
-  <button id="uploadBtn">☁️ Đồng bộ Google Sheet</button>
-  <button id="downloadBtn">💾 Xuất Excel</button>
-  <button id="importBtn">📂 Nhập Excel</button>
-  <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none">
-  <span class="status" id="syncStatus">Trạng thái: offline</span>
-</div>
-<p class="note">📘 File <code>data.json</code> nằm cùng thư mục với <code>index.html</code>. Khi mở web, dữ liệu sẽ tải từ file này.</p>
-
-<table id="machineTable">
-  <thead>
-    <tr>
-      <th>STT</th>
-      <th>QR</th>
-      <th>Số thẻ</th>
-      <th>Số máy</th>
-      <th>Loại máy</th>
-      <th>Vị trí</th>
-      <th>Ghi chú</th>
-      <th>Hành động</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<!-- Popup chỉnh sửa -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <h3>✏️ Chỉnh sửa thông tin máy</h3>
-    <label>Số thẻ:</label><input id="editSoThe">
-    <label>Số máy:</label><input id="editSoMay">
-    <label>Loại máy:</label><input id="editLoaiMay">
-    <label>Vị trí:</label><input id="editViTri">
-    <label>Ghi chú:</label><textarea id="editGhiChu" rows="3"></textarea>
-    <div class="modal-buttons">
-      <button id="cancelEdit">Hủy</button>
-      <button id="saveEdit">Cập nhật</button>
-    </div>
-  </div>
+<div id="controls">
+  <input type="text" id="searchBox" placeholder="🔍 Tìm theo số thẻ hoặc số máy" />
+  <button onclick="exportExcel()">⬇️ Xuất Excel</button>
+  <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none" />
+  <button onclick="document.getElementById('fileInput').click()">⬆️ Nhập Excel</button>
+  <button onclick="addRow()">➕ Thêm dòng</button>
+  <button onclick="syncToSheet()">🔄 Đồng bộ Google Sheet</button>
 </div>
 
+<div style="overflow-x:auto;">
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Số Thẻ</th>
+        <th>Số Máy</th>
+        <th>Loại Máy</th>
+        <th>Vị Trí</th>
+        <th>Ghi Chú</th>
+        <th>Hành Động</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
-const GITHUB_BASE = 'https://mrlongv.github.io/KiemKeMayVH/';
+const gasUrl = 'https://script.google.com/macros/s/AKfycbyV36oZEfMdC7Hc2EOqVL5r2A6qMPWvo5sU3qUdDhxbQ1hMPzwSYgdGnXPioOeZeWVs/exec';
+const localUrl = 'data.json';
+let allData = [];
 
-const qrInput = document.getElementById('qrInput');
-const tableBody = document.querySelector('#machineTable tbody');
-const syncStatus = document.getElementById('syncStatus');
-const uploadBtn = document.getElementById('uploadBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const importBtn = document.getElementById('importBtn');
-const importFile = document.getElementById('importFile');
-
-const modal = document.getElementById('editModal');
-let editingRow = null;
-
-// ---------- Load từ data.json ----------
-async function loadFromJson() {
+async function loadData() {
   try {
-    const res = await fetch('data.json?nocache=' + Date.now());
-    const data = await res.json();
-    tableBody.innerHTML = '';
-    data.forEach(d => addRow(d.soThe, d.soMay, d.loaiMay, d.viTri, d.ghiChu));
-    updateSTT(); generateQRs();
-    syncStatus.innerText = '✅ Đã tải từ data.json (' + data.length + ' dòng)';
-  } catch(err) {
-    syncStatus.innerText = '❌ Lỗi tải data.json';
-    console.error(err);
+    const res = await fetch(gasUrl + '?action=getData');
+    const json = await res.json();
+    if (!json.success) throw new Error('GAS trả lỗi');
+    allData = json.data;
+    renderTable(allData);
+    console.log('✅ Load từ Google Sheet');
+  } catch (err) {
+    console.warn('⚠️ GAS lỗi, thử data.json', err);
+    const res = await fetch(localUrl);
+    allData = await res.json();
+    renderTable(allData);
   }
 }
 
-// ---------- Thêm / sửa / xóa ----------
-function addRow(soThe, soMay, loaiMay, viTri, ghiChu){
-  const row = document.createElement('tr');
-  row.dataset.id = soThe || '';
-  row.innerHTML = `
-    <td></td>
-    <td class="qr"></td>
-    <td>${soThe || ''}</td>
-    <td>${soMay || ''}</td>
-    <td>${loaiMay || ''}</td>
-    <td>${viTri || ''}</td>
-    <td>${ghiChu || ''}</td>
-    <td>
-      <button class="editBtn">✏️</button>
-      <button class="deleteBtn">🗑️</button>
-    </td>
-  `;
-  tableBody.appendChild(row);
-}
-
-document.getElementById('addBtn').onclick = ()=>{
-  const soThe = prompt('Số thẻ:'); if(!soThe) return;
-  const soMay = prompt('Số máy:'); const loai = prompt('Loại máy:'); const viTri = prompt('Vị trí:'); const ghi = prompt('Ghi chú:');
-  addRow(soThe, soMay, loai, viTri, ghi); updateSTT(); generateQRs();
-};
-
-tableBody.addEventListener('click', e=>{
-  const btn = e.target.closest('button'); if(!btn) return;
-  const row = btn.closest('tr');
-  if(btn.classList.contains('deleteBtn')){
-    if(confirm('Xoá máy ' + row.dataset.id + '?')){ row.remove(); updateSTT(); }
-  }
-  if(btn.classList.contains('editBtn')){
-    editingRow = row;
-    const tds = row.querySelectorAll('td');
-    document.getElementById('editSoThe').value = tds[2].innerText;
-    document.getElementById('editSoMay').value = tds[3].innerText;
-    document.getElementById('editLoaiMay').value = tds[4].innerText;
-    document.getElementById('editViTri').value = tds[5].innerText;
-    document.getElementById('editGhiChu').value = tds[6].innerText;
-    modal.style.display = 'block';
-  }
-});
-document.getElementById('cancelEdit').onclick = ()=> modal.style.display = 'none';
-document.getElementById('saveEdit').onclick = ()=>{
-  if(!editingRow) return;
-  const tds = editingRow.querySelectorAll('td');
-  const soThe = document.getElementById('editSoThe').value.trim();
-  if(!soThe){ alert('Số thẻ không được để trống'); return; }
-  editingRow.dataset.id = soThe;
-  tds[2].innerText = soThe;
-  tds[3].innerText = document.getElementById('editSoMay').value;
-  tds[4].innerText = document.getElementById('editLoaiMay').value;
-  tds[5].innerText = document.getElementById('editViTri').value;
-  tds[6].innerText = document.getElementById('editGhiChu').value;
-  generateQRs(); modal.style.display = 'none';
-};
-
-// ---------- STT & QR ----------
-function updateSTT(){ tableBody.querySelectorAll('tr').forEach((r,i)=> r.children[0].innerText = i+1); }
-function generateQRs(){
-  tableBody.querySelectorAll('tr').forEach(row => {
-    const id = row.dataset.id || row.children[2].innerText;
-    row.dataset.id = id;
-    const qrCell = row.querySelector('.qr'); qrCell.innerHTML = '';
-    const url = GITHUB_BASE + '#' + encodeURIComponent(id);
-    new QRCode(qrCell, { text: url, width:60, height:60 });
+function renderTable(data) {
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML = '';
+  data.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.soThe || ''}</td>
+      <td>${r.soMay || ''}</td>
+      <td>${r.loaiMay || ''}</td>
+      <td>${r.viTri || ''}</td>
+      <td>${r.ghiChu || ''}</td>
+      <td>
+        <button onclick="editRow(${i})">✏️</button>
+        <button onclick="deleteRow(${i})">🗑️</button>
+      </td>`;
+    tbody.appendChild(tr);
   });
+  highlightFromQR();
 }
 
-// ---------- Tìm & highlight ----------
-function highlightRow(val){
-  document.querySelectorAll('.highlight').forEach(e=> e.classList.remove('highlight'));
-  const row = tableBody.querySelector('tr[data-id="'+val+'"]');
-  if(row){
-    row.classList.add('highlight');
-    row.scrollIntoView({behavior:'smooth', block:'center'});
-  } else {
-    alert('Không tìm thấy: ' + val);
-  }
-}
-qrInput.addEventListener('change', ()=>{ const v = qrInput.value.trim(); if(!v) return; highlightRow(v); qrInput.value=''; qrInput.focus(); });
-
-// ---------- Export / Import Excel ----------
-downloadBtn.onclick = ()=>{
-  const data = [['STT','Số thẻ','Số máy','Loại máy','Vị trí','Ghi chú']];
-  tableBody.querySelectorAll('tr').forEach(r=>{
-    const t = r.querySelectorAll('td');
-    data.push([t[0].innerText, t[2].innerText, t[3].innerText, t[4].innerText, t[5].innerText, t[6].innerText]);
-  });
-  const ws = XLSX.utils.aoa_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'DanhSachMay');
-  XLSX.writeFile(wb, 'DanhSachMay.xlsx');
-};
-
-importBtn.onclick = ()=> importFile.click();
-importFile.addEventListener('change', e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = (ev)=>{
-    const data = new Uint8Array(ev.target.result);
-    const wb = XLSX.read(data, {type:'array'});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
-    tableBody.innerHTML = '';
-    rows.slice(1).forEach(rw => { if(rw[1]) addRow(rw[1], rw[2]||'', rw[3]||'', rw[4]||'', rw[5]||''); });
-    updateSTT(); generateQRs();
-    alert('✅ Đã nhập xong Excel');
+function editRow(index) {
+  const r = allData[index];
+  const newData = {
+    soThe: prompt('Số thẻ:', r.soThe),
+    soMay: prompt('Số máy:', r.soMay),
+    loaiMay: prompt('Loại máy:', r.loaiMay),
+    viTri: prompt('Vị trí:', r.viTri),
+    ghiChu: prompt('Ghi chú:', r.ghiChu)
   };
-  r.readAsArrayBuffer(f);
-});
+  allData[index] = newData;
+  renderTable(allData);
+}
 
-// ---------- Đồng bộ lên Google Sheet ----------
-uploadBtn.onclick = async () => {
-  const arr = [];
-  tableBody.querySelectorAll('tr').forEach(r => {
-    const t = r.querySelectorAll('td');
-    arr.push({
-      soThe: t[2].innerText,
-      soMay: t[3].innerText,
-      loaiMay: t[4].innerText,
-      viTri: t[5].innerText,
-      ghiChu: t[6].innerText
-    });
-  });
-
-  try {
-    syncStatus.innerText = '⏳ Đang gửi lên Google Sheet...';
-    const formData = new URLSearchParams();
-    formData.append('data', JSON.stringify(arr));
-    const res = await fetch(GAS_URL, { method:'POST', body:formData });
-    const text = await res.text();
-    const j = JSON.parse(text);
-    if (j && j.success) {
-      syncStatus.innerText = '✅ Đã đồng bộ ' + j.written + ' dòng lên Google Sheet';
-      alert('Đồng bộ thành công!');
-    } else {
-      syncStatus.innerText = '❌ Lỗi đồng bộ';
-      alert('Lỗi: ' + (j && j.message));
-    }
-  } catch(err) {
-    syncStatus.innerText = '❌ Lỗi kết nối khi upload';
-    alert('Không thể kết nối tới GAS: ' + err);
+function deleteRow(i) {
+  if (confirm('Xóa dòng này?')) {
+    allData.splice(i, 1);
+    renderTable(allData);
   }
-};
+}
 
-// ---------- Khi mở trang ----------
-window.addEventListener('load', ()=>{
-  loadFromJson();
-  const id = decodeURIComponent(window.location.hash.slice(1));
-  if(id) setTimeout(()=> highlightRow(id), 800);
-});
+function addRow() {
+  const newData = {
+    soThe: prompt('Số thẻ:'),
+    soMay: prompt('Số máy:'),
+    loaiMay: prompt('Loại máy:'),
+    viTri: prompt('Vị trí:'),
+    ghiChu: prompt('Ghi chú:')
+  };
+  if (newData.soThe) {
+    allData.push(newData);
+    renderTable(allData);
+  }
+}
+
+async function syncToSheet() {
+  try {
+    const res = await fetch(gasUrl + '?action=updateData', {
+      method: 'POST',
+      body: JSON.stringify(allData),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const txt = await res.text();
+    alert('✅ Đã đồng bộ lên Google Sheet!\n' + txt);
+  } catch (e) {
+    alert('❌ Lỗi khi đồng bộ: ' + e.message);
+  }
+}
+
+function exportExcel() {
+  const ws = XLSX.utils.json_to_sheet(allData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DanhSachMay');
+  XLSX.writeFile(wb, 'DanhSachMay.xlsx');
+}
+
+document.getElementById('fileInput').addEventListener('change', handleFile);
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const data = new Uint8Array(ev.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    allData = XLSX.utils.sheet_to_json(sheet);
+    renderTable(allData);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// --- Highlight + scroll theo QR ---
+function highlightFromQR() {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('q');
+  if (!code) return;
+  const index = allData.findIndex(r => r.soThe === code || r.soMay === code);
+  if (index >= 0) {
+    const rows = document.querySelectorAll('#dataTable tbody tr');
+    rows.forEach(r => r.classList.remove('highlight'));
+    const target = rows[index];
+    target.classList.add('highlight');
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    alert('Không tìm thấy: ' + code);
+  }
+}
+
+window.onload = loadData;
 </script>
-
 </body>
 </html>
