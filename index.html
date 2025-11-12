@@ -80,7 +80,7 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV3IoU2WLlMlhfUAMvyBGMqQqAPmgawmfm9j0uHOZBfo1KCf14Ei4EPHieQAafmC2s/exec'; // <-- Thay bằng URL Web App deploy
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyV3IoU2WLlMlhfUAMvyBGMqQqAPmgawmfm9j0uHOZBfo1KCf14Ei4EPHieQAafmC2s/exec';
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex = null;
@@ -98,6 +98,7 @@ function loadData(){
         allData = res.data;
         renderTable();
         setStatus('Đã tải '+allData.length+' dòng');
+        highlightFromHash();
       } else {
         setStatus('Lỗi tải dữ liệu',false);
         alert(res.message || 'Không lấy được dữ liệu');
@@ -218,27 +219,14 @@ document.getElementById('btnSync').onclick = () => {
         loadData();
       } else {
         setStatus('Lỗi ghi dữ liệu', false);
-        alert(res.message || 'Lỗi ghi dữ liệu');
       }
-    } finally {
-      delete window[cbName];
-      script.remove();
-    }
+    } finally { delete window[cbName]; script.remove(); }
   };
   const script = document.createElement('script');
   script.src = GAS_URL + '?save=1&callback=' + cbName + '&data=' + encoded + '&_=' + Date.now();
-
-  // ==== Thay đổi ở đây ====
-  script.onerror = function(){
-    console.warn('Có thể ghi thành công nhưng JSONP callback chưa load xong.');
-    delete window[cbName];
-    script.remove();
-    // Không hiện alert, dữ liệu vẫn vào sheet
-  };
-
+  script.onerror = ()=>{ console.warn('Có thể ghi thành công nhưng JSONP callback chưa load xong.'); delete window[cbName]; script.remove(); };
   document.head.appendChild(script);
 };
-
 
 /* ===== In tem QR ===== */
 document.getElementById('btnPrint').onclick=()=>{
@@ -247,16 +235,36 @@ document.getElementById('btnPrint').onclick=()=>{
   const w=window.open('','_blank');
   w.document.write('<html><head><title>In Tem QR</title><style>body{font-family:Arial;margin:0;padding:0} .tem{width:48%;height:180px;margin:1%;float:left;border:1px solid #000;padding:4px;box-sizing:border-box;text-align:center;} canvas{margin-top:8px}</style></head><body>');
   printData.forEach(r=>{
-    w.document.write('<div class="tem"><b>Số thẻ:</b>'+r.soThe+'<br><b>Số máy:</b>'+r.soMay+'<br><b>Ngày mua:</b>'+r.ngayMua+'<div id="qr_'+r.soThe+'"></div></div>');
+    const code = encodeURIComponent(r.soThe||'');
+    w.document.write('<div class="tem"><b>Số thẻ:</b>'+r.soThe+'<br><b>Số máy:</b>'+r.soMay+'<br><b>Ngày mua:</b>'+r.ngayMua+'<div id="qr_'+code+'"></div></div>');
   });
   w.document.write('</body></html>');
   w.document.close();
   printData.forEach(r=>{
-    const qrDiv=w.document.getElementById('qr_'+r.soThe);
-    new QRCode(qrDiv, {text:r.soThe,width:80,height:80});
+    const code = encodeURIComponent(r.soThe||'');
+    const qrDiv=w.document.getElementById('qr_'+code);
+    new QRCode(qrDiv, {text:location.href.split('#')[0]+'#'+code,width:80,height:80});
   });
   w.focus(); w.print();
 };
+
+/* ===== Nhảy & highlight từ QR hash ===== */
+function highlightFromHash(){
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if(!hash) return;
+  Array.from(tbody.children).forEach(tr=>{
+    const idx = Number(tr.dataset.index);
+    const r = allData[idx];
+    if(r.soThe === hash){
+      tr.classList.add('highlight');
+      tr.scrollIntoView({behavior:'smooth', block:'center'});
+    } else {
+      tr.classList.remove('highlight');
+    }
+  });
+}
+window.addEventListener('load', highlightFromHash);
+window.addEventListener('hashchange', highlightFromHash);
 
 /* ===== Tải lại dữ liệu ===== */
 document.getElementById('btnRefresh').onclick = loadData;
