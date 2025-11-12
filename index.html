@@ -2,10 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📋 Kiểm kê máy may - JSONP Full</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📋 Kiểm kê máy may - Sync JSONP</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
 header{background:#0b74d1;color:#fff;padding:12px 16px;font-size:18px}
@@ -19,7 +18,7 @@ table{width:100%;border-collapse:collapse;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;word-break:break-word}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
-button.rowBtn{margin:0 2px;padding:2px 6px;font-size:14px;cursor:pointer;}
+/* modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
 .modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%}
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -29,17 +28,18 @@ button.rowBtn{margin:0 2px;padding:2px 6px;font-size:14px;cursor:pointer;}
 </style>
 </head>
 <body>
-<header>📋 Kiểm kê máy may — JSONP Full</header>
+<header>📋 Kiểm kê máy may — Sync JSONP</header>
 
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
   <button id="btnAdd">➕ Thêm</button>
   <button id="btnSync">☁️ Đồng bộ Sheet</button>
+  <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
   <button id="btnPrint">🖨️ In tem QR</button>
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 
-<div class="note">QR code, checkbox "Đã kiểm kê" + "Chọn để in", ngày mua chuẩn dd/mm/yyyy</div>
+<div class="note">QR code, in tem, checkbox "Đã kiểm kê" + "Chọn để in", ngày mua chuẩn dd/mm/yyyy</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -80,28 +80,65 @@ button.rowBtn{margin:0 2px;padding:2px 6px;font-size:14px;cursor:pointer;}
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyWGfw5Xp_KU_dFm2lauJV0XkOlhmDBgBsSmbv9EDORlfGN6AHw2H0YdR01c-_s5e6a/exec'; // <-- Thay URL WebApp deploy
+/* ======= Cấu hình ======= */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyWGfw5Xp_KU_dFm2lauJV0XkOlhmDBgBsSmbv9EDORlfGN6AHw2H0YdR01c-_s5e6a/exec'; // Thay bằng URL WebApp JSONP
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex=null;
 
+/* ======= Utils ======= */
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt; statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return (v===null||v===undefined)?'':String(v);}
 
-/* ===== JSONP Load dữ liệu ===== */
+/* ======= Render bảng ======= */
+function renderTable(){
+  tbody.innerHTML='';
+  allData.forEach((r,idx)=>{
+    const tr=document.createElement('tr');
+    tr.dataset.index=idx;
+    tr.innerHTML=`
+      <td>${idx+1}</td>
+      <td>${escapeHtml(r.soThe)}</td>
+      <td>${escapeHtml(r.soMay)}</td>
+      <td>${escapeHtml(r.loaiMay)}</td>
+      <td>${escapeHtml(r.viTri)}</td>
+      <td>${escapeHtml(r.ghiChu)}</td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+      <td>${r.ngayMua||''}</td>
+      <td>
+        <button data-act="edit" data-i="${idx}">✏️</button>
+        <button data-act="qr" data-i="${idx}">🔗</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ======= Load dữ liệu JSONP ======= */
 function loadData(){
   setStatus('Đang tải dữ liệu...');
-  const cbName = '__gs_cb_' + Date.now();
-  window[cbName] = function(response){
+  const cbName = '__gs_load_cb_' + Date.now();
+  window[cbName] = function(res){
     try{
-      if(response.success){
-        allData = response.data;
-        renderTable();
+      if(res && res.success && Array.isArray(res.data)){
+        allData = res.data.map(r=>({
+          soThe:safeText(r.soThe),
+          soMay:safeText(r.soMay),
+          loaiMay:safeText(r.loaiMay),
+          viTri:safeText(r.viTri),
+          ghiChu:safeText(r.ghiChu),
+          daKiemKe:!!r.daKiemKe,
+          chonIn:!!r.chonIn,
+          ngayMua:r.ngayMua
+        }));
         setStatus('Đã tải '+allData.length+' dòng');
+        renderTable();
       } else {
         setStatus('Lỗi tải dữ liệu', false);
-        alert(response.message||'Không thể tải dữ liệu');
       }
     } finally {
       delete window[cbName];
@@ -109,55 +146,35 @@ function loadData(){
     }
   };
   const script = document.createElement('script');
-  script.src = GAS_URL + '?callback=' + cbName + '&_=' + Date.now();
-  script.onerror = ()=>{setStatus('Lỗi kết nối', false); script.remove(); delete window[cbName];};
+  script.src = GAS_URL+'?callback='+cbName+'&_='+Date.now();
+  script.onerror = ()=>{setStatus('Lỗi tải dữ liệu', false); delete window[cbName]; script.remove();};
   document.head.appendChild(script);
 }
 
-/* ===== Render bảng ===== */
-function renderTable(){
-  tbody.innerHTML='';
-  allData.forEach((r,idx)=>{
-    const tr=document.createElement('tr'); tr.dataset.index=idx;
-    tr.innerHTML=`
-      <td>${idx+1}</td>
-      <td>${r.soThe}</td>
-      <td>${r.soMay}</td>
-      <td>${r.loaiMay}</td>
-      <td>${r.viTri}</td>
-      <td>${r.ghiChu}</td>
-      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-      <td>${r.ngayMua||''}</td>
-      <td>
-        <button class="rowBtn" data-act="edit" data-i="${idx}">✏️</button>
-        <button class="rowBtn" data-act="qr" data-i="${idx}">🔗</button>
-        <button class="rowBtn" data-act="del" data-i="${idx}">❌</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+/* ======= Nút Đồng bộ JSONP ======= */
+document.getElementById('btnSync').onclick=()=>{
+  setStatus('Đang đồng bộ...');
+  const payload = encodeURIComponent(JSON.stringify(allData));
+  const cbName = '__gs_save_cb_' + Date.now();
+  window[cbName] = function(res){
+    try{
+      if(res && res.success){
+        setStatus('Đã đồng bộ '+res.written+' dòng');
+        loadData();
+      } else {
+        setStatus('Lỗi ghi dữ liệu', false);
+      }
+    } finally {
+      delete window[cbName]; script.remove();
+    }
+  };
+  const script = document.createElement('script');
+  script.src = GAS_URL+'?save=1&data='+payload+'&callback='+cbName+'&_='+Date.now();
+  script.onerror = ()=>{setStatus('Lỗi kết nối khi ghi', false); delete window[cbName]; script.remove();};
+  document.head.appendChild(script);
+};
 
-/* ===== Event trong bảng ===== */
-tbody.addEventListener('click', e=>{
-  const btn=e.target.closest('button'); if(!btn) return;
-  const act=btn.dataset.act, i=Number(btn.dataset.i);
-  if(act==='edit') openEditModal(i);
-  else if(act==='del'){ if(confirm('Xóa dòng này?')){ allData.splice(i,1); renderTable(); } }
-  else if(act==='qr'){
-    const code=encodeURIComponent(allData[i].soThe||'');
-    const url=location.href.split('#')[0]+'#'+code;
-    prompt('Link QR (copy & in tem):',url);
-  }
-});
-tbody.addEventListener('change',e=>{
-  const tr=e.target.closest('tr'); const idx=Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
-  if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
-});
-
-/* ===== Modal ===== */
+/* ======= Modal thêm / sửa ======= */
 const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe');
 const m_soMay=document.getElementById('m_soMay');
@@ -167,7 +184,6 @@ const m_ghiChu=document.getElementById('m_ghiChu');
 const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_chonIn=document.getElementById('m_chonIn');
 const m_ngayMua=document.getElementById('m_ngayMua');
-
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;}
 document.getElementById('saveBtn').onclick=()=>{
@@ -179,7 +195,7 @@ document.getElementById('saveBtn').onclick=()=>{
     ghiChu:m_ghiChu.value.trim(),
     daKiemKe:m_daKiemKe.checked,
     chonIn:m_chonIn.checked,
-    ngayMua:m_ngayMua.value ? new Date(m_ngayMua.value).toLocaleDateString('en-GB') : ''
+    ngayMua:m_ngayMua.value ? (new Date(m_ngayMua.value)).toLocaleDateString('en-GB') : ''
   };
   if(!obj.soThe){alert('Số thẻ không được để trống'); return;}
   if(editingIndex===null) allData.push(obj); else allData[editingIndex]=obj;
@@ -201,7 +217,26 @@ function openEditModal(idx){
   modal.style.display='flex'; m_soThe.focus();
 }
 
-/* ===== Tìm kiếm ===== */
+/* ======= Bảng sự kiện ======= */
+tbody.addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  if(!btn) return;
+  const act=btn.dataset.act, i=Number(btn.dataset.i);
+  if(act==='edit') openEditModal(i);
+  else if(act==='qr'){
+    const code=encodeURIComponent(allData[i].soThe||'');
+    const url=location.href.split('#')[0]+'#'+code;
+    prompt('Link QR (copy & in tem):',url);
+  }
+});
+tbody.addEventListener('change',e=>{
+  const tr=e.target.closest('tr');
+  const idx=Number(tr.dataset.index);
+  if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
+  if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
+});
+
+/* ======= Search ======= */
 document.getElementById('searchBox').addEventListener('input',e=>{
   const v=e.target.value.toLowerCase();
   Array.from(tbody.children).forEach(tr=>{
@@ -211,36 +246,28 @@ document.getElementById('searchBox').addEventListener('input',e=>{
   });
 });
 
-/* ===== JSONP Đồng bộ dữ liệu ===== */
-document.getElementById('btnSync').onclick=()=>{
-  setStatus('Đang đồng bộ...');
-  const cbName='__gs_save_cb_'+Date.now();
-  window[cbName] = function(res){
-    try{
-      if(res.success){ setStatus('Đã đồng bộ '+res.written+' dòng'); loadData(); }
-      else{ setStatus('Lỗi server', false); alert(res.message||'Lỗi server'); }
-    } finally { delete window[cbName]; script.remove(); }
-  };
-  const script=document.createElement('script');
-  script.src = GAS_URL + '?save=1&callback=' + cbName + '&data=' + encodeURIComponent(JSON.stringify(allData)) + '&_=' + Date.now();
-  script.onerror=()=>{setStatus('Lỗi kết nối khi ghi', false); delete window[cbName]; script.remove();};
-  document.head.appendChild(script);
-};
-
-/* ===== In tem QR ===== */
+/* ======= In QR ======= */
 document.getElementById('btnPrint').onclick=()=>{
   const printData=allData.filter(r=>r.chonIn);
   if(printData.length===0){alert('Chọn ít nhất 1 dòng để in'); return;}
   const w=window.open('','_blank');
   w.document.write('<html><head><title>In Tem QR</title><style>body{font-family:Arial;margin:0;padding:0} .tem{width:48%;height:180px;margin:1%;float:left;border:1px solid #000;padding:4px;box-sizing:border-box;text-align:center;} canvas{margin-top:8px}</style></head><body>');
   printData.forEach(r=>{
-    w.document.write('<div class="tem"><b>Số thẻ:</b>'+r.soThe+'<br><b>Số máy:</b>'+r.soMay+'<br><b>Ngày mua:</b>'+r.ngayMua+'<div id="qrcode'+r.soThe+'"></div></div>');
+    w.document.write('<div class="tem"><b>Số thẻ:</b>'+r.soThe+'<br><b>Số máy:</b>'+r.soMay+'<br><b>Ngày mua:</b>'+r.ngayMua+'<div id="qr_'+r.soThe+'"></div></div>');
   });
-  w.document.write('</body></html>'); w.document.close();
-  w.onload=function(){ printData.forEach(r=>{ new QRCode(w.document.getElementById('qrcode'+r.soThe), {text:r.soThe,width:100,height:100}); }); };
+  w.document.write('</body></html>');
+  w.document.close();
+  printData.forEach(r=>{
+    const qrDiv=w.document.getElementById('qr_'+r.soThe);
+    new QRCode(qrDiv, {text:r.soThe,width:80,height:80});
+  });
+  w.focus(); w.print();
 };
 
-/* ===== Khởi tạo ===== */
+/* ======= Nút tải lại ======= */
+document.getElementById('btnRefresh').onclick=loadData;
+
+/* ======= Load khi mở ======= */
 loadData();
 </script>
 </body>
