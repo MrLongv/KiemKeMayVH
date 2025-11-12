@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📋 Kiểm kê máy may - Sync JSONP</title>
+<title>📋 Kiểm kê máy Việt Hồng</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
@@ -27,12 +27,12 @@ tr.highlight{background:#ffeaa7 !important}
 </style>
 </head>
 <body>
-<header>📋 Kiểm kê máy may — Sync JSONP</header>
+<header>📋 Kiểm kê máy Việt Hồng</header>
 
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
   <button id="btnAdd">➕ Thêm</button>
-  <button id="btnSync">☁️ Đồng bộ Sheet</button>
+  <button id="btnSync">☁️ Đồng bộ lên Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
   <button id="btnPrint">🖨️ In tem QR</button>
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
@@ -80,7 +80,7 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzXo8WTTJlaRptJNK_iBJn8Pm3z4bn9Bt2J2iRBdqOFx8PG5ZK1XCnK3mKycwGfY_r9/exec'; // <-- Thay bằng URL Web App deploy
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAYZ6RYOcFC0FXNLX9f9RfbTLwJ4XLVyFXT9LIgD1WrXTQeOnEbnGbhXQeA_J5DPN8/exec'; // <-- Thay bằng URL Web App deploy
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex = null;
