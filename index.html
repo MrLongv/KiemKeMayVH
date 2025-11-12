@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>📋 Kiểm kê máy may - Sync & QR</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📋 Kiểm kê máy may - Sync</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -17,10 +17,9 @@ header{background:#0b74d1;color:#fff;padding:12px 16px;font-size:18px}
 .note{padding:8px 12px;color:#666;font-size:13px}
 .table-wrap{padding:12px;overflow:auto}
 table{width:100%;border-collapse:collapse;background:#fff}
-th,td{border:1px solid #ddd;padding:6px;text-align:center;word-break:break-word}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;word-break:break-word}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background: #ffeaa7 !important}
-/* modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
 .modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%}
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -31,22 +30,22 @@ tr.highlight{background: #ffeaa7 !important}
 </head>
 <body>
 
-<header>📋 Kiểm kê máy may — QR + In tem + Đồng bộ Google Sheet</header>
+<header>📋 Kiểm kê máy may — Load + Sync Google Sheet</header>
 
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
   <button id="btnImport" class="ghost">📂 Nhập Excel</button>
   <button id="btnExport">💾 Xuất Excel</button>
   <button id="btnAdd">➕ Thêm</button>
-  <button id="btnSync">☁️ Đồng bộ Sheet</button>
+  <button id="btnSync">☁️ Đồng bộ Google Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
-  <button id="btnPrint">🖨 In tem QR</button>
+  <button id="btnPrint" class="ghost">🖨️ In tem QR</button>
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
   <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none" />
 </div>
 
 <div class="note">
-Ghi chú: Checkbox "Đã kiểm kê" để theo dõi, checkbox "Chọn để in" để in QR. Ngày mua hiển thị dd/mm/yyyy. 
+Ghi chú: QR code, ngày mua chuẩn dd/mm/yyyy, checkbox “Đã kiểm kê” và “Chọn để in”. 
 </div>
 
 <div class="table-wrap">
@@ -54,14 +53,14 @@ Ghi chú: Checkbox "Đã kiểm kê" để theo dõi, checkbox "Chọn để in"
     <thead>
       <tr>
         <th>STT</th>
-        <th>Chọn để in</th>
+        <th>Chọn in</th>
+        <th>Đã kiểm kê</th>
         <th>Số thẻ</th>
         <th>Số máy</th>
         <th>Loại máy</th>
         <th>Vị trí</th>
-        <th>Ghi chú</th>
-        <th>Đã kiểm kê</th>
         <th>Ngày mua</th>
+        <th>Ghi chú</th>
         <th>Hành động</th>
       </tr>
     </thead>
@@ -77,9 +76,9 @@ Ghi chú: Checkbox "Đã kiểm kê" để theo dõi, checkbox "Chọn để in"
     <label>Số máy</label><input id="m_soMay" />
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
+    <label>Ngày mua</label><input id="m_ngayMua" type="date" />
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
-    <label>Ngày mua</label><input type="date" id="m_ngayMua" />
+    <label><input id="m_daKiemKe" type="checkbox" /> Đã kiểm kê</label>
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
@@ -91,78 +90,64 @@ Ghi chú: Checkbox "Đã kiểm kê" để theo dõi, checkbox "Chọn để in"
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-/* ====== CẤU HÌNH ====== */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw3S0botMbBfzxqwXCRwBkKZI6Gu6QijJNUABHoTQE3LJxnJleb2pFA5et5sThjOW6k/exec'; 
-const DATA_JSON = 'data.json';
-
-/* ====== TRẠNG THÁI & DỮ LIỆU ====== */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxW2INfFPRfsuqukjpHSqMdvXnY3A9df-ghw1Rz_4X8K6BqbcNzkShtBrTnHqQEhUhP/exec'; // replace with your WebApp URL
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [];
 let editingIndex = null;
 
-/* ====== HỖ TRỢ ====== */
-function setStatus(text, ok=true){
-  statusEl.innerText = 'Trạng thái: ' + text;
-  statusEl.style.color = ok ? '#0b74d1' : '#c0392b';
-}
-
+/* ======= HỖ TRỢ ======= */
+function setStatus(text, ok=true){ statusEl.innerText='Trạng thái: '+text; statusEl.style.color=ok?'#0b74d1':'#c0392b'; }
 function safeText(v){ return (v===null||v===undefined)?'':String(v); }
+function formatDate(d){ if(!d) return ''; const dt=new Date(d); return dt.toLocaleDateString('vi-VN'); }
+function parseDate(v){ if(!v) return null; const dt=new Date(v); return isNaN(dt)?null:dt; }
 
-function formatDate(d){
-  if(!d) return '';
-  const date = new Date(d);
-  const dd = String(date.getDate()).padStart(2,'0');
-  const mm = String(date.getMonth()+1).padStart(2,'0');
-  const yyyy = date.getFullYear();
-  return dd+'/'+mm+'/'+yyyy;
-}
-
-/* ====== Load dữ liệu từ GAS / fallback data.json ====== */
+/* ======= LOAD DATA từ GAS ======= */
 async function loadData(){
   setStatus('Đang tải dữ liệu...');
-  try{
-    const res = await fetch(GAS_URL);
-    if(!res.ok) throw new Error('GAS trả lỗi '+res.status);
-    const j = await res.json();
-    if(j && j.success && Array.isArray(j.data)){
-      allData = j.data.map(r=>({
-        soThe: safeText(r.soThe),
-        soMay: safeText(r.soMay),
-        loaiMay: safeText(r.loaiMay),
-        viTri: safeText(r.viTri),
-        ghiChu: safeText(r.ghiChu),
-        daKiemKe: r.daKiemKe===true,
-        ngayMua: r.ngayMua ? new Date(r.ngayMua) : null,
-        inTem: false
+  try {
+    const res=await fetch(GAS_URL);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const j=await res.json();
+    if(j.success && Array.isArray(j.data)){
+      allData=j.data.map(r=>({
+        soThe:safeText(r.soThe),
+        soMay:safeText(r.soMay),
+        loaiMay:safeText(r.loaiMay),
+        viTri:safeText(r.viTri),
+        ghiChu:safeText(r.ghiChu),
+        daKiemKe:!!r.daKiemKe,
+        chonIn:false,
+        ngayMua:r.ngayMua?formatDate(r.ngayMua):''
       }));
-      setStatus('Đã tải từ Google Sheet ('+allData.length+' dòng)');
+      setStatus('Đã tải '+allData.length+' dòng từ Google Sheet');
       renderTable();
       return;
     } else throw new Error('Dữ liệu không hợp lệ');
-  }catch(err){
-    console.warn('Load GAS thất bại:',err);
-    setStatus('Không thể tải dữ liệu',false);
+  } catch(err){
+    console.error(err);
+    setStatus('Lỗi tải dữ liệu', false);
+    allData=[];
+    renderTable();
   }
 }
 
-/* ====== Render bảng ====== */
+/* ======= RENDER TABLE ======= */
 function renderTable(){
   tbody.innerHTML='';
   allData.forEach((r,idx)=>{
-    const tr = document.createElement('tr');
+    const tr=document.createElement('tr');
     tr.dataset.index=idx;
-    tr.dataset.id=r.soThe||'';
     tr.innerHTML=`
       <td>${idx+1}</td>
-      <td><input type="checkbox" class="chkPrint" ${r.inTem?'checked':''}></td>
+      <td><input type="checkbox" class="chkChon" ${r.chonIn?'checked':''}></td>
+      <td><input type="checkbox" class="chkDaKiemKe" ${r.daKiemKe?'checked':''}></td>
       <td>${escapeHtml(r.soThe)}</td>
       <td>${escapeHtml(r.soMay)}</td>
       <td>${escapeHtml(r.loaiMay)}</td>
       <td>${escapeHtml(r.viTri)}</td>
+      <td>${r.ngayMua}</td>
       <td>${escapeHtml(r.ghiChu)}</td>
-      <td><input type="checkbox" class="chkKiemKe" ${r.daKiemKe?'checked':''}></td>
-      <td>${r.ngayMua?formatDate(r.ngayMua):''}</td>
       <td>
         <button data-act="edit" data-i="${idx}">✏️</button>
         <button data-act="qr" data-i="${idx}">🔗</button>
@@ -171,35 +156,10 @@ function renderTable(){
   });
 }
 
-/* escape html */
+/* ======= ESCAPE HTML ======= */
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-/* ====== Bảng: sự kiện checkbox ====== */
-tbody.addEventListener('change',e=>{
-  const tr = e.target.closest('tr');
-  const idx = Number(tr.dataset.index);
-  if(e.target.classList.contains('chkKiemKe')){
-    allData[idx].daKiemKe = e.target.checked;
-  }
-  if(e.target.classList.contains('chkPrint')){
-    allData[idx].inTem = e.target.checked;
-  }
-});
-
-/* ====== Bảng: sự kiện nút edit / qr ====== */
-tbody.addEventListener('click',e=>{
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  const act = btn.dataset.act;
-  const i = Number(btn.dataset.i);
-  if(act==='edit') openEditModal(i);
-  else if(act==='qr'){
-    const url = location.href.split('#')[0]+'#'+encodeURIComponent(allData[i].soThe);
-    prompt('Link QR (copy & in tem):',url);
-  }
-});
-
-/* ====== Modal chỉnh sửa ====== */
+/* ======= MODAL ======= */
 const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe');
 const m_soMay=document.getElementById('m_soMay');
@@ -208,31 +168,8 @@ const m_viTri=document.getElementById('m_viTri');
 const m_ghiChu=document.getElementById('m_ghiChu');
 const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_ngayMua=document.getElementById('m_ngayMua');
-const cancelBtn=document.getElementById('cancelBtn');
-const saveBtn=document.getElementById('saveBtn');
-
-function openEditModal(idx){
-  editingIndex=typeof idx==='number'?idx:null;
-  if(editingIndex===null){
-    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
-    m_daKiemKe.checked=false; m_ngayMua.value='';
-  }else{
-    const r=allData[editingIndex];
-    m_soThe.value=r.soThe||'';
-    m_soMay.value=r.soMay||'';
-    m_loaiMay.value=r.loaiMay||'';
-    m_viTri.value=r.viTri||'';
-    m_ghiChu.value=r.ghiChu||'';
-    m_daKiemKe.checked=r.daKiemKe;
-    m_ngayMua.value=r.ngayMua?r.ngayMua.toISOString().split('T')[0]:'';
-  }
-  modal.style.display='flex';
-  m_soThe.focus();
-}
-
-cancelBtn.onclick=()=>{modal.style.display='none'; editingIndex=null;};
-
-saveBtn.onclick=()=>{
+document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
+document.getElementById('saveBtn').onclick=()=>{
   const obj={
     soThe:m_soThe.value.trim(),
     soMay:m_soMay.value.trim(),
@@ -240,73 +177,135 @@ saveBtn.onclick=()=>{
     viTri:m_viTri.value.trim(),
     ghiChu:m_ghiChu.value.trim(),
     daKiemKe:m_daKiemKe.checked,
-    ngayMua:m_ngayMua.value?new Date(m_ngayMua.value):null,
-    inTem:false
+    chonIn:false,
+    ngayMua:m_ngayMua.value
   };
   if(!obj.soThe){alert('Số thẻ không được để trống');return;}
-  if(editingIndex===null) allData.push(obj);
-  else allData[editingIndex]=obj;
+  if(editingIndex===null){allData.push(obj);}else{allData[editingIndex]=obj;}
   modal.style.display='none';
   editingIndex=null;
   renderTable();
 };
 
-/* ====== Nút điều khiển ====== */
-document.getElementById('btnAdd').addEventListener('click',()=>openEditModal(null));
-document.getElementById('btnRefresh').addEventListener('click',loadData);
+/* ======= EVENT TABLE ======= */
+tbody.addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  if(btn){
+    const act=btn.dataset.act;
+    const i=Number(btn.dataset.i);
+    if(act==='edit'){openEditModal(i);}
+    else if(act==='qr'){showQR(i);}
+  }
+});
+tbody.addEventListener('change',e=>{
+  if(e.target.classList.contains('chkDaKiemKe')){
+    const idx=Number(e.target.closest('tr').dataset.index);
+    allData[idx].daKiemKe=e.target.checked;
+  }
+  if(e.target.classList.contains('chkChon')){
+    const idx=Number(e.target.closest('tr').dataset.index);
+    allData[idx].chonIn=e.target.checked;
+  }
+});
 
-/* Import/Export Excel */
-const fileInput=document.getElementById('fileInput');
-document.getElementById('btnImport').addEventListener('click',()=>fileInput.click());
-fileInput.addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
+/* ======= EDIT MODAL ======= */
+function openEditModal(idx){
+  editingIndex=idx;
+  const r=(idx!==null)?allData[idx]:{soThe:'',soMay:'',loaiMay:'',viTri:'',ghiChu:'',daKiemKe:false,ngayMua:''};
+  m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri;
+  m_ghiChu.value=r.ghiChu; m_daKiemKe.checked=r.daKiemKe; m_ngayMua.value=r.ngayMua;
+  modal.style.display='flex';
+  m_soThe.focus();
+}
+
+/* ======= QR CODE ======= */
+function showQR(idx){
+  const r=allData[idx];
+  const url=location.href.split('#')[0]+'#'+encodeURIComponent(r.soThe);
+  alert('QR Link: '+url);
+}
+
+/* ======= IMPORT / EXPORT EXCEL ======= */
+document.getElementById('btnImport').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
   const reader=new FileReader();
-  reader.onload=(ev)=>{
+  reader.onload=ev=>{
     const data=new Uint8Array(ev.target.result);
     const wb=XLSX.read(data,{type:'array'});
-    const sheet=wb.Sheets[wb.SheetNames[0]];
-    const arr=XLSX.utils.sheet_to_json(sheet);
-    allData=arr.map(r=>({
-      soThe:safeText(r.soThe||r['Số thẻ']||r['MaMay']||r['Ma']),
+    const sheet=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    allData=sheet.map(r=>({
+      soThe:safeText(r.soThe||r['Số thẻ']||r['MaMay']),
       soMay:safeText(r.soMay||r['Số máy']||r['SoMay']),
-      loaiMay:safeText(r.loaiMay||r['Loại máy']||''),
-      viTri:safeText(r.viTri||r['Vị trí']||''),
-      ghiChu:safeText(r.ghiChu||r['Ghi chú']||''),
+      loaiMay:safeText(r.loaiMay||r['Loại máy']),
+      viTri:safeText(r.viTri||r['Vị trí']),
+      ghiChu:safeText(r.ghiChu||r['Ghi chú']),
       daKiemKe:!!r.daKiemKe,
-      ngayMua:r.ngayMua?r.ngayMua:new Date(),
-      inTem:false
+      chonIn:false,
+      ngayMua:r.ngayMua||''
     }));
     renderTable();
   };
   reader.readAsArrayBuffer(f);
 });
-
-document.getElementById('btnExport').addEventListener('click',()=>{
+document.getElementById('btnExport').onclick=()=>{
   const ws=XLSX.utils.json_to_sheet(allData);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'DanhSachMay');
   XLSX.writeFile(wb,'DanhSachMay.xlsx');
-});
+};
 
-/* ====== Đồng bộ Google Sheet ====== */
-document.getElementById('btnSync').addEventListener('click',async ()=>{
+/* ======= SYNC TO GOOGLE SHEET ======= */
+document.getElementById('btnSync').onclick=async()=>{
   setStatus('Đang đồng bộ lên Google Sheet...');
   try{
     const res=await fetch(GAS_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(allData)
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'data='+encodeURIComponent(JSON.stringify(allData))
     });
     const txt=await res.text();
     let parsed=null;
     try{parsed=JSON.parse(txt);}catch(e){parsed=null;}
-    if(!res.ok){setStatus('HTTP '+res.status,false); alert('Lỗi: '+txt); return;}
-    if(parsed && parsed.success){setStatus('Đã đồng bộ '+allData.length+' dòng'); alert('Đồng bộ thành công!'); loadData();}
-    else alert('Server trả: '+txt);
-  }catch(err){console.error(err); setStatus('Lỗi kết nối',false); alert('Không thể kết nối: '+err.message);}
-});
+    if(parsed && parsed.success){
+      setStatus('Đã đồng bộ '+allData.length+' dòng');
+      alert('Đồng bộ thành công!');
+      setTimeout(()=>loadData(),700);
+    }else{
+      setStatus('Server trả lỗi',false);
+      alert('Server trả: '+txt);
+    }
+  }catch(err){
+    console.error(err);
+    setStatus('Không thể kết nối tới GAS',false);
+    alert('Lỗi: '+err.message);
+  }
+};
 
-/* ====== Search ====== */
+/* ======= LOAD BUTTON ======= */
+document.getElementById('btnRefresh').onclick=loadData;
+
+/* ======= PRINT QR ======= */
+document.getElementById('btnPrint').onclick=()=>{
+  const items=allData.filter(r=>r.chonIn);
+  if(items.length===0){alert('Chọn ít nhất 1 dòng để in'); return;}
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>In Tem QR</title></head><body style="font-family:Arial">');
+  items.forEach(r=>{
+    w.document.write('<div style="width:200px;height:200px;border:1px solid #333;float:left;margin:4px;text-align:center">');
+    w.document.write('<div style="font-weight:bold;margin:4px">'+r.soThe+'</div>');
+    w.document.write('<div style="font-size:12px;margin:4px">'+r.soMay+' | '+r.loaiMay+'</div>');
+    w.document.write('<div style="font-size:12px;margin:4px">'+r.viTri+'</div>');
+    const qrDiv=w.document.createElement('div');
+    w.document.body.appendChild(qrDiv);
+    new QRCode(qrDiv,{text:r.soThe,width:100,height:100});
+    w.document.write('</div>');
+  });
+  w.document.write('<div style="clear:both"></div></body></html>');
+  w.document.close();
+};
+
+/* ======= SEARCH ======= */
 document.getElementById('searchBox').addEventListener('input',e=>{
   const v=e.target.value.toLowerCase();
   Array.from(tbody.children).forEach(tr=>{
@@ -317,27 +316,8 @@ document.getElementById('searchBox').addEventListener('input',e=>{
   });
 });
 
-/* ====== In tem QR ====== */
-document.getElementById('btnPrint').addEventListener('click',()=>{
-  const selected=allData.filter(r=>r.inTem);
-  if(selected.length===0){alert('Chưa chọn dòng nào để in'); return;}
-  const w=window.open('','_blank');
-  w.document.write('<html><head><title>In tem QR</title><style>body{font-family:Arial;margin:0;padding:10px} .tem{width:180px;height:100px;border:1px solid #000;display:inline-block;margin:5px;padding:5px;text-align:center;}</style></head><body>');
-  selected.forEach(r=>{
-    w.document.write('<div class="tem">');
-    w.document.write('<b>'+escapeHtml(r.soThe)+'</b><br>');
-    w.document.write('<b>'+escapeHtml(r.soMay)+'</b><br>');
-    const qrDiv='qrd'+Math.random().toString(36).substring(2,8);
-    w.document.write('<div id="'+qrDiv+'"></div>');
-    w.document.write('</div>');
-    setTimeout(()=>{new QRCode(w.document.getElementById(qrDiv),{text:r.soThe,width:80,height:80});},100);
-  });
-  w.document.write('</body></html>');
-  w.document.close();
-});
-
-/* ====== Khởi động ====== */
-window.addEventListener('load',()=>loadData());
+/* ======= INIT ======= */
+window.addEventListener('load',loadData);
 </script>
 </body>
 </html>
