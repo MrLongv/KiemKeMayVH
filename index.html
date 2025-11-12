@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📋 Kiểm kê máy may - JSONP</title>
+<title>📋 Kiểm kê máy may - JSONP Full</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -19,6 +19,7 @@ table{width:100%;border-collapse:collapse;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;word-break:break-word}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
+button.rowBtn{margin:0 2px;padding:2px 6px;font-size:14px;cursor:pointer;}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
 .modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%}
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -28,16 +29,17 @@ tr.highlight{background:#ffeaa7 !important}
 </style>
 </head>
 <body>
-<header>📋 Kiểm kê máy may — JSONP</header>
+<header>📋 Kiểm kê máy may — JSONP Full</header>
 
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
+  <button id="btnAdd">➕ Thêm</button>
   <button id="btnSync">☁️ Đồng bộ Sheet</button>
   <button id="btnPrint">🖨️ In tem QR</button>
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 
-<div class="note">QR code, in tem, checkbox "Đã kiểm kê" + "Chọn để in", ngày mua chuẩn dd/mm/yyyy</div>
+<div class="note">QR code, checkbox "Đã kiểm kê" + "Chọn để in", ngày mua chuẩn dd/mm/yyyy</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -52,6 +54,7 @@ tr.highlight{background:#ffeaa7 !important}
         <th>Đã kiểm kê</th>
         <th>Chọn để in</th>
         <th>Ngày mua</th>
+        <th>Hành động</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -78,7 +81,7 @@ tr.highlight{background:#ffeaa7 !important}
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzULfuWjolwdIR9OQJhLnUUdAtcfnv5RvtajKrNbsQwjrYRdFdw50TWsA0AB18emj2o/exec'; // <-- Thay URL WebApp deploy
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyWGfw5Xp_KU_dFm2lauJV0XkOlhmDBgBsSmbv9EDORlfGN6AHw2H0YdR01c-_s5e6a/exec'; // <-- Thay URL WebApp deploy
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex=null;
@@ -126,29 +129,35 @@ function renderTable(){
       <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
       <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
       <td>${r.ngayMua||''}</td>
+      <td>
+        <button class="rowBtn" data-act="edit" data-i="${idx}">✏️</button>
+        <button class="rowBtn" data-act="qr" data-i="${idx}">🔗</button>
+        <button class="rowBtn" data-act="del" data-i="${idx}">❌</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-/* ===== Event checkbox ===== */
-tbody.addEventListener('change', e=>{
+/* ===== Event trong bảng ===== */
+tbody.addEventListener('click', e=>{
+  const btn=e.target.closest('button'); if(!btn) return;
+  const act=btn.dataset.act, i=Number(btn.dataset.i);
+  if(act==='edit') openEditModal(i);
+  else if(act==='del'){ if(confirm('Xóa dòng này?')){ allData.splice(i,1); renderTable(); } }
+  else if(act==='qr'){
+    const code=encodeURIComponent(allData[i].soThe||'');
+    const url=location.href.split('#')[0]+'#'+code;
+    prompt('Link QR (copy & in tem):',url);
+  }
+});
+tbody.addEventListener('change',e=>{
   const tr=e.target.closest('tr'); const idx=Number(tr.dataset.index);
   if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
   if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
 });
 
-/* ===== Tìm kiếm ===== */
-document.getElementById('searchBox').addEventListener('input',e=>{
-  const v=e.target.value.toLowerCase();
-  Array.from(tbody.children).forEach(tr=>{
-    const idx=Number(tr.dataset.index);
-    const text=(allData[idx].soThe+' '+allData[idx].soMay+' '+allData[idx].loaiMay+' '+allData[idx].viTri+' '+allData[idx].ghiChu).toLowerCase();
-    tr.style.display=text.includes(v)?'':'none';
-  });
-});
-
-/* ===== Thêm / Sửa (modal) ===== */
+/* ===== Modal ===== */
 const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe');
 const m_soMay=document.getElementById('m_soMay');
@@ -159,6 +168,7 @@ const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_chonIn=document.getElementById('m_chonIn');
 const m_ngayMua=document.getElementById('m_ngayMua');
 
+document.getElementById('btnAdd').onclick=()=>openEditModal(null);
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;}
 document.getElementById('saveBtn').onclick=()=>{
   const obj={
@@ -175,10 +185,34 @@ document.getElementById('saveBtn').onclick=()=>{
   if(editingIndex===null) allData.push(obj); else allData[editingIndex]=obj;
   modal.style.display='none'; editingIndex=null; renderTable();
 };
+function openEditModal(idx){
+  editingIndex=(typeof idx==='number')?idx:null;
+  if(editingIndex===null){
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
+    m_daKiemKe.checked=m_chonIn.checked=false;
+    m_ngayMua.value='';
+  }else{
+    const r=allData[editingIndex];
+    m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay;
+    m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
+    m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
+    m_ngayMua.value=r.ngayMua ? new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10) : '';
+  }
+  modal.style.display='flex'; m_soThe.focus();
+}
+
+/* ===== Tìm kiếm ===== */
+document.getElementById('searchBox').addEventListener('input',e=>{
+  const v=e.target.value.toLowerCase();
+  Array.from(tbody.children).forEach(tr=>{
+    const idx=Number(tr.dataset.index); const r=allData[idx];
+    const text=(r.soThe+' '+r.soMay+' '+r.loaiMay+' '+r.viTri+' '+r.ghiChu).toLowerCase();
+    tr.style.display=text.includes(v)?'':'none';
+  });
+});
 
 /* ===== JSONP Đồng bộ dữ liệu ===== */
 document.getElementById('btnSync').onclick=()=>{
-  if(!confirm('Đồng bộ toàn bộ dữ liệu lên Sheet? (ghi đè dữ liệu)')) return;
   setStatus('Đang đồng bộ...');
   const cbName='__gs_save_cb_'+Date.now();
   window[cbName] = function(res){
