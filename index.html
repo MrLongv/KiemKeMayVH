@@ -28,9 +28,10 @@ tr.highlight{background:#ffeaa7 !important}
 </style>
 </head>
 <body>
+
 <header>📋 Kiểm kê máy Việt Hồng</header>
 
-<div class="controls">
+<div class="controls" id="mainUI">
   <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
   <select id="filterBox">
     <option value="all">📋 Hiện tất cả</option>
@@ -68,7 +69,7 @@ tr.highlight{background:#ffeaa7 !important}
   </table>
 </div>
 
-<!-- Modal -->
+<!-- Modal Thêm / Sửa -->
 <div id="editModal" class="modal">
   <div class="card">
     <h3 style="margin:0 0 6px 0">✏️ Chỉnh sửa / Thêm dòng</h3>
@@ -87,12 +88,28 @@ tr.highlight{background:#ffeaa7 !important}
   </div>
 </div>
 
+<!-- Prompt mật khẩu -->
+<div id="pwdModal" class="modal" style="display:flex;align-items:center;justify-content:center;">
+  <div class="card">
+    <h3>🔒 Nhập mật khẩu để truy cập</h3>
+    <input id="pwdInput" type="password" placeholder="Nhập mật khẩu" style="width:100%;padding:6px;margin-top:8px;border:1px solid #ccc;border-radius:4px" />
+    <div class="actions">
+      <button id="pwdBtn">Mở khóa</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+const PASSWORD='12345';      // Mật khẩu truy cập
+const SESSION_HOURS=1;       // Giữ phiên 1 giờ
 const GAS_URL='https://script.google.com/macros/s/AKfycbxHxyBUyh7Brn9lf7bgEqPaZ0Z7N5Gq3YH3eUewk6Pz_wCMXj6lE4G2sQdkVP7_YcZa/exec';
+
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
-const modal=document.getElementById('editModal');
+const modal=document.getElementById('editModal'), mainUI=document.getElementById('mainUI');
+const pwdModal=document.getElementById('pwdModal'), pwdInput=document.getElementById('pwdInput'), pwdBtn=document.getElementById('pwdBtn');
+
 const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
       m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
       m_ghiChu=document.getElementById('m_ghiChu'), m_daKiemKe=document.getElementById('m_daKiemKe'),
@@ -100,13 +117,32 @@ const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementByI
 
 let allData=[], editingIndex=null;
 
+// ===================== Bảo mật mật khẩu =====================
+function checkLogin(){
+  const sess=localStorage.getItem('loginTime');
+  if(sess && Date.now() - parseInt(sess)<SESSION_HOURS*3600*1000){ // còn hạn
+    pwdModal.style.display='none'; mainUI.style.display='flex'; return true;
+  }
+  else{
+    pwdModal.style.display='flex'; mainUI.style.display='none';
+    pwdInput.value=''; pwdInput.focus(); return false;
+  }
+}
+pwdBtn.onclick=()=>{
+  if(pwdInput.value===PASSWORD){
+    localStorage.setItem('loginTime', Date.now());
+    pwdModal.style.display='none'; mainUI.style.display='flex';
+    highlightFromHash();
+  }else{alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus();}
+}
+window.addEventListener('load',checkLogin);
+
+// ===================== Các hàm hiện có =====================
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
 
-// Render bảng với filter + search
 function renderTable(){
-  const filter=filterBox.value;
-  const search=searchBox.value.toLowerCase();
+  const filter=filterBox.value, search=searchBox.value.toLowerCase();
   tbody.innerHTML='';
   allData.forEach((r,idx)=>{
     let show=true;
@@ -133,14 +169,14 @@ function renderTable(){
   });
 }
 
-// Load dữ liệu JSONP
 function loadData(){
   setStatus('Đang tải dữ liệu...');
   const cb='__load_cb_'+Date.now();
   window[cb]=function(res){
     try{
-      if(res && res.success && Array.isArray(res.data)){allData=res.data; renderTable(); setStatus('Đã tải '+allData.length+' dòng'); highlightFromHash();}
-      else setStatus('Lỗi tải dữ liệu',false);
+      if(res && res.success && Array.isArray(res.data)){
+        allData=res.data; renderTable(); setStatus('Đã tải '+allData.length+' dòng'); highlightFromHash();
+      } else setStatus('Lỗi tải dữ liệu',false);
     }finally{delete window[cb];script.remove();}
   };
   const script=document.createElement('script');
@@ -149,7 +185,6 @@ function loadData(){
   document.head.appendChild(script);
 }
 
-// Auto lưu 1 dòng
 function autoSyncRow(i){
   if(i==null||!allData[i]) return;
   const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
@@ -161,7 +196,7 @@ function autoSyncRow(i){
   document.head.appendChild(script);
 }
 
-// Events
+// === Event, Modal ===
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
 
@@ -180,7 +215,6 @@ tbody.addEventListener('change',e=>{
   renderTable();
 });
 
-// Modal
 document.getElementById('btnAdd').onclick=()=>{
   editingIndex=null;
   m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
@@ -255,7 +289,6 @@ window.addEventListener('hashchange',highlightFromHash);
 // Refresh
 document.getElementById('btnRefresh').onclick=loadData;
 
-loadData();
 </script>
 </body>
 </html>
