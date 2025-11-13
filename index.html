@@ -93,63 +93,42 @@ tr.highlight{background:#ffeaa7 !important}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const GAS_URL='https://script.google.com/macros/s/AKfycbxHxyBUyh7Brn9lf7bgEqPaZ0Z7N5Gq3YH3eUewk6Pz_wCMXj6lE4G2sQdkVP7_YcZa/exec';
-
-const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
-const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
+const statusEl=document.getElementById('status'),tbody=document.querySelector('#dataTable tbody');
+const filterBox=document.getElementById('filterBox'),searchBox=document.getElementById('searchBox');
 const modal=document.getElementById('editModal');
-const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
-      m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
-      m_hanhDong=document.getElementById('m_hanhDong'), m_ghiChu=document.getElementById('m_ghiChu'), 
-      m_daKiemKe=document.getElementById('m_daKiemKe'),
-      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua'),
-      m_noiMua=document.getElementById('m_noiMua');
+const m_soThe=document.getElementById('m_soThe'),m_soMay=document.getElementById('m_soMay'),
+      m_loaiMay=document.getElementById('m_loaiMay'),m_viTri=document.getElementById('m_viTri'),
+      m_hanhDong=document.getElementById('m_hanhDong'),m_ghiChu=document.getElementById('m_ghiChu'),
+      m_daKiemKe=document.getElementById('m_daKiemKe'),m_chonIn=document.getElementById('m_chonIn'),
+      m_ngayMua=document.getElementById('m_ngayMua'),m_noiMua=document.getElementById('m_noiMua');
 
-let allData=[], editingIndex=null;
+let allData=[],editingIndex=null;
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
 
-// ==== PHẦN MẬT KHẨU ====
-const PASSWORD = '12345'; // mật khẩu
-const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
-const pwdModal = document.createElement('div');
-pwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
-pwdModal.innerHTML = `
-  <div style="background:#fff;padding:20px;border-radius:8px;width:300px;text-align:center">
-    <h3>🔒 Nhập mật khẩu</h3>
-    <input id="pwdInput" type="password" style="width:80%;padding:6px;margin-top:10px" />
-    <div style="margin-top:12px">
-      <button id="pwdBtn" style="padding:6px 12px;background:#0b74d1;color:#fff;border:none;border-radius:4px;cursor:pointer">Đăng nhập</button>
-    </div>
-  </div>`;
-document.body.appendChild(pwdModal);
-mainUI.forEach(el=>el.style.display='none');
-
-const pwdInput = document.getElementById('pwdInput');
-const pwdBtn = document.getElementById('pwdBtn');
-pwdInput.focus();
-
-pwdBtn.onclick = () => {
-  if(pwdInput.value===PASSWORD){
-    localStorage.setItem('loginTime', Date.now());
-    pwdModal.style.display='none';
-    mainUI.forEach(el=>el.style.display='flex');
-    highlightFromHash();
-    loadData();
-  } else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
-};
-const loginTime = localStorage.getItem('loginTime');
-if(loginTime && Date.now() - loginTime < 3600*1000){
-  pwdModal.style.display='none';
-  mainUI.forEach(el=>el.style.display='flex');
-  loadData();
+// ========== TẢI DỮ LIỆU ==========
+function loadData(){
+  setStatus('Đang tải dữ liệu...');
+  const cb='__load_cb_'+Date.now();
+  window[cb]=function(res){
+    try{
+      if(res && res.success && Array.isArray(res.data)){
+        allData=res.data;
+        renderTable();
+        setStatus('Đã tải '+allData.length+' dòng');
+        highlightFromHash();
+      }else setStatus('Lỗi tải dữ liệu',false);
+    }finally{delete window[cb];script.remove();}
+  };
+  const script=document.createElement('script');
+  script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
+  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false);delete window[cb];script.remove();};
+  document.head.appendChild(script);
 }
 
-// ==== HẾT PHẦN MẬT KHẨU ====
-
-// Render bảng
+// ========== RENDER BẢNG ==========
 function renderTable(){
-  const filter=filterBox.value;
-  const search=searchBox.value.toLowerCase();
+  const filter=filterBox.value,search=searchBox.value.toLowerCase();
   tbody.innerHTML='';
   allData.forEach((r,idx)=>{
     let show=true;
@@ -161,171 +140,103 @@ function renderTable(){
     if(show){
       const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
-        <td>${idx+1}</td>
-        <td>${safeText(r.soThe)}</td>
-        <td>${safeText(r.soMay)}</td>
-        <td>${safeText(r.loaiMay)}</td>
-        <td>${safeText(r.viTri)}</td>
-        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>
-        <td>${safeText(r.ghiChu)}</td>
-        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-        <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua ? new Date(r.ngayMua).toLocaleDateString('en-GB') : ''}</td>
-        <td>${safeText(r.noiMua||'')}</td>
-      `;
+      <td>${idx+1}</td>
+      <td>${safeText(r.soThe)}</td>
+      <td>${safeText(r.soMay)}</td>
+      <td>${safeText(r.loaiMay)}</td>
+      <td>${safeText(r.viTri)}</td>
+      <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>
+      <td>${safeText(r.ghiChu)}</td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+      <td>${r.ngayMua ? new Date(r.ngayMua).toLocaleDateString('en-GB') : ''}</td>
+      <td>${safeText(r.noiMua||'')}</td>`;
       tbody.appendChild(tr);
     }
   });
 }
 
-// Load JSONP
-function loadData(){
-  setStatus('Đang tải dữ liệu...');
-  const cb='__load_cb_'+Date.now();
-  window[cb]=function(res){
-    try{
-      if(res && res.success && Array.isArray(res.data)){
-        allData=res.data; 
-        renderTable(); 
-        setStatus('Đã tải '+allData.length+' dòng'); 
-        highlightFromHash();
-      }
-      else setStatus('Lỗi tải dữ liệu',false);
-    } finally {
-      delete window[cb];
-      script.remove();
-    }
-  };
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
-  document.head.appendChild(script);
-}
-
-// Auto sync 1 dòng
+// ========== LƯU 1 DÒNG ==========
 function autoSyncRow(i){
   if(i==null||!allData[i]) return;
-  const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
+  const row=allData[i];
+  const encoded=encodeURIComponent(JSON.stringify(row));
   const cb='__auto_cb_'+Date.now();
-  window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1)); else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb];script.remove();}};
+  window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1));else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb];script.remove();}};
   const script=document.createElement('script');
   script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng'); delete window[cb]; script.remove();};
+  script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng');delete window[cb];script.remove();};
   document.head.appendChild(script);
 }
 
-// Events
+// ========== SỰ KIỆN ==========
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
 
 tbody.addEventListener('click',e=>{
-  const btn=e.target.closest('button'); if(!btn) return;
+  const btn=e.target.closest('button');if(!btn)return;
   const act=btn.dataset.act,i=Number(btn.dataset.i);
-  if(act==='edit'){openEditModal(i);}
-  if(act==='qr'){const code=encodeURIComponent(allData[i].soThe||'');const url=location.href.split('#')[0]+'#'+code;prompt('Link QR (copy & in tem):',url);}
+  if(act==='edit') openEditModal(i);
+  if(act==='qr'){const code=encodeURIComponent(allData[i].soThe||'');const url=location.href.split('#')[0]+'#'+code;prompt('Link QR:',url);}
 });
 
-tbody.addEventListener('change', e=>{
-  const tr = e.target.closest('tr'); if(!tr) return;
-  const idx = Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')){
-    allData[idx].daKiemKe = e.target.checked; 
-    autoSyncRow(idx);
-  }
-  if(e.target.classList.contains('chonIn')){
-    allData[idx].chonIn = e.target.checked;
-    autoSyncRow(idx);
-  }
-  renderTable();
+tbody.addEventListener('change',e=>{
+  const tr=e.target.closest('tr');if(!tr)return;
+  const idx=Number(tr.dataset.index);
+  if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
+  if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
+  autoSyncRow(idx);
 });
 
-// Modal add/edit
+// ========== MODAL ==========
 document.getElementById('btnAdd').onclick=()=>{
   editingIndex=null;
-  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value=m_hanhDong.value=m_noiMua.value='';
+  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_hanhDong.value=m_ghiChu.value=m_noiMua.value='';
   m_daKiemKe.checked=m_chonIn.checked=false;
   m_ngayMua.value='';
-  modal.style.display='flex'; m_soThe.focus();
+  modal.style.display='flex';
 };
-document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
+document.getElementById('cancelBtn').onclick=()=>modal.style.display='none';
+
 document.getElementById('saveBtn').onclick=()=>{
   const obj={
-    soThe:m_soThe.value.trim(), soMay:m_soMay.value.trim(), loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(), hanhDong:m_hanhDong.value.trim(), ghiChu:m_ghiChu.value.trim(),
-    daKiemKe:m_daKiemKe.checked, chonIn:m_chonIn.checked,
+    soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
+    viTri:m_viTri.value.trim(),hanhDong:m_hanhDong.value.trim(),ghiChu:m_ghiChu.value.trim(),
+    daKiemKe:m_daKiemKe.checked,chonIn:m_chonIn.checked,
     ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):'',
     noiMua:m_noiMua.value.trim()
   };
-  if(!obj.soThe){alert('Số thẻ không được để trống');return;}
-  if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
-  else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
-  modal.style.display='none';
-  editingIndex=null;
-  renderTable();
-  highlightFromHash();
+  if(!obj.soThe){alert('Số thẻ không được trống');return;}
+  if(editingIndex===null){allData.push(obj);autoSyncRow(allData.length-1);}
+  else{allData[editingIndex]=obj;autoSyncRow(editingIndex);}
+  modal.style.display='none';renderTable();
 };
-function openEditModal(idx){
-  editingIndex=Number(idx);
-  const r=allData[editingIndex];
-  m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri;
-  m_hanhDong.value=r.hanhDong||''; m_ghiChu.value=r.ghiChu; m_daKiemKe.checked=r.daKiemKe;
-  m_chonIn.checked=r.chonIn; m_noiMua.value=r.noiMua||'';
+
+function openEditModal(i){
+  editingIndex=i;const r=allData[i];
+  m_soThe.value=r.soThe;m_soMay.value=r.soMay;m_loaiMay.value=r.loaiMay;m_viTri.value=r.viTri;
+  m_hanhDong.value=r.hanhDong||'';m_ghiChu.value=r.ghiChu||'';m_noiMua.value=r.noiMua||'';
+  m_daKiemKe.checked=r.daKiemKe;m_chonIn.checked=r.chonIn;
   m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
-  modal.style.display='flex'; m_soThe.focus();
+  modal.style.display='flex';
 }
 
-// Đồng bộ thủ công
-document.getElementById('btnSync').onclick=()=>{
-  const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
-  const cb='__sync_cb_'+Date.now();
-  window[cb]=function(res){try{if(res&&res.success){setStatus('Đã đồng bộ '+(res.written||0)+' dòng'); loadData();}else setStatus('Lỗi ghi dữ liệu',false);}finally{delete window[cb];script.remove();}};
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?save=1&callback='+cb+'&data='+encoded+'&_='+Date.now();
-  script.onerror=()=>{console.warn('Có thể ghi thành công nhưng JSONP callback chưa load');delete window[cb];script.remove();};
-  document.head.appendChild(script);
-};
-
-// Print QR code
-document.getElementById('btnPrint').onclick = () => {
-  const printData = allData.filter(r => r.chonIn);
-  if (!printData.length) { alert('Chọn ít nhất 1 dòng để in'); return; }
-
-  const w = window.open('', '_blank');
-  w.document.write('<html><head><title>In Tem QR</title>');
-  w.document.write('<style>@page{size:A4 portrait;margin:4mm}body{font-family:Arial;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,auto);gap:2mm;justify-items:center;align-items:center}.tem{width:34mm;height:40mm;border:1px solid #000;border-radius:2px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1mm;box-sizing:border-box;text-align:center}.tem .top{font-weight:bold;font-size:13px;margin-bottom:0.3mm}.tem .qr{margin:0;padding:0;line-height:0}.tem .bottom{font-weight:bold;font-size:12px;margin-top:1mm}canvas{display:block;margin:0;width:82px!important;height:75px!important}</style></head><body>');
-
-  printData.forEach(r => {
-    const code = encodeURIComponent(r.soThe || '');
-    const soThe = r.soThe || '';
-    const soMay = r.soMay || '';
-    w.document.write(`<div class="tem"><div class="top">${soThe}</div><div class="qr" id="qr_${code}"></div><div class="bottom">Số máy: ${soMay}</div></div>`);
-  });
-
-  w.document.write('</body></html>'); w.document.close();
-
-  w.onload = () => {
-    printData.forEach(r => {
-      const code = encodeURIComponent(r.soThe || '');
-      const qrDiv = w.document.getElementById('qr_' + code);
-      if (qrDiv) new QRCode(qrDiv, { text: location.href.split('#')[0]+'#'+code, width:90, height:90 });
-    });
-    setTimeout(()=>{w.focus(); w.print();},600);
-  };
-};
-
-// Highlight khi quét QR
-function highlightFromHash() {
-  const hash = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
-  Array.from(tbody.children).forEach(tr => {
-    const idx = Number(tr.dataset.index);
-    const r = allData[idx];
-    const soThe = r.soThe ? String(r.soThe).trim().toLowerCase() : '';
-    if (soThe && soThe === hash) { tr.classList.add('highlight'); tr.scrollIntoView({behavior:'smooth', block:'center'}); }
+// ========== HIGHLIGHT QR ==========
+function highlightFromHash(){
+  const hash=decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
+  Array.from(tbody.children).forEach(tr=>{
+    const idx=Number(tr.dataset.index);const r=allData[idx];
+    const soThe=r.soThe?String(r.soThe).trim().toLowerCase():'';
+    if(soThe===hash){tr.classList.add('highlight');tr.scrollIntoView({behavior:'smooth',block:'center'});}
     else tr.classList.remove('highlight');
   });
 }
 window.addEventListener('hashchange',highlightFromHash);
+
+// ========== KHỞI ĐỘNG ==========
 document.getElementById('btnRefresh').onclick=loadData;
+document.getElementById('btnSync').onclick=()=>{const payload=encodeURIComponent(JSON.stringify(allData));const cb='__sync_'+Date.now();window[cb]=r=>{if(r&&r.success)setStatus('Đồng bộ '+(r.written||0)+' dòng');else setStatus('Lỗi đồng bộ',false);delete window[cb];s.remove();};const s=document.createElement('script');s.src=GAS_URL+'?save=1&callback='+cb+'&data='+payload+'&_='+Date.now();document.head.appendChild(s);};
+loadData();
 </script>
 </body>
 </html>
