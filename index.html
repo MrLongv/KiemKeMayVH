@@ -57,11 +57,12 @@ tr.highlight{background:#ffeaa7 !important}
         <th>Số máy</th>
         <th>Loại máy</th>
         <th>Vị trí</th>
+        <th>Hành động</th>
         <th>Ghi chú</th>
         <th>Đã kiểm kê</th>
         <th>Chọn để in</th>
         <th>Ngày mua</th>
-        <th>Hành động</th>
+        <th>Nơi mua</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -77,9 +78,10 @@ tr.highlight{background:#ffeaa7 !important}
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
-    <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
+    <label>Đã kiểm </label><input type="checkbox" id="m_daKiemKe" />
+    <label>In QR</label><input type="checkbox" id="m_chonIn" />
     <label>Ngày mua</label><input type="date" id="m_ngayMua" />
+    <label>Nơi mua</label><input id="m_noiMua" />
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
@@ -97,7 +99,8 @@ const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
       m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
       m_ghiChu=document.getElementById('m_ghiChu'), m_daKiemKe=document.getElementById('m_daKiemKe'),
-      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua');
+      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua'),
+      m_noiMua=document.getElementById('m_noiMua');
 
 let allData=[], editingIndex=null;
 
@@ -105,7 +108,7 @@ function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusE
 function safeText(v){return v==null?'':String(v);}
 
 // ==== PHẦN MẬT KHẨU ====
-const PASSWORD = '12345'; // mật khẩu
+const PASSWORD = '12345'; 
 const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
 const pwdModal = document.createElement('div');
 pwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
@@ -134,7 +137,6 @@ pwdBtn.onclick = () => {
   } else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
 };
 
-// Kiểm tra phiên đăng nhập 1 giờ
 const loginTime = localStorage.getItem('loginTime');
 if(loginTime && Date.now() - loginTime < 3600*1000){
   pwdModal.style.display='none';
@@ -155,7 +157,7 @@ function renderTable(){
     if(filter==='chuaKiemKe' && r.daKiemKe) show=false;
     if(filter==='daIn' && !r.chonIn) show=false;
     if(filter==='chuaIn' && r.chonIn) show=false;
-    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
+    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu+r.noiMua).toLowerCase().includes(search)) show=false;
     if(show){
       const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
@@ -164,11 +166,13 @@ function renderTable(){
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
+        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>
         <td>${safeText(r.ghiChu)}</td>
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
         <td>${r.ngayMua||''}</td>
-        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`;
+        <td>${safeText(r.noiMua||'')}</td>
+      `;
       tbody.appendChild(tr);
     }
   });
@@ -184,7 +188,6 @@ function loadData(){
         allData=res.data; 
         renderTable(); 
         setStatus('Đã tải '+allData.length+' dòng'); 
-        // ✨ Gọi highlight ngay sau khi bảng đã render xong
         highlightFromHash();
       }
       else setStatus('Lỗi tải dữ liệu',false);
@@ -198,7 +201,7 @@ function loadData(){
   script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
   document.head.appendChild(script);
 }
-// Auto lưu 1 dòng
+
 function autoSyncRow(i){
   if(i==null||!allData[i]) return;
   const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
@@ -230,7 +233,7 @@ tbody.addEventListener('change', e=>{
   }
   if(e.target.classList.contains('chonIn')){
     allData[idx].chonIn = e.target.checked;
-    autoSyncRow(idx);  // 👈 thêm dòng này để tự lưu
+    autoSyncRow(idx); 
   }
   renderTable();
 });
@@ -238,24 +241,31 @@ tbody.addEventListener('change', e=>{
 // Modal Thêm / sửa
 document.getElementById('btnAdd').onclick=()=>{
   editingIndex=null;
-  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
+  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value=m_noiMua.value='';
   m_daKiemKe.checked=m_chonIn.checked=false;
   m_ngayMua.value='';
   modal.style.display='flex'; m_soThe.focus();
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick=()=>{
-  const obj={soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(),ghiChu:m_ghiChu.value.trim(),daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''
+  const obj={
+    soThe:m_soThe.value.trim(),
+    soMay:m_soMay.value.trim(),
+    loaiMay:m_loaiMay.value.trim(),
+    viTri:m_viTri.value.trim(),
+    ghiChu:m_ghiChu.value.trim(),
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):'',
+    noiMua:m_noiMua.value.trim()
   };
   if(!obj.soThe){alert('Số thẻ không được để trống');return;}
- if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
-else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
-modal.style.display='none';
-editingIndex=null;
-renderTable();
-highlightFromHash();  // <= thêm dòng này để cuộn tới QR nếu hash trùng soThe
+  if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
+  else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
+  modal.style.display='none';
+  editingIndex=null;
+  renderTable();
+  highlightFromHash();
 };
 function openEditModal(idx){
   editingIndex=Number(idx);
@@ -263,6 +273,7 @@ function openEditModal(idx){
   m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
   m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
   m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
+  m_noiMua.value = r.noiMua || '';
   modal.style.display='flex'; m_soThe.focus();
 }
 
@@ -283,64 +294,19 @@ document.getElementById('btnPrint').onclick = () => {
     alert('Chọn ít nhất 1 dòng để in');
     return;
   }
-
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>In Tem QR</title>');
   w.document.write('<style>');
   w.document.write(`
-    @page {
-      size: A4 portrait;
-      margin: 4mm;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      grid-template-columns: repeat(5, 1fr); /* 5 cột */
-      grid-template-rows: repeat(6, auto);   /* 6 hàng */
-      gap: 2mm;
-      justify-items: center;
-      align-items: center;
-    }
-    .tem {
-      width: 34mm;
-      height: 40mm;
-      border: 1px solid #000;
-      border-radius: 2px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 1mm;          /* 👈 Sát hơn: chỉ ~4pt */
-      box-sizing: border-box;
-      text-align: center;
-      page-break-inside: avoid;
-    }
-    .tem .top {
-      font-weight: bold;
-      font-size: 13px;
-      margin-bottom: 0.3mm;  /* 👈 gần hơn */
-    }
-    .tem .qr {
-      margin: 0;
-      padding: 0;
-      line-height: 0;
-    }
-    .tem .bottom {
-      font-weight: bold;
-      font-size: 12px;
-      margin-top: 1mm;     /* 👈 gần hơn */
-    }
-    canvas {
-      display: block;
-      margin: 0;
-      width: 82px !important;  /* ✅ to rõ nét */
-      height: 75px !important;
-    }
+    @page {size: A4 portrait;margin: 4mm;}
+    body{font-family: Arial;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,auto);gap:2mm;justify-items:center;align-items:center;}
+    .tem{width:34mm;height:40mm;border:1px solid #000;border-radius:2px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1mm;box-sizing:border-box;text-align:center;page-break-inside:avoid;}
+    .tem .top{font-weight:bold;font-size:13px;margin-bottom:0.3mm;}
+    .tem .qr{margin:0;padding:0;line-height:0;}
+    .tem .bottom{font-weight:bold;font-size:12px;margin-top:1mm;}
+    canvas{display:block;margin:0;width:82px !important;height:75px !important;}
   `);
   w.document.write('</style></head><body>');
-
   printData.forEach(r => {
     const code = encodeURIComponent(r.soThe || '');
     const soThe = r.soThe || '';
@@ -353,30 +319,20 @@ document.getElementById('btnPrint').onclick = () => {
       </div>
     `);
   });
-
   w.document.write('</body></html>');
   w.document.close();
-
   w.onload = () => {
     printData.forEach(r => {
       const code = encodeURIComponent(r.soThe || '');
       const qrDiv = w.document.getElementById('qr_' + code);
       if (qrDiv) {
-        new QRCode(qrDiv, {
-          text: location.href.split('#')[0] + '#' + code,
-          width: 90,
-          height: 90
-        });
+        new QRCode(qrDiv, {text: location.href.split('#')[0] + '#' + code,width:90,height:90});
       }
     });
-    setTimeout(() => {
-      w.focus();
-      w.print();
-    }, 600);
+    setTimeout(() => { w.focus(); w.print(); }, 600);
   };
 };
 
-// Highlight + scroll khi quét QR (số thẻ là chữ/số kết hợp)
 function highlightFromHash() {
   const hash = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
   Array.from(tbody.children).forEach(tr => {
@@ -393,7 +349,6 @@ function highlightFromHash() {
 }
 window.addEventListener('hashchange',highlightFromHash);
 document.getElementById('btnRefresh').onclick=loadData;
-
 </script>
 </body>
 </html>
