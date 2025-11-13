@@ -271,25 +271,99 @@ document.getElementById('btnSync').onclick=()=>{
   document.head.appendChild(script);
 };
 
-// In QR chia cột đẹp
-document.getElementById('btnPrint').onclick=()=>{
-  const printData=allData.filter(r=>r.chonIn);
-  if(printData.length===0){alert('Chọn ít nhất 1 dòng để in');return;}
-  const w=window.open('','_blank');
+document.getElementById('btnPrint').onclick = () => {
+  const printData = allData.filter(r => r.chonIn);
+  if (printData.length === 0) {
+    alert('Chọn ít nhất 1 dòng để in');
+    return;
+  }
+
+  const w = window.open('', '_blank');
   w.document.write('<html><head><title>In Tem QR</title>');
-  w.document.write('<style>body{font-family:Arial;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:flex-start}');
-  w.document.write('.tem{width:30%;margin:1%;border:1px solid #000;padding:4px;box-sizing:border-box;text-align:center;page-break-inside:avoid;}canvas{margin-top:8px;}</style>');
-  w.document.write('</head><body>');
-  printData.forEach(r=>{
-    const code=encodeURIComponent(r.soThe||'');
-    w.document.write('<div class="tem"><b>Số thẻ:</b>'+r.soThe+'<br><b>Số máy:</b>'+r.soMay+'<div id="qr_'+code+'"></div></div>');
+  w.document.write('<style>');
+  w.document.write(`
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 3 cột */
+      grid-template-rows: repeat(5, auto);   /* 5 hàng */
+      gap: 8mm;
+      justify-items: center;
+      align-items: center;
+    }
+    .tem {
+      width: 100%;
+      aspect-ratio: 1/1; /* khung vuông */
+      border: 1px solid #000;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .tem .top {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .tem .qr {
+      margin: auto;
+    }
+    .tem .bottom {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  `);
+  w.document.write('</style></head><body>');
+
+  // Tạo nội dung từng tem
+  printData.forEach(r => {
+    const code = encodeURIComponent(r.soThe || '');
+    const soThe = r.soThe ? r.soThe : '';
+    const soMay = r.soMay ? r.soMay : '';
+    w.document.write(`
+      <div class="tem">
+        <div class="top">Số thẻ: ${soThe}</div>
+        <div class="qr" id="qr_${code}"></div>
+        <div class="bottom">Số máy: ${soMay}</div>
+      </div>
+    `);
   });
-  w.document.write('</body></html>'); w.document.close();
-  printData.forEach(r=>{
-    const code=encodeURIComponent(r.soThe||''); const qrDiv=w.document.getElementById('qr_'+code);
-    new QRCode(qrDiv,{text:location.href.split('#')[0]+'#'+code,width:80,height:80});
-  });
-  w.focus(); w.print();
+
+  w.document.write('</body></html>');
+  w.document.close();
+
+  // Sau khi trang load, vẽ mã QR
+  w.onload = () => {
+    printData.forEach(r => {
+      const code = encodeURIComponent(r.soThe || '');
+      const qrDiv = w.document.getElementById('qr_' + code);
+      if (qrDiv) {
+        new QRCode(qrDiv, {
+          text: location.href.split('#')[0] + '#' + code,
+          width: 90,
+          height: 90
+        });
+      }
+    });
+    setTimeout(() => {
+      w.focus();
+      w.print();
+    }, 500);
+  };
 };
 
 // Highlight + scroll khi quét QR
