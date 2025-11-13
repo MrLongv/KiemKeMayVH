@@ -200,9 +200,9 @@ const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_chonIn=document.getElementById('m_chonIn');
 const m_ngayMua=document.getElementById('m_ngayMua');
 
-// Mở modal thêm
+// Nút Thêm
 document.getElementById('btnAdd').onclick=()=>{
-  editingIndex=null; // quan trọng: thêm mới
+  editingIndex=null;
   m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
   m_daKiemKe.checked=m_chonIn.checked=false;
   m_ngayMua.value='';
@@ -211,7 +211,10 @@ document.getElementById('btnAdd').onclick=()=>{
 };
 
 // Hủy modal
-document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none';editingIndex=null;};
+document.getElementById('cancelBtn').onclick=()=>{
+  modal.style.display='none';
+  editingIndex=null;
+};
 
 // Lưu/cập nhật
 document.getElementById('saveBtn').onclick=()=>{
@@ -233,13 +236,23 @@ document.getElementById('saveBtn').onclick=()=>{
 
 function openEditModal(idx){
   editingIndex=(typeof idx==='number')?idx:null;
-  if(editingIndex===null){m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
-    m_daKiemKe.checked=m_chonIn.checked=false;m_ngayMua.value='';
-  }else{const r=allData[editingIndex];
-    m_soThe.value=r.soThe;m_soMay.value=r.soMay;m_loaiMay.value=r.loaiMay;m_viTri.value=r.viTri;m_ghiChu.value=r.ghiChu;
-    m_daKiemKe.checked=r.daKiemKe;m_chonIn.checked=r.chonIn;
-    m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';}
-  modal.style.display='flex';m_soThe.focus();
+  if(editingIndex===null){
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
+    m_daKiemKe.checked=m_chonIn.checked=false;
+    m_ngayMua.value='';
+  }else{
+    const r=allData[editingIndex];
+    m_soThe.value=r.soThe;
+    m_soMay.value=r.soMay;
+    m_loaiMay.value=r.loaiMay;
+    m_viTri.value=r.viTri;
+    m_ghiChu.value=r.ghiChu;
+    m_daKiemKe.checked=r.daKiemKe;
+    m_chonIn.checked=r.chonIn;
+    m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
+  }
+  modal.style.display='flex';
+  m_soThe.focus();
 }
 
 /* ===== Tìm kiếm ===== */
