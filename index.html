@@ -291,8 +291,8 @@ document.getElementById('btnPrint').onclick = () => {
       margin: 0;
       padding: 0;
       display: grid;
-      grid-template-columns: repeat(5, 1fr); /* ✅ 5 cột x 5 hàng = 25 tem */
-      grid-template-rows: repeat(5, 1fr);
+      grid-template-columns: repeat(5, 1fr); /* ✅ 5 cột */
+      grid-template-rows: repeat(6, 1fr); /* ✅ 6 hàng = 30 tem */
       gap: 3mm; /* khoảng cách giữa các tem */
       justify-items: center;
       align-items: center;
@@ -308,15 +308,15 @@ document.getElementById('btnPrint').onclick = () => {
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 2mm; /* ✅ viền sát */
+      padding: 1.5mm; /* ✅ sát hơn */
       text-align: center;
       page-break-inside: avoid;
       position: relative;
     }
     .tem .top {
       font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 1mm;
+      font-size: 13px;
+      margin-bottom: 0.5mm;
     }
     .tem .qr {
       flex: 1;
@@ -326,8 +326,8 @@ document.getElementById('btnPrint').onclick = () => {
       margin: 0;
     }
     .tem .bottom {
-      font-size: 12px;
-      margin-top: 1mm;
+      font-size: 11px;
+      margin-top: 0.5mm;
     }
     canvas {
       display: block;
@@ -360,8 +360,8 @@ document.getElementById('btnPrint').onclick = () => {
       if (qrDiv) {
         new QRCode(qrDiv, {
           text: location.href.split('#')[0] + '#' + code,
-          width: 100,  // ✅ QR to, vừa khít khung
-          height: 100
+          width: 95,  // ✅ vừa khít khung
+          height: 95
         });
       }
     });
@@ -371,7 +371,6 @@ document.getElementById('btnPrint').onclick = () => {
     }, 600);
   };
 };
-
 
 // Highlight + scroll khi quét QR (số thẻ là chữ/số kết hợp)
 function highlightFromHash() {
