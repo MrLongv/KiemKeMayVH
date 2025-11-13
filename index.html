@@ -199,17 +199,38 @@ const m_ghiChu=document.getElementById('m_ghiChu');
 const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_chonIn=document.getElementById('m_chonIn');
 const m_ngayMua=document.getElementById('m_ngayMua');
-document.getElementById('btnAdd').onclick=()=>openEditModal(null);
+
+// Mở modal thêm
+document.getElementById('btnAdd').onclick=()=>{
+  editingIndex=null; // quan trọng: thêm mới
+  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
+  m_daKiemKe.checked=m_chonIn.checked=false;
+  m_ngayMua.value='';
+  modal.style.display='flex';
+  m_soThe.focus();
+};
+
+// Hủy modal
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none';editingIndex=null;};
+
+// Lưu/cập nhật
 document.getElementById('saveBtn').onclick=()=>{
   const obj={soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
     viTri:m_viTri.value.trim(),ghiChu:m_ghiChu.value.trim(),daKiemKe:m_daKiemKe.checked,
     chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''};
   if(!obj.soThe){alert('Số thẻ không được để trống');return;}
-  if(editingIndex===null)allData.push(obj);else allData[editingIndex]=obj;
-  modal.style.display='none';editingIndex=null;renderTable();
-  autoSyncRow(editingIndex===null?allData.length-1:editingIndex);
+  if(editingIndex===null){
+    allData.push(obj);
+    autoSyncRow(allData.length-1);
+  }else{
+    allData[editingIndex]=obj;
+    autoSyncRow(editingIndex);
+  }
+  modal.style.display='none';
+  editingIndex=null;
+  renderTable();
 };
+
 function openEditModal(idx){
   editingIndex=(typeof idx==='number')?idx:null;
   if(editingIndex===null){m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
