@@ -270,6 +270,7 @@ document.getElementById('btnSync').onclick=()=>{
   script.onerror=()=>{console.warn('Có thể ghi thành công nhưng JSONP callback chưa load');delete window[cb];script.remove();};
   document.head.appendChild(script);
 };
+  
 document.getElementById('btnPrint').onclick = () => {
   const printData = allData.filter(r => r.chonIn);
   if (printData.length === 0) {
@@ -290,8 +291,8 @@ document.getElementById('btnPrint').onclick = () => {
       margin: 0;
       padding: 0;
       display: grid;
-      grid-template-columns: repeat(4, 1fr); /* 4 cột */
-      grid-template-rows: repeat(6, auto);   /* 6 hàng = 24 tem */
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(6, auto);
       gap: 5mm;
       justify-items: center;
       align-items: center;
@@ -299,28 +300,30 @@ document.getElementById('btnPrint').onclick = () => {
     .tem {
       width: 100%;
       aspect-ratio: 1/1.05;
-      border: 1px solid #000;
-      border-radius: 5px;
+      border: 0.6px solid #000;
+      border-radius: 3px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 3px 2px;
+      padding: 2px 2px 3px 2px;
       text-align: center;
       page-break-inside: avoid;
     }
     .tem .top {
       font-weight: bold;
-      font-size: 10px;
+      font-size: 9.5px;
       margin-bottom: 2px;
+      line-height: 1.1;
     }
     .tem .qr {
       margin: 0;
     }
     .tem .bottom {
       font-size: 9px;
-      margin-top: 3px;
+      margin-top: 2px;
+      line-height: 1.1;
     }
     canvas {
       display: block;
@@ -329,7 +332,6 @@ document.getElementById('btnPrint').onclick = () => {
   `);
   w.document.write('</style></head><body>');
 
-  // Sinh từng tem
   printData.forEach(r => {
     const code = encodeURIComponent(r.soThe || '');
     const soThe = r.soThe || '';
@@ -346,7 +348,7 @@ document.getElementById('btnPrint').onclick = () => {
   w.document.write('</body></html>');
   w.document.close();
 
-  // Vẽ QR code
+  // Sinh QR khi cửa sổ in đã sẵn sàng
   w.onload = () => {
     printData.forEach(r => {
       const code = encodeURIComponent(r.soThe || '');
@@ -354,15 +356,15 @@ document.getElementById('btnPrint').onclick = () => {
       if (qrDiv) {
         new QRCode(qrDiv, {
           text: location.href.split('#')[0] + '#' + code,
-          width: 60,   // ✅ QR nhỏ gọn phù hợp 24 tem
-          height: 60
+          width: 55,   // QR nhỏ gọn hơn tí
+          height: 55
         });
       }
     });
     setTimeout(() => {
       w.focus();
       w.print();
-    }, 500);
+    }, 400);
   };
 };
 
