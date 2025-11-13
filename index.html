@@ -221,11 +221,17 @@ tbody.addEventListener('click',e=>{
   if(act==='qr'){const code=encodeURIComponent(allData[i].soThe||'');const url=location.href.split('#')[0]+'#'+code;prompt('Link QR (copy & in tem):',url);}
 });
 
-tbody.addEventListener('change',e=>{
-  const tr=e.target.closest('tr'); if(!tr) return;
-  const idx=Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')){allData[idx].daKiemKe=e.target.checked; autoSyncRow(idx);}
-  if(e.target.classList.contains('chonIn')){allData[idx].chonIn=e.target.checked;}
+tbody.addEventListener('change', e=>{
+  const tr = e.target.closest('tr'); if(!tr) return;
+  const idx = Number(tr.dataset.index);
+  if(e.target.classList.contains('daKiemKe')){
+    allData[idx].daKiemKe = e.target.checked; 
+    autoSyncRow(idx);
+  }
+  if(e.target.classList.contains('chonIn')){
+    allData[idx].chonIn = e.target.checked;
+    autoSyncRow(idx);  // 👈 thêm dòng này để tự lưu
+  }
   renderTable();
 });
 
