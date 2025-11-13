@@ -285,15 +285,21 @@ document.getElementById('btnPrint').onclick=()=>{
 };
 
 // Highlight + scroll khi quét QR
-function highlightFromHash(){
-  const hash=decodeURIComponent(location.hash.slice(1));
-  Array.from(tbody.children).forEach(tr=>{
-    const idx=Number(tr.dataset.index),r=allData[idx];
-    if(r.soThe===hash){tr.classList.add('highlight'); tr.scrollIntoView({behavior:'smooth', block:'center'});}
-    else{tr.classList.remove('highlight');}
+// Highlight + scroll khi quét QR (số thẻ là chữ/số kết hợp)
+function highlightFromHash() {
+  const hash = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
+  Array.from(tbody.children).forEach(tr => {
+    const idx = Number(tr.dataset.index);
+    const r = allData[idx];
+    const soThe = r.soThe ? String(r.soThe).trim().toLowerCase() : '';
+    if (soThe && soThe === hash) {
+      tr.classList.add('highlight');
+      tr.scrollIntoView({behavior:'smooth', block:'center'});
+    } else {
+      tr.classList.remove('highlight');
+    }
   });
 }
-
 window.addEventListener('hashchange',highlightFromHash);
 document.getElementById('btnRefresh').onclick=loadData;
 
