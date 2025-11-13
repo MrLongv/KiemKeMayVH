@@ -301,7 +301,7 @@ document.getElementById('btnPrint').onclick = () => {
       width: 38mm;
       height: 45mm;
       border: 0.8px solid #000;
-      border-radius: 3px;
+      border-radius: 1px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -358,8 +358,8 @@ document.getElementById('btnPrint').onclick = () => {
       if (qrDiv) {
         new QRCode(qrDiv, {
           text: location.href.split('#')[0] + '#' + code,
-          width: 85,   // ✅ to đẹp, sát khung
-          height: 85
+          width: 90,   // ✅ to đẹp, sát khung
+          height: 90
         });
       }
     });
