@@ -88,7 +88,7 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhEP9cXiP40yjWT3Ub-LQ5AJ13fk2aAsFI6trzcVlG0M5ebzPkVZzT3oENrrL8JcTi/exec'; // <-- URL Web App
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw4hhnccDlGrmBYQ1rxJ1oCNdSzQBIbd-3DDfF9nefvSX6ywYkcsTAEQ_mCprWDFbR3/exec'; // <-- URL Web App
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex = null;
@@ -145,22 +145,45 @@ function renderTable(){
 }
 
 /* ===== Gửi dữ liệu tức thì một dòng lên Sheet ===== */
-function autoSyncRow(i){
-  if(i==null || !allData[i]) return;
+/* ===== Gửi dữ liệu tức thì CHỈ 1 dòng ===== */
+function autoSyncRow(i) {
+  if (i == null || !allData[i]) return;
   const row = allData[i];
-  const payload = allData; // có thể gửi toàn bộ để an toàn, nhưng cũng có thể chỉ gửi 1 dòng
-  const encoded = encodeURIComponent(JSON.stringify(payload));
+  const encoded = encodeURIComponent(JSON.stringify(row));
   const cbName = '__auto_cb_' + Date.now();
-  window[cbName] = function(res){
-    try{
-      if(res && res.success){
-        setStatus('✅ Đã lưu tự động dòng '+(i+1));
-      } else setStatus('Lỗi lưu dòng '+(i+1), false);
-    } finally { delete window[cbName]; script.remove(); }
+
+  window[cbName] = function (res) {
+    try {
+      if (res && res.success) {
+        setStatus('✅ Đã lưu dòng ' + (i + 1));
+      } else {
+        setStatus('❌ Lỗi lưu dòng ' + (i + 1), false);
+      }
+    } finally {
+      delete window[cbName];
+      script.remove();
+    }
   };
+
   const script = document.createElement('script');
-  script.src = GAS_URL + '?save=1&callback=' + cbName + '&data=' + encoded + '&_=' + Date.now();
-  script.onerror = ()=>{ console.warn('AutoSync lỗi mạng, sẽ thử lại khi cần.'); delete window[cbName]; script.remove(); };
+  // chỉ gửi 1 dòng, dùng update=1 thay vì save=1
+  script.src =
+    GAS_URL +
+    '?update=1&row=' +
+    (i + 1) +
+    '&data=' +
+    encoded +
+    '&callback=' +
+    cbName +
+    '&_=' +
+    Date.now();
+
+  script.onerror = () => {
+    console.warn('⚠️ AutoSync lỗi mạng, thử lại khi cần.');
+    delete window[cbName];
+    script.remove();
+  };
+
   document.head.appendChild(script);
 }
 
