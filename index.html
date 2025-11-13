@@ -46,7 +46,7 @@ tr.highlight{background:#ffeaa7 !important}
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 
-<div class="note">Chỉ cần check vào dấu kiểm kê thì dữ liệu sẽ tự động lưu về sheet</div>
+<div class="note">QR code, in tem, checkbox "Đã kiểm kê" + "Chọn để in", ngày mua chuẩn dd/mm/yyyy</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -77,9 +77,10 @@ tr.highlight{background:#ffeaa7 !important}
     <label>Số máy</label><input id="m_soMay" />
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
+    <label>Hành động</label><input id="m_hanhDong" />
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <label>Đã kiểm </label><input type="checkbox" id="m_daKiemKe" />
-    <label>In QR</label><input type="checkbox" id="m_chonIn" />
+    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
+    <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
     <label>Ngày mua</label><input type="date" id="m_ngayMua" />
     <label>Nơi mua</label><input id="m_noiMua" />
     <div class="actions">
@@ -98,17 +99,17 @@ const filterBox=document.getElementById('filterBox'), searchBox=document.getElem
 const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
       m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
-      m_ghiChu=document.getElementById('m_ghiChu'), m_daKiemKe=document.getElementById('m_daKiemKe'),
+      m_hanhDong=document.getElementById('m_hanhDong'), m_ghiChu=document.getElementById('m_ghiChu'), 
+      m_daKiemKe=document.getElementById('m_daKiemKe'),
       m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua'),
       m_noiMua=document.getElementById('m_noiMua');
 
 let allData=[], editingIndex=null;
-
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
 
 // ==== PHẦN MẬT KHẨU ====
-const PASSWORD = '12345'; 
+const PASSWORD = '12345'; // mật khẩu
 const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
 const pwdModal = document.createElement('div');
 pwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
@@ -136,7 +137,6 @@ pwdBtn.onclick = () => {
     loadData();
   } else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
 };
-
 const loginTime = localStorage.getItem('loginTime');
 if(loginTime && Date.now() - loginTime < 3600*1000){
   pwdModal.style.display='none';
@@ -146,7 +146,7 @@ if(loginTime && Date.now() - loginTime < 3600*1000){
 
 // ==== HẾT PHẦN MẬT KHẨU ====
 
-// Render bảng với filter + search
+// Render bảng
 function renderTable(){
   const filter=filterBox.value;
   const search=searchBox.value.toLowerCase();
@@ -157,7 +157,7 @@ function renderTable(){
     if(filter==='chuaKiemKe' && r.daKiemKe) show=false;
     if(filter==='daIn' && !r.chonIn) show=false;
     if(filter==='chuaIn' && r.chonIn) show=false;
-    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu+r.noiMua).toLowerCase().includes(search)) show=false;
+    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
     if(show){
       const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
@@ -170,7 +170,7 @@ function renderTable(){
         <td>${safeText(r.ghiChu)}</td>
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua||''}</td>
+        <td>${r.ngayMua ? new Date(r.ngayMua).toLocaleDateString('en-GB') : ''}</td>
         <td>${safeText(r.noiMua||'')}</td>
       `;
       tbody.appendChild(tr);
@@ -178,7 +178,7 @@ function renderTable(){
   });
 }
 
-// Load dữ liệu JSONP
+// Load JSONP
 function loadData(){
   setStatus('Đang tải dữ liệu...');
   const cb='__load_cb_'+Date.now();
@@ -202,6 +202,7 @@ function loadData(){
   document.head.appendChild(script);
 }
 
+// Auto sync 1 dòng
 function autoSyncRow(i){
   if(i==null||!allData[i]) return;
   const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
@@ -233,15 +234,15 @@ tbody.addEventListener('change', e=>{
   }
   if(e.target.classList.contains('chonIn')){
     allData[idx].chonIn = e.target.checked;
-    autoSyncRow(idx); 
+    autoSyncRow(idx);
   }
   renderTable();
 });
 
-// Modal Thêm / sửa
+// Modal add/edit
 document.getElementById('btnAdd').onclick=()=>{
   editingIndex=null;
-  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value=m_noiMua.value='';
+  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value=m_hanhDong.value=m_noiMua.value='';
   m_daKiemKe.checked=m_chonIn.checked=false;
   m_ngayMua.value='';
   modal.style.display='flex'; m_soThe.focus();
@@ -249,13 +250,9 @@ document.getElementById('btnAdd').onclick=()=>{
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick=()=>{
   const obj={
-    soThe:m_soThe.value.trim(),
-    soMay:m_soMay.value.trim(),
-    loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(),
-    ghiChu:m_ghiChu.value.trim(),
-    daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,
+    soThe:m_soThe.value.trim(), soMay:m_soMay.value.trim(), loaiMay:m_loaiMay.value.trim(),
+    viTri:m_viTri.value.trim(), hanhDong:m_hanhDong.value.trim(), ghiChu:m_ghiChu.value.trim(),
+    daKiemKe:m_daKiemKe.checked, chonIn:m_chonIn.checked,
     ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):'',
     noiMua:m_noiMua.value.trim()
   };
@@ -270,10 +267,10 @@ document.getElementById('saveBtn').onclick=()=>{
 function openEditModal(idx){
   editingIndex=Number(idx);
   const r=allData[editingIndex];
-  m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
-  m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
+  m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri;
+  m_hanhDong.value=r.hanhDong||''; m_ghiChu.value=r.ghiChu; m_daKiemKe.checked=r.daKiemKe;
+  m_chonIn.checked=r.chonIn; m_noiMua.value=r.noiMua||'';
   m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
-  m_noiMua.value = r.noiMua || '';
   modal.style.display='flex'; m_soThe.focus();
 }
 
@@ -287,64 +284,44 @@ document.getElementById('btnSync').onclick=()=>{
   script.onerror=()=>{console.warn('Có thể ghi thành công nhưng JSONP callback chưa load');delete window[cb];script.remove();};
   document.head.appendChild(script);
 };
-  
+
+// Print QR code
 document.getElementById('btnPrint').onclick = () => {
   const printData = allData.filter(r => r.chonIn);
-  if (printData.length === 0) {
-    alert('Chọn ít nhất 1 dòng để in');
-    return;
-  }
+  if (!printData.length) { alert('Chọn ít nhất 1 dòng để in'); return; }
+
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>In Tem QR</title>');
-  w.document.write('<style>');
-  w.document.write(`
-    @page {size: A4 portrait;margin: 4mm;}
-    body{font-family: Arial;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,auto);gap:2mm;justify-items:center;align-items:center;}
-    .tem{width:34mm;height:40mm;border:1px solid #000;border-radius:2px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1mm;box-sizing:border-box;text-align:center;page-break-inside:avoid;}
-    .tem .top{font-weight:bold;font-size:13px;margin-bottom:0.3mm;}
-    .tem .qr{margin:0;padding:0;line-height:0;}
-    .tem .bottom{font-weight:bold;font-size:12px;margin-top:1mm;}
-    canvas{display:block;margin:0;width:82px !important;height:75px !important;}
-  `);
-  w.document.write('</style></head><body>');
+  w.document.write('<style>@page{size:A4 portrait;margin:4mm}body{font-family:Arial;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,auto);gap:2mm;justify-items:center;align-items:center}.tem{width:34mm;height:40mm;border:1px solid #000;border-radius:2px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1mm;box-sizing:border-box;text-align:center}.tem .top{font-weight:bold;font-size:13px;margin-bottom:0.3mm}.tem .qr{margin:0;padding:0;line-height:0}.tem .bottom{font-weight:bold;font-size:12px;margin-top:1mm}canvas{display:block;margin:0;width:82px!important;height:75px!important}</style></head><body>');
+
   printData.forEach(r => {
     const code = encodeURIComponent(r.soThe || '');
     const soThe = r.soThe || '';
     const soMay = r.soMay || '';
-    w.document.write(`
-      <div class="tem">
-        <div class="top">${soThe}</div>
-        <div class="qr" id="qr_${code}"></div>
-        <div class="bottom">Số máy: ${soMay}</div>
-      </div>
-    `);
+    w.document.write(`<div class="tem"><div class="top">${soThe}</div><div class="qr" id="qr_${code}"></div><div class="bottom">Số máy: ${soMay}</div></div>`);
   });
-  w.document.write('</body></html>');
-  w.document.close();
+
+  w.document.write('</body></html>'); w.document.close();
+
   w.onload = () => {
     printData.forEach(r => {
       const code = encodeURIComponent(r.soThe || '');
       const qrDiv = w.document.getElementById('qr_' + code);
-      if (qrDiv) {
-        new QRCode(qrDiv, {text: location.href.split('#')[0] + '#' + code,width:90,height:90});
-      }
+      if (qrDiv) new QRCode(qrDiv, { text: location.href.split('#')[0]+'#'+code, width:90, height:90 });
     });
-    setTimeout(() => { w.focus(); w.print(); }, 600);
+    setTimeout(()=>{w.focus(); w.print();},600);
   };
 };
 
+// Highlight khi quét QR
 function highlightFromHash() {
   const hash = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
   Array.from(tbody.children).forEach(tr => {
     const idx = Number(tr.dataset.index);
     const r = allData[idx];
     const soThe = r.soThe ? String(r.soThe).trim().toLowerCase() : '';
-    if (soThe && soThe === hash) {
-      tr.classList.add('highlight');
-      tr.scrollIntoView({behavior:'smooth', block:'center'});
-    } else {
-      tr.classList.remove('highlight');
-    }
+    if (soThe && soThe === hash) { tr.classList.add('highlight'); tr.scrollIntoView({behavior:'smooth', block:'center'}); }
+    else tr.classList.remove('highlight');
   });
 }
 window.addEventListener('hashchange',highlightFromHash);
