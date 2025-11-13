@@ -42,7 +42,6 @@ tr.highlight{background:#ffeaa7 !important}
   <button id="btnAdd">➕ Thêm</button>
   <button id="btnSync">☁️ Đồng bộ lên Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
-  <button id="btnPrint">🖨️ In tem QR</button>
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 
@@ -57,12 +56,12 @@ tr.highlight{background:#ffeaa7 !important}
         <th>Số máy</th>
         <th>Loại máy</th>
         <th>Vị trí</th>
-        <th>Hành động</th>
         <th>Ghi chú</th>
+        <th>Nơi mua</th>
+        <th>Ngày mua</th>
         <th>Đã kiểm kê</th>
         <th>Chọn để in</th>
-        <th>Ngày mua</th>
-        <th>Nơi mua</th>
+        <th>Hành động</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -77,12 +76,11 @@ tr.highlight{background:#ffeaa7 !important}
     <label>Số máy</label><input id="m_soMay" />
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
-    <label>Hành động</label><input id="m_hanhDong" />
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
+    <label>Nơi mua</label><input id="m_noiMua" />
+    <label>Ngày mua</label><input type="date" id="m_ngayMua" />
     <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
-    <label>Ngày mua</label><input type="date" id="m_ngayMua" />
-    <label>Nơi mua</label><input id="m_noiMua" />
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
@@ -92,15 +90,15 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbyiUW1KGPvAMN42DrO0N6qGbbR7TIwr4kY5BAYXuj4XIFTH0HsiaSW6gJSvAIGLGNbF/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbyJ098SddsKWCbuDlgZHnflo9WkG6ckIPbHBhiNukJNVSN8IzTS8v8cdQtgynDFTPH1/exec';
 const statusEl=document.getElementById('status'),tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'),searchBox=document.getElementById('searchBox');
 const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe'),m_soMay=document.getElementById('m_soMay'),
       m_loaiMay=document.getElementById('m_loaiMay'),m_viTri=document.getElementById('m_viTri'),
-      m_hanhDong=document.getElementById('m_hanhDong'),m_ghiChu=document.getElementById('m_ghiChu'),
+      m_ghiChu=document.getElementById('m_ghiChu'),m_noiMua=document.getElementById('m_noiMua'),
       m_daKiemKe=document.getElementById('m_daKiemKe'),m_chonIn=document.getElementById('m_chonIn'),
-      m_ngayMua=document.getElementById('m_ngayMua'),m_noiMua=document.getElementById('m_noiMua');
+      m_ngayMua=document.getElementById('m_ngayMua');
 
 let allData=[],editingIndex=null;
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
@@ -136,7 +134,7 @@ function renderTable(){
     if(filter==='chuaKiemKe' && r.daKiemKe) show=false;
     if(filter==='daIn' && !r.chonIn) show=false;
     if(filter==='chuaIn' && r.chonIn) show=false;
-    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
+    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu+r.noiMua).toLowerCase().includes(search)) show=false;
     if(show){
       const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
@@ -145,12 +143,12 @@ function renderTable(){
       <td>${safeText(r.soMay)}</td>
       <td>${safeText(r.loaiMay)}</td>
       <td>${safeText(r.viTri)}</td>
-      <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>
       <td>${safeText(r.ghiChu)}</td>
+      <td>${safeText(r.noiMua)}</td>
+      <td>${safeText(r.ngayMua)}</td>
       <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
       <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-      <td>${r.ngayMua ? new Date(r.ngayMua).toLocaleDateString('en-GB') : ''}</td>
-      <td>${safeText(r.noiMua||'')}</td>`;
+      <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`;
       tbody.appendChild(tr);
     }
   });
@@ -162,7 +160,12 @@ function autoSyncRow(i){
   const row=allData[i];
   const encoded=encodeURIComponent(JSON.stringify(row));
   const cb='__auto_cb_'+Date.now();
-  window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1));else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb];script.remove();}};
+  window[cb]=function(res){
+    try{
+      if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1));
+      else setStatus('❌ Lỗi lưu dòng '+(i+1),false);
+    }finally{delete window[cb];script.remove();}
+  };
   const script=document.createElement('script');
   script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
   script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng');delete window[cb];script.remove();};
@@ -191,7 +194,7 @@ tbody.addEventListener('change',e=>{
 // ========== MODAL ==========
 document.getElementById('btnAdd').onclick=()=>{
   editingIndex=null;
-  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_hanhDong.value=m_ghiChu.value=m_noiMua.value='';
+  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value=m_noiMua.value='';
   m_daKiemKe.checked=m_chonIn.checked=false;
   m_ngayMua.value='';
   modal.style.display='flex';
@@ -200,11 +203,15 @@ document.getElementById('cancelBtn').onclick=()=>modal.style.display='none';
 
 document.getElementById('saveBtn').onclick=()=>{
   const obj={
-    soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(),hanhDong:m_hanhDong.value.trim(),ghiChu:m_ghiChu.value.trim(),
-    daKiemKe:m_daKiemKe.checked,chonIn:m_chonIn.checked,
-    ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):'',
-    noiMua:m_noiMua.value.trim()
+    soThe:m_soThe.value.trim(),
+    soMay:m_soMay.value.trim(),
+    loaiMay:m_loaiMay.value.trim(),
+    viTri:m_viTri.value.trim(),
+    ghiChu:m_ghiChu.value.trim(),
+    noiMua:m_noiMua.value.trim(),
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    ngayMua:m_ngayMua.value?new Date(m_ngayMua.value).toLocaleDateString('en-GB'):''
   };
   if(!obj.soThe){alert('Số thẻ không được trống');return;}
   if(editingIndex===null){allData.push(obj);autoSyncRow(allData.length-1);}
@@ -213,9 +220,10 @@ document.getElementById('saveBtn').onclick=()=>{
 };
 
 function openEditModal(i){
-  editingIndex=i;const r=allData[i];
-  m_soThe.value=r.soThe;m_soMay.value=r.soMay;m_loaiMay.value=r.loaiMay;m_viTri.value=r.viTri;
-  m_hanhDong.value=r.hanhDong||'';m_ghiChu.value=r.ghiChu||'';m_noiMua.value=r.noiMua||'';
+  editingIndex=i;
+  const r=allData[i];
+  m_soThe.value=r.soThe||'';m_soMay.value=r.soMay||'';m_loaiMay.value=r.loaiMay||'';m_viTri.value=r.viTri||'';
+  m_ghiChu.value=r.ghiChu||'';m_noiMua.value=r.noiMua||'';
   m_daKiemKe.checked=r.daKiemKe;m_chonIn.checked=r.chonIn;
   m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
   modal.style.display='flex';
@@ -235,7 +243,18 @@ window.addEventListener('hashchange',highlightFromHash);
 
 // ========== KHỞI ĐỘNG ==========
 document.getElementById('btnRefresh').onclick=loadData;
-document.getElementById('btnSync').onclick=()=>{const payload=encodeURIComponent(JSON.stringify(allData));const cb='__sync_'+Date.now();window[cb]=r=>{if(r&&r.success)setStatus('Đồng bộ '+(r.written||0)+' dòng');else setStatus('Lỗi đồng bộ',false);delete window[cb];s.remove();};const s=document.createElement('script');s.src=GAS_URL+'?save=1&callback='+cb+'&data='+payload+'&_='+Date.now();document.head.appendChild(s);};
+document.getElementById('btnSync').onclick=()=>{
+  const payload=encodeURIComponent(JSON.stringify(allData));
+  const cb='__sync_'+Date.now();
+  window[cb]=r=>{
+    if(r&&r.success)setStatus('Đồng bộ '+(r.written||0)+' dòng');
+    else setStatus('Lỗi đồng bộ',false);
+    delete window[cb];s.remove();
+  };
+  const s=document.createElement('script');
+  s.src=GAS_URL+'?save=1&callback='+cb+'&data='+payload+'&_='+Date.now();
+  document.head.appendChild(s);
+};
 loadData();
 </script>
 </body>
