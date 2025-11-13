@@ -88,7 +88,7 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhEP9cXiP40yjWT3Ub-LQ5AJ13fk2aAsFI6trzcVlG0M5ebzPkVZzT3oENrrL8JcTi/exec'; // <-- Thay bằng URL Web App deploy
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhEP9cXiP40yjWT3Ub-LQ5AJ13fk2aAsFI6trzcVlG0M5ebzPkVZzT3oENrrL8JcTi/exec'; // <-- URL Web App
 const statusEl = document.getElementById('status');
 const tbody = document.querySelector('#dataTable tbody');
 let allData = [], editingIndex = null;
@@ -144,6 +144,26 @@ function renderTable(){
   });
 }
 
+/* ===== Gửi dữ liệu tức thì một dòng lên Sheet ===== */
+function autoSyncRow(i){
+  if(i==null || !allData[i]) return;
+  const row = allData[i];
+  const payload = allData; // có thể gửi toàn bộ để an toàn, nhưng cũng có thể chỉ gửi 1 dòng
+  const encoded = encodeURIComponent(JSON.stringify(payload));
+  const cbName = '__auto_cb_' + Date.now();
+  window[cbName] = function(res){
+    try{
+      if(res && res.success){
+        setStatus('✅ Đã lưu tự động dòng '+(i+1));
+      } else setStatus('Lỗi lưu dòng '+(i+1), false);
+    } finally { delete window[cbName]; script.remove(); }
+  };
+  const script = document.createElement('script');
+  script.src = GAS_URL + '?save=1&callback=' + cbName + '&data=' + encoded + '&_=' + Date.now();
+  script.onerror = ()=>{ console.warn('AutoSync lỗi mạng, sẽ thử lại khi cần.'); delete window[cbName]; script.remove(); };
+  document.head.appendChild(script);
+}
+
 /* ===== Bảng sự kiện ===== */
 tbody.addEventListener('click',e=>{
   const btn=e.target.closest('button');
@@ -156,10 +176,17 @@ tbody.addEventListener('click',e=>{
     prompt('Link QR (copy & in tem):', url);
   }
 });
+
 tbody.addEventListener('change',e=>{
   const tr=e.target.closest('tr'); const idx=Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')) allData[idx].daKiemKe=e.target.checked;
-  if(e.target.classList.contains('chonIn')) allData[idx].chonIn=e.target.checked;
+  if(e.target.classList.contains('daKiemKe')){
+    allData[idx].daKiemKe = e.target.checked;
+    autoSyncRow(idx); // ✅ tự đồng bộ khi tích Đã kiểm kê
+  }
+  if(e.target.classList.contains('chonIn')){
+    allData[idx].chonIn = e.target.checked;
+    // Không auto sync checkbox in
+  }
 });
 
 /* ===== Modal thêm/sửa ===== */
@@ -172,8 +199,10 @@ const m_ghiChu=document.getElementById('m_ghiChu');
 const m_daKiemKe=document.getElementById('m_daKiemKe');
 const m_chonIn=document.getElementById('m_chonIn');
 const m_ngayMua=document.getElementById('m_ngayMua');
+
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
 document.getElementById('cancelBtn').onclick=()=>{ modal.style.display='none'; editingIndex=null; };
+
 document.getElementById('saveBtn').onclick=()=>{
   const obj = {
     soThe: m_soThe.value.trim(),
@@ -188,7 +217,9 @@ document.getElementById('saveBtn').onclick=()=>{
   if(!obj.soThe){alert('Số thẻ không được để trống'); return;}
   if(editingIndex===null) allData.push(obj); else allData[editingIndex]=obj;
   modal.style.display='none'; editingIndex=null; renderTable();
+  autoSyncRow(editingIndex===null ? allData.length-1 : editingIndex); // ✅ tự đồng bộ sau khi cập nhật
 };
+
 function openEditModal(idx){
   editingIndex = (typeof idx==='number')?idx:null;
   if(editingIndex===null){
@@ -215,7 +246,7 @@ document.getElementById('searchBox').addEventListener('input',e=>{
   });
 });
 
-/* ===== JSONP Đồng bộ dữ liệu ===== */
+/* ===== JSONP Đồng bộ thủ công ===== */
 document.getElementById('btnSync').onclick = () => {
   const payload = allData;
   const encoded = encodeURIComponent(JSON.stringify(payload));
@@ -241,9 +272,9 @@ document.getElementById('btnPrint').onclick=()=>{
   const w=window.open('','_blank');
   w.document.write('<html><head><title>In Tem QR</title><style>body{font-family:Arial;margin:0;padding:0}.tem{width:calc(100% - 10px);max-width:300px;height:180px;margin:5px auto;border:1px solid #000;padding:4px;box-sizing:border-box;text-align:center;white-space:nowrap;word-break:normal;float:none} canvas{margin-top:8px;}</style></head><body>');
   printData.forEach(r=>{
-  const code = encodeURIComponent(r.soThe||'');
-  w.document.write('<div class="tem"><b>Số thẻ:</b> '+r.soThe+'<br><b>Số máy:</b> '+r.soMay+'<div id="qr_'+code+'"></div></div>');
-});
+    const code = encodeURIComponent(r.soThe||'');
+    w.document.write('<div class="tem"><b>Số thẻ:</b> '+r.soThe+'<br><b>Số máy:</b> '+r.soMay+'<div id="qr_'+code+'"></div></div>');
+  });
   w.document.write('</body></html>');
   w.document.close();
   printData.forEach(r=>{
@@ -254,7 +285,7 @@ document.getElementById('btnPrint').onclick=()=>{
   w.focus(); w.print();
 };
 
-/* ===== Nhảy & highlight từ QR hash ===== */
+/* ===== Highlight từ QR ===== */
 function highlightFromHash(){
   const hash = decodeURIComponent(location.hash.slice(1));
   if(!hash) return;
@@ -272,10 +303,8 @@ function highlightFromHash(){
 window.addEventListener('load', highlightFromHash);
 window.addEventListener('hashchange', highlightFromHash);
 
-/* ===== Tải lại dữ liệu ===== */
+/* ===== Tải lại ===== */
 document.getElementById('btnRefresh').onclick = loadData;
-
-/* ===== Load khi mở ===== */
 loadData();
 </script>
 </body>
