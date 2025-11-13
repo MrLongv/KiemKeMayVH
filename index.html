@@ -284,7 +284,7 @@ document.getElementById('btnPrint').onclick = () => {
   w.document.write(`
     @page {
       size: A4 portrait;
-      margin: 10mm;
+      margin: 8mm;
     }
     body {
       font-family: Arial, sans-serif;
@@ -293,34 +293,35 @@ document.getElementById('btnPrint').onclick = () => {
       display: grid;
       grid-template-columns: repeat(3, 1fr); /* 3 cột */
       grid-template-rows: repeat(5, auto);   /* 5 hàng */
-      gap: 8mm;
+      gap: 6mm;
       justify-items: center;
       align-items: center;
     }
     .tem {
       width: 100%;
-      aspect-ratio: 1/1; /* khung vuông */
+      aspect-ratio: 1/1;
       border: 1px solid #000;
+      border-radius: 6px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 6px;
+      padding: 4px 2px;
       text-align: center;
       page-break-inside: avoid;
     }
     .tem .top {
       font-weight: bold;
-      font-size: 13px;
-      margin-bottom: 4px;
+      font-size: 12px;
+      margin-bottom: 2px;
     }
     .tem .qr {
-      margin: auto;
+      margin: 0;
     }
     .tem .bottom {
-      font-size: 12px;
-      margin-top: 4px;
+      font-size: 11px;
+      margin-top: 2px;
     }
     canvas {
       display: block;
@@ -336,9 +337,9 @@ document.getElementById('btnPrint').onclick = () => {
     const soMay = r.soMay ? r.soMay : '';
     w.document.write(`
       <div class="tem">
-        <div class="top">Số thẻ: ${soThe}</div>
+        <div class="top">${soThe}</div>
         <div class="qr" id="qr_${code}"></div>
-        <div class="bottom">Số máy: ${soMay}</div>
+        <div class="bottom">${soMay}</div>
       </div>
     `);
   });
@@ -346,7 +347,7 @@ document.getElementById('btnPrint').onclick = () => {
   w.document.write('</body></html>');
   w.document.close();
 
-  // Sau khi trang load, vẽ mã QR
+  // Vẽ QR code sau khi load
   w.onload = () => {
     printData.forEach(r => {
       const code = encodeURIComponent(r.soThe || '');
@@ -354,8 +355,8 @@ document.getElementById('btnPrint').onclick = () => {
       if (qrDiv) {
         new QRCode(qrDiv, {
           text: location.href.split('#')[0] + '#' + code,
-          width: 90,
-          height: 90
+          width: 80,
+          height: 80
         });
       }
     });
@@ -365,7 +366,6 @@ document.getElementById('btnPrint').onclick = () => {
     }, 500);
   };
 };
-
 // Highlight + scroll khi quét QR
 // Highlight + scroll khi quét QR (số thẻ là chữ/số kết hợp)
 function highlightFromHash() {
