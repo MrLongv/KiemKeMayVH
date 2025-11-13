@@ -236,9 +236,12 @@ document.getElementById('saveBtn').onclick=()=>{
     chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''
   };
   if(!obj.soThe){alert('Số thẻ không được để trống');return;}
-  if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
-  else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
-  modal.style.display='none'; editingIndex=null; renderTable();
+ if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
+else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
+modal.style.display='none';
+editingIndex=null;
+renderTable();
+highlightFromHash();  // <= thêm dòng này để cuộn tới QR nếu hash trùng soThe
 };
 function openEditModal(idx){
   editingIndex=Number(idx);
