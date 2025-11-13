@@ -291,22 +291,22 @@ document.getElementById('btnPrint').onclick = () => {
       margin: 0;
       padding: 0;
       display: grid;
-      grid-template-columns: repeat(5, 1fr); /* ✅ 5 cột */
-      grid-template-rows: repeat(6, auto); /* ✅ 6 hàng */
+      grid-template-columns: repeat(5, 1fr); /* 5 cột */
+      grid-template-rows: repeat(6, auto);   /* 6 hàng */
       gap: 3mm;
       justify-items: center;
       align-items: center;
     }
     .tem {
-      width: 38mm;          /* ✅ rộng 38mm */
-      height: 45mm;         /* ✅ cao 45mm */
-      border: 0.8px solid #000;  /* ✅ khung rõ ràng */
+      width: 38mm;
+      height: 45mm;
+      border: 0.8px solid #000;
       border-radius: 3px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 2mm;         /* ✅ thu sát vừa phải */
+      padding: 1.5mm;  /* 🔧 thu sát thêm một chút */
       box-sizing: border-box;
       text-align: center;
       page-break-inside: avoid;
@@ -314,17 +314,18 @@ document.getElementById('btnPrint').onclick = () => {
     .tem .top {
       font-weight: bold;
       font-size: 13px;
-      margin-bottom: 2mm;
+      margin-bottom: 1mm;  /* 🔧 giảm khoảng cách */
     }
     .tem .qr {
-      flex: 1;
+      flex: 0 0 auto;
       display: flex;
       justify-content: center;
       align-items: center;
+      margin: 0.5mm 0;  /* 🔧 sát hơn giữa QR và text */
     }
     .tem .bottom {
       font-size: 11px;
-      margin-top: 2mm;
+      margin-top: 0.5mm;  /* 🔧 gần hơn */
     }
     canvas {
       display: block;
@@ -357,7 +358,7 @@ document.getElementById('btnPrint').onclick = () => {
       if (qrDiv) {
         new QRCode(qrDiv, {
           text: location.href.split('#')[0] + '#' + code,
-          width: 85,   // ✅ to vừa khung
+          width: 85,   // ✅ to đẹp, sát khung
           height: 85
         });
       }
@@ -368,7 +369,6 @@ document.getElementById('btnPrint').onclick = () => {
     }, 600);
   };
 };
-
 
 // Highlight + scroll khi quét QR (số thẻ là chữ/số kết hợp)
 function highlightFromHash() {
