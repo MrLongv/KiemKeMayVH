@@ -90,198 +90,134 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded',()=>{
-const GAS_URL='https://script.google.com/macros/s/AKfycbxHxyBUyh7Brn9lf7bgEqPaZ0Z7N5Gq3YH3eUewk6Pz_wCMXj6lE4G2sQdkVP7_YcZa/exec';
+const GAS_URL='YOUR_GOOGLE_SCRIPT_DEPLOY_URL'; // <== Thay bằng URL Web App của bạn
 const statusEl=document.getElementById('status'),tbody=document.querySelector('#dataTable tbody');
-const filterBox=document.getElementById('filterBox');
+const filterBox=document.getElementById('filterBox'),searchBox=document.getElementById('searchBox');
+const modal=document.getElementById('editModal');
+const m_soThe=document.getElementById('m_soThe'),m_soMay=document.getElementById('m_soMay'),m_loaiMay=document.getElementById('m_loaiMay'),m_viTri=document.getElementById('m_viTri'),m_ghiChu=document.getElementById('m_ghiChu');
+const m_daKiemKe=document.getElementById('m_daKiemKe'),m_chonIn=document.getElementById('m_chonIn'),m_ngayMua=document.getElementById('m_ngayMua');
+
 let allData=[],editingIndex=null;
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return (v===null||v===undefined)?'':String(v);}
 
-/* ===== Load dữ liệu JSONP ===== */
-function loadData(){
-  setStatus('Đang tải dữ liệu...');
-  const cbName='__load_cb_'+Date.now();
-  window[cbName]=function(res){
-    try{
-      if(res && res.success && Array.isArray(res.data)){
-        allData=res.data.map(r=>{
-          return {
-            soThe:r.soThe||'',
-            soMay:r.soMay||'',
-            loaiMay:r.loaiMay||'',
-            viTri:r.viTri||'',
-            ghiChu:r.ghiChu||'',
-            daKiemKe:!!r.daKiemKe,
-            chonIn:!!r.chonIn,
-            ngayMua:r.ngayMua||''
-          };
-        });
-        renderTable();
-        setStatus('Đã tải '+allData.length+' dòng');
-        highlightFromHash();
-      }else{setStatus('Lỗi tải dữ liệu',false);}
-    }finally{delete window[cbName];script.remove();}
-  };
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?callback='+cbName+'&_='+Date.now();
-  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false);delete window[cbName];script.remove();};
-  document.head.appendChild(script);
-}
-
-/* ===== Render bảng có lọc ===== */
 function renderTable(){
   const filter=filterBox.value;
+  const search=searchBox.value.toLowerCase();
   tbody.innerHTML='';
-  const filtered=allData.filter(r=>{
-    if(filter==='daKiemKe') return r.daKiemKe;
-    if(filter==='chuaKiemKe') return !r.daKiemKe;
-    if(filter==='daIn') return r.chonIn;
-    if(filter==='chuaIn') return !r.chonIn;
-    return true;
-  });
-  filtered.forEach((r)=>{
-    const tr=document.createElement('tr');
-    const realIndex=allData.indexOf(r);
-    tr.dataset.index=realIndex;
-    tr.innerHTML=`
-      <td>${realIndex+1}</td>
-      <td>${safeText(r.soThe)}</td>
-      <td>${safeText(r.soMay)}</td>
-      <td>${safeText(r.loaiMay)}</td>
-      <td>${safeText(r.viTri)}</td>
-      <td>${safeText(r.ghiChu)}</td>
-      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-      <td>${r.ngayMua||''}</td>
-      <td>
-        <button data-act="edit" data-i="${realIndex}">✏️</button>
-        <button data-act="qr" data-i="${realIndex}">🔗</button>
-      </td>`;
-    tbody.appendChild(tr);
+  allData.forEach((r,idx)=>{
+    let show=true;
+    if(filter==='daKiemKe' && !r.daKiemKe) show=false;
+    if(filter==='chuaKiemKe' && r.daKiemKe) show=false;
+    if(filter==='daIn' && !r.chonIn) show=false;
+    if(filter==='chuaIn' && r.chonIn) show=false;
+    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
+    if(show){
+      const tr=document.createElement('tr'); tr.dataset.index=idx;
+      tr.innerHTML=`
+        <td>${idx+1}</td>
+        <td>${safeText(r.soThe)}</td>
+        <td>${safeText(r.soMay)}</td>
+        <td>${safeText(r.loaiMay)}</td>
+        <td>${safeText(r.viTri)}</td>
+        <td>${safeText(r.ghiChu)}</td>
+        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+        <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+        <td>${r.ngayMua||''}</td>
+        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`;
+      tbody.appendChild(tr);
+    }
   });
 }
 
-/* ===== Auto sync 1 dòng ===== */
-function autoSyncRow(i){
-  if(i==null||!allData[i])return;
-  const row=allData[i];
-  const encoded=encodeURIComponent(JSON.stringify(row));
-  const cbName='__auto_cb_'+Date.now();
-  window[cbName]=function(res){
-    try{if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1));else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}
-    finally{delete window[cbName];script.remove();}
+// Load dữ liệu JSONP
+function loadData(){
+  setStatus('Đang tải dữ liệu...');
+  const cb='__load_cb_'+Date.now();
+  window[cb]=function(res){
+    try{
+      if(res && res.success && Array.isArray(res.data)){allData=res.data; renderTable(); setStatus('Đã tải '+allData.length+' dòng');}
+      else setStatus('Lỗi tải dữ liệu',false);
+    }finally{delete window[cb];script.remove();}
   };
   const script=document.createElement('script');
-  script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cbName+'&_='+Date.now();
-  script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng');delete window[cbName];script.remove();};
+  script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
+  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false);delete window[cb];script.remove();};
   document.head.appendChild(script);
 }
 
-/* ===== Sự kiện bảng ===== */
+// Auto lưu 1 dòng
+function autoSyncRow(i){
+  if(i==null||!allData[i]) return;
+  const row=allData[i],encoded=encodeURIComponent(JSON.stringify(row));
+  const cb='__auto_cb_'+Date.now();
+  window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1));else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb];script.remove();}};
+  const script=document.createElement('script');
+  script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
+  script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng');delete window[cb];script.remove();};
+  document.head.appendChild(script);
+}
+
+// Events
+filterBox.addEventListener('change',renderTable);
+searchBox.addEventListener('input',renderTable);
+
 tbody.addEventListener('click',e=>{
-  const btn=e.target.closest('button');if(!btn)return;
+  const btn=e.target.closest('button'); if(!btn) return;
   const act=btn.dataset.act,i=Number(btn.dataset.i);
-  if(act==='edit') openEditModal(i);
-  else if(act==='qr'){
-    const code=encodeURIComponent(allData[i].soThe||'');
-    const url=location.href.split('#')[0]+'#'+code;
-    prompt('Link QR (copy & in tem):',url);
-  }
+  if(act==='edit'){openEditModal(i);}
+  if(act==='qr'){const code=encodeURIComponent(allData[i].soThe||'');const url=location.href.split('#')[0]+'#'+code;prompt('Link QR (copy & in tem):',url);}
 });
+
 tbody.addEventListener('change',e=>{
-  const tr=e.target.closest('tr');const idx=Number(tr.dataset.index);
+  const tr=e.target.closest('tr'); if(!tr) return;
+  const idx=Number(tr.dataset.index);
   if(e.target.classList.contains('daKiemKe')){allData[idx].daKiemKe=e.target.checked; autoSyncRow(idx);}
   if(e.target.classList.contains('chonIn')){allData[idx].chonIn=e.target.checked;}
+  renderTable();
 });
 
-/* ===== Modal ===== */
-const modal=document.getElementById('editModal');
-const m_soThe=document.getElementById('m_soThe');
-const m_soMay=document.getElementById('m_soMay');
-const m_loaiMay=document.getElementById('m_loaiMay');
-const m_viTri=document.getElementById('m_viTri');
-const m_ghiChu=document.getElementById('m_ghiChu');
-const m_daKiemKe=document.getElementById('m_daKiemKe');
-const m_chonIn=document.getElementById('m_chonIn');
-const m_ngayMua=document.getElementById('m_ngayMua');
-
-// Thêm mới
+// Modal
 document.getElementById('btnAdd').onclick=()=>{
   editingIndex=null;
-  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
+  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
   m_daKiemKe.checked=m_chonIn.checked=false;
   m_ngayMua.value='';
-  modal.style.display='flex';
-  m_soThe.focus();
+  modal.style.display='flex'; m_soThe.focus();
 };
-
-// Hủy modal
-document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none';editingIndex=null;};
-
-// Lưu/Cập nhật
+document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick=()=>{
-  const obj={
-    soThe:m_soThe.value.trim(),
-    soMay:m_soMay.value.trim(),
-    loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(),
-    ghiChu:m_ghiChu.value.trim(),
-    daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,
-    ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''
+  const obj={soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
+    viTri:m_viTri.value.trim(),ghiChu:m_ghiChu.value.trim(),daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''
   };
-  if(!obj.soThe){alert('Số thẻ không được để trống'); return;}
-  if(editingIndex===null){ allData.push(obj); autoSyncRow(allData.length-1); }
-  else{ allData[editingIndex]=obj; autoSyncRow(editingIndex); }
-  modal.style.display='none'; editingIndex=null;
-  renderTable();
+  if(!obj.soThe){alert('Số thẻ không được để trống');return;}
+  if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
+  else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
+  modal.style.display='none'; editingIndex=null; renderTable();
 };
-
 function openEditModal(idx){
-  editingIndex=(typeof idx==='number')?idx:null;
-  if(editingIndex===null){
-    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu='';
-    m_daKiemKe.checked=m_chonIn.checked=false;
-    m_ngayMua.value='';
-  }else{
-    const r=allData[editingIndex];
-    m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
-    m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
-    m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
-  }
+  editingIndex=Number(idx);
+  const r=allData[editingIndex];
+  m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
+  m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
+  m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
   modal.style.display='flex'; m_soThe.focus();
 }
 
-/* ===== Tìm kiếm ===== */
-document.getElementById('searchBox').addEventListener('input',e=>{
-  const v=e.target.value.toLowerCase();
-  Array.from(tbody.children).forEach(tr=>{
-    const idx=Number(tr.dataset.index),r=allData[idx];
-    const text=(r.soThe+' '+r.soMay+' '+r.loaiMay+' '+r.viTri+' '+r.ghiChu).toLowerCase();
-    tr.style.display=text.includes(v)?'':'none';
-  });
-});
-
-/* ===== Bộ lọc ===== */
-filterBox.addEventListener('change', renderTable);
-
-/* ===== Đồng bộ thủ công ===== */
+// Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
   const payload=allData,encoded=encodeURIComponent(JSON.stringify(payload));
-  const cbName='__sync_cb_'+Date.now();
-  window[cbName]=function(res){
-    try{if(res&&res.success){setStatus('Đã đồng bộ '+(res.written||0)+' dòng'); loadData();}
-      else setStatus('Lỗi ghi dữ liệu',false);}finally{delete window[cbName];script.remove();}
-  };
+  const cb='__sync_cb_'+Date.now();
+  window[cb]=function(res){try{if(res&&res.success){setStatus('Đã đồng bộ '+(res.written||0)+' dòng');loadData();}else setStatus('Lỗi ghi dữ liệu',false);}finally{delete window[cb];script.remove();}};
   const script=document.createElement('script');
-  script.src=GAS_URL+'?save=1&callback='+cbName+'&data='+encoded+'&_='+Date.now();
-  script.onerror=()=>{console.warn('Có thể ghi thành công nhưng JSONP callback chưa load');delete window[cbName];script.remove();};
+  script.src=GAS_URL+'?save=1&callback='+cb+'&data='+encoded+'&_='+Date.now();
+  script.onerror=()=>{console.warn('Có thể ghi thành công nhưng JSONP callback chưa load');delete window[cb];script.remove();};
   document.head.appendChild(script);
 };
 
-/* ===== In tem QR ===== */
+// In QR
 document.getElementById('btnPrint').onclick=()=>{
   const printData=allData.filter(r=>r.chonIn);
   if(printData.length===0){alert('Chọn ít nhất 1 dòng để in');return;}
@@ -291,30 +227,17 @@ document.getElementById('btnPrint').onclick=()=>{
     const code=encodeURIComponent(r.soThe||'');
     w.document.write('<div class="tem"><b>Số thẻ:</b> '+r.soThe+'<br><b>Số máy:</b> '+r.soMay+'<div id="qr_'+code+'"></div></div>');
   });
-  w.document.write('</body></html>'); w.document.close();
+  w.document.write('</body></html>');w.document.close();
   printData.forEach(r=>{
-    const code=encodeURIComponent(r.soThe||''); const qrDiv=w.document.getElementById('qr_'+code);
+    const code=encodeURIComponent(r.soThe||'');const qrDiv=w.document.getElementById('qr_'+code);
     new QRCode(qrDiv,{text:location.href.split('#')[0]+'#'+code,width:80,height:80});
   });
   w.focus(); w.print();
 };
 
-/* ===== Highlight từ QR ===== */
-function highlightFromHash(){
-  const hash=decodeURIComponent(location.hash.slice(1));
-  if(!hash)return;
-  Array.from(tbody.children).forEach(tr=>{
-    const idx=Number(tr.dataset.index),r=allData[idx];
-    if(r.soThe===hash){tr.classList.add('highlight');tr.scrollIntoView({behavior:'smooth',block:'center'});}
-    else tr.classList.remove('highlight');
-  });
-}
-window.addEventListener('hashchange',highlightFromHash);
-
-/* ===== Nút tải lại ===== */
 document.getElementById('btnRefresh').onclick=loadData;
+
 loadData();
-});
 </script>
 </body>
 </html>
