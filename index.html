@@ -284,7 +284,7 @@ document.getElementById('btnPrint').onclick = () => {
   w.document.write(`
     @page {
       size: A4 portrait;
-      margin: 5mm;
+      margin: 4mm;
     }
     body {
       font-family: Arial, sans-serif;
@@ -293,20 +293,20 @@ document.getElementById('btnPrint').onclick = () => {
       display: grid;
       grid-template-columns: repeat(5, 1fr); /* 5 cột */
       grid-template-rows: repeat(6, auto);   /* 6 hàng */
-      gap: 3mm;
+      gap: 2mm;
       justify-items: center;
       align-items: center;
     }
     .tem {
       width: 38mm;
       height: 45mm;
-      border: 0.8px solid #000;
-      border-radius: 1px;
+      border: 1px solid #000;
+      border-radius: 2px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 1.5mm;  /* 🔧 thu sát thêm một chút */
+      padding: 1mm;          /* 👈 Sát hơn: chỉ ~4pt */
       box-sizing: border-box;
       text-align: center;
       page-break-inside: avoid;
@@ -314,22 +314,22 @@ document.getElementById('btnPrint').onclick = () => {
     .tem .top {
       font-weight: bold;
       font-size: 13px;
-      margin-bottom: 1mm;  /* 🔧 giảm khoảng cách */
+      margin-bottom: 0.3mm;  /* 👈 gần hơn */
     }
     .tem .qr {
-      flex: 0 0 auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0.5mm 0;  /* 🔧 sát hơn giữa QR và text */
+      margin: 0;
+      padding: 0;
+      line-height: 0;
     }
     .tem .bottom {
       font-size: 11px;
-      margin-top: 0.5mm;  /* 🔧 gần hơn */
+      margin-top: 0.3mm;     /* 👈 gần hơn */
     }
     canvas {
       display: block;
       margin: 0;
+      width: 90px !important;  /* ✅ to rõ nét */
+      height: 90px !important;
     }
   `);
   w.document.write('</style></head><body>');
@@ -350,7 +350,6 @@ document.getElementById('btnPrint').onclick = () => {
   w.document.write('</body></html>');
   w.document.close();
 
-  // Tạo QR sau khi trang mở
   w.onload = () => {
     printData.forEach(r => {
       const code = encodeURIComponent(r.soThe || '');
@@ -358,7 +357,7 @@ document.getElementById('btnPrint').onclick = () => {
       if (qrDiv) {
         new QRCode(qrDiv, {
           text: location.href.split('#')[0] + '#' + code,
-          width: 90,   // ✅ to đẹp, sát khung
+          width: 90,
           height: 90
         });
       }
