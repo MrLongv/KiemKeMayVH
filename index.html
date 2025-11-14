@@ -62,20 +62,30 @@ tr.highlight{background:#ffeaa7 !important}
 <div class="table-wrap">
   <table id="dataTable">
     <thead>
-      <tr>
-        <th>STT</th>
-        <th>Số thẻ</th>
-        <th>Số máy</th>
-        <th>Loại máy</th>
-        <th>Vị trí</th>
-        <th>Ghi chú</th>
-        <th>Hành động</th>
-        <th>Đã KK</th>
-        <th>In QR</th>
-        <th>Ngày mua</th>
-        <th>Nơi mua</th>
-      </tr>
-    </thead>
+  <tr>
+    <th>STT</th>
+    <th>Số thẻ</th>
+    <th>Số máy</th>
+    <th>Loại máy</th>
+    <th>Vị trí</th>
+    <th>Ghi chú</th>
+    <th>Hành động</th>
+
+    <th>
+      Đã KK<br>
+      <input type="checkbox" id="checkAllKiemKe">
+    </th>
+
+    <th>
+      In QR<br>
+      <input type="checkbox" id="checkAllIn">
+    </th>
+
+    <th>Ngày mua</th>
+    <th>Nơi mua</th>
+  </tr>
+</thead>
+
     <tbody></tbody>
   </table>
 </div>
@@ -214,6 +224,19 @@ function renderTable(){
     }
   });
 }
+// ===== CHECK ALL – Đã kiểm kê =====
+document.getElementById("checkAllKiemKe")?.addEventListener("change", function () {
+  const checked = this.checked;
+  allData.forEach(r => r.daKiemKe = checked);
+  renderTable();
+});
+
+// ===== CHECK ALL – In QR =====
+document.getElementById("checkAllIn")?.addEventListener("change", function () {
+  const checked = this.checked;
+  allData.forEach(r => r.chonIn = checked);
+  renderTable();
+});
 
 // Load dữ liệu JSONP
 function loadData(){
