@@ -150,34 +150,49 @@ if(loginTime && Date.now() - loginTime < 3600*1000){
 
 // Render bảng với filter + search
 function renderTable(){
-  const filter=filterBox.value;
-  const search=searchBox.value.toLowerCase();
-  tbody.innerHTML='';
-  allData.forEach((r,idx)=>{
-    let show=true;
-    if(filter==='daKiemKe' && !r.daKiemKe) show=false;
-    if(filter==='chuaKiemKe' && r.daKiemKe) show=false;
-    if(filter==='daIn' && !r.chonIn) show=false;
-    if(filter==='chuaIn' && r.chonIn) show=false;
-    if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
+  const filter = filterBox.value;
+  const search = searchBox.value.toLowerCase();
+  tbody.innerHTML = '';
+  
+  allData.forEach((r, idx) => {
+    let show = true;
+
+    // Filter
+    if(filter === 'daKiemKe' && !r.daKiemKe) show = false;
+    if(filter === 'chuaKiemKe' && r.daKiemKe) show = false;
+    if(filter === 'daIn' && !r.chonIn) show = false;
+    if(filter === 'chuaIn' && r.chonIn) show = false;
+
+    // Search
+    if(search && !(r.soThe + r.soMay + r.loaiMay + r.viTri + r.ghiChu).toLowerCase().includes(search))
+      show = false;
+
     if(show){
-      const tr=document.createElement('tr'); tr.dataset.index=idx;
-      tr.innerHTML=`
-        <td>${idx+1}</td>
+      const tr = document.createElement('tr');
+      tr.dataset.index = idx;
+
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
         <td>${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
         <td>${safeText(r.ghiChu)}</td>
-        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`
+        <td>
+          <button data-act="edit" data-i="${idx}">✏️</button>
+          <button data-act="qr" data-i="${idx}">🔗</button>
+        </td>
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua ? new Date(r.ngayMua).toLocaleDateString('en-GB') : ''}</td>
-        <td>${safeText(r.noiMua)}</td>;
+        <td>${r.ngayMua ? r.ngayMua : ''}</td>
+        <td>${safeText(r.noiMua)}</td>
+      `;
+
       tbody.appendChild(tr);
     }
   });
 }
+
 
 // Load dữ liệu JSONP
 function loadData(){
