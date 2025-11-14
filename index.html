@@ -173,6 +173,8 @@ pwdBtn.onclick = () => {
 const loginTime = localStorage.getItem('loginTime');
 if(loginTime && Date.now() - loginTime < 3600*1000){
   pwdModal.style.display='none';
+  modal.style.display='none'; // đảm bảo modal ẩn
+  editingIndex = null;       // reset index
   mainUI.forEach(el=>{
     if(el.classList.contains('note')||el.classList.contains('table-wrap')) el.style.display='block';
     else el.style.display='flex';
