@@ -312,81 +312,94 @@ document.getElementById('btnAdd').onclick=()=>{
   modal.style.display='flex'; m_soThe.focus();
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
-document.getElementById('saveBtn').onclick = () => {
-  let ngayMuaFormatted = '';
+document.getElementById("saveBtn").onclick = () => {
 
-  // Nếu user nhập ngày mới, validate dd/MM/yyyy
-  const inputVal = m_ngayMua.value.trim();
-  if(inputVal){
-    const parts = inputVal.split('/');
-    if(parts.length===3){
-      let dd = parts[0].padStart(2,'0');
-      let mm = parts[1].padStart(2,'0');
-      let yyyy = parts[2];
-      // Check basic: ngày và tháng là số
-      if(isNaN(dd) || isNaN(mm) || isNaN(yyyy)){
-        alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy');
-        m_ngayMua.focus();
-        return;
-      }
-      ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
-    } else {
-      alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy');
+  let ngayText = m_ngayMua.value.trim();
+  let ngayMuaFormatted = "";
+
+  // Người dùng có nhập → kiểm tra dd/MM/yyyy
+  if (ngayText !== "") {
+    const parts = ngayText.split("/");
+    if (parts.length !== 3) {
+      alert("Ngày mua không hợp lệ (dd/MM/yyyy)");
       m_ngayMua.focus();
       return;
     }
-  } else if(editingIndex !== null && allData[editingIndex].ngayMua){
-    // giữ nguyên ngày cũ nếu input rỗng
-    ngayMuaFormatted = allData[editingIndex].ngayMua;
+    let [dd, mm, yyyy] = parts;
+
+    // Validate số
+    if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) {
+      alert("Ngày mua phải là số (dd/MM/yyyy)");
+      return;
+    }
+
+    // Chuẩn hóa 2 chữ số ngày/tháng
+    dd = dd.padStart(2, "0");
+    mm = mm.padStart(2, "0");
+
+    ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
+  }
+  else if (editingIndex !== null) {
+    // Không nhập gì → giữ nguyên ngày cũ
+    ngayMuaFormatted = allData[editingIndex].ngayMua || "";
   }
 
   const obj = {
-    soThe: m_soThe.value.trim(),
-    soMay: m_soMay.value.trim(),
+    soThe:   m_soThe.value.trim(),
+    soMay:   m_soMay.value.trim(),
     loaiMay: m_loaiMay.value.trim(),
-    viTri: m_viTri.value.trim(),
-    ghiChu: m_ghiChu.value.trim(),
+    viTri:   m_viTri.value.trim(),
+    ghiChu:  m_ghiChu.value.trim(),
     daKiemKe: m_daKiemKe.checked,
-    chonIn: m_chonIn.checked,
-    ngayMua: ngayMuaFormatted,
-    noiMua: m_noiMua.value.trim()
+    chonIn:   m_chonIn.checked,
+    ngayMua:  ngayMuaFormatted,   // <-- LƯU TEXT
+    noiMua:   m_noiMua.value.trim()
   };
 
-  if(!obj.soThe){ alert('Số thẻ không được để trống'); return; }
+  if (!obj.soThe) {
+    alert("Số thẻ không được để trống");
+    return;
+  }
 
-  if(editingIndex === null){
+  // Ghi data vào mảng + autosync
+  if (editingIndex === null) {
     allData.push(obj);
-    autoSyncRow(allData.length-1);
+    autoSyncRow(allData.length - 1);
   } else {
     allData[editingIndex] = obj;
     autoSyncRow(editingIndex);
   }
 
-  modal.style.display='none';
-  editingIndex=null;
+  modal.style.display = "none";
+  editingIndex = null;
   renderTable();
   highlightFromHash();
 };
+
 // Mở modal để thêm / chỉnh sửa
-function openEditModal(idx){
-  editingIndex = Number(idx);
-  const r = allData[editingIndex];
+function openEditModal(index) {
+  editingIndex = index;
+  const r = allData[index];
 
-  m_soThe.value = r.soThe || '';
-  m_soMay.value = r.soMay || '';
-  m_loaiMay.value = r.loaiMay || '';
-  m_viTri.value = r.viTri || '';
-  m_ghiChu.value = r.ghiChu || '';
+  // Gán dữ liệu vào modal đúng ID
+  m_soThe.value   = r.soThe || "";
+  m_soMay.value   = r.soMay || "";
+  m_loaiMay.value = r.loaiMay || "";
+  m_viTri.value   = r.viTri || "";
+  m_ghiChu.value  = r.ghiChu || "";
+  m_noiMua.value  = r.noiMua || "";
+
   m_daKiemKe.checked = !!r.daKiemKe;
-  m_chonIn.checked = !!r.chonIn;
+  m_chonIn.checked   = !!r.chonIn;
 
-  // Ngày mua: giữ nguyên dd/MM/yyyy nếu có
-  m_ngayMua.value = r.ngayMua || '';
-  m_noiMua.value = r.noiMua || '';
+  // Giữ nguyên text dd/MM/yyyy, không convert sang ISO
+  m_ngayMua.value = r.ngayMua || "";
 
-  modal.style.display = 'flex';
+  modal.style.display = "flex";
   m_soThe.focus();
 }
+
+
 // Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
   const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
