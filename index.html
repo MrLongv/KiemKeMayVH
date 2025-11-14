@@ -357,7 +357,7 @@ document.getElementById('btnPrint').onclick = () => {
       padding: 0;
       display: grid;
       grid-template-columns: repeat(5, 1fr); /* 5 cột */
-      grid-auto-rows: 38mm;                  /* mỗi hàng cao 40mm */
+      grid-template-rows: repeat(6, auto); /* 6 hàng */
       gap: 2mm;
       justify-items: center;
       align-items: center;
