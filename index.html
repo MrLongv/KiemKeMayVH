@@ -153,7 +153,7 @@ function renderTable(){
   const filter = filterBox.value;
   const search = searchBox.value.toLowerCase();
   tbody.innerHTML = '';
-  
+
   allData.forEach((r, idx) => {
     let show = true;
 
@@ -184,7 +184,7 @@ function renderTable(){
         </td>
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua ? r.ngayMua : ''}</td>
+        <td>${r.ngayMua || ''}</td>
         <td>${safeText(r.noiMua)}</td>
       `;
 
@@ -192,7 +192,6 @@ function renderTable(){
     }
   });
 }
-
 
 // Load dữ liệu JSONP
 function loadData(){
