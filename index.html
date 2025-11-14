@@ -27,14 +27,13 @@ tr.highlight{background:#ffeaa7 !important}
 /* Modal + card */
 .modal {
   display: none;
-  position: fixed;
-  top: 10%; left: 50%;
-  transform: translateX(-50%);
+  position: fixed; inset:0;
   background: rgba(0,0,0,0.4);
   z-index: 999;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 10px 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
 }
 .modal .card {
   background: #fff;
@@ -135,7 +134,6 @@ const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementByI
       m_noiMua=document.getElementById('m_noiMua');
 
 let allData=[], editingIndex=null;
-
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
 
@@ -163,7 +161,10 @@ pwdBtn.onclick = () => {
   if(pwdInput.value===PASSWORD){
     localStorage.setItem('loginTime', Date.now());
     pwdModal.style.display='none';
-    mainUI.forEach(el=>el.style.display='flex');
+    mainUI.forEach(el=>{
+      if(el.classList.contains('note')||el.classList.contains('table-wrap')) el.style.display='block';
+      else el.style.display='flex';
+    });
     highlightFromHash();
     loadData();
   } else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
@@ -172,39 +173,36 @@ pwdBtn.onclick = () => {
 const loginTime = localStorage.getItem('loginTime');
 if(loginTime && Date.now() - loginTime < 3600*1000){
   pwdModal.style.display='none';
-  mainUI.forEach(el=>el.style.display='flex');
+  mainUI.forEach(el=>{
+    if(el.classList.contains('note')||el.classList.contains('table-wrap')) el.style.display='block';
+    else el.style.display='flex';
+  });
   loadData();
 }
 
 // ===== Helpers =====
 function formatDateDDMMYYYY(d){
-  if (!d) return "";
-  if (d.includes("/")) return d;
+  if(!d) return "";
+  if(d.includes("/")) return d;
   const date = new Date(d);
-  if (isNaN(date)) return d;
-  const day = String(date.getDate()).padStart(2,'0');
-  const month = String(date.getMonth()+1).padStart(2,'0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
+  if(isNaN(date)) return d;
+  return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
 }
 
 // Render table
 function renderTable(){
   const filter = filterBox.value;
   const search = searchBox.value.toLowerCase();
-  tbody.innerHTML = '';
-
-  allData.forEach((r, idx) => {
-    let show = true;
+  tbody.innerHTML='';
+  allData.forEach((r,idx)=>{
+    let show=true;
     if(filter==='daKiemKe'&&!r.daKiemKe) show=false;
     if(filter==='chuaKiemKe'&&r.daKiemKe) show=false;
     if(filter==='daIn'&&!r.chonIn) show=false;
     if(filter==='chuaIn'&&r.chonIn) show=false;
     if(search && !(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
-
     if(show){
-      const tr=document.createElement('tr');
-      tr.dataset.index=idx;
+      const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
         <td>${idx+1}</td>
         <td>${safeText(r.soThe)}</td>
@@ -218,7 +216,7 @@ function renderTable(){
         </td>
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
+        <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua):''}</td>
         <td>${safeText(r.noiMua)}</td>
       `;
       tbody.appendChild(tr);
@@ -226,26 +224,18 @@ function renderTable(){
   });
 }
 
-// Scroll trong container
+// Scroll + highlight
 function scrollToRow(idx){
-  const tr=tbody.children[idx];
-  if(!tr) return;
+  const tr=tbody.children[idx]; if(!tr) return;
   const container=document.querySelector('.table-wrap');
-  const trTop=tr.offsetTop;
-  const trHeight=tr.offsetHeight;
-  const containerHeight=container.clientHeight;
-  container.scrollTo({top:trTop-containerHeight/2+trHeight/2, behavior:'smooth'});
+  container.scrollTo({top:tr.offsetTop - container.clientHeight/2 + tr.offsetHeight/2, behavior:'smooth'});
 }
-
-// Highlight + scroll
 function highlightFromHash(){
   const hash=decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
   Array.from(tbody.children).forEach(tr=>{
-    const idx=Number(tr.dataset.index);
-    const r=allData[idx];
+    const idx=Number(tr.dataset.index); const r=allData[idx];
     const soThe=r.soThe?String(r.soThe).trim().toLowerCase():'';
-    if(soThe && soThe===hash){tr.classList.add('highlight'); scrollToRow(idx);}
-    else tr.classList.remove('highlight');
+    if(soThe && soThe===hash){tr.classList.add('highlight'); scrollToRow(idx);} else tr.classList.remove('highlight');
   });
 }
 window.addEventListener('hashchange',highlightFromHash);
@@ -253,12 +243,12 @@ window.addEventListener('hashchange',highlightFromHash);
 // Check all
 document.getElementById("checkAllKiemKe")?.addEventListener("change",function(){
   const checked=this.checked;
-  allData.forEach(r=>r.daKiemKe=checked);
+  allData.forEach(r=>{r.daKiemKe=checked; autoSyncRow(allData.indexOf(r));});
   renderTable();
 });
 document.getElementById("checkAllIn")?.addEventListener("change",function(){
   const checked=this.checked;
-  allData.forEach(r=>r.chonIn=checked);
+  allData.forEach(r=>{r.chonIn=checked; autoSyncRow(allData.indexOf(r));});
   renderTable();
 });
 
@@ -269,16 +259,15 @@ function loadData(){
   window[cb]=function(res){
     try{
       if(res && res.success && Array.isArray(res.data)){
-        allData=res.data; 
-        renderTable(); 
-        setStatus('Đã tải '+allData.length+' dòng'); 
-        highlightFromHash();
-      }else setStatus('Lỗi tải dữ liệu',false);
-    }finally{delete window[cb]; script.remove();}
+        allData=res.data; renderTable(); setStatus('Đã tải '+allData.length+' dòng'); highlightFromHash();
+      } else setStatus('Lỗi tải dữ liệu',false);
+    } finally {
+      delete window[cb]; if(script.parentNode) script.remove();
+    }
   };
   const script=document.createElement('script');
   script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
+  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; if(script.parentNode) script.remove();};
   document.head.appendChild(script);
 }
 
@@ -287,14 +276,14 @@ function autoSyncRow(i){
   if(i==null||!allData[i]) return;
   const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
   const cb='__auto_cb_'+Date.now();
-  window[cb]=function(res){try{if(res&&res.success) setStatus('✅ Đã lưu dòng '+(i+1)); else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb]; script.remove();}};
+  window[cb]=function(res){try{if(res&&res.success) setStatus('✅ Đã lưu dòng '+(i+1)); else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb]; if(script.parentNode) script.remove();}};
   const script=document.createElement('script');
   script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{ console.warn('⚠️ AutoSync lỗi mạng'); delete window[cb]; script.remove(); };
+  script.onerror=()=>{ console.warn('⚠️ AutoSync lỗi mạng'); delete window[cb]; if(script.parentNode) script.remove(); };
   document.head.appendChild(script);
 }
 
-// Event table
+// Events
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
 tbody.addEventListener('click',e=>{
@@ -303,50 +292,22 @@ tbody.addEventListener('click',e=>{
   if(act==='edit'){openEditModal(i);}
   if(act==='qr'){const code=encodeURIComponent(allData[i].soThe||''); const url=location.href.split('#')[0]+'#'+code; prompt('Link QR (copy & in tem):',url);}
 });
-tbody.addEventListener('change', e=>{
-  const tr = e.target.closest('tr'); if(!tr) return;
-  const idx = Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')){
-    allData[idx].daKiemKe = e.target.checked; autoSyncRow(idx);
-  }
-  if(e.target.classList.contains('chonIn')){
-    allData[idx].chonIn = e.target.checked; autoSyncRow(idx);
-  }
-  renderTable();
+tbody.addEventListener('change',e=>{
+  const tr=e.target.closest('tr'); if(!tr) return;
+  const idx=Number(tr.dataset.index);
+  if(e.target.classList.contains('daKiemKe')){allData[idx].daKiemKe=e.target.checked; autoSyncRow(idx);}
+  if(e.target.classList.contains('chonIn')){allData[idx].chonIn=e.target.checked; autoSyncRow(idx);}
 });
 
-// Modal add/edit
-document.getElementById('btnAdd').onclick=()=>{
-  editingIndex=null;
-  m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
-  m_daKiemKe.checked=m_chonIn.checked=false; m_ngayMua.value=''; m_noiMua.value='';
-  openEditModal(null);
-};
+// Modal
+document.getElementById('btnAdd').onclick=()=>openEditModal(null);
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick = () => {
-  let ngayMuaFormatted='';
-  const inputVal=m_ngayMua.value.trim();
-  if(inputVal){
-    const parts=inputVal.split('/');
-    if(parts.length===3){let dd=parts[0].padStart(2,'0'); let mm=parts[1].padStart(2,'0'); let yyyy=parts[2];
-      if(isNaN(dd)||isNaN(mm)||isNaN(yyyy)){alert("Ngày mua không hợp lệ (dd/MM/yyyy)"); return m_ngayMua.focus();}
-      ngayMuaFormatted=`${dd}/${mm}/${yyyy}`;
-    } else {alert("Ngày mua không hợp lệ (dd/MM/yyyy)"); return m_ngayMua.focus();}
-  } else if(editingIndex!==null && allData[editingIndex].ngayMua) ngayMuaFormatted=allData[editingIndex].ngayMua;
-
-  const obj={soThe:m_soThe.value.trim(), soMay:m_soMay.value.trim(), loaiMay:m_loaiMay.value.trim(),
-             viTri:m_viTri.value.trim(), ghiChu:m_ghiChu.value.trim(), daKiemKe:m_daKiemKe.checked,
-             chonIn:m_chonIn.checked, ngayMua:ngayMua
-
-document.getElementById('saveBtn').onclick = () => {
-  let ngayMuaFormatted='';
-  const inputVal=m_ngayMua.value.trim();
+  let ngayMuaFormatted=''; const inputVal=m_ngayMua.value.trim();
   if(inputVal){
     const parts=inputVal.split('/');
     if(parts.length===3){
-      let dd=parts[0].padStart(2,'0');
-      let mm=parts[1].padStart(2,'0');
-      let yyyy=parts[2];
+      let dd=parts[0].padStart(2,'0'), mm=parts[1].padStart(2,'0'), yyyy=parts[2];
       if(isNaN(dd)||isNaN(mm)||isNaN(yyyy)){alert("Ngày mua không hợp lệ (dd/MM/yyyy)"); return m_ngayMua.focus();}
       ngayMuaFormatted=`${dd}/${mm}/${yyyy}`;
     } else {alert("Ngày mua không hợp lệ (dd/MM/yyyy)"); return m_ngayMua.focus();}
@@ -364,20 +325,12 @@ document.getElementById('saveBtn').onclick = () => {
     noiMua:m_noiMua.value.trim()
   };
 
-  if(editingIndex===null){
-    allData.push(obj);
-    editingIndex=allData.length-1;
-  } else {
-    allData[editingIndex]=obj;
-  }
+  if(editingIndex===null){ allData.push(obj); editingIndex=allData.length-1; }
+  else allData[editingIndex]=obj;
 
-  renderTable();
-  modal.style.display='none';
-  autoSyncRow(editingIndex);
-  editingIndex=null;
+  renderTable(); modal.style.display='none'; autoSyncRow(editingIndex); editingIndex=null;
 };
 
-// mở modal edit
 function openEditModal(idx){
   if(idx!==null){
     const r=allData[idx];
@@ -387,33 +340,24 @@ function openEditModal(idx){
     editingIndex=idx;
   } else {
     m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value='';
-    m_daKiemKe.checked=m_chonIn.checked=false; m_ngayMua.value=''; m_noiMua.value='';
-    editingIndex=null;
+    m_daKiemKe.checked=m_chonIn.checked=false; m_ngayMua.value=''; m_noiMua.value=''; editingIndex=null;
   }
   modal.style.display='flex';
 }
+modal.addEventListener('click',e=>{if(e.target===modal) modal.style.display='none';});
 
-// Click ngoài modal đóng
-modal.addEventListener('click', e=>{if(e.target===modal) modal.style.display='none';});
-
-// In QR
+// Print QR
 document.getElementById('btnPrint').onclick=()=>{
   const qrData = allData.filter(r=>r.chonIn).map(r=>r.soThe);
   if(!qrData.length){alert('Chưa chọn dòng in'); return;}
   let w=window.open('','_blank');
   w.document.write('<html><head><title>QR Code In</title></head><body>');
-  qrData.forEach(code=>{
-    w.document.write('<div style="margin:10px;display:inline-block;text-align:center">');
-    w.document.write('<div id="qr'+code+'"></div><br>'+code+'</div>');
-  });
-  w.document.write('</body></html>');
-  w.document.close();
-  qrData.forEach(code=>{
-    new QRCode(w.document.getElementById('qr'+code), {text:code,width:120,height:120});
-  });
+  qrData.forEach(code=>{w.document.write('<div style="margin:10px;display:inline-block;text-align:center"><div id="qr'+code+'"></div><br>'+code+'</div>');});
+  w.document.write('</body></html>'); w.document.close();
+  qrData.forEach(code=>{new QRCode(w.document.getElementById('qr'+code),{text:code,width:120,height:120});});
 };
 
-// Reload dữ liệu
+// Reload + Sync all
 document.getElementById('btnRefresh').onclick=loadData;
 document.getElementById('btnSync').onclick=()=>{
   allData.forEach((r,i)=>autoSyncRow(i));
