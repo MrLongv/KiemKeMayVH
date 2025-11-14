@@ -344,14 +344,20 @@ document.getElementById('btnRefresh').onclick=loadData;
 
 // ==== HASH HIGHLIGHT từ QR ====
 function highlightFromHash(){
-  const code=location.hash.slice(1);
+  const code = location.hash.slice(1);
   if(!code) return;
   allData.forEach((r,idx)=>{
-    const tr=tbody.querySelector('tr[data-index="'+idx+'"]');
+    const tr = tbody.querySelector('tr[data-index="'+idx+'"]');
     if(tr) tr.classList.remove('highlight');
-    if(r.soThe===code && tr) {tr.classList.add('highlight'); tr.scrollIntoView({behavior:'smooth',block:'center'});}
+    if(r.soThe === code && tr) {
+      tr.classList.add('highlight');
+      tr.scrollIntoView({behavior:'smooth', block:'center'});
+      // ⚠️ Xóa phần mở modal tự động
+      // openEditModal(idx); <-- bỏ đi
+    }
   });
 }
+
 document.getElementById('btnPrint').onclick = () => {
   const printData = allData.filter(r => r.chonIn);
   if (printData.length === 0) {
