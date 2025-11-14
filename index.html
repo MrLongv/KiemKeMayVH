@@ -161,22 +161,64 @@ pwdModal.innerHTML=`
 document.body.appendChild(pwdModal);
 mainUI.forEach(el=>el.style.display='none');
 
-const pwdInput=document.getElementById('pwdInput'), pwdBtn=document.getElementById('pwdBtn');
-pwdInput.focus();
-pwdBtn.onclick=()=>{
-  if(pwdInput.value===PASSWORD){
-    localStorage.setItem('loginTime',Date.now());
-    pwdModal.style.display='none';
-    mainUI.forEach(el=>el.style.display='flex');
-    highlightFromHash();
-    loadData();
-  } else {alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus();}
+// Sau khi đăng nhập hoặc tự động login
+function initUI(){
+  mainUI.forEach(el=>el.style.display='flex');
+  loadData(); // load xong mới highlight
 }
-const loginTime=localStorage.getItem('loginTime');
+
+// loadData() chỉnh lại
+function loadData(){
+  setStatus('Đang tải dữ liệu...');
+  const cb='__load_cb_'+Date.now();
+  window[cb]=function(res){
+    try{
+      if(res && res.success && Array.isArray(res.data)){
+        allData=res.data;
+        renderTable();
+        setStatus('Đã tải '+allData.length+' dòng');
+        highlightFromHash(); // chỉ highlight, KHÔNG mở modal
+      } else setStatus('Lỗi tải dữ liệu',false);
+    } finally{ delete window[cb]; script.remove(); }
+  };
+  const script=document.createElement('script');
+  script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
+  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
+  document.head.appendChild(script);
+}
+
+// highlightFromHash
+function highlightFromHash(){
+  const code=location.hash.slice(1);
+  if(!code) return;
+  allData.forEach((r,idx)=>{
+    const tr=tbody.querySelector('tr[data-index="'+idx+'"]');
+    if(tr) tr.classList.remove('highlight');
+    if(r.soThe===code && tr) {
+      tr.classList.add('highlight');
+      tr.scrollIntoView({behavior:'smooth', block:'center'});
+      // KHÔNG gọi openEditModal(idx)
+    }
+  });
+}
+
+// Khi login
 if(loginTime && Date.now()-loginTime<3600*1000){
   pwdModal.style.display='none';
-  mainUI.forEach(el=>el.style.display='flex');
-  loadData();
+  initUI();
+} else {
+  pwdInput.focus();
+  pwdBtn.onclick=()=>{
+    if(pwdInput.value===PASSWORD){
+      localStorage.setItem('loginTime',Date.now());
+      pwdModal.style.display='none';
+      initUI();
+    } else {
+      alert('Mật khẩu sai!');
+      pwdInput.value='';
+      pwdInput.focus();
+    }
+  };
 }
 
 // ==== RENDER BẢNG ====
