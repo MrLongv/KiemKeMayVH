@@ -326,21 +326,20 @@ function openEditModal(idx){
   m_daKiemKe.checked = !!r.daKiemKe;
   m_chonIn.checked = !!r.chonIn;
 
-  // ==== Chuẩn hóa ngày mua cho input type=date ====
+  // ===== Chuyển dd/mm/yyyy sang yyyy-MM-dd cho input type=date =====
   function toInputDate(d){
     if(!d) return '';
-    // Nếu đã là yyyy-mm-dd, trả luôn
-    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-    // Nếu là dd/mm/yyyy
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // nếu đã đúng chuẩn
     const parts = d.split('/');
     if(parts.length===3){
-      const yyyy = parts[2];
-      const mm = parts[1].padStart(2,'0');
       const dd = parts[0].padStart(2,'0');
+      const mm = parts[1].padStart(2,'0');
+      const yyyy = parts[2];
       return `${yyyy}-${mm}-${dd}`;
     }
     return '';
   }
+
   m_ngayMua.value = toInputDate(r.ngayMua);
 
   m_noiMua.value = r.noiMua || '';
@@ -348,7 +347,6 @@ function openEditModal(idx){
   modal.style.display = 'flex';
   m_soThe.focus();
 }
-
 
 // Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
