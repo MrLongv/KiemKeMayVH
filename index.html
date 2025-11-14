@@ -171,7 +171,7 @@ function renderTable(){
         <td>${safeText(r.ghiChu)}</td>
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua||''}</td>
+        <td>${r.ngayMua ? r.ngayMua : ''}</td>
         <td>${safeText(r.noiMua)}</td>
         <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`;
       tbody.appendChild(tr);
