@@ -91,7 +91,8 @@ tr.highlight{background:#ffeaa7 !important}
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
     <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
-    <label>Ngày mua</label><input type="date" id="m_ngayMua" />
+    <label>Ngày mua</label>
+    <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" /> 
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
@@ -242,13 +243,17 @@ function autoSyncRow(i){
   if(i==null||!allData[i]) return;
   const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
   const cb='__auto_cb_'+Date.now();
-  window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đã lưu dòng '+(i+1)); else setStatus('❌ Lỗi lưu dòng '+(i+1),false);}finally{delete window[cb];script.remove();}};
+  window[cb]=function(res){
+    try{
+      if(res&&res.success) setStatus('✅ Đã lưu dòng '+(i+1));
+      else setStatus('❌ Lỗi lưu dòng '+(i+1),false);
+    } finally { delete window[cb]; script.remove(); }
+  };
   const script=document.createElement('script');
   script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng'); delete window[cb]; script.remove();};
+  script.onerror=()=>{ console.warn('⚠️ AutoSync lỗi mạng'); delete window[cb]; script.remove(); };
   document.head.appendChild(script);
 }
-
 // Events
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
@@ -284,20 +289,30 @@ document.getElementById('btnAdd').onclick=()=>{
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick = () => {
-  if(!m_soThe.value.trim()){
-    alert('Số thẻ không được để trống');
-    return;
-  }
-
-  // Parse ngày mua từ modal
   let ngayMuaFormatted = '';
-  if(m_ngayMua.value){ // nếu user nhập ngày mới
-    const parts = m_ngayMua.value.split('-'); // ["yyyy","MM","dd"]
-    if(parts.length === 3){
-      ngayMuaFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/MM/yyyy
+
+  // Nếu user nhập ngày mới, validate dd/MM/yyyy
+  const inputVal = m_ngayMua.value.trim();
+  if(inputVal){
+    const parts = inputVal.split('/');
+    if(parts.length===3){
+      let dd = parts[0].padStart(2,'0');
+      let mm = parts[1].padStart(2,'0');
+      let yyyy = parts[2];
+      // Check basic: ngày và tháng là số
+      if(isNaN(dd) || isNaN(mm) || isNaN(yyyy)){
+        alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy');
+        m_ngayMua.focus();
+        return;
+      }
+      ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
+    } else {
+      alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy');
+      m_ngayMua.focus();
+      return;
     }
   } else if(editingIndex !== null && allData[editingIndex].ngayMua){
-    // giữ nguyên ngày cũ nếu modal để trống
+    // giữ nguyên ngày cũ nếu input rỗng
     ngayMuaFormatted = allData[editingIndex].ngayMua;
   }
 
@@ -313,54 +328,41 @@ document.getElementById('saveBtn').onclick = () => {
     noiMua: m_noiMua.value.trim()
   };
 
+  if(!obj.soThe){ alert('Số thẻ không được để trống'); return; }
+
   if(editingIndex === null){
-    // Thêm mới
     allData.push(obj);
-    autoSyncRow(allData.length-1); // tự động lưu dòng mới
+    autoSyncRow(allData.length-1);
   } else {
-    // Chỉnh sửa
     allData[editingIndex] = obj;
-    autoSyncRow(editingIndex);     // tự động lưu dòng chỉnh sửa
+    autoSyncRow(editingIndex);
   }
 
-  modal.style.display = 'none';
-  editingIndex = null;
+  modal.style.display='none';
+  editingIndex=null;
   renderTable();
   highlightFromHash();
 };
 // Mở modal để thêm / chỉnh sửa
 function openEditModal(idx){
-  editingIndex = (idx != null) ? Number(idx) : null;
-  let r = editingIndex !== null ? allData[editingIndex] : null;
+  editingIndex = Number(idx);
+  const r = allData[editingIndex];
 
-  m_soThe.value = r ? r.soThe || '' : '';
-  m_soMay.value = r ? r.soMay || '' : '';
-  m_loaiMay.value = r ? r.loaiMay || '' : '';
-  m_viTri.value = r ? r.viTri || '' : '';
-  m_ghiChu.value = r ? r.ghiChu || '' : '';
-  m_daKiemKe.checked = r ? !!r.daKiemKe : false;
-  m_chonIn.checked = r ? !!r.chonIn : false;
+  m_soThe.value = r.soThe || '';
+  m_soMay.value = r.soMay || '';
+  m_loaiMay.value = r.loaiMay || '';
+  m_viTri.value = r.viTri || '';
+  m_ghiChu.value = r.ghiChu || '';
+  m_daKiemKe.checked = !!r.daKiemKe;
+  m_chonIn.checked = !!r.chonIn;
 
-  // ===== Chuyển dd/MM/yyyy sang yyyy-MM-dd cho input type="date" =====
-  if(r && r.ngayMua){
-    const parts = r.ngayMua.split('/'); // ["dd","MM","yyyy"]
-    if(parts.length === 3){
-      const dd = parts[0].padStart(2,'0');
-      const mm = parts[1].padStart(2,'0');
-      const yyyy = parts[2];
-      m_ngayMua.value = `${yyyy}-${mm}-${dd}`; // yyyy-MM-dd
-    } else {
-      m_ngayMua.value = '';
-    }
-  } else {
-    m_ngayMua.value = '';
-  }
+  // Ngày mua: giữ nguyên dd/MM/yyyy nếu có
+  m_ngayMua.value = r.ngayMua || '';
+  m_noiMua.value = r.noiMua || '';
 
-  m_noiMua.value = r ? r.noiMua || '' : '';
   modal.style.display = 'flex';
   m_soThe.focus();
 }
-
 // Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
   const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
