@@ -61,6 +61,7 @@ tr.highlight{background:#ffeaa7 !important}
         <th>Đã kiểm kê</th>
         <th>Chọn để in</th>
         <th>Ngày mua</th>
+        <th>Nơi mua</th>
         <th>Hành động</th>
       </tr>
     </thead>
@@ -80,6 +81,7 @@ tr.highlight{background:#ffeaa7 !important}
     <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
     <label>Ngày mua</label><input type="date" id="m_ngayMua" />
+    <label>Nơi mua</label><input id="m_noiMua" /> 
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
@@ -89,7 +91,7 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbwlFR1cB7APSn44GhTP3hz3rw0Wv9OluOZjzs6-EmXuP0alqXslki5gTMZkbrBK9leI/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbwYXvdBTz4Y39pyEWCC__5usaSygfaZeRRlKGk_wLWmgebIlVwKf0m7d5Wy7qLHuPIn/exec';
 
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
@@ -97,7 +99,9 @@ const modal=document.getElementById('editModal');
 const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
       m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
       m_ghiChu=document.getElementById('m_ghiChu'), m_daKiemKe=document.getElementById('m_daKiemKe'),
-      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua');
+      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua'),
+      m_noiMua=document.getElementById('m_noiMua');
+      
 
 let allData=[], editingIndex=null;
 
@@ -168,6 +172,7 @@ function renderTable(){
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
         <td>${r.ngayMua||''}</td>
+        <td>${safeText(r.noiMua)}</td>
         <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`;
       tbody.appendChild(tr);
     }
@@ -248,6 +253,7 @@ document.getElementById('saveBtn').onclick=()=>{
   const obj={soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
     viTri:m_viTri.value.trim(),ghiChu:m_ghiChu.value.trim(),daKiemKe:m_daKiemKe.checked,
     chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''
+    noiMua:m_noiMua.value.trim()
   };
   if(!obj.soThe){alert('Số thẻ không được để trống');return;}
  if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
@@ -263,6 +269,7 @@ function openEditModal(idx){
   m_soThe.value=r.soThe; m_soMay.value=r.soMay; m_loaiMay.value=r.loaiMay; m_viTri.value=r.viTri; m_ghiChu.value=r.ghiChu;
   m_daKiemKe.checked=r.daKiemKe; m_chonIn.checked=r.chonIn;
   m_ngayMua.value=r.ngayMua?new Date(r.ngayMua.split('/').reverse().join('-')).toISOString().slice(0,10):'';
+  m_noiMua.value=r.noiMua || '';
   modal.style.display='flex'; m_soThe.focus();
 }
 
