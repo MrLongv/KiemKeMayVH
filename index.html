@@ -249,20 +249,39 @@ document.getElementById('btnAdd').onclick=()=>{
   modal.style.display='flex'; m_soThe.focus();
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
-document.getElementById('saveBtn').onclick=()=>{
-  const obj={soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
-    viTri:m_viTri.value.trim(),ghiChu:m_ghiChu.value.trim(),daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):'',
-    noiMua:m_noiMua.value.trim()
+document.getElementById('saveBtn').onclick = () => {
+  function formatDateDDMMYYYY(dateStr){
+    if(!dateStr) return '';
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2,'0');
+    const month = String(d.getMonth()+1).padStart(2,'0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  const obj = {
+    soThe: m_soThe.value.trim(),
+    soMay: m_soMay.value.trim(),
+    loaiMay: m_loaiMay.value.trim(),
+    viTri: m_viTri.value.trim(),
+    ghiChu: m_ghiChu.value.trim(),
+    daKiemKe: m_daKiemKe.checked,
+    chonIn: m_chonIn.checked,
+    ngayMua: formatDateDDMMYYYY(m_ngayMua.value),
+    noiMua: m_noiMua.value.trim()
   };
-  if(!obj.soThe){alert('Số thẻ không được để trống');return;}
- if(editingIndex===null){allData.push(obj); autoSyncRow(allData.length-1);}
-else{allData[editingIndex]=obj; autoSyncRow(editingIndex);}
-modal.style.display='none';
-editingIndex=null;
-renderTable();
-highlightFromHash();  // <= thêm dòng này để cuộn tới QR nếu hash trùng soThe
+
+  if(!obj.soThe){ alert('Số thẻ không được để trống'); return; }
+
+  if(editingIndex===null){ allData.push(obj); autoSyncRow(allData.length-1); }
+  else { allData[editingIndex] = obj; autoSyncRow(editingIndex); }
+
+  modal.style.display='none';
+  editingIndex=null;
+  renderTable();
+  highlightFromHash();  // cuộn tới QR nếu hash trùng soThe
 };
+
 function openEditModal(idx){
   editingIndex=Number(idx);
   const r=allData[editingIndex];
