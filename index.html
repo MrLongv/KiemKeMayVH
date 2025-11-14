@@ -326,12 +326,14 @@ function openEditModal(idx){
   m_daKiemKe.checked = !!r.daKiemKe;
   m_chonIn.checked = !!r.chonIn;
 
-  // ==== Phần sửa ngày mua ====
+  // ==== Sửa ngày mua ====
   if(r.ngayMua){
-    const parts = r.ngayMua.split('/');
+    const parts = r.ngayMua.split('/'); // dd/mm/yyyy
     if(parts.length === 3){
-      // Chuyển dd/mm/yyyy -> yyyy-mm-dd cho input type="date"
-      m_ngayMua.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      const yyyy = parts[2];
+      const mm = parts[1].padStart(2,'0');
+      const dd = parts[0].padStart(2,'0');
+      m_ngayMua.value = `${yyyy}-${mm}-${dd}`; // chuyển sang yyyy-mm-dd
     } else {
       m_ngayMua.value = '';
     }
