@@ -47,17 +47,20 @@ tr.highlight{background:#ffeaa7 !important}
   border-radius: 8px;
   width: 360px;
   max-width: 95%;
-  max-height: 80vh;          /* ⚡ modal scroll được nếu cao */
+  max-height: 80vh;          /* modal scroll nếu cao */
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* mượt trên iOS */
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
-/* Ngăn scroll ngoài modal */
+/* Ngăn cuộn body khi modal mở */
 body.modal-open {
+  position: fixed;
+  width: 100%;
   overflow: hidden;
-  touch-action: none; /* ngăn vuốt ngoài modal */
+  height: 100%;
+  top: 0;
 }
-
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -386,8 +389,26 @@ function openEditModal(idx){
   m_noiMua.value = r.noiMua || '';
 
   modal.style.display = 'flex';
-  document.body.classList.add('modal-open'); // khóa cuộn body
+
+  // khóa body
+  const scrollY = window.scrollY;
+  document.body.style.top = `-${scrollY}px`;
+  document.body.classList.add('modal-open');
+
+  // scroll modal để input hiện giữa
+  setTimeout(()=>m_soThe.scrollIntoView({behavior:'smooth', block:'center'}), 300);
   m_soThe.focus();
+}
+
+function closeModal(){
+  modal.style.display = 'none';
+  editingIndex=null;
+
+  // mở body, trả scroll về vị trí cũ
+  const scrollY = -parseInt(document.body.style.top || '0');
+  document.body.classList.remove('modal-open');
+  document.body.style.top='';
+  window.scrollTo(0, scrollY);
 }
 
 function closeModal(){
@@ -395,6 +416,14 @@ function closeModal(){
   editingIndex=null;
   document.body.classList.remove('modal-open'); // mở lại body
 }
+const inputs = modal.querySelectorAll('input, textarea');
+inputs.forEach(input => {
+  input.addEventListener('focus', () => {
+    setTimeout(() => {
+      input.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 300); // bàn phím bật xong
+  });
+});
 
 // capture touch để không scroll body khi vuốt modal
 modal.addEventListener('touchmove', e => {
