@@ -284,15 +284,15 @@ document.getElementById('btnAdd').onclick=()=>{
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick = () => {
-  const ngayMuaInput = m_ngayMua.value; // yyyy-MM-dd
   let ngayMuaFormatted = '';
-  if(ngayMuaInput){
-    const parts = ngayMuaInput.split('-'); // ["yyyy","mm","dd"]
-    if(parts.length===3){
+  const inputVal = m_ngayMua.value; // yyyy-MM-dd
+  if(inputVal){ // nếu user nhập hoặc chỉnh sửa
+    const parts = inputVal.split('-'); // ["yyyy","MM","dd"]
+    if(parts.length === 3){
       ngayMuaFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/MM/yyyy
     }
-  } else if(editingIndex!==null && allData[editingIndex].ngayMua){
-    // giữ nguyên ngày cũ nếu user không nhập gì
+  } else if(editingIndex !== null && allData[editingIndex].ngayMua){
+    // giữ nguyên ngày cũ nếu input rỗng
     ngayMuaFormatted = allData[editingIndex].ngayMua;
   }
 
@@ -310,8 +310,13 @@ document.getElementById('saveBtn').onclick = () => {
 
   if(!obj.soThe){ alert('Số thẻ không được để trống'); return; }
 
-  if(editingIndex===null){ allData.push(obj); autoSyncRow(allData.length-1); }
-  else { allData[editingIndex] = obj; autoSyncRow(editingIndex); }
+  if(editingIndex === null){
+    allData.push(obj);
+    autoSyncRow(allData.length-1);
+  } else {
+    allData[editingIndex] = obj;
+    autoSyncRow(editingIndex);
+  }
 
   modal.style.display='none';
   editingIndex=null;
@@ -330,12 +335,11 @@ function openEditModal(idx){
   m_ghiChu.value = r.ghiChu || '';
   m_daKiemKe.checked = !!r.daKiemKe;
   m_chonIn.checked = !!r.chonIn;
-  m_noiMua.value = r.noiMua || '';
 
-  // ===== Chuyển dd/MM/yyyy → yyyy-MM-dd =====
+  // ===== Chuyển dd/MM/yyyy sang yyyy-MM-dd =====
   if(r.ngayMua){
-    const parts = r.ngayMua.split('/');
-    if(parts.length===3){
+    const parts = r.ngayMua.split('/'); // ["dd","MM","yyyy"]
+    if(parts.length === 3){
       const dd = parts[0].padStart(2,'0');
       const mm = parts[1].padStart(2,'0');
       const yyyy = parts[2];
@@ -346,6 +350,8 @@ function openEditModal(idx){
   } else {
     m_ngayMua.value = '';
   }
+
+  m_noiMua.value = r.noiMua || '';
 
   modal.style.display = 'flex';
   m_soThe.focus();
