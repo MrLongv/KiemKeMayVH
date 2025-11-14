@@ -30,8 +30,28 @@ table{width:100%;border-collapse:collapse;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;white-space:nowrap}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
-.modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%}
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px; /* khoảng trống khi bàn phím bật */
+}
+
+.modal .card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  width: 360px;
+  max-width: 95%;
+  max-height: 90vh;     /* giới hạn chiều cao modal */
+  overflow-y: auto;     /* cho scroll khi bàn phím bật */
+}
+
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -473,6 +493,15 @@ document.getElementById('btnPrint').onclick = () => {
     }, 600);
   };
 };
+// Auto scroll input khi focus trên mobile
+const inputs = modal.querySelectorAll('input, textarea');
+inputs.forEach(input => {
+  input.addEventListener('focus', () => {
+    setTimeout(() => {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300); // delay 300ms cho bàn phím bật xong
+  });
+});
 
 // Highlight + scroll khi quét QR (số thẻ là chữ/số kết hợp)
 function highlightFromHash() {
