@@ -284,15 +284,25 @@ document.getElementById('btnAdd').onclick=()=>{
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick = () => {
-  // Xử lý ngày mua
   let ngayMuaFormatted = '';
+
   if (m_ngayMua.value) {
-    // Người dùng nhập hoặc chọn ngày mới → chuyển sang dd/MM/yyyy
-    const [yyyy, mm, dd] = m_ngayMua.value.split('-');
-    ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
+    // m_ngayMua.value luôn yyyy-MM-dd
+    const d = new Date(m_ngayMua.value);
+    if (!isNaN(d)) {
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
+    } else {
+      ngayMuaFormatted = '';
+    }
   } else if (editingIndex !== null && allData[editingIndex].ngayMua) {
-    // Edit mà không thay đổi ngày → giữ nguyên
+    // Edit mà không chỉnh ngày → giữ nguyên
     ngayMuaFormatted = allData[editingIndex].ngayMua;
+  } else {
+    // Thêm mới, không nhập ngày → để rỗng
+    ngayMuaFormatted = '';
   }
 
   const obj = {
@@ -310,11 +320,9 @@ document.getElementById('saveBtn').onclick = () => {
   if (!obj.soThe) { alert('Số thẻ không được để trống'); return; }
 
   if (editingIndex === null) {
-    // Thêm mới
     allData.push(obj);
     autoSyncRow(allData.length - 1);
   } else {
-    // Chỉnh sửa
     allData[editingIndex] = obj;
     autoSyncRow(editingIndex);
   }
@@ -324,6 +332,7 @@ document.getElementById('saveBtn').onclick = () => {
   renderTable();
   highlightFromHash();
 };
+
 function openEditModal(idx) {
   editingIndex = idx !== null ? Number(idx) : null;
 
