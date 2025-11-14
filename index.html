@@ -146,11 +146,16 @@ function safeText(v){return v==null?'':String(v);}
 function formatDateDDMMYYYY(d){if(!d) return""; if(d.includes("/")) return d; const date=new Date(d); if(isNaN(date)) return d; const day=String(date.getDate()).padStart(2,'0'); const month=String(date.getMonth()+1).padStart(2,'0'); const year=date.getFullYear(); return `${day}/${month}/${year}`;}
 
 // ==== PHẦN MẬT KHẨU ====
-const PASSWORD='12345';
-const mainUI=[document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
-const pwdModal=document.createElement('div');
-pwdModal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
-pwdModal.innerHTML=`
+const PASSWORD = '12345';
+const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
+
+// Ẩn UI chính
+mainUI.forEach(el => el.style.display = 'none');
+
+// Tạo modal nhập mật khẩu
+const pwdModal = document.createElement('div');
+pwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
+pwdModal.innerHTML = `
   <div style="background:#fff;padding:20px;border-radius:8px;width:300px;text-align:center">
     <h3>🔒 Nhập mật khẩu</h3>
     <input id="pwdInput" type="password" style="width:80%;padding:6px;margin-top:10px" />
@@ -159,67 +164,39 @@ pwdModal.innerHTML=`
     </div>
   </div>`;
 document.body.appendChild(pwdModal);
-mainUI.forEach(el=>el.style.display='none');
 
-// Sau khi đăng nhập hoặc tự động login
-function initUI(){
-  mainUI.forEach(el=>el.style.display='flex');
-  loadData(); // load xong mới highlight
+// Lấy input + button
+const pwdInput = document.getElementById('pwdInput');
+const pwdBtn = document.getElementById('pwdBtn');
+
+// Hàm hiển thị UI sau khi login
+function initUI() {
+  pwdModal.style.display = 'none';
+  mainUI.forEach(el => el.style.display = 'flex');
+  loadData(); // load dữ liệu và highlight nhưng KHÔNG mở modal edit
 }
 
-// loadData() chỉnh lại
-function loadData(){
-  setStatus('Đang tải dữ liệu...');
-  const cb='__load_cb_'+Date.now();
-  window[cb]=function(res){
-    try{
-      if(res && res.success && Array.isArray(res.data)){
-        allData=res.data;
-        renderTable();
-        setStatus('Đã tải '+allData.length+' dòng');
-        highlightFromHash(); // chỉ highlight, KHÔNG mở modal
-      } else setStatus('Lỗi tải dữ liệu',false);
-    } finally{ delete window[cb]; script.remove(); }
-  };
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
-  document.head.appendChild(script);
-}
-
-// highlightFromHash
-function highlightFromHash(){
-  const code=location.hash.slice(1);
-  if(!code) return;
-  allData.forEach((r,idx)=>{
-    const tr=tbody.querySelector('tr[data-index="'+idx+'"]');
-    if(tr) tr.classList.remove('highlight');
-    if(r.soThe===code && tr) {
-      tr.classList.add('highlight');
-      tr.scrollIntoView({behavior:'smooth', block:'center'});
-      // KHÔNG gọi openEditModal(idx)
-    }
-  });
-}
-
-// Khi login
-if(loginTime && Date.now()-loginTime<3600*1000){
-  pwdModal.style.display='none';
+// Kiểm tra login trước đó
+const loginTime = localStorage.getItem('loginTime');
+if (loginTime && Date.now() - loginTime < 3600 * 1000) {
   initUI();
 } else {
   pwdInput.focus();
-  pwdBtn.onclick=()=>{
-    if(pwdInput.value===PASSWORD){
-      localStorage.setItem('loginTime',Date.now());
-      pwdModal.style.display='none';
+  pwdBtn.onclick = () => {
+    if (pwdInput.value === PASSWORD) {
+      localStorage.setItem('loginTime', Date.now());
       initUI();
     } else {
       alert('Mật khẩu sai!');
-      pwdInput.value='';
+      pwdInput.value = '';
       pwdInput.focus();
     }
   };
 }
+
+// Đảm bảo modal edit mặc định ẩn
+modal.style.display = 'none';
+
 
 // ==== RENDER BẢNG ====
 function renderTable(){
