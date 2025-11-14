@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>📋 Kiểm kê máy Việt Hồng</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -23,7 +23,7 @@ header {
 .controls button { background:#0b74d1; color:#fff; border:none; padding:8px 10px; border-radius:6px; cursor:pointer; }
 .controls button.ghost { background:#eee; color:#333; }
 .note { padding:8px 12px; color:#666; font-size:13px; }
-.table-wrap { padding:12px; overflow:auto; }
+.table-wrap { padding:12px; overflow:auto; max-height:70vh; }
 table { width:100%; border-collapse:collapse; background:#fff; }
 th,td { border:1px solid #ddd; padding:8px; text-align:center; white-space:nowrap; }
 th { background:#0b74d1; color:#fff; }
@@ -47,7 +47,7 @@ tr.highlight { background:#ffeaa7 !important; }
   .controls { flex-direction:column; align-items:stretch; }
   .controls input[type="text"], .controls select { width:100%; }
   .table-wrap { overflow-x:auto; }
-  table th:nth-child(4), table td:nth-child(4) { display:none; } /* Loại máy bỏ trên mobile */
+  table th:nth-child(4), table td:nth-child(4){ display:none; } /* Loại máy bỏ trên mobile */
 }
 </style>
 </head>
@@ -131,15 +131,13 @@ const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementByI
 
 let allData=[], editingIndex=null;
 
-// ===== Helpers =====
-function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
+function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt; statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
-function formatDateDDMMYYYY(d){ if(!d) return ''; if(d.includes('/')) return d; const dt=new Date(d); if(isNaN(dt)) return d; const dd=String(dt.getDate()).padStart(2,'0'); const mm=String(dt.getMonth()+1).padStart(2,'0'); const yyyy=dt.getFullYear(); return dd+'/'+mm+'/'+yyyy; }
+function formatDateDDMMYYYY(d){if(!d)return''; if(d.includes('/')) return d; const dt=new Date(d); if(isNaN(dt)) return d; const dd=String(dt.getDate()).padStart(2,'0'); const mm=String(dt.getMonth()+1).padStart(2,'0'); const yyyy=dt.getFullYear(); return dd+'/'+mm+'/'+yyyy;}
 
-// ===== Render Table =====
+// ===== Render table =====
 function renderTable(){
-  const filter=filterBox.value;
-  const search=searchBox.value.toLowerCase();
+  const filter=filterBox.value, search=searchBox.value.toLowerCase();
   tbody.innerHTML='';
   allData.forEach((r, idx)=>{
     let show=true;
@@ -171,7 +169,7 @@ function renderTable(){
   });
 }
 
-// ===== Scroll + Highlight =====
+// ===== Scroll + highlight =====
 function scrollToRow(idx){
   const tr=tbody.children[idx]; if(!tr) return;
   const container=document.querySelector('.table-wrap');
@@ -188,42 +186,31 @@ function highlightFromHash(){
   });
 }
 window.addEventListener('hashchange',highlightFromHash);
+window.addEventListener('load',highlightFromHash);
 
-// ===== Check All =====
-document.getElementById("checkAllKiemKe").addEventListener("change",function(){
-  allData.forEach(r=>r.daKiemKe=this.checked); renderTable();
-});
-document.getElementById("checkAllIn").addEventListener("change",function(){
-  allData.forEach(r=>r.chonIn=this.checked); renderTable();
-});
+// ===== Check all =====
+document.getElementById("checkAllKiemKe").addEventListener("change",function(){ allData.forEach(r=>r.daKiemKe=this.checked); renderTable(); });
+document.getElementById("checkAllIn").addEventListener("change",function(){ allData.forEach(r=>r.chonIn=this.checked); renderTable(); });
 
-// ===== Load Data JSONP =====
+// ===== Load JSONP =====
 function loadData(){
   setStatus('Đang tải dữ liệu...');
   const cb='__load_cb_'+Date.now();
   window[cb]=function(res){
-  try{ 
-    if(res && res.success && Array.isArray(res.data)){ 
-      allData=res.data; 
-      renderTable(); 
-      setStatus('Đã tải '+allData.length+' dòng'); 
-      highlightFromHash(); // ← thêm dòng này để tự scroll nếu URL có hash
-    } else setStatus('Lỗi tải dữ liệu',false); 
-  } finally { delete window[cb]; script.remove(); }
-};
-
+    try{ if(res && res.success && Array.isArray(res.data)){ allData=res.data; renderTable(); setStatus('Đã tải '+allData.length+' dòng'); highlightFromHash(); }
+    else setStatus('Lỗi tải dữ liệu',false);
+    }finally{ delete window[cb]; script.remove(); }
+  };
   const script=document.createElement('script');
   script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
   script.onerror=()=>{ setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove(); };
   document.head.appendChild(script);
 }
 
-// ===== AutoSync 1 dòng =====
-function autoSyncRow(i){
-  if(i==null||!allData[i]) return;
+// ===== AutoSync =====
+function autoSyncRow(i){ if(i==null||!allData[i]) return;
   const row=allData[i], encoded=encodeURIComponent(JSON.stringify(row));
-  const cb='__auto_cb_'+Date.now();
-  window[cb]=function(res){ delete window[cb]; script.remove(); };
+  const cb='__auto_cb_'+Date.now(); window[cb]=()=>{ delete window[cb]; script.remove(); };
   const script=document.createElement('script');
   script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
@@ -237,11 +224,11 @@ tbody.addEventListener('click',e=>{
   const act=btn.dataset.act,i=Number(btn.dataset.i);
   if(act==='edit'){ openEditModal(i); }
   if(act==='qr'){ 
-  const code = encodeURIComponent(allData[i].soThe || ''); 
-  location.hash = code;          // cập nhật hash
-  highlightFromHash();           // scroll + highlight ngay lập tức
-  alert('Link QR (copy hoặc quét điện thoại): ' + location.href.split('#')[0] + '#' + code); 
-}
+    const code=encodeURIComponent(allData[i].soThe||''); 
+    const url=location.href.split('#')[0]+'#'+code; 
+    location.href=url; // tự scroll + highlight
+    alert('Quét QR code hoặc link: '+url); 
+  }
 });
 tbody.addEventListener('change',e=>{
   const tr=e.target.closest('tr'); if(!tr) return;
@@ -287,8 +274,8 @@ document.getElementById('btnPrint').onclick=()=>{
   const w=window.open('','_blank');
   w.document.write('<html><head><title>QR Code In</title></head><body>');
   qrData.forEach(code=>{
-    w.document.write('<div style="margin:10px;display:inline-block;text-align:center">');
     const url=location.href.split('#')[0]+'#'+encodeURIComponent(code);
+    w.document.write('<div style="margin:10px;display:inline-block;text-align:center">');
     w.document.write('<div id="qr'+code+'"></div><br>'+code+'</div>');
     setTimeout(()=>{ new QRCode(w.document.getElementById('qr'+code), {text:url,width:120,height:120}); },50);
   });
@@ -301,7 +288,6 @@ document.getElementById('btnSync').onclick=()=>{ allData.forEach((r,i)=>autoSync
 
 // ===== Init =====
 loadData();
-highlightFromHash();
 </script>
 
 </body>
