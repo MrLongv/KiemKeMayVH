@@ -202,10 +202,16 @@ function loadData(){
   setStatus('Đang tải dữ liệu...');
   const cb='__load_cb_'+Date.now();
   window[cb]=function(res){
-    try{ if(res && res.success && Array.isArray(res.data)){ allData=res.data; renderTable(); setStatus('Đã tải '+allData.length+' dòng'); highlightFromHash(); }
-    else setStatus('Lỗi tải dữ liệu',false);
-    }finally{ delete window[cb]; script.remove(); }
-  };
+  try{ 
+    if(res && res.success && Array.isArray(res.data)){ 
+      allData=res.data; 
+      renderTable(); 
+      setStatus('Đã tải '+allData.length+' dòng'); 
+      highlightFromHash(); // ← thêm dòng này để tự scroll nếu URL có hash
+    } else setStatus('Lỗi tải dữ liệu',false); 
+  } finally { delete window[cb]; script.remove(); }
+};
+
   const script=document.createElement('script');
   script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
   script.onerror=()=>{ setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove(); };
@@ -230,7 +236,12 @@ tbody.addEventListener('click',e=>{
   const btn=e.target.closest('button'); if(!btn) return;
   const act=btn.dataset.act,i=Number(btn.dataset.i);
   if(act==='edit'){ openEditModal(i); }
-  if(act==='qr'){ const code=encodeURIComponent(allData[i].soThe||''); location.hash=code; alert('Quét QR code hoặc link: '+location.href.split('#')[0]+'#'+code); }
+  if(act==='qr'){ 
+  const code = encodeURIComponent(allData[i].soThe || ''); 
+  location.hash = code;          // cập nhật hash
+  highlightFromHash();           // scroll + highlight ngay lập tức
+  alert('Link QR (copy hoặc quét điện thoại): ' + location.href.split('#')[0] + '#' + code); 
+}
 });
 tbody.addEventListener('change',e=>{
   const tr=e.target.closest('tr'); if(!tr) return;
