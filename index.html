@@ -252,11 +252,9 @@ document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; ed
 document.getElementById('saveBtn').onclick = () => {
   function formatDateDDMMYYYY(dateStr){
     if(!dateStr) return '';
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2,'0');
-    const month = String(d.getMonth()+1).padStart(2,'0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    // dateStr là "yyyy-mm-dd"
+    const parts = dateStr.split('-'); // ["yyyy","mm","dd"]
+    return `${parts[2]}/${parts[1]}/${parts[0]}`; // "dd/mm/yyyy"
   }
 
   const obj = {
@@ -281,6 +279,7 @@ document.getElementById('saveBtn').onclick = () => {
   renderTable();
   highlightFromHash();  // cuộn tới QR nếu hash trùng soThe
 };
+
 
 function openEditModal(idx){
   editingIndex=Number(idx);
