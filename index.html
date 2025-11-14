@@ -395,9 +395,9 @@ document.getElementById('btnPrint').onclick = () => {
     const soMay = r.soMay || '';
     w.document.write(`
       <div class="tem">
-        <div class="top">${soThe}</div>
+        <div class="top">VH-${soThe}</div>
         <div class="qr" id="qr_${code}"></div>
-        <div class="bottom">Số máy: ${soMay}</div>
+        <div class="bottom">SM: ${soMay}</div>
       </div>
     `);
   });
