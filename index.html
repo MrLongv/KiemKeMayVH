@@ -399,18 +399,6 @@ document.getElementById('saveBtn').onclick = () => {
   document.body.style.overflow = ''; // 🔓 mở lại cuộn body
 };
 
-  // Auto scroll input khi focus trên mobile
-const inputs = modal.querySelectorAll('input, textarea');
-inputs.forEach(input => {
-  input.addEventListener('focus', () => {
-    setTimeout(() => {
-      const rect = input.getBoundingClientRect();
-      const offset = window.innerHeight / 2 - rect.height/2;
-      window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'smooth' });
-    }, 300); // delay để bàn phím bật xong
-  });
-});
-
 // Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
   const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
