@@ -169,11 +169,11 @@ function renderTable(){
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
         <td>${safeText(r.ghiChu)}</td>
+        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
         <td>${r.ngayMua ? new Date(r.ngayMua).toLocaleDateString('en-GB') : ''}</td>
-        <td>${safeText(r.noiMua)}</td>
-        <td><button data-act="edit" data-i="${idx}">✏️</button><button data-act="qr" data-i="${idx}">🔗</button></td>`;
+        <td>${safeText(r.noiMua)}</td>;
       tbody.appendChild(tr);
     }
   });
