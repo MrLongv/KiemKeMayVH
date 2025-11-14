@@ -284,15 +284,14 @@ document.getElementById('btnAdd').onclick=()=>{
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick = () => {
+  // Xử lý ngày mua
   let ngayMuaFormatted = '';
-  const inputVal = m_ngayMua.value; // yyyy-MM-dd
-  if(inputVal){ // nếu user nhập hoặc chỉnh sửa
-    const parts = inputVal.split('-'); // ["yyyy","MM","dd"]
-    if(parts.length === 3){
-      ngayMuaFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/MM/yyyy
-    }
-  } else if(editingIndex !== null && allData[editingIndex].ngayMua){
-    // giữ nguyên ngày cũ nếu input rỗng
+  if (m_ngayMua.value) {
+    // Người dùng nhập hoặc chọn ngày mới → chuyển sang dd/MM/yyyy
+    const [yyyy, mm, dd] = m_ngayMua.value.split('-');
+    ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
+  } else if (editingIndex !== null && allData[editingIndex].ngayMua) {
+    // Edit mà không thay đổi ngày → giữ nguyên
     ngayMuaFormatted = allData[editingIndex].ngayMua;
   }
 
@@ -308,55 +307,65 @@ document.getElementById('saveBtn').onclick = () => {
     noiMua: m_noiMua.value.trim()
   };
 
-  if(!obj.soThe){ alert('Số thẻ không được để trống'); return; }
+  if (!obj.soThe) { alert('Số thẻ không được để trống'); return; }
 
-  if(editingIndex === null){
+  if (editingIndex === null) {
+    // Thêm mới
     allData.push(obj);
-    autoSyncRow(allData.length-1);
+    autoSyncRow(allData.length - 1);
   } else {
+    // Chỉnh sửa
     allData[editingIndex] = obj;
     autoSyncRow(editingIndex);
   }
 
-  modal.style.display='none';
-  editingIndex=null;
+  modal.style.display = 'none';
+  editingIndex = null;
   renderTable();
   highlightFromHash();
 };
+function openEditModal(idx) {
+  editingIndex = idx !== null ? Number(idx) : null;
 
-function openEditModal(idx){
-  editingIndex = Number(idx);
-  const r = allData[editingIndex];
+  if (editingIndex !== null) {
+    // ==== CHỈNH SỬA ====
+    const r = allData[editingIndex];
 
-  m_soThe.value = r.soThe || '';
-  m_soMay.value = r.soMay || '';
-  m_loaiMay.value = r.loaiMay || '';
-  m_viTri.value = r.viTri || '';
-  m_ghiChu.value = r.ghiChu || '';
-  m_daKiemKe.checked = !!r.daKiemKe;
-  m_chonIn.checked = !!r.chonIn;
+    m_soThe.value = r.soThe || '';
+    m_soMay.value = r.soMay || '';
+    m_loaiMay.value = r.loaiMay || '';
+    m_viTri.value = r.viTri || '';
+    m_ghiChu.value = r.ghiChu || '';
+    m_daKiemKe.checked = !!r.daKiemKe;
+    m_chonIn.checked = !!r.chonIn;
 
-  // ===== Chuyển dd/MM/yyyy sang yyyy-MM-dd =====
-  if(r.ngayMua){
-    const parts = r.ngayMua.split('/'); // ["dd","MM","yyyy"]
-    if(parts.length === 3){
-      const dd = parts[0].padStart(2,'0');
-      const mm = parts[1].padStart(2,'0');
-      const yyyy = parts[2];
-      m_ngayMua.value = `${yyyy}-${mm}-${dd}`;
+    // Chuyển ngày dd/MM/yyyy sang yyyy-MM-dd để hiển thị input[type=date]
+    if (r.ngayMua) {
+      const parts = r.ngayMua.split('/'); // ["dd","MM","yyyy"]
+      if (parts.length === 3) {
+        const dd = parts[0].padStart(2, '0');
+        const mm = parts[1].padStart(2, '0');
+        const yyyy = parts[2];
+        m_ngayMua.value = `${yyyy}-${mm}-${dd}`;
+      } else {
+        m_ngayMua.value = '';
+      }
     } else {
       m_ngayMua.value = '';
     }
-  } else {
-    m_ngayMua.value = '';
-  }
 
-  m_noiMua.value = r.noiMua || '';
+    m_noiMua.value = r.noiMua || '';
+  } else {
+    // ==== THÊM MỚI ====
+    m_soThe.value = m_soMay.value = m_loaiMay.value = m_viTri.value = m_ghiChu.value = '';
+    m_daKiemKe.checked = m_chonIn.checked = false;
+    m_ngayMua.value = '';
+    m_noiMua.value = '';
+  }
 
   modal.style.display = 'flex';
   m_soThe.focus();
 }
-
 // Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
   const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
