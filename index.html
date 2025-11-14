@@ -314,24 +314,24 @@ document.getElementById('saveBtn').onclick = () => {
   highlightFromHash();  // cuộn tới QR nếu hash trùng soThe
 };
 
-
 function openEditModal(idx){
   editingIndex = Number(idx);
   const r = allData[editingIndex];
 
-  m_soThe.value = r.soThe;
-  m_soMay.value = r.soMay;
-  m_loaiMay.value = r.loaiMay;
-  m_viTri.value = r.viTri;
-  m_ghiChu.value = r.ghiChu;
-  m_daKiemKe.checked = r.daKiemKe;
-  m_chonIn.checked = r.chonIn;
+  m_soThe.value = r.soThe || '';
+  m_soMay.value = r.soMay || '';
+  m_loaiMay.value = r.loaiMay || '';
+  m_viTri.value = r.viTri || '';
+  m_ghiChu.value = r.ghiChu || '';
+  m_daKiemKe.checked = !!r.daKiemKe;
+  m_chonIn.checked = !!r.chonIn;
 
-  // CHUYỂN dd/mm/yyyy → yyyy-mm-dd để input type="date" hiển thị đúng
+  // ==== Phần sửa ngày mua ====
   if(r.ngayMua){
     const parts = r.ngayMua.split('/');
     if(parts.length === 3){
-      m_ngayMua.value = `${parts[2]}-${parts[1]}-${parts[0]}`; // yyyy-mm-dd
+      // Chuyển dd/mm/yyyy -> yyyy-mm-dd cho input type="date"
+      m_ngayMua.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
     } else {
       m_ngayMua.value = '';
     }
@@ -340,6 +340,7 @@ function openEditModal(idx){
   }
 
   m_noiMua.value = r.noiMua || '';
+
   modal.style.display = 'flex';
   m_soThe.focus();
 }
