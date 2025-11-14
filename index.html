@@ -103,7 +103,7 @@ tr.highlight{background:#ffeaa7 !important}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbwYXvdBTz4Y39pyEWCC__5usaSygfaZeRRlKGk_wLWmgebIlVwKf0m7d5Wy7qLHuPIn/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbw4uF_svcJwo2ki83RoZ0chTcY3IndTSZidOL-oZ3rM4GSEfEH4IT-Oey7z-UFgWmsB/exec';
 
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
@@ -160,9 +160,10 @@ if(loginTime && Date.now() - loginTime < 3600*1000){
 
 // ==== HẾT PHẦN MẬT KHẨU ====
 function formatDateDDMMYYYY(d){
-  if(!d) return '';
+  if (!d) return "";
+  if (d.includes("/")) return d; // đã đúng dd/MM/yyyy => giữ nguyên
   const date = new Date(d);
-  if(isNaN(date)) return '';
+  if (isNaN(date)) return d;
   const day = String(date.getDate()).padStart(2,'0');
   const month = String(date.getMonth()+1).padStart(2,'0');
   const year = date.getFullYear();
