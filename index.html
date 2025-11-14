@@ -284,11 +284,16 @@ document.getElementById('btnAdd').onclick=()=>{
 };
 document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; editingIndex=null;};
 document.getElementById('saveBtn').onclick = () => {
-  function formatDateDDMMYYYY(dateStr){
-    if(!dateStr) return '';
-    // dateStr là "yyyy-mm-dd"
-    const parts = dateStr.split('-'); // ["yyyy","mm","dd"]
-    return `${parts[2]}/${parts[1]}/${parts[0]}`; // "dd/mm/yyyy"
+  const ngayMuaInput = m_ngayMua.value; // yyyy-MM-dd
+  let ngayMuaFormatted = '';
+  if(ngayMuaInput){
+    const parts = ngayMuaInput.split('-'); // ["yyyy","mm","dd"]
+    if(parts.length===3){
+      ngayMuaFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/MM/yyyy
+    }
+  } else if(editingIndex!==null && allData[editingIndex].ngayMua){
+    // giữ nguyên ngày cũ nếu user không nhập gì
+    ngayMuaFormatted = allData[editingIndex].ngayMua;
   }
 
   const obj = {
@@ -299,7 +304,7 @@ document.getElementById('saveBtn').onclick = () => {
     ghiChu: m_ghiChu.value.trim(),
     daKiemKe: m_daKiemKe.checked,
     chonIn: m_chonIn.checked,
-    ngayMua: m_ngayMua.value, // yyyy-mm-dd
+    ngayMua: ngayMuaFormatted,
     noiMua: m_noiMua.value.trim()
   };
 
@@ -311,7 +316,7 @@ document.getElementById('saveBtn').onclick = () => {
   modal.style.display='none';
   editingIndex=null;
   renderTable();
-  highlightFromHash();  // cuộn tới QR nếu hash trùng soThe
+  highlightFromHash();
 };
 
 function openEditModal(idx){
@@ -325,24 +330,22 @@ function openEditModal(idx){
   m_ghiChu.value = r.ghiChu || '';
   m_daKiemKe.checked = !!r.daKiemKe;
   m_chonIn.checked = !!r.chonIn;
+  m_noiMua.value = r.noiMua || '';
 
-  // ===== Chuyển dd/mm/yyyy sang yyyy-MM-dd cho input type=date =====
-  function toInputDate(d){
-    if(!d) return '';
-    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // nếu đã đúng chuẩn
-    const parts = d.split('/');
+  // ===== Chuyển dd/MM/yyyy → yyyy-MM-dd =====
+  if(r.ngayMua){
+    const parts = r.ngayMua.split('/');
     if(parts.length===3){
       const dd = parts[0].padStart(2,'0');
       const mm = parts[1].padStart(2,'0');
       const yyyy = parts[2];
-      return `${yyyy}-${mm}-${dd}`;
+      m_ngayMua.value = `${yyyy}-${mm}-${dd}`;
+    } else {
+      m_ngayMua.value = '';
     }
-    return '';
+  } else {
+    m_ngayMua.value = '';
   }
-
-  m_ngayMua.value = toInputDate(r.ngayMua);
-
-  m_noiMua.value = r.noiMua || '';
 
   modal.style.display = 'flex';
   m_soThe.focus();
