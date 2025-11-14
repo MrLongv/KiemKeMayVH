@@ -32,16 +32,13 @@ th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
 .modal {
   display: none;
-  position: fixed;       /* luôn dính viewport */
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,.4);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;      /* khoảng trống trên/dưới khi bàn phím bật */
-  overflow: hidden;      /* ⚠ khóa cuộn ngoài modal */
-  touch-action: none;    /* ⚠ ngăn vuốt ngoài modal */
 }
 
 .modal .card {
@@ -50,9 +47,15 @@ tr.highlight{background:#ffeaa7 !important}
   border-radius: 8px;
   width: 360px;
   max-width: 95%;
-  max-height: 90vh;      /* modal scroll được nếu cao */
-  overflow-y: auto;      /* ⚡ chỉ scroll trong modal */
+  max-height: 80vh;          /* ⚡ modal scroll được nếu cao */
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch; /* mượt trên iOS */
+}
+
+/* Ngăn scroll ngoài modal */
+body.modal-open {
+  overflow: hidden;
+  touch-action: none; /* ngăn vuốt ngoài modal */
 }
 
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -383,10 +386,39 @@ function openEditModal(idx){
   m_noiMua.value = r.noiMua || '';
 
   modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden'; // khóa cuộn body
-  document.body.style.position = 'fixed';  // ⚡ khóa hoàn toàn trang dưới
+  document.body.classList.add('modal-open'); // khóa cuộn body
   m_soThe.focus();
 }
+
+function closeModal(){
+  modal.style.display = 'none';
+  editingIndex=null;
+  document.body.classList.remove('modal-open'); // mở lại body
+}
+
+// capture touch để không scroll body khi vuốt modal
+modal.addEventListener('touchmove', e => {
+  e.stopPropagation();
+}, {passive:false});
+
+document.getElementById('cancelBtn').onclick = closeModal;
+document.getElementById('saveBtn').onclick = () => {
+  // save logic cũ
+  closeModal();
+};
+
+// scroll input khi focus trong modal
+const inputs = modal.querySelectorAll('input, textarea');
+inputs.forEach(input => {
+  input.addEventListener('focus', () => {
+    setTimeout(() => {
+      const rect = input.getBoundingClientRect();
+      const offset = window.innerHeight / 2 - rect.height/2;
+      modal.scrollTop += rect.top - offset;  // chỉ scroll modal
+    }, 300); // bàn phím bật xong
+  });
+});
+
 
 // Khi đóng modal
 function closeModal(){
