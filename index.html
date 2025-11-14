@@ -381,24 +381,23 @@ function openEditModal(index) {
   editingIndex = index;
   const r = allData[index];
 
-  // Gán dữ liệu vào modal đúng ID
   m_soThe.value   = r.soThe || "";
   m_soMay.value   = r.soMay || "";
   m_loaiMay.value = r.loaiMay || "";
   m_viTri.value   = r.viTri || "";
   m_ghiChu.value  = r.ghiChu || "";
-  m_noiMua.value  = r.noiMua || "";
-
   m_daKiemKe.checked = !!r.daKiemKe;
   m_chonIn.checked   = !!r.chonIn;
+  m_noiMua.value  = r.noiMua || "";
 
-  // Giữ nguyên text dd/MM/yyyy, không convert sang ISO
-  m_ngayMua.value = r.ngayMua || "";
+  // ⭐⭐ GIỮ ĐÚNG TEXT dd/MM/yyyy – KHÔNG BAO GIỜ new Date()
+  m_ngayMua.value = r.ngayMua && r.ngayMua.includes("/")
+      ? r.ngayMua
+      : ""; // nếu sheet có format lạ thì hiển thị trống
 
   modal.style.display = "flex";
   m_soThe.focus();
 }
-
 
 // Đồng bộ thủ công
 document.getElementById('btnSync').onclick=()=>{
