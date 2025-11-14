@@ -252,7 +252,7 @@ document.getElementById('cancelBtn').onclick=()=>{modal.style.display='none'; ed
 document.getElementById('saveBtn').onclick=()=>{
   const obj={soThe:m_soThe.value.trim(),soMay:m_soMay.value.trim(),loaiMay:m_loaiMay.value.trim(),
     viTri:m_viTri.value.trim(),ghiChu:m_ghiChu.value.trim(),daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):''
+    chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value?(new Date(m_ngayMua.value)).toLocaleDateString('en-GB'):'',
     noiMua:m_noiMua.value.trim()
   };
   if(!obj.soThe){alert('Số thẻ không được để trống');return;}
