@@ -7,14 +7,16 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
-header{
-  background:#0b74d1;        /* màu nền xanh */
-  color:#fff;                /* màu chữ trắng */
-  padding:16px 0;            /* trên-dưới nhiều hơn, trái-phải bằng 0 */
-  font-size:24px;            /* chữ to hơn */
-  text-align:center;         /* canh giữa */
-  font-weight:bold;          /* chữ đậm */
-  letter-spacing:1px;        /* khoảng cách chữ hơi rộng cho đẹp */
+header {
+  display: flex;             /* dùng flexbox */
+  justify-content: center;   /* canh giữa theo ngang */
+  align-items: center;       /* canh giữa theo dọc */
+  background: #0b74d1;       /* nền xanh */
+  color: #fff;               /* chữ trắng */
+  padding: 16px 0;           /* trên-dưới */
+  font-size: 24px;           /* chữ to hơn */
+  font-weight: bold;         /* chữ đậm */
+  letter-spacing: 1px;       /* khoảng cách chữ */
 }
 
 .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
