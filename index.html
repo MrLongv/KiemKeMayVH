@@ -279,7 +279,7 @@ function renderTable(){
       const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
         <td>${idx+1}</td>
-        <td>${safeText(r.soThe)}</td>
+        <td class="col-so-the">${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
@@ -468,6 +468,22 @@ function highlightFromHash(){
     }
   });
 }
+// === AUTO SCROLL KHI MỚI MỞ TRANG (THEO SỐ THẺ) ===
+window.addEventListener("DOMContentLoaded", () => {
+  const code = location.hash.slice(1);
+  if (!code) return;
+
+  const rows = document.querySelectorAll("#dataTable tbody tr");
+  rows.forEach(row => {
+    const soTheCell = row.querySelector(".col-so-the");
+    if (!soTheCell) return;
+
+    if (soTheCell.textContent.trim() === code) {
+      row.classList.add("highlight-row");
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+});
 
 document.getElementById('btnPrint').onclick = () => {
   const printData = allData.filter(r => r.chonIn);
@@ -547,39 +563,6 @@ document.getElementById("checkAllQR").addEventListener("change", function() {
     autoSyncRow(idx);
   });
   renderTable();
-});
-// === AUTO SCROLL KHI URL CÓ DẠNG #MAMAY (HIGHLIGHT LIÊN TỤC) ===
-window.addEventListener("DOMContentLoaded", () => {
-  const hash = window.location.hash.replace("#", "").trim();
-  if (!hash) return;
-
-  const rows = document.querySelectorAll("tbody tr");
-  let targetRow = null;
-
-  rows.forEach(row => {
-    const maMayCell = row.querySelector(".col-ma-may");
-    if (!maMayCell) return;
-
-    const maMay = maMayCell.textContent.trim();
-    if (maMay === hash) {
-      targetRow = row;
-    }
-  });
-
-  if (targetRow) {
-    // Bỏ highlight cũ
-    document.querySelectorAll(".highlight-row").forEach(r => {
-      r.classList.remove("highlight-row");
-    });
-
-    // Scroll vào đúng dòng
-    setTimeout(() => {
-      targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 200);
-
-    // Giữ highlight vô thời hạn
-    targetRow.classList.add("highlight-row");
-  }
 });
 
 // ==== ADD NEW ROW ====
