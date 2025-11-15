@@ -485,7 +485,11 @@ function highlightFromHash(retry = 40) {
     setTimeout(() => highlightFromHash(retry - 1), 150);
   }
 }
-
+// Khi hash (#1234) thay đổi do quét QR mới → cho phép scroll lại
+window.addEventListener("hashchange", () => {
+  hashScrollDone = false;
+  setTimeout(() => highlightFromHash(), 100);
+});
 
 document.getElementById('btnPrint').onclick = () => {
   const printData = allData.filter(r => r.chonIn);
