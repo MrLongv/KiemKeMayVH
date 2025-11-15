@@ -209,7 +209,22 @@ function renderTable(){
     if(filter==='chuaKiemKe'&&r.daKiemKe) show=false;
     if(filter==='daIn'&&!r.chonIn) show=false;
     if(filter==='chuaIn'&&r.chonIn) show=false;
-    if(search&&!(r.soThe+r.soMay+r.loaiMay+r.viTri+r.ghiChu).toLowerCase().includes(search)) show=false;
+    if (search) {
+  const haystack = [
+    r.soThe,
+    r.soMay,
+    r.loaiMay,
+    r.viTri,
+    r.ghiChu,
+    r.noiMua,
+    r.ngayMua
+  ]
+  .map(x => (x || "").toString().toLowerCase())
+  .join(" ");
+
+  if (!haystack.includes(search)) show = false;
+}
+
     if(show){
       const tr=document.createElement('tr'); tr.dataset.index=idx;
       tr.innerHTML=`
