@@ -453,9 +453,10 @@ document.getElementById('btnSync').onclick=()=>{
 };
 document.getElementById('btnRefresh').onclick=loadData;
 
-// ==== HASH HIGHLIGHT từ QR ====
-// ==== HASH HIGHLIGHT từ QR (có auto retry) ====
-function highlightFromHash(retry = 20) {
+// ==== CUỘN ĐẾN DÒNG TỪ QR, CHỜ DỮ LIỆU LOAD ====
+let hashScrollDone = false;
+
+function highlightFromHash(retry = 40) {
   const code = location.hash.slice(1);
   if (!code) return;
 
@@ -468,14 +469,20 @@ function highlightFromHash(retry = 20) {
 
     if (soTheCell.textContent.trim() === code) {
       row.classList.add("highlight-row");
-      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      
+      // Chỉ scroll 1 lần để tránh giật
+      if (!hashScrollDone) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        hashScrollDone = true;
+      }
+
       found = true;
     }
   });
 
-  // Nếu chưa tìm thấy → thử lại sau 200ms (tối đa 20 lần)
+  // Nếu chưa có dữ liệu → phải chờ thêm (điện thoại load chậm)
   if (!found && retry > 0) {
-    setTimeout(() => highlightFromHash(retry - 1), 200);
+    setTimeout(() => highlightFromHash(retry - 1), 150);
   }
 }
 
