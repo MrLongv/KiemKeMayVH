@@ -224,6 +224,8 @@ function initUI() {
   pwdModal.style.display = 'none';
   mainUI.forEach(el => el.style.display = 'flex');
   loadData(); // load dữ liệu và highlight nhưng KHÔNG mở modal edit
+   // ✨ NEW: cuộn theo QR sau khi login xong
+  setTimeout(highlightFromHash, 800);
 }
 
 // Kiểm tra login trước đó
