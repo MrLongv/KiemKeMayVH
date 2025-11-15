@@ -96,8 +96,14 @@ body.modal-open {
         <th>Vị trí</th>
         <th>Ghi chú</th>
         <th>Hành động</th>
-        <th>Đã KK</th>
-        <th>In QR</th>
+        <th style="text-align:center;">
+        Đã KK<br>
+        <input type="checkbox" id="checkAllKK">
+        </th>
+        <th style="text-align:center;">
+        In QR<br>
+        <input type="checkbox" id="checkAllQR">
+        </th>
         <th>Ngày mua</th>
         <th>Nơi mua</th>
       </tr>
@@ -514,6 +520,29 @@ document.getElementById('btnPrint').onclick = () => {
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
+// Check / Uncheck tất cả "Đã KK"
+document.getElementById("checkAllKK").addEventListener("change", function() {
+  const items = document.querySelectorAll(".daKiemKe");
+  items.forEach(cb => {
+    cb.checked = this.checked;
+    const idx = Number(cb.closest("tr").dataset.index);
+    allData[idx].daKiemKe = this.checked;
+    autoSyncRow(idx);
+  });
+  renderTable();
+});
+
+// Check / Uncheck tất cả "In QR"
+document.getElementById("checkAllQR").addEventListener("change", function() {
+  const items = document.querySelectorAll(".chonIn");
+  items.forEach(cb => {
+    cb.checked = this.checked;
+    const idx = Number(cb.closest("tr").dataset.index);
+    allData[idx].chonIn = this.checked;
+    autoSyncRow(idx);
+  });
+  renderTable();
+});
 
 // ==== ADD NEW ROW ====
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
