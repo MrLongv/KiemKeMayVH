@@ -293,19 +293,47 @@ tbody.addEventListener('change',e=>{
   renderTable();
 });
 
-// ==== MODAL ====
-function openEditModal(idx){
-  editingIndex=Number(idx);
-  const r=allData[editingIndex]||{};
-  m_soThe.value=r.soThe||''; m_soMay.value=r.soMay||''; m_loaiMay.value=r.loaiMay||''; m_viTri.value=r.viTri||''; 
-  m_ghiChu.value=r.ghiChu||''; m_daKiemKe.checked=!!r.daKiemKe; m_chonIn.checked=!!r.chonIn;
-  m_ngayMua.value=r.ngayMua||''; m_noiMua.value=r.noiMua||'';
-  modal.style.display='flex';
+function openEditModal(idx) {
+
+  // Nếu idx null hoặc undefined → tạo mới
+  if (idx === null || idx === undefined) {
+    editingIndex = null;
+
+    m_soThe.value = "";
+    m_soMay.value = "";
+    m_loaiMay.value = "";
+    m_viTri.value = "";
+    m_ghiChu.value = "";
+    m_daKiemKe.checked = false;
+    m_chonIn.checked = false;
+    m_ngayMua.value = "";
+    m_noiMua.value = "";
+  } 
+  else {
+    // Sửa dòng
+    editingIndex = idx;
+    const r = allData[idx] || {};
+
+    m_soThe.value = r.soThe || "";
+    m_soMay.value = r.soMay || "";
+    m_loaiMay.value = r.loaiMay || "";
+    m_viTri.value = r.viTri || "";
+    m_ghiChu.value = r.ghiChu || "";
+    m_daKiemKe.checked = !!r.daKiemKe;
+    m_chonIn.checked = !!r.chonIn;
+    m_ngayMua.value = r.ngayMua || "";
+    m_noiMua.value = r.noiMua || "";
+  }
+
+  modal.style.display = 'flex';
   document.body.classList.add('modal-open');
-  const scrollY=window.scrollY; document.body.style.top=`-${scrollY}px`;
-  setTimeout(()=>m_soThe.scrollIntoView({behavior:'smooth', block:'center'}),300);
+  const scrollY = window.scrollY;
+  document.body.style.top = `-${scrollY}px`;
+
+  setTimeout(()=> m_soThe.scrollIntoView({behavior:'smooth', block:'center'}),300);
   m_soThe.focus();
 }
+
 
 function closeModal(){
   modal.style.display='none';
