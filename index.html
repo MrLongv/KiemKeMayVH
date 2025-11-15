@@ -224,8 +224,6 @@ function initUI() {
   pwdModal.style.display = 'none';
   mainUI.forEach(el => el.style.display = 'flex');
   loadData(); // load dữ liệu và highlight nhưng KHÔNG mở modal edit
-   // ✨ NEW: cuộn theo QR sau khi login xong
-  setTimeout(highlightFromHash, 800);
 }
 
 // Kiểm tra login trước đó
@@ -456,26 +454,14 @@ document.getElementById('btnSync').onclick=()=>{
 document.getElementById('btnRefresh').onclick=loadData;
 
 // ==== HASH HIGHLIGHT từ QR ====
-function highlightFromHash(){
-  const code = location.hash.slice(1);
-  if(!code) return;
-  allData.forEach((r,idx)=>{
-    const tr = tbody.querySelector('tr[data-index="'+idx+'"]');
-    if(tr) tr.classList.remove('highlight');
-    if(r.soThe === code && tr) {
-      tr.classList.add('highlight');
-      tr.scrollIntoView({behavior:'smooth', block:'center'});
-      // ⚠️ Xóa phần mở modal tự động
-      // openEditModal(idx); <-- bỏ đi
-    }
-  });
-}
-// === AUTO SCROLL KHI MỚI MỞ TRANG (THEO SỐ THẺ) ===
-window.addEventListener("DOMContentLoaded", () => {
+// ==== HASH HIGHLIGHT từ QR (có auto retry) ====
+function highlightFromHash(retry = 20) {
   const code = location.hash.slice(1);
   if (!code) return;
 
   const rows = document.querySelectorAll("#dataTable tbody tr");
+  let found = false;
+
   rows.forEach(row => {
     const soTheCell = row.querySelector(".col-so-the");
     if (!soTheCell) return;
@@ -483,9 +469,16 @@ window.addEventListener("DOMContentLoaded", () => {
     if (soTheCell.textContent.trim() === code) {
       row.classList.add("highlight-row");
       row.scrollIntoView({ behavior: "smooth", block: "center" });
+      found = true;
     }
   });
-});
+
+  // Nếu chưa tìm thấy → thử lại sau 200ms (tối đa 20 lần)
+  if (!found && retry > 0) {
+    setTimeout(() => highlightFromHash(retry - 1), 200);
+  }
+}
+
 
 document.getElementById('btnPrint').onclick = () => {
   const printData = allData.filter(r => r.chonIn);
@@ -553,6 +546,7 @@ document.getElementById("checkAllKK").addEventListener("change", function() {
     autoSyncRow(idx);
   });
   renderTable();
+  highlightFromHash();
 });
 
 // Check / Uncheck tất cả "In QR"
