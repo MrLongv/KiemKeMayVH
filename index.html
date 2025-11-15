@@ -361,8 +361,9 @@ tbody.addEventListener('change',e=>{
   if(e.target.classList.contains('chonIn')){ allData[idx].chonIn=e.target.checked; autoSyncRow(idx);}
   renderTable();
 });
-
+let lastScrollY = 0;
 function openEditModal(idx) {
+lastScrollY = window.scrollY; // LƯU VỊ TRÍ TRƯỚC KHI MỞ MODAL
 
   // Nếu idx null hoặc undefined → tạo mới
   if (idx === null || idx === undefined) {
@@ -406,7 +407,8 @@ function closeModal(){
   document.body.classList.remove('modal-open');
   document.body.style.top='';
   document.body.style.overflow='';
-  window.scrollTo(0,0);
+  // 🔥 KHÔI PHỤC VỊ TRÍ CUỘN CŨ — KHÔNG NHẢY VỀ ĐẦU
+  window.scrollTo(0, lastScrollY);
 }
 document.getElementById('cancelBtn').onclick=closeModal;
 document.getElementById('saveBtn').onclick=()=>{
