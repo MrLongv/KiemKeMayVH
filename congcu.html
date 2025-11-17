@@ -98,7 +98,7 @@ body.modal-open{position:fixed;width:100%;overflow:hidden;height:100%;top:0}
   Lưu ý: frontend sẽ gửi param `sheet=DanhSachCongCu` đến webapp để đọc/ghi sheet tương ứng.
   WebApp (Code.gs) cần hỗ trợ e.parameter.sheet (mình sẽ gửi patch Code.gs phía dưới).
 */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbylrd6wQMTmOL_DUncZajnhvOuA4kC-bTDZmKciV92mQZ1K3Pykzuucd51nfmoqOI0u/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwfq6Th5wAs1gg-V6tw8665b6ancC5Ydxiua0IBZRc4V78JakEmwfder9WzIOnbtVcn/exec';
 const SHEET_NAME = 'DanhSachCongCu'; // frontend mặc định dùng sheet này
 
 const statusEl = document.getElementById('status'), tbody = document.querySelector('#dataTable tbody');
@@ -199,17 +199,18 @@ function loadData(){
   window[cb] = function(res){
     try{
       if (res && res.success && Array.isArray(res.data)){
-        allData = res.data.map(r => ({
-          ma: r.ma || '',
-          chungLoai: r.chungLoai || '',
-          viTri: r.viTri || '',
-          soTien: r.soTien || '',
-          ngayMua: r.ngayMua || '',
-          tinhTrang: r.tinhTrang || '',
-          ghiChu: r.ghiChu || '',
-          daKiemKe: !!r.daKiemKe,
-          chonIn: !!r.chonIn
-        }));
+allData = res.data.map(r => ({
+  ma: r.maCongCu || '',
+  chungLoai: r.loaiCongCu || '',
+  viTri: r.viTri || '',
+  soTien: r.soTien || '',
+  ngayMua: r.ngayMua || '',
+  tinhTrang: r.tinhTrang || '',
+  ghiChu: r.ghiChu || '',
+  daKiemKe: !!r.daKiemKe,
+  chonIn: !!r.chonIn
+}));
+
         allData.forEach(r => { if (r.ngayMua) r.ngayMua = formatDateDDMMYYYY(r.ngayMua); });
         renderTable();
         setStatus('Đã tải '+allData.length+' dòng');
