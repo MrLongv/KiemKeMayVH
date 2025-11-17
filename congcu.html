@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📦 Kiểm kê Công Cụ</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body{font-family:Arial;margin:0;background:#f5f5f5}
+header{background:#2b7cff;color:#fff;padding:15px;font-size:20px;text-align:center}
+.container{padding:15px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ddd;padding:8px;font-size:14px}
+th{background:#e8f0ff}
+tr.highlight{background:#fff3bf!important}
+input[type="text"],select{width:100%;padding:6px}
+.btn{background:#2b7cff;color:#fff;border:none;padding:10px 15px;border-radius:6px;cursor:pointer;margin:5px 0}
+.btn:active{opacity:0.7}
+.topbar{display:flex;gap:10px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<header>📦 Kiểm kê Công Cụ</header>
+<div class="container">
+<div class="topbar">
+<input id="searchBox" placeholder="Tìm kiếm..." />
+<button class="btn" id="btnSave">💾 Lưu toàn bộ</button>
+</div>
+<table id="tbl">
+<thead>
+<tr>
+<th>STT</th>
+<th>Chủng loại</th>
+<th>Vị trí</th>
+<th>Số tiền</th>
+<th>Ngày mua</th>
+<th>Tình trạng</th>
+<th>Ghi chú</th>
+<th>Đã KK</th>
+<th>In</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<script>
+const webAppUrl = "https://script.google.com/macros/s/AKfycbzA9aBINlKCZRGFnNWK3echEmEKG96AUpG_SWysHjnhlNEoGXh3JGvPUjpEoEEOeyyz/exec";
+let allData = [];
+
+function loadData(){
+  const url = `${webAppUrl}?mode=congcu&callback=callback`;
+  let s = document.createElement("script");
+  s.src = url;
+  document.body.appendChild(s);
+}
+
+function callback(res){
+  if(!res.success){alert("Lỗi tải dữ liệu: "+res.message);return;}
+  allData = res.data;
+  renderTable();
+}
+
+function renderTable(){
+  const tb = document.querySelector("#tbl tbody");
+  tb.innerHTML="";
+  const keyword = document.getElementById("searchBox").value.toLowerCase();
+  allData.forEach((r,i)=>{
+    let rowText = JSON.stringify(r).toLowerCase();
+    if(!rowText.includes(keyword)) return;
+
+    let tr=document.createElement("tr");
+    tr.dataset.index=i;
+    tr.innerHTML = `
+      <td><input value="${r.stt||""}" class="stt" /></td>
+      <td><input value="${r.chungLoai||""}" class="chungLoai" /></td>
+      <td><input value="${r.viTri||""}" class="viTri" /></td>
+      <td><input value="${r.soTien||""}" class="soTien" /></td>
+      <td><input value="${r.ngayMua||""}" class="ngayMua" /></td>
+      <td><input value="${r.tinhTrang||""}" class="tinhTrang" /></td>
+      <td><input value="${r.ghiChu||""}" class="ghiChu" /></td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?"checked":""}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?"checked":""}></td>
+    `;
+    tb.appendChild(tr);
+
+    tr.querySelectorAll("input").forEach(inp=>{
+      inp.addEventListener("change",()=>{
+        updateRow(i,tr);
+      });
+    });
+  });
+}
+
+function updateRow(i,tr){
+  allData[i] = {
+    stt: tr.querySelector(".stt").value,
+    chungLoai: tr.querySelector(".chungLoai").value,
+    viTri: tr.querySelector(".viTri").value,
+    soTien: tr.querySelector(".soTien").value,
+    ngayMua: tr.querySelector(".ngayMua").value,
+    tinhTrang: tr.querySelector(".tinhTrang").value,
+    ghiChu: tr.querySelector(".ghiChu").value,
+    daKiemKe: tr.querySelector(".daKiemKe").checked,
+    chonIn: tr.querySelector(".chonIn").checked
+  };
+  autoSyncRow(i);
+}
+
+function autoSyncRow(i){
+  const url = `${webAppUrl}?mode=congcu&update=1&row=${i}&callback=callback2&data=`+encodeURIComponent(JSON.stringify(allData[i]));
+  let s=document.createElement("script");
+  s.src=url;
+  document.body.appendChild(s);
+}
+function callback2(){ /* không cần xử lý */ }
+
+// Lưu toàn bộ
+btnSave.addEventListener("click",()=>{
+  if(!confirm("Ghi đè toàn bộ danh sách?")) return;
+  const url = `${webAppUrl}?mode=congcu&save=1&callback=callback3&data=` + encodeURIComponent(JSON.stringify(allData));
+  let s=document.createElement("script");
+  s.src=url;
+  document.body.appendChild(s);
+});
+function callback3(res){
+  alert("Đã lưu: " + res.written + " dòng");
+}
+
+searchBox.addEventListener("input",renderTable);
+loadData();
+</script>
+</body>
+</html>
