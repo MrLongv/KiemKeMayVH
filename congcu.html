@@ -176,7 +176,7 @@ function renderTable(){
         <td class="col-ma">${safeText(r.ma)}</td>
         <td>${safeText(r.chungLoai)}</td>
         <td>${safeText(r.viTri)}</td>
-        <td>${safeText(r.soTien)}</td>
+        <td>${formatNumberVN(r.soTien)}</td>
         <td>${r.ngayMua?formatDateDDMMYYYY(r.ngayMua):''}</td>
         <td>${safeText(r.tinhTrang)}</td>
         <td>${safeText(r.ghiChu)}</td>
@@ -324,6 +324,12 @@ document.getElementById('saveBtn').onclick = ()=>{
   else { allData[editingIndex] = obj; autoSyncRow(editingIndex); }
 
   closeModal(); renderTable(); highlightFromHash();
+}
+function formatNumberVN(n){
+  if (n == null || n === '') return '';
+  const num = typeof n === 'number' ? n : Number(n.toString().replace(/\./g,'').replace(/,/g,'')); 
+  if (isNaN(num)) return n;
+  return num.toLocaleString('vi-VN'); // ví dụ: 2000000 => "2.000.000"
 }
 
 // Scroll modal khi focus input (điện thoại)
