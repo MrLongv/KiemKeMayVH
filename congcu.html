@@ -20,7 +20,7 @@ table{width:100%;border-collapse:collapse;background:#fff}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;white-space:nowrap}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;align-items:center;justify-content:center}
 .modal .card{background:#fff;padding:16px;border-radius:8px;width:380px;max-width:95%;max-height:80vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
 body.modal-open{position:fixed;width:100%;overflow:hidden;height:100%;top:0}
 .modal label{display:block;margin-top:8px;font-weight:600}
@@ -379,7 +379,7 @@ document.getElementById('btnSync').onclick = ()=>{
   daKiemKe: r.daKiemKe,
   chonIn: r.chonIn
 }));
-, encoded = encodeURIComponent(JSON.stringify(payload));
+encoded = encodeURIComponent(JSON.stringify(payload));
   const cb = '__sync_cb_'+Date.now();
   window[cb] = function(res){ try{ if (res && res.success) setStatus('✅ Đồng bộ thành công'); else setStatus('❌ Lỗi đồng bộ', false); } finally { delete window[cb]; script.remove(); } };
   const script = document.createElement('script');
