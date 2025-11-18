@@ -147,6 +147,12 @@ pwdModal.innerHTML = `<div style="background:#fff;padding:20px;border-radius:8px
 </div>`;
 document.body.appendChild(pwdModal);
 const pwdInput = document.getElementById('pwdInput'), pwdBtn = document.getElementById('pwdBtn');
+  document.getElementById("pwdInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    document.getElementById("pwdBtn").click();
+  }
+});
+
 function initUI(){ pwdModal.style.display='none'; mainUI.forEach(el=>el.style.display='flex'); loadData(); }
 const loginTime = localStorage.getItem('loginTime');
 if (loginTime && Date.now() - loginTime < 3600*1000) initUI();
