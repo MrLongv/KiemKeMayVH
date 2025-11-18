@@ -233,7 +233,20 @@ allData = res.data.map(r => ({
 // AUTO SYNC ROW (JSONP)
 function autoSyncRow(i){
   if (i == null || !allData[i]) return;
-  const row = allData[i], encoded = encodeURIComponent(JSON.stringify(row));
+  const r = allData[i];
+const toSend = {
+  maCongCu: r.ma,
+  loaiCongCu: r.chungLoai,
+  viTri: r.viTri,
+  soTien: r.soTien,
+  ngayMua: r.ngayMua,
+  tinhTrang: r.tinhTrang,
+  ghiChu: r.ghiChu,
+  daKiemKe: r.daKiemKe,
+  chonIn: r.chonIn
+};
+const encoded = encodeURIComponent(JSON.stringify(toSend));
+
   const cb = '__auto_cb_' + Date.now();
   window[cb] = function(res){
     try{ if (res && res.success) setStatus('✅ Đã lưu dòng '+(i+1)); else setStatus('❌ Lỗi lưu dòng '+(i+1), false); }
@@ -351,7 +364,18 @@ Array.from(modal.querySelectorAll('input,textarea')).forEach(input=>{
 
 // SYNC THỦ CÔNG - ghi đè toàn bộ
 document.getElementById('btnSync').onclick = ()=>{
-  const payload = allData, encoded = encodeURIComponent(JSON.stringify(payload));
+  const payload = allData.map(r => ({
+  maCongCu: r.ma,
+  loaiCongCu: r.chungLoai,
+  viTri: r.viTri,
+  soTien: r.soTien,
+  ngayMua: r.ngayMua,
+  tinhTrang: r.tinhTrang,
+  ghiChu: r.ghiChu,
+  daKiemKe: r.daKiemKe,
+  chonIn: r.chonIn
+}));
+, encoded = encodeURIComponent(JSON.stringify(payload));
   const cb = '__sync_cb_'+Date.now();
   window[cb] = function(res){ try{ if (res && res.success) setStatus('✅ Đồng bộ thành công'); else setStatus('❌ Lỗi đồng bộ', false); } finally { delete window[cb]; script.remove(); } };
   const script = document.createElement('script');
