@@ -232,6 +232,13 @@ if (loginTime && Date.now() - loginTime < 3600 * 1000) {
   initUI();
 } else {
   pwdInput.focus();
+  // Bấm ENTER để đăng nhập
+pwdInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    pwdBtn.click();   // Giả lập click login
+  }
+});
+
   pwdBtn.onclick = () => {
     if (pwdInput.value === PASSWORD) {
       localStorage.setItem('loginTime', Date.now());
