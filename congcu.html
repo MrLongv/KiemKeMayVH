@@ -153,12 +153,16 @@ const pwdInput = document.getElementById('pwdInput'), pwdBtn = document.getEleme
   }
 });
 
-function initUI(){ pwdModal.style.display='none'; mainUI.forEach(el=>el.style.display='flex'); loadData(); }
+function initUI(){
+  pwdModal.style.display='none';
+  mainUI.forEach(el=> el.style.display='');
+  loadData();
+}
+
 const loginTime = localStorage.getItem('loginTime');
 if (loginTime && Date.now() - loginTime < 3600*1000) initUI();
 else { pwdInput.focus(); pwdBtn.onclick = ()=>{ if(pwdInput.value===PASSWORD){ localStorage.setItem('loginTime', Date.now()); initUI(); } else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); } }; }
 
-modal.style.display='none';
 
 // RENDER TABLE
 function renderTable(){
