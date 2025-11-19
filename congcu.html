@@ -160,7 +160,7 @@ function initUI(){
 }
 
 const loginTime = localStorage.getItem('loginTime');
-if (loginTime && Date.now() - loginTime < 3600*1000) initUI();
+if (loginTime && Date.now() - loginTime < 3500*1000) initUI();
 else { pwdInput.focus(); pwdBtn.onclick = ()=>{ if(pwdInput.value===PASSWORD){ localStorage.setItem('loginTime', Date.now()); initUI(); } else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); } }; }
 
 
