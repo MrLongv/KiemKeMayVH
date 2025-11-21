@@ -26,10 +26,14 @@ header {
 .controls button.ghost{background:#eee;color:#333}
 .note{padding:8px 12px;color:#666;font-size:13px}
 .table-wrap {
-  overflow-x: scroll;  /* luôn hiển thị thanh ngang */
-  overflow-y: auto;
-  padding-right: 16px;  /* giữ để không bị che chữ */
+  display: block;      /* bắt buộc block để scroll hoạt động chuẩn */
+  width: 100%;         /* chiếm hết chiều ngang */
+  overflow-x: auto;    /* scroll ngang khi cần */
+  overflow-y: auto;    /* scroll dọc khi cần */
+  padding-bottom: 1px; /* tạo khoảng để scroll ngang không bị che */
+  box-sizing: border-box;
 }
+
 table {
   min-width: 1200px;  /* đảm bảo bảng đủ rộng để chứa tất cả cột */
   border-collapse: collapse;
