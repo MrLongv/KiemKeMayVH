@@ -7,84 +7,39 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #0b74d1;
-  color: #fff;
-  padding: 16px 0;
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
+header{display:flex;justify-content:center;align-items:center;background:#0b74d1;color:#fff;padding:16px 0;font-size:24px;font-weight:bold;letter-spacing:1px}
 .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
 .controls input[type="text"]{padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:220px}
 .controls select{padding:6px 8px;border:1px solid #ccc;border-radius:4px;}
 .controls button{background:#0b74d1;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
 .controls button.ghost{background:#eee;color:#333}
 .note{padding:8px 12px;color:#666;font-size:13px}
-.table-wrap {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-table {
-  min-width: 1200px;  /* đảm bảo bảng đủ rộng để chứa tất cả cột */
-  border-collapse: collapse;
-  background: #fff;
-}
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-  white-space: nowrap;  /* không xuống dòng */
-}
-
+.table-wrap{display:block;width:100%;overflow-x:auto;box-sizing:border-box;}
+table{min-width:1200px;border-collapse:collapse;background:#fff;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;vertical-align:middle}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.4);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+/* ==== FIXED WIDTH + ELLIPSIS ==== */
+.col-loai-may,.col-ghi-chu,.col-sua-chua{
+  width:140px;
+  max-width:140px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
+  padding-left:8px;
 }
-.modal .card {
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  width: 360px;
-  max-width: 95%;
-  max-height: 80vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
-}
-body.modal-open {
-  position: fixed;
-  width: 100%;
-  overflow: hidden;
-  height: 100%;
-  top: 0;
-}
+
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center}
+.modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%;max-height:80vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
+body.modal-open{position:fixed;width:100%;overflow:hidden;height:100%;top:0}
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-@media(max-width:920px){
-  /* make maintenance columns wrap nicer on narrow screens */
-  .table-wrap{overflow:auto}
-}
+
+@media(max-width:920px){.table-wrap{overflow:auto}}
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
-.highlight-row { background: yellow !important; transition: background 0.2s; }
-.small-checkbox{transform:scale(1);margin:0}
 </style>
 </head>
 <body>
@@ -106,37 +61,28 @@ body.modal-open {
   <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 
-<div class="note">Tìm số thẻ chỉ nhập số, Checkbox Đã KK tự lưu, ngày mua chuẩn dd/mm/yyyy. Bảo dưỡng = 4 quý (checkbox). Sửa chữa = text, editable trong modal và auto-sync.</div>
+<div class="note">Bấm ✏️ để xem/ chỉnh sửa nội dung đầy đủ. Cột dài sẽ hiển thị dấu ... nếu quá 140px.</div>
 
 <div class="table-wrap">
   <table id="dataTable">
     <thead>
-      <!-- Row 1: parent headers (Bảo dưỡng is a parent spanning 4) -->
       <tr>
-        <th rowspan="2">STT</th>
-        <th rowspan="2">Số thẻ</th>
-        <th rowspan="2">Số máy</th>
-        <th rowspan="2">Loại máy</th>
-        <th rowspan="2">Vị trí</th>
-        <th rowspan="2">Ghi chú</th>
-        <th rowspan="2">Hành động</th>
-        <th rowspan="2" style="text-align:center;">
-          Đã KK<br><input type="checkbox" id="checkAllKK">
-        </th>
-        <th rowspan="2" style="text-align:center;">
-          In QR<br><input type="checkbox" id="checkAllQR">
-        </th>
-        <th rowspan="2">Ngày mua</th>
-        <th rowspan="2">Nơi mua</th>
-        <th colspan="4">Bảo dưỡng</th>
-        <th rowspan="2">Sửa chữa</th>
-      </tr>
-      <!-- Row 2: Q1..Q4 -->
-      <tr>
-        <th>Q1</th>
-        <th>Q2</th>
-        <th>Q3</th>
-        <th>Q4</th>
+        <th>STT</th>
+        <th>Số thẻ</th>
+        <th>Số máy</th>
+        <th class="col-loai-may">Loại máy</th>
+        <th>Vị trí</th>
+        <th class="col-ghi-chu">Ghi chú</th>
+        <th>Hành động</th>
+        <th>Đã KK<br><input type="checkbox" id="checkAllKK"></th>
+        <th>In QR<br><input type="checkbox" id="checkAllQR"></th>
+        <th>Ngày mua</th>
+        <th>Nơi mua</th>
+        <th>Bảo dưỡng Q1</th>
+        <th>Bảo dưỡng Q2</th>
+        <th>Bảo dưỡng Q3</th>
+        <th>Bảo dưỡng Q4</th>
+        <th class="col-sua-chua">Sửa chữa</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -153,22 +99,16 @@ body.modal-open {
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
     <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
-    <label>Ngày mua</label>
-    <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
+    <label>Ngày mua</label><input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
-    <!-- NEW: Bảo dưỡng Q1..Q4 -->
-    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
+    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý)</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ1" /> Q1</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ2" /> Q2</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ3" /> Q3</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ4" /> Q4</label>
+      <label><input type="checkbox" id="m_bdQ1" /> Q1</label>
+      <label><input type="checkbox" id="m_bdQ2" /> Q2</label>
+      <label><input type="checkbox" id="m_bdQ3" /> Q3</label>
+      <label><input type="checkbox" id="m_bdQ4" /> Q4</label>
     </div>
-
-    <!-- NEW: Sửa chữa text -->
-    <label style="margin-top:10px">Sửa chữa</label>
-    <textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa (vd: thay motor, thay dây...)"></textarea>
-
+    <label style="margin-top:10px">Sửa chữa</label><textarea id="m_suaChua" rows="3"></textarea>
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
