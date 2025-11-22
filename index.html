@@ -25,6 +25,8 @@ header {
 .controls button{background:#0b74d1;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
 .controls button.ghost{background:#eee;color:#333}
 .note{padding:8px 12px;color:#666;font-size:13px}
+
+/* ==== TABLE STYLE ==== */
 .table-wrap {
   display: block;
   width: 100%;
@@ -34,57 +36,40 @@ header {
 }
 
 table {
-  min-width: 1200px;  /* đảm bảo bảng đủ rộng để chứa tất cả cột */
+  width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   background: #fff;
 }
+
 th, td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 6px 8px;
   text-align: center;
-  white-space: nowrap;  /* không xuống dòng */
+  overflow: hidden;
+  white-space: normal;        
+  text-overflow: ellipsis;    
+  word-break: break-word;     
 }
-/* Cột 1: Số thẻ */
-th:nth-child(1), td:nth-child(1) { max-width: 90px; }
 
-/* Cột 2: Số máy */
-th:nth-child(2), td:nth-child(2) { max-width: 110px; }
+/* Cột cố định chiều rộng bằng class */
+.col-stt { max-width: 50px; }
+.col-so-the { max-width: 90px; }
+.col-so-may { max-width: 110px; }
+.col-loai-may { max-width: 130px; }
+.col-vi-tri { max-width: 130px; }
+.col-ghi-chu { max-width: 160px; }
+.col-da-kiem-ke { max-width: 55px; }
+.col-chon-in { max-width: 55px; }
+.col-ngay-mua { max-width: 140px; }
+.col-noi-mua { max-width: 170px; }
+.col-bao-duong { max-width: 30px; }
+.col-sua-chua { max-width: 180px; }
+.col-hanh-dong { max-width: 90px; }
 
-/* Cột 3: Loại máy */
-th:nth-child(3), td:nth-child(3) { max-width: 130px; }
+th { background: #0b74d1; color: #fff; }
+tr.highlight { background: #ffeaa7 !important; }
 
-/* Cột 4: Vị trí */
-th:nth-child(4), td:nth-child(4) { max-width: 130px; }
-
-/* Cột 5: Ghi chú */
-th:nth-child(5), td:nth-child(5) { max-width: 160px; }
-
-/* Cột 6: Đã kiểm kê (checkbox) */
-th:nth-child(6), td:nth-child(6) { max-width: 55px; }
-
-/* Cột 7: Chọn in (checkbox) */
-th:nth-child(7), td:nth-child(7) { max-width: 55px; }
-
-/* Cột 8: Ngày mua */
-th:nth-child(8), td:nth-child(8) { max-width: 140px; }
-
-/* Cột 9: Nơi mua */
-th:nth-child(9), td:nth-child(9) { max-width: 170px; }
-
-/* Cột 10–13: Bảo dưỡng Q1–Q4 */
-th:nth-child(10), td:nth-child(10),
-th:nth-child(11), td:nth-child(11),
-th:nth-child(12), td:nth-child(12),
-th:nth-child(13), td:nth-child(13) { max-width: 30px; }
-
-/* Cột 14: Sửa chữa */
-th:nth-child(14), td:nth-child(14) { max-width: 180px; }
-
-/* Cột 15: Nút chỉnh sửa */
-th:nth-child(15), td:nth-child(15) { max-width: 90px; }
-
-th{background:#0b74d1;color:#fff}
-tr.highlight{background:#ffeaa7 !important}
 .modal {
   display: none;
   position: fixed;
@@ -116,30 +101,11 @@ body.modal-open {
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-@media(max-width:920px){
-  /* make maintenance columns wrap nicer on narrow screens */
-  .table-wrap{overflow:auto}
-}
+
+@media(max-width:920px){.table-wrap{overflow:auto}}
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
 .highlight-row { background: yellow !important; transition: background 0.2s; }
 .small-checkbox{transform:scale(1);margin:0}
-
-/* Bảng luôn gọn, không bị kéo ngang */
-table {
-  table-layout: fixed;
-  width: 100%;
-  border-collapse: collapse;
-}
-
-/* Header + ô dữ liệu cố định chiều rộng + ẩn phần dư */
-th, td {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: 180px;   /* Bạn chỉnh tuỳ cột */
-  padding: 6px 8px;
-}
-
 </style>
 </head>
 <body>
@@ -166,38 +132,33 @@ th, td {
 <div class="table-wrap">
   <table id="dataTable">
     <thead>
-      <!-- Row 1: parent headers (Bảo dưỡng is a parent spanning 4) -->
       <tr>
-        <th rowspan="2">STT</th>
-        <th rowspan="2">Số thẻ</th>
-        <th rowspan="2">Số máy</th>
-        <th rowspan="2">Loại máy</th>
-        <th rowspan="2">Vị trí</th>
-        <th rowspan="2">Ghi chú</th>
-        <th rowspan="2">Hành động</th>
-        <th rowspan="2" style="text-align:center;">
-          Đã KK<br><input type="checkbox" id="checkAllKK">
-        </th>
-        <th rowspan="2" style="text-align:center;">
-          In QR<br><input type="checkbox" id="checkAllQR">
-        </th>
-        <th rowspan="2">Ngày mua</th>
-        <th rowspan="2">Nơi mua</th>
-        <th colspan="4">Bảo dưỡng</th>
-        <th rowspan="2">Sửa chữa</th>
+        <th rowspan="2" class="col-stt">STT</th>
+        <th rowspan="2" class="col-so-the">Số thẻ</th>
+        <th rowspan="2" class="col-so-may">Số máy</th>
+        <th rowspan="2" class="col-loai-may">Loại máy</th>
+        <th rowspan="2" class="col-vi-tri">Vị trí</th>
+        <th rowspan="2" class="col-ghi-chu">Ghi chú</th>
+        <th rowspan="2" class="col-hanh-dong">Hành động</th>
+        <th rowspan="2" class="col-da-kiem-ke">Đã KK<br><input type="checkbox" id="checkAllKK"></th>
+        <th rowspan="2" class="col-chon-in">In QR<br><input type="checkbox" id="checkAllQR"></th>
+        <th rowspan="2" class="col-ngay-mua">Ngày mua</th>
+        <th rowspan="2" class="col-noi-mua">Nơi mua</th>
+        <th colspan="4" class="col-bao-duong">Bảo dưỡng</th>
+        <th rowspan="2" class="col-sua-chua">Sửa chữa</th>
       </tr>
-      <!-- Row 2: Q1..Q4 -->
       <tr>
-        <th>Q1</th>
-        <th>Q2</th>
-        <th>Q3</th>
-        <th>Q4</th>
+        <th class="col-bao-duong">Q1</th>
+        <th class="col-bao-duong">Q2</th>
+        <th class="col-bao-duong">Q3</th>
+        <th class="col-bao-duong">Q4</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 </div>
 
+<!-- ==== MODAL ==== -->
 <div id="editModal" class="modal">
   <div class="card">
     <h3 style="margin:0 0 6px 0">✏️ Chỉnh sửa </h3>
@@ -211,7 +172,6 @@ th, td {
     <label>Ngày mua</label>
     <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
-    <!-- NEW: Bảo dưỡng Q1..Q4 -->
     <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
       <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ1" /> Q1</label>
@@ -219,11 +179,8 @@ th, td {
       <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ3" /> Q3</label>
       <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ4" /> Q4</label>
     </div>
-
-    <!-- NEW: Sửa chữa text -->
     <label style="margin-top:10px">Sửa chữa</label>
-    <textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa (vd: thay motor, thay dây...)"></textarea>
-
+    <textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa"></textarea>
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
       <button id="saveBtn">Cập nhật</button>
