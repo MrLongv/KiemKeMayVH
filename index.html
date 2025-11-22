@@ -291,10 +291,7 @@ function renderTable(){
         <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
 
         <!-- Sửa chữa (text) -->
-       <td class="col-sua-chua">
-        ${r.suaChua ? `<button class="infoBtn" data-i="${idx}" title="Xem lịch sử sửa chữa">ℹ️</button>` : ''}
-</td>
-
+        <td class="col-sua-chua" style="text-align:left;padding-left:8px">${safeText(r.suaChua)}</td>
       `;
       tbody.appendChild(tr);
     }
@@ -374,17 +371,6 @@ tbody.addEventListener('click',e=>{
     const url=location.href.split('#')[0]+'#'+code;
     prompt('Link QR (copy & in tem):',url);
   }
-    // info button for Sửa chữa
-if(btn.classList.contains('infoBtn')){
-  const r = allData[i];
-  if(!r.suaChua) return;
-  const scModal = document.getElementById('suaChuaModal');
-  const scContent = document.getElementById('scContent');
-  scContent.value = r.suaChua || '';
-  scModal.style.display = 'flex';
-  document.body.classList.add('modal-open');
-}
-
 });
 
 // checkbox changes inside table (daKiemKe, chonIn, bdQ1..bdQ4)
@@ -610,20 +596,6 @@ document.getElementById("checkAllQR").addEventListener("change", function() {
   });
   renderTable();
 });
-<div id="suaChuaModal" class="modal">
-  <div class="card">
-    <h3 style="margin:0 0 6px 0">🔧 Lịch sửa chữa</h3>
-    <textarea id="scContent" rows="6" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" readonly></textarea>
-    <div class="actions">
-      <button id="scClose" class="ghost">Đóng</button>
-    </div>
-  </div>
-</div>
-document.getElementById('scClose').onclick = ()=>{
-  const scModal = document.getElementById('suaChuaModal');
-  scModal.style.display = 'none';
-  document.body.classList.remove('modal-open');
-};
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
