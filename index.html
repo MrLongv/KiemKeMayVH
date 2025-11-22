@@ -85,7 +85,33 @@ body.modal-open {
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
 .highlight-row { background: yellow !important; transition: background 0.2s; }
 .small-checkbox{transform:scale(1);margin:0}
-<style>
+/* Checkbox Q1–Q4 trong table */
+.bdQ {
+  width:18px; height:18px;
+  margin:0;
+  vertical-align:middle;
+}
+
+th div.checkbox-wrapper, td div.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+td div.checkbox-wrapper label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+/* Small checkbox scale nếu muốn */
+.small-checkbox {
+  transform: scale(1.2);
+}
+
+  <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
 
 header {
@@ -246,35 +272,36 @@ td.col-noi-mua {
 
 <div class="table-wrap">
   <table id="dataTable">
-    <thead>
-      <!-- Row 1: parent headers (Bảo dưỡng is a parent spanning 4) -->
-      <tr>
-        <th rowspan="2">STT</th>
-        <th rowspan="2">Số thẻ</th>
-        <th rowspan="2">Số máy</th>
-        <th rowspan="2">Loại máy</th>
-        <th rowspan="2">Vị trí</th>
-        <th rowspan="2">Ghi chú</th>
-        <th rowspan="2">Hành động</th>
-        <th rowspan="2" style="text-align:center;">
-          Đã KK<br><input type="checkbox" id="checkAllKK">
-        </th>
-        <th rowspan="2" style="text-align:center;">
-          In QR<br><input type="checkbox" id="checkAllQR">
-        </th>
-        <th rowspan="2">Ngày mua</th>
-        <th rowspan="2">Nơi mua</th>
-        <th colspan="4">Bảo dưỡng</th>
-        <th rowspan="2">Sửa chữa</th>
-      </tr>
-      <!-- Row 2: Q1..Q4 -->
-      <tr>
-        <th>Q1</th>
-        <th>Q2</th>
-        <th>Q3</th>
-        <th>Q4</th>
-      </tr>
-    </thead>
+<thead>
+  <tr>
+    <th rowspan="2">STT</th>
+    <th rowspan="2">Số thẻ</th>
+    <th rowspan="2">Số máy</th>
+    <th rowspan="2">Loại máy</th>
+    <th rowspan="2">Vị trí</th>
+    <th rowspan="2">Ghi chú</th>
+    <th rowspan="2">Hành động</th>
+    <th rowspan="2" style="text-align:center;">
+      Đã KK<br>
+      <input type="checkbox" id="checkAllKK" class="small-checkbox">
+    </th>
+    <th rowspan="2" style="text-align:center;">
+      In QR<br>
+      <input type="checkbox" id="checkAllQR" class="small-checkbox">
+    </th>
+    <th rowspan="2">Ngày mua</th>
+    <th rowspan="2">Nơi mua</th>
+    <th colspan="4">Bảo dưỡng</th>
+    <th rowspan="2">Sửa chữa</th>
+  </tr>
+  <tr>
+    <th><div class="checkbox-wrapper">Q1 <input type="checkbox" class="bdQ bdQ1 small-checkbox"></div></th>
+    <th><div class="checkbox-wrapper">Q2 <input type="checkbox" class="bdQ bdQ2 small-checkbox"></div></th>
+    <th><div class="checkbox-wrapper">Q3 <input type="checkbox" class="bdQ bdQ3 small-checkbox"></div></th>
+    <th><div class="checkbox-wrapper">Q4 <input type="checkbox" class="bdQ bdQ4 small-checkbox"></div></th>
+  </tr>
+</thead>
+
     <tbody></tbody>
   </table>
 </div>
@@ -411,28 +438,27 @@ function renderTable() {
       const tr = document.createElement('tr');
       tr.dataset.index = idx;
 
-      tr.innerHTML = `
-        <td>${idx + 1}</td>
-        <td class="col-so-the">${safeText(r.soThe)}</td>
-        <td>${safeText(r.soMay)}</td>
-        <td>${safeText(r.loaiMay)}</td>
-        <td>${safeText(r.viTri)}</td>
-        <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
-        <td>
-          <button data-act="edit" data-i="${idx}">✏️</button>
-          <button data-act="qr" data-i="${idx}">🔗</button>
-        </td>
-        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
-        <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
-        <td class="col-noi-mua"><div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div></td>
-        <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
-        <td class="col-sua-chua"><div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div></td>
-      `;
-
+     tr.innerHTML = `
+  <td>${idx + 1}</td>
+  <td class="col-so-the">${safeText(r.soThe)}</td>
+  <td>${safeText(r.soMay)}</td>
+  <td>${safeText(r.loaiMay)}</td>
+  <td>${safeText(r.viTri)}</td>
+  <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
+  <td>
+    <button data-act="edit" data-i="${idx}">✏️</button>
+    <button data-act="qr" data-i="${idx}">🔗</button>
+  </td>
+  <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
+  <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
+  <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
+  <td class="col-noi-mua"><div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div></td>
+  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}> Q1</label></div></td>
+  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}> Q2</label></div></td>
+  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}> Q3</label></div></td>
+  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}> Q4</label></div></td>
+  <td class="col-sua-chua"><div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div></td>
+`;
       tbody.appendChild(tr);
     }
   });
