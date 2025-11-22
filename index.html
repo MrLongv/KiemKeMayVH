@@ -421,7 +421,7 @@ function autoSyncRow(i){
   if(i == null || !allData[i]) return;
   const rowData = allData[i];
 
-  // gửi dữ liệu lên Sheet, map đúng các cột Q1-Q4 và ngày
+  // gửi dữ liệu lên Sheet, map đúng các cột Q1-Q4, ngày BD và sửa chữa
   const payload = {
     soThe: rowData.soThe || "",
     soMay: rowData.soMay || "",
@@ -436,10 +436,10 @@ function autoSyncRow(i){
     bdQ2: !!rowData.bdQ2,
     bdQ3: !!rowData.bdQ3,
     bdQ4: !!rowData.bdQ4,
-    bdNgayQ1: rowData.bdQ1_ngay || "",
-bdNgayQ2: rowData.bdQ2_ngay || "",
-bdNgayQ3: rowData.bdQ3_ngay || "",
-bdNgayQ4: rowData.bdQ4_ngay || "",
+    bdNgayQ1: rowData.bdNgayQ1 || "",
+    bdNgayQ2: rowData.bdNgayQ2 || "",
+    bdNgayQ3: rowData.bdNgayQ3 || "",
+    bdNgayQ4: rowData.bdNgayQ4 || "",
     suaChua: rowData.suaChua || ""
   };
 
@@ -458,7 +458,6 @@ bdNgayQ4: rowData.bdQ4_ngay || "",
   script.src = GAS_URL+'?update=1&row='+(i+1)+'&data='+encodeURIComponent(JSON.stringify(payload))+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
 }
-
 // ==== EVENTS ====
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
@@ -552,8 +551,8 @@ function closeModal(){
 document.getElementById('cancelBtn').onclick=closeModal;
 
 document.getElementById('saveBtn').onclick = () => {
-  if (editingIndex === null) {
-    // thêm row mới
+  if(editingIndex == null) {
+    // thêm mới
     const newRow = {
       soThe: m_soThe.value,
       soMay: m_soMay.value,
@@ -577,7 +576,7 @@ document.getElementById('saveBtn').onclick = () => {
     allData.push(newRow);
     autoSyncRow(allData.length - 1);
   } else {
-    // update row hiện tại
+    // chỉnh sửa
     const r = allData[editingIndex];
     r.soThe = m_soThe.value;
     r.soMay = m_soMay.value;
@@ -597,12 +596,13 @@ document.getElementById('saveBtn').onclick = () => {
     r.bdNgayQ3 = m_bdQ3_ngay.value;
     r.bdNgayQ4 = m_bdQ4_ngay.value;
     r.suaChua = m_suaChua.value;
+
     autoSyncRow(editingIndex);
   }
+
   renderTable();
   closeModal();
 };
-
 // Scroll modal khi focus input
 const modalInputs=modal.querySelectorAll('input, textarea');
 modalInputs.forEach(input=>{
