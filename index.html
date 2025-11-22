@@ -18,40 +18,35 @@ header {
   font-weight: bold;
   letter-spacing: 1px;
 }
-
 .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
 .controls input[type="text"]{padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:220px}
 .controls select{padding:6px 8px;border:1px solid #ccc;border-radius:4px;}
 .controls button{background:#0b74d1;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
 .controls button.ghost{background:#eee;color:#333}
 .note{padding:8px 12px;color:#666;font-size:13px}
-
-/* ==== TABLE STYLE ==== */
 .table-wrap {
   display: block;
   width: 100%;
   overflow-x: auto;
-  overflow-y: auto;
-  box-sizing: border-box;
 }
 
-table {
- width: auto;  /* hoặc 100% nếu muốn bảng chiếm toàn trang */
-  border-collapse: collapse;
-  background: #fff;
-}
-
+/* Bảng cố định, nội dung dài tối đa 2 dòng */
+table { border-collapse: collapse; width: 100%; table-layout: auto; background:#fff; }
 th, td {
-  border: 1px solid #ddd;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* tối đa 2 dòng */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
   padding: 6px 8px;
   text-align: center;
-  overflow: hidden;
-  white-space: normal;        
-  text-overflow: ellipsis;    
-  word-break: break-word;     
+  border: 1px solid #ddd;
+  background: #fff;
 }
+th { background: #0b74d1; color: #fff; }
 
-/* Cột cố định chiều rộng bằng class */
+/* Cột cố định */
 .col-stt { max-width: 35px; }
 .col-so-the { max-width: 100px; }
 .col-so-may { max-width: 120px; }
@@ -64,11 +59,9 @@ th, td {
 .col-noi-mua { max-width: 170px; }
 .col-bao-duong { max-width: 30px; }
 .col-sua-chua { max-width: 180px; }
-.col-hanh-dong { max-width: 30px; }
+.col-hanh-dong { max-width: 50px; }
 
-th { background: #0b74d1; color: #fff; }
-tr.highlight { background: #ffeaa7 !important; }
-
+tr.highlight{background:#ffeaa7 !important}
 .modal {
   display: none;
   position: fixed;
@@ -100,8 +93,9 @@ body.modal-open {
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-
-@media(max-width:920px){.table-wrap{overflow:auto}}
+@media(max-width:920px){
+  .table-wrap{overflow:auto}
+}
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
 .highlight-row { background: yellow !important; transition: background 0.2s; }
 .small-checkbox{transform:scale(1);margin:0}
@@ -132,19 +126,23 @@ body.modal-open {
   <table id="dataTable">
     <thead>
       <tr>
-        <th rowspan="2" class="col-stt">STT</th>
-        <th rowspan="2" class="col-so-the">Số thẻ</th>
-        <th rowspan="2" class="col-so-may">Số máy</th>
-        <th rowspan="2" class="col-loai-may">Loại máy</th>
-        <th rowspan="2" class="col-vi-tri">Vị trí</th>
-        <th rowspan="2" class="col-ghi-chu">Ghi chú</th>
-        <th rowspan="2" class="col-hanh-dong">Hành động</th>
-        <th rowspan="2" class="col-da-kiem-ke">Đã KK<br><input type="checkbox" id="checkAllKK"></th>
-        <th rowspan="2" class="col-chon-in">In QR<br><input type="checkbox" id="checkAllQR"></th>
-        <th rowspan="2" class="col-ngay-mua">Ngày mua</th>
-        <th rowspan="2" class="col-noi-mua">Nơi mua</th>
-        <th colspan="4" class="col-bao-duong">Bảo dưỡng</th>
-        <th rowspan="2" class="col-sua-chua">Sửa chữa</th>
+        <th class="col-stt" rowspan="2">STT</th>
+        <th class="col-so-the" rowspan="2">Số thẻ</th>
+        <th class="col-so-may" rowspan="2">Số máy</th>
+        <th class="col-loai-may" rowspan="2">Loại máy</th>
+        <th class="col-vi-tri" rowspan="2">Vị trí</th>
+        <th class="col-ghi-chu" rowspan="2">Ghi chú</th>
+        <th class="col-hanh-dong" rowspan="2">Hành động</th>
+        <th class="col-da-kiem-ke" rowspan="2" style="text-align:center;">
+          Đã KK<br><input type="checkbox" id="checkAllKK">
+        </th>
+        <th class="col-chon-in" rowspan="2" style="text-align:center;">
+          In QR<br><input type="checkbox" id="checkAllQR">
+        </th>
+        <th class="col-ngay-mua" rowspan="2">Ngày mua</th>
+        <th class="col-noi-mua" rowspan="2">Nơi mua</th>
+        <th class="col-bao-duong" colspan="4">Bảo dưỡng</th>
+        <th class="col-sua-chua" rowspan="2">Sửa chữa</th>
       </tr>
       <tr>
         <th class="col-bao-duong">Q1</th>
@@ -153,7 +151,9 @@ body.modal-open {
         <th class="col-bao-duong">Q4</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody>
+      <!-- Dữ liệu sẽ render bởi JS -->
+    </tbody>
   </table>
 </div>
 
