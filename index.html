@@ -575,12 +575,8 @@ function closeModal(){
 document.getElementById('cancelBtn').onclick=closeModal;
 
 document.getElementById('saveBtn').onclick = () => {
-  if(editingIndex === null) {
-    // thêm mới
-    editingIndex = allData.length;
-  }
+  if(editingIndex === null) editingIndex = allData.length;
 
-  // lấy giá trị từ modal
   const r = {
     soThe: m_soThe.value.trim(),
     soMay: m_soMay.value.trim(),
@@ -595,20 +591,21 @@ document.getElementById('saveBtn').onclick = () => {
     bdQ2: m_bdQ2.checked,
     bdQ3: m_bdQ3.checked,
     bdQ4: m_bdQ4.checked,
-    bdNgayQ1: m_bdQ1_ngay.value.trim(),
-    bdNgayQ2: m_bdQ2_ngay.value.trim(),
-    bdNgayQ3: m_bdQ3_ngay.value.trim(),
-    bdNgayQ4: m_bdQ4_ngay.value.trim(),
     suaChua: m_suaChua.value.trim()
   };
 
-  // lưu vào allData
-  allData[editingIndex] = r;
+  // tạo JSON cho ngày bảo dưỡng
+  const bdNgayObj = {
+    Q1: m_bdQ1_ngay.value.trim(),
+    Q2: m_bdQ2_ngay.value.trim(),
+    Q3: m_bdQ3_ngay.value.trim(),
+    Q4: m_bdQ4_ngay.value.trim()
+  };
+  r.bdNgay = JSON.stringify(bdNgayObj);
 
-  // gửi auto sync lên sheet
+  allData[editingIndex] = r;
   autoSyncRow(editingIndex);
 
-  // đóng modal & render lại bảng
   closeModal();
   renderTable();
   highlightFromHash();
