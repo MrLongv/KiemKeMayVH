@@ -7,56 +7,50 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
-header { display: flex; justify-content: center; align-items: center; background: #0b74d1; color: #fff; padding: 16px 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; }
+header{display:flex;justify-content:center;align-items:center;background:#0b74d1;color:#fff;padding:16px 0;font-size:24px;font-weight:bold;letter-spacing:1px}
 .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
-.controls input[type="text"]{padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:220px}
-.controls select{padding:6px 8px;border:1px solid #ccc;border-radius:4px;}
+.controls input[type="text"],.controls select{padding:6px 8px;border:1px solid #ccc;border-radius:4px}
+.controls input[type="text"]{width:220px}
 .controls button{background:#0b74d1;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
 .controls button.ghost{background:#eee;color:#333}
 .note{padding:8px 12px;color:#666;font-size:13px}
-.table-wrap { display: block; width: 100%; overflow-x: auto; }
-
-/* Bảng */
-table { border-collapse: collapse; width: 100%; table-layout: auto; background:#fff; }
-th, td { padding: 6px 8px; text-align: center; border: 1px solid #ddd; background: #fff; vertical-align: middle; word-break: break-word; }
-th { background: #0b74d1; color: #fff; }
-
-/* Chỉ các cột dài áp clamp */
-tbody td.col-ghi-chu, tbody td.col-sua-chua {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
+.table-wrap{display:block;width:100%;overflow-x:auto}
+table{border-collapse:collapse;width:100%;table-layout:fixed;background:#fff}
+th,td{padding:6px 8px;text-align:center;border:1px solid #ddd;vertical-align:middle;overflow-wrap:break-word;background:#fff}
+th{background:#0b74d1;color:#fff}
+tbody td.col-ghi-chu,tbody td.col-sua-chua{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
 }
-
-/* Cột cố định chiều rộng */
-.col-stt { max-width: 35px; }
-.col-so-the { max-width: 100px; }
-.col-so-may { max-width: 120px; }
-.col-loai-may { max-width: 140px; }
-.col-vi-tri { max-width: 90px; }
-.col-ghi-chu { max-width: 170px; }
-.col-da-kiem-ke { max-width: 30px; }
-.col-chon-in { max-width: 30px; }
-.col-ngay-mua { max-width: 160px; }
-.col-noi-mua { max-width: 170px; }
-.col-bao-duong { max-width: 30px; }
-.col-sua-chua { max-width: 180px; }
-.col-hanh-dong { max-width: 50px; }
-
+.col-stt{min-width:35px;max-width:35px}
+.col-so-the{min-width:90px;max-width:100px}
+.col-so-may{min-width:100px;max-width:120px}
+.col-loai-may{min-width:120px;max-width:140px}
+.col-vi-tri{min-width:80px;max-width:90px}
+.col-ghi-chu{min-width:120px;max-width:170px}
+.col-da-kiem-ke,.col-chon-in{min-width:30px;max-width:30px}
+.col-ngay-mua{min-width:120px;max-width:160px}
+.col-noi-mua{min-width:140px;max-width:170px}
+.col-bao-duong{min-width:30px;max-width:30px}
+.col-sua-chua{min-width:150px;max-width:180px}
+.col-hanh-dong{min-width:50px;max-width:50px}
 tr.highlight{background:#ffeaa7 !important}
-
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-.modal .card { background: #fff; padding: 16px; border-radius: 8px; width: 360px; max-width: 95%; max-height: 80vh; overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
-body.modal-open { position: fixed; width: 100%; overflow: hidden; height: 100%; top: 0; }
+.table-wrap::-webkit-scrollbar{height:8px}
+.table-wrap::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+.table-wrap::-webkit-scrollbar-track{background:#f4f6f8}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center}
+.modal .card{background:#fff;padding:16px;border-radius:8px;width:360px;max-width:95%;max-height:80vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
+body.modal-open{position:fixed;width:100%;overflow:hidden;height:100%;top:0}
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-@media(max-width:920px){ .table-wrap{overflow:auto} }
+@media(max-width:920px){.table-wrap{overflow:auto}}
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
-.highlight-row { background: yellow !important; transition: background 0.2s; }
+.highlight-row{background:yellow !important;transition:background 0.2s}
 .small-checkbox{transform:scale(1);margin:0}
 </style>
 </head>
@@ -64,84 +58,86 @@ body.modal-open { position: fixed; width: 100%; overflow: hidden; height: 100%; 
 <header>📋 Kiểm kê máy Việt Hồng</header>
 
 <div class="controls">
-  <input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
-  <select id="filterBox">
-    <option value="all">📋 Hiện tất cả</option>
-    <option value="daKiemKe">✅ Đã kiểm kê</option>
-    <option value="chuaKiemKe">⬜ Chưa kiểm kê</option>
-    <option value="daIn">🖨️ Đã chọn in</option>
-    <option value="chuaIn">📄 Chưa chọn in</option>
-  </select>
-  <button id="btnAdd">➕ Thêm</button>
-  <button id="btnSync">☁️ Đồng bộ lên Sheet</button>
-  <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
-  <button id="btnPrint">🖨️ In tem QR</button>
-  <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
+<input id="searchBox" type="text" placeholder="🔍 Tìm theo số thẻ / số máy" />
+<select id="filterBox">
+<option value="all">📋 Hiện tất cả</option>
+<option value="daKiemKe">✅ Đã kiểm kê</option>
+<option value="chuaKiemKe">⬜ Chưa kiểm kê</option>
+<option value="daIn">🖨️ Đã chọn in</option>
+<option value="chuaIn">📄 Chưa chọn in</option>
+</select>
+<button id="btnAdd">➕ Thêm</button>
+<button id="btnSync">☁️ Đồng bộ lên Sheet</button>
+<button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
+<button id="btnPrint">🖨️ In tem QR</button>
+<span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 
 <div class="note">Tìm số thẻ chỉ nhập số, Checkbox Đã KK tự lưu, ngày mua chuẩn dd/mm/yyyy. Bảo dưỡng = 4 quý (checkbox). Sửa chữa = text, editable trong modal và auto-sync.</div>
 
 <div class="table-wrap">
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th class="col-stt" rowspan="2">STT</th>
-        <th class="col-so-the" rowspan="2">Số thẻ</th>
-        <th class="col-so-may" rowspan="2">Số máy</th>
-        <th class="col-loai-may" rowspan="2">Loại máy</th>
-        <th class="col-vi-tri" rowspan="2">Vị trí</th>
-        <th class="col-ghi-chu" rowspan="2">Ghi chú</th>
-        <th class="col-hanh-dong" rowspan="2">Hành động</th>
-        <th class="col-da-kiem-ke" rowspan="2">Đã KK<br><input type="checkbox" id="checkAllKK"></th>
-        <th class="col-chon-in" rowspan="2">In QR<br><input type="checkbox" id="checkAllQR"></th>
-        <th class="col-ngay-mua" rowspan="2">Ngày mua</th>
-        <th class="col-noi-mua" rowspan="2">Nơi mua</th>
-        <th class="col-bao-duong" colspan="4">Bảo dưỡng</th>
-        <th class="col-sua-chua" rowspan="2">Sửa chữa</th>
-      </tr>
-      <tr>
-        <th class="col-bao-duong">Q1</th>
-        <th class="col-bao-duong">Q2</th>
-        <th class="col-bao-duong">Q3</th>
-        <th class="col-bao-duong">Q4</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Dữ liệu render bởi JS -->
-    </tbody>
-  </table>
+<table id="dataTable">
+<thead>
+<tr>
+<th class="col-stt" rowspan="2">STT</th>
+<th class="col-so-the" rowspan="2">Số thẻ</th>
+<th class="col-so-may" rowspan="2">Số máy</th>
+<th class="col-loai-may" rowspan="2">Loại máy</th>
+<th class="col-vi-tri" rowspan="2">Vị trí</th>
+<th class="col-ghi-chu" rowspan="2">Ghi chú</th>
+<th class="col-hanh-dong" rowspan="2">Hành động</th>
+<th class="col-da-kiem-ke" rowspan="2">
+Đã KK<br><input type="checkbox" id="checkAllKK">
+</th>
+<th class="col-chon-in" rowspan="2">
+In QR<br><input type="checkbox" id="checkAllQR">
+</th>
+<th class="col-ngay-mua" rowspan="2">Ngày mua</th>
+<th class="col-noi-mua" rowspan="2">Nơi mua</th>
+<th class="col-bao-duong" colspan="4">Bảo dưỡng</th>
+<th class="col-sua-chua" rowspan="2">Sửa chữa</th>
+</tr>
+<tr>
+<th class="col-bao-duong">Q1</th>
+<th class="col-bao-duong">Q2</th>
+<th class="col-bao-duong">Q3</th>
+<th class="col-bao-duong">Q4</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 </div>
 
 <!-- ==== MODAL ==== -->
 <div id="editModal" class="modal">
-  <div class="card">
-    <h3 style="margin:0 0 6px 0">✏️ Chỉnh sửa </h3>
-    <label>Số thẻ</label><input id="m_soThe" />
-    <label>Số máy</label><input id="m_soMay" />
-    <label>Loại máy</label><input id="m_loaiMay" />
-    <label>Vị trí</label><input id="m_viTri" />
-    <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
-    <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
-    <label>Ngày mua</label>
-    <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
-    <label>Nơi mua</label><input id="m_noiMua" />
-    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ1" /> Q1</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ2" /> Q2</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ3" /> Q3</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ4" /> Q4</label>
-    </div>
-    <label style="margin-top:10px">Sửa chữa</label>
-    <textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa"></textarea>
-    <div class="actions">
-      <button id="cancelBtn" class="ghost">Hủy</button>
-      <button id="saveBtn">Cập nhật</button>
-    </div>
-  </div>
+<div class="card">
+<h3 style="margin:0 0 6px 0">✏️ Chỉnh sửa </h3>
+<label>Số thẻ</label><input id="m_soThe" />
+<label>Số máy</label><input id="m_soMay" />
+<label>Loại máy</label><input id="m_loaiMay" />
+<label>Vị trí</label><input id="m_viTri" />
+<label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
+<label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
+<label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
+<label>Ngày mua</label><input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
+<label>Nơi mua</label><input id="m_noiMua" />
+<label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ1" /> Q1</label>
+<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ2" /> Q2</label>
+<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ3" /> Q3</label>
+<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ4" /> Q4</label>
+</div>
+<label style="margin-top:10px">Sửa chữa</label>
+<textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa"></textarea>
+<div class="actions">
+<button id="cancelBtn" class="ghost">Hủy</button>
+<button id="saveBtn">Cập nhật</button>
+</div>
+</div>
 </div>
 
+  
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const GAS_URL='https://script.google.com/macros/s/AKfycbzY2d-PGtLLnS15qkvObOcZZ9anit3mhYFVvNn7djXI-0ody8RFZC-ugbPwvFphQ4_r/exec';
