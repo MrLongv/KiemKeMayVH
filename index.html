@@ -93,8 +93,9 @@ td.col-ghi-chu, td.col-sua-chua {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal; /* cho phép xuống dòng */
-  text-align: left;   /* căn trái cho dễ đọc */
-  padding-left: 8px;  /* giữ padding hiện tại */
+  text-align: left;    /* căn trái cho dễ đọc */
+  padding-left: 8px;   /* giữ padding hiện tại */
+  min-height: 2.4em;   /* đảm bảo ô trống cũng chiếm chỗ 2 dòng */
 }
 
 </style>
@@ -261,20 +262,20 @@ modal.style.display = 'none';
 
 // ==== RENDER BẢNG ====
 function renderTable() {
-  tbody.innerHTML = ''; // Xóa nội dung cũ
+  tbody.innerHTML = '';
   const filter = filterBox.value;
   const search = (searchBox.value || '').toLowerCase();
 
   allData.forEach((r, idx) => {
     let show = true;
 
-    // Lọc theo filter
+    // filter theo checkbox
     if (filter === 'daKiemKe' && !r.daKiemKe) show = false;
     if (filter === 'chuaKiemKe' && r.daKiemKe) show = false;
     if (filter === 'daIn' && !r.chonIn) show = false;
     if (filter === 'chuaIn' && r.chonIn) show = false;
 
-    // Tìm kiếm
+    // filter theo search
     if (search) {
       const haystack = [
         r.soThe, r.soMay, r.loaiMay, r.viTri, r.ghiChu, r.noiMua, r.ngayMua, r.suaChua,
@@ -286,14 +287,13 @@ function renderTable() {
     if (show) {
       const tr = document.createElement('tr');
       tr.dataset.index = idx;
-
       tr.innerHTML = `
         <td>${idx + 1}</td>
         <td class="col-so-the">${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
-        <td class="col-ghi-chu">${safeText(r.ghiChu)}</td>
+        <td class="col-ghi-chu">${r.ghiChu ? safeText(r.ghiChu) : ''}</td>
         <td>
           <button data-act="edit" data-i="${idx}">✏️</button>
           <button data-act="qr" data-i="${idx}">🔗</button>
@@ -306,9 +306,8 @@ function renderTable() {
         <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
-        <td class="col-sua-chua">${safeText(r.suaChua)}</td>
+        <td class="col-sua-chua">${r.suaChua ? safeText(r.suaChua) : ''}</td>
       `;
-
       tbody.appendChild(tr);
     }
   });
