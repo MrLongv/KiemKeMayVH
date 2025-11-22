@@ -123,13 +123,7 @@ td.bdQ input[type="checkbox"] {
   display:flex;
   gap:10px;
   align-items:center;
-  flex-wrap:wrap;
-}
-.modal .bdQ-group label{
-  display:flex;
-  align-items:center;
-  gap:4px;
-  font-weight:500;
+  justify-content:center;
 }
 .modal .bdQ-group input[type=checkbox]{
   transform: scale(1.2);
@@ -207,16 +201,15 @@ td.bdQ input[type="checkbox"] {
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
     <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
-    <label>Ngày mua</label>
-    <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
+    <label>Ngày mua</label><input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
     
     <label style="margin-top:10px;font-weight:700">Bảo dưỡng (Q1–Q4)</label>
     <div class="bdQ-group">
-      <label><input type="checkbox" id="m_bdQ1"> Q1</label>
-      <label><input type="checkbox" id="m_bdQ2"> Q2</label>
-      <label><input type="checkbox" id="m_bdQ3"> Q3</label>
-      <label><input type="checkbox" id="m_bdQ4"> Q4</label>
+      <input type="checkbox" id="m_bdQ1">
+      <input type="checkbox" id="m_bdQ2">
+      <input type="checkbox" id="m_bdQ3">
+      <input type="checkbox" id="m_bdQ4">
     </div>
 
     <label style="margin-top:10px">Sửa chữa</label>
@@ -352,10 +345,10 @@ function renderTable() {
   <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
   <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
   <td class="col-noi-mua"><div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div></td>
-  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}> Q1</label></div></td>
-  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}> Q2</label></div></td>
-  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}> Q3</label></div></td>
-  <td><div class="checkbox-wrapper"><label><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}> Q4</label></div></td>
+<td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
+<td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
+<td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
+<td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
   <td class="col-sua-chua"><div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div></td>
 `;
       tbody.appendChild(tr);
