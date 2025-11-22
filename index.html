@@ -465,15 +465,33 @@ tbody.addEventListener('change',e=>{
 let lastScrollY = 0;
 function openEditModal(idx) {
   lastScrollY = window.scrollY;
+
   if (idx === null || idx === undefined) {
+    // THÊM MỚI
     editingIndex = null;
-    m_soThe.value = ""; m_soMay.value = ""; m_loaiMay.value = ""; m_viTri.value = ""; m_ghiChu.value = "";
-    m_daKiemKe.checked = false; m_chonIn.checked=false; m_ngayMua.value=''; m_noiMua.value='';
-    m_bdQ1.checked = m_bdQ2.checked = m_bdQ3.checked = m_bdQ4.checked = false;
+    m_soThe.value = "";
+    m_soMay.value = "";
+    m_loaiMay.value = "";
+    m_viTri.value = "";
+    m_ghiChu.value = "";
+    m_daKiemKe.checked = false;
+    m_chonIn.checked = false;
+    m_ngayMua.value = '';
+    m_noiMua.value = '';
+    m_bdQ1.checked = false;
+    m_bdQ2.checked = false;
+    m_bdQ3.checked = false;
+    m_bdQ4.checked = false;
+    m_bdQ1_ngay.value = '';
+    m_bdQ2_ngay.value = '';
+    m_bdQ3_ngay.value = '';
+    m_bdQ4_ngay.value = '';
     m_suaChua.value = '';
   } else {
+    // CHỈNH SỬA
     editingIndex = idx;
     const r = allData[idx] || {};
+
     m_soThe.value = r.soThe || '';
     m_soMay.value = r.soMay || '';
     m_loaiMay.value = r.loaiMay || '';
@@ -488,19 +506,30 @@ function openEditModal(idx) {
     m_bdQ3.checked = !!r.bdQ3;
     m_bdQ4.checked = !!r.bdQ4;
     m_suaChua.value = r.suaChua || '';
-  }
-  if(r.bdNgay){
-  try{
-    const bd = JSON.parse(r.bdNgay);
-    m_bdQ1_ngay.value = bd.Q1 || '';
-    m_bdQ2_ngay.value = bd.Q2 || '';
-    m_bdQ3_ngay.value = bd.Q3 || '';
-    m_bdQ4_ngay.value = bd.Q4 || '';
-  } catch(e){}
-} else {
-  m_bdQ1_ngay.value = m_bdQ2_ngay.value = m_bdQ3_ngay.value = m_bdQ4_ngay.value = '';
-}
 
+    // ---- LOAD NGÀY BẢO DƯỠNG Q1..Q4 ----
+    if (r.bdNgay) {
+      try {
+        const bd = JSON.parse(r.bdNgay);
+        m_bdQ1_ngay.value = bd.Q1 || '';
+        m_bdQ2_ngay.value = bd.Q2 || '';
+        m_bdQ3_ngay.value = bd.Q3 || '';
+        m_bdQ4_ngay.value = bd.Q4 || '';
+      } catch(e) {
+        m_bdQ1_ngay.value = '';
+        m_bdQ2_ngay.value = '';
+        m_bdQ3_ngay.value = '';
+        m_bdQ4_ngay.value = '';
+      }
+    } else {
+      m_bdQ1_ngay.value = '';
+      m_bdQ2_ngay.value = '';
+      m_bdQ3_ngay.value = '';
+      m_bdQ4_ngay.value = '';
+    }
+  }
+
+  // HIỂN THỊ MODAL
   modal.style.display = 'flex';
   document.body.classList.add('modal-open');
   const scrollY = window.scrollY;
@@ -508,6 +537,7 @@ function openEditModal(idx) {
   setTimeout(()=> m_soThe.scrollIntoView({behavior:'smooth', block:'center'}),300);
   m_soThe.focus();
 }
+
 function closeModal(){
   modal.style.display='none';
   editingIndex=null;
