@@ -30,23 +30,28 @@ header {
   overflow-x: auto;
 }
 
-/* Bảng cố định, nội dung dài tối đa 2 dòng */
+/* Bảng cơ bản */
 table { border-collapse: collapse; width: 100%; table-layout: auto; background:#fff; }
 th, td {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid #ddd;
+  background: #fff;
+  word-break: break-word;
+}
+th { background: #0b74d1; color: #fff; }
+
+/* Multiline clamp chỉ cho cột dài */
+.col-ghi-chu, .col-sua-chua {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2; /* tối đa 2 dòng */
   overflow: hidden;
   text-overflow: ellipsis;
-  word-break: break-word;
-  padding: 6px 8px;
-  text-align: center;
-  border: 1px solid #ddd;
-  background: #fff;
+  text-align: left;
 }
-th { background: #0b74d1; color: #fff; }
 
-/* Cột cố định */
+/* Cột cố định chiều rộng */
 .col-stt { max-width: 35px; }
 .col-so-the { max-width: 100px; }
 .col-so-may { max-width: 120px; }
@@ -62,6 +67,7 @@ th { background: #0b74d1; color: #fff; }
 .col-hanh-dong { max-width: 50px; }
 
 tr.highlight{background:#ffeaa7 !important}
+
 .modal {
   display: none;
   position: fixed;
@@ -152,7 +158,7 @@ body.modal-open {
       </tr>
     </thead>
     <tbody>
-      <!-- Dữ liệu sẽ render bởi JS -->
+      <!-- Dữ liệu render bởi JS -->
     </tbody>
   </table>
 </div>
