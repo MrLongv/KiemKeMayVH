@@ -291,7 +291,10 @@ function renderTable(){
         <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
 
         <!-- Sửa chữa (text) -->
-        <td class="col-sua-chua" style="text-align:left;padding-left:8px">${safeText(r.suaChua)}</td>
+       <td class="col-sua-chua">
+        ${r.suaChua ? `<button class="infoBtn" data-i="${idx}" title="Xem lịch sử sửa chữa">ℹ️</button>` : ''}
+</td>
+
       `;
       tbody.appendChild(tr);
     }
@@ -370,6 +373,13 @@ tbody.addEventListener('click',e=>{
     const code=encodeURIComponent(allData[i].soThe||'');
     const url=location.href.split('#')[0]+'#'+code;
     prompt('Link QR (copy & in tem):',url);
+  }
+    // info button for Sửa chữa
+  if(btn.classList.contains('infoBtn')){
+    const r = allData[idx];
+    if(!r.suaChua) return;
+    alert(`🔧 Lịch sửa chữa:\n${r.suaChua}`);
+    // hoặc mở modal khác nếu muốn UI đẹp hơn
   }
 });
 
