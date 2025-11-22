@@ -123,6 +123,7 @@ td.bdQ input[type="checkbox"] {
   display:flex;
   gap:10px;
   align-items:center;
+  flex-wrap:wrap;
   justify-content:center;
 }
 .modal .bdQ-group input[type=checkbox]{
@@ -181,10 +182,10 @@ td.bdQ input[type="checkbox"] {
         <th rowspan="2">Sửa chữa</th>
       </tr>
       <tr>
-        <th>Q1</th>
-        <th>Q2</th>
-        <th>Q3</th>
-        <th>Q4</th>
+        <th> </th>
+        <th> </th>
+        <th> </th>
+        <th> </th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -203,7 +204,7 @@ td.bdQ input[type="checkbox"] {
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
     <label>Ngày mua</label><input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
-    
+
     <label style="margin-top:10px;font-weight:700">Bảo dưỡng (Q1–Q4)</label>
     <div class="bdQ-group">
       <input type="checkbox" id="m_bdQ1">
@@ -221,7 +222,7 @@ td.bdQ input[type="checkbox"] {
     </div>
   </div>
 </div>
-
+  
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // === Tất cả JS cũ của bạn giữ nguyên ===
@@ -303,59 +304,50 @@ else {
 modal.style.display = 'none';
 
 // ==== RENDER BẢNG ====
-function renderTable() {
-  tbody.innerHTML = '';
-  const filter = filterBox.value;
-  const search = (searchBox.value || '').toLowerCase();
+function renderTable(){
+  tbody.innerHTML='';
+  allData.forEach((r,idx)=>{
+    const tr=document.createElement('tr');
+    tr.dataset.index=idx;
+    tr.innerHTML=`
+      <td>${idx+1}</td>
+      <td class="col-so-the">${r.soThe||''}</td>
+      <td>${r.soMay||''}</td>
+      <td>${r.loaiMay||''}</td>
+      <td>${r.viTri||''}</td>
+      <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu||''}</div></td>
+      <td>
+        <button data-act="edit" data-i="${idx}">✏️</button>
+        <button data-act="qr" data-i="${idx}">🔗</button>
+      </td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+      <td>${r.ngayMua||''}</td>
+      <td class="col-noi-mua"><div class="clamp-2">${r.noiMua||''}</div></td>
+      <td class="bdQ"><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1?'checked':''}></td>
+      <td class="bdQ"><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2?'checked':''}></td>
+      <td class="bdQ"><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3?'checked':''}></td>
+      <td class="bdQ"><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
+      <td class="col-sua-chua"><div class="clamp-2">${r.suaChua||''}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  highlightFromHash(); // highlight QR scan sau khi render xong
+}
 
-  allData.forEach((r, idx) => {
-    let show = true;
-
-    // filter theo checkbox
-    if (filter === 'daKiemKe' && !r.daKiemKe) show = false;
-    if (filter === 'chuaKiemKe' && r.daKiemKe) show = false;
-    if (filter === 'daIn' && !r.chonIn) show = false;
-    if (filter === 'chuaIn' && r.chonIn) show = false;
-
-    // filter theo search
-    if (search) {
-      const haystack = [
-        r.soThe, r.soMay, r.loaiMay, r.viTri, r.ghiChu, r.noiMua, r.ngayMua, r.suaChua,
-        r.bdQ1, r.bdQ2, r.bdQ3, r.bdQ4
-      ].map(x => (x || '').toString().toLowerCase()).join(' ');
-      if (!haystack.includes(search)) show = false;
-    }
-
-    if (show) {
-      const tr = document.createElement('tr');
-      tr.dataset.index = idx;
-
-     tr.innerHTML = `
-  <td>${idx + 1}</td>
-  <td class="col-so-the">${safeText(r.soThe)}</td>
-  <td>${safeText(r.soMay)}</td>
-  <td>${safeText(r.loaiMay)}</td>
-  <td>${safeText(r.viTri)}</td>
-  <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
-  <td>
-    <button data-act="edit" data-i="${idx}">✏️</button>
-    <button data-act="qr" data-i="${idx}">🔗</button>
-  </td>
-  <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
-  <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
-  <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
-  <td class="col-noi-mua"><div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div></td>
-<td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
-<td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
-<td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
-<td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
-  <td class="col-sua-chua"><div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div></td>
-`;
-      tbody.appendChild(tr);
+// highlight QR
+function highlightFromHash(){
+  const code=location.hash.slice(1);
+  if(!code) return;
+  document.querySelectorAll('#dataTable tbody tr').forEach(tr=>{
+    tr.classList.remove('highlight-row');
+    const soThe=tr.querySelector('.col-so-the');
+    if(soThe && soThe.textContent.trim()===code){
+      tr.classList.add('highlight-row');
+      tr.scrollIntoView({behavior:'smooth',block:'center'});
     }
   });
 }
-
 // ==== LOAD DATA JSONP ====
 function loadData(){
   setStatus('Đang tải dữ liệu...');
