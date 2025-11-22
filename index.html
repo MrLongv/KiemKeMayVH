@@ -375,12 +375,16 @@ tbody.addEventListener('click',e=>{
     prompt('Link QR (copy & in tem):',url);
   }
     // info button for Sửa chữa
-  if(btn.classList.contains('infoBtn')){
-    const r = allData[idx];
-    if(!r.suaChua) return;
-    alert(`🔧 Lịch sửa chữa:\n${r.suaChua}`);
-    // hoặc mở modal khác nếu muốn UI đẹp hơn
-  }
+if(btn.classList.contains('infoBtn')){
+  const r = allData[i];
+  if(!r.suaChua) return;
+  const scModal = document.getElementById('suaChuaModal');
+  const scContent = document.getElementById('scContent');
+  scContent.value = r.suaChua || '';
+  scModal.style.display = 'flex';
+  document.body.classList.add('modal-open');
+}
+
 });
 
 // checkbox changes inside table (daKiemKe, chonIn, bdQ1..bdQ4)
@@ -606,6 +610,20 @@ document.getElementById("checkAllQR").addEventListener("change", function() {
   });
   renderTable();
 });
+<div id="suaChuaModal" class="modal">
+  <div class="card">
+    <h3 style="margin:0 0 6px 0">🔧 Lịch sửa chữa</h3>
+    <textarea id="scContent" rows="6" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" readonly></textarea>
+    <div class="actions">
+      <button id="scClose" class="ghost">Đóng</button>
+    </div>
+  </div>
+</div>
+document.getElementById('scClose').onclick = ()=>{
+  const scModal = document.getElementById('suaChuaModal');
+  scModal.style.display = 'none';
+  document.body.classList.remove('modal-open');
+};
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
