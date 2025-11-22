@@ -260,54 +260,60 @@ else {
 modal.style.display = 'none';
 
 // ==== RENDER BẢNG ====
-function renderTable(){
-  const filter=filterBox.value;
-  const search=(searchBox.value||'').toLowerCase();
-  allData.forEach((r,idx)=>{
-    let show=true;
-    if(filter==='daKiemKe'&&!r.daKiemKe) show=false;
-    if(filter==='chuaKiemKe'&&r.daKiemKe) show=false;
-    if(filter==='daIn'&&!r.chonIn) show=false;
-    if(filter==='chuaIn'&&r.chonIn) show=false;
-    if (search){
+function renderTable() {
+  tbody.innerHTML = ''; // Xóa nội dung cũ
+  const filter = filterBox.value;
+  const search = (searchBox.value || '').toLowerCase();
+
+  allData.forEach((r, idx) => {
+    let show = true;
+
+    // Lọc theo filter
+    if (filter === 'daKiemKe' && !r.daKiemKe) show = false;
+    if (filter === 'chuaKiemKe' && r.daKiemKe) show = false;
+    if (filter === 'daIn' && !r.chonIn) show = false;
+    if (filter === 'chuaIn' && r.chonIn) show = false;
+
+    // Tìm kiếm
+    if (search) {
       const haystack = [
         r.soThe, r.soMay, r.loaiMay, r.viTri, r.ghiChu, r.noiMua, r.ngayMua, r.suaChua,
         r.bdQ1, r.bdQ2, r.bdQ3, r.bdQ4
-      ].map(x => (x||'').toString().toLowerCase()).join(' ');
+      ].map(x => (x || '').toString().toLowerCase()).join(' ');
       if (!haystack.includes(search)) show = false;
     }
 
-    if(show){
-      const tr=document.createElement('tr'); tr.dataset.index=idx;
-      tr.innerHTML=`
-        <td>${idx+1}</td>
+    if (show) {
+      const tr = document.createElement('tr');
+      tr.dataset.index = idx;
+
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
         <td class="col-so-the">${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
-        <td>${safeText(r.ghiChu)}</td>
+        <td class="col-ghi-chu">${safeText(r.ghiChu)}</td>
         <td>
           <button data-act="edit" data-i="${idx}">✏️</button>
           <button data-act="qr" data-i="${idx}">🔗</button>
         </td>
-        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-        <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua?formatDateDDMMYYYY(r.ngayMua):''}</td>
+        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
+        <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
         <td>${safeText(r.noiMua)}</td>
-
-        <!-- Bảo dưỡng Q1..Q4 -->
-        <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1?'checked':''}></td>
-        <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2?'checked':''}></td>
-        <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3?'checked':''}></td>
-        <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
-
-        <!-- Sửa chữa (text) -->
-        <td class="col-sua-chua" style="text-align:left;padding-left:8px">${safeText(r.suaChua)}</td>
+        <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
+        <td class="col-sua-chua">${safeText(r.suaChua)}</td>
       `;
+
       tbody.appendChild(tr);
     }
   });
 }
+
 
 // ==== LOAD DATA JSONP ====
 function loadData(){
