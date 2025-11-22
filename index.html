@@ -85,6 +85,23 @@ body.modal-open {
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
 .highlight-row { background: yellow !important; transition: background 0.2s; }
 .small-checkbox{transform:scale(1);margin:0}
+
+/* Bảng luôn gọn, không bị kéo ngang */
+table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Header + ô dữ liệu cố định chiều rộng + ẩn phần dư */
+th, td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 180px;   /* Bạn chỉnh tuỳ cột */
+  padding: 6px 8px;
+}
+
 </style>
 </head>
 <body>
