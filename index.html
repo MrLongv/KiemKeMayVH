@@ -541,7 +541,10 @@ document.getElementById('btnPrint').onclick = () => {
     .tem .bottom { font-weight:bold; font-size:12px; margin:1mm 0 0.2mm 0; }
     canvas { display:block; margin:0; width:82px !important; height:75px !important; }
   `);
-  w.document.write('</style></head><body>');
+  w.document.write('</style>');
+w.document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>');
+w.document.write('</head><body>');
+
   printData.forEach(r => {
     const code = encodeURIComponent(r.soThe || '');
     const soThe = r.soThe || '';
