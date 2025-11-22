@@ -548,51 +548,31 @@ function closeModal(){
 }
 document.getElementById('cancelBtn').onclick=closeModal;
 
-document.getElementById('saveBtn').onclick=()=>{
-  // bảo dưỡng + ngày
-bdNgayObj = {
-  Q1: m_bdQ1_ngay.value.trim(),
-  Q2: m_bdQ2_ngay.value.trim(),
-  Q3: m_bdQ3_ngay.value.trim(),
-  Q4: m_bdQ4_ngay.value.trim()
-}
-
-const obj = {
-  soThe: soTheVal,
-  soMay: m_soMay.value.trim(),
-  loaiMay: m_loaiMay.value.trim(),
-  viTri: m_viTri.value.trim(),
-  ghiChu: m_ghiChu.value.trim(),
-  daKiemKe: m_daKiemKe.checked,
-  chonIn: m_chonIn.checked,
-  ngayMua: ngayMuaFormatted,
-  noiMua: m_noiMua.value.trim(),
-  bdQ1: !!m_bdQ1.checked,
-  bdQ2: !!m_bdQ2.checked,
-  bdQ3: !!m_bdQ3.checked,
-  bdQ4: !!m_bdQ4.checked,
-  // **thêm dữ liệu ngày bảo dưỡng**
-  bdNgay: JSON.stringify(bdNgayObj),
-  suaChua: m_suaChua.value.trim()
-};
-
-  // validate soThe
+document.getElementById('saveBtn').onclick = () => {
   const soTheVal = m_soThe.value.trim();
-  if (!soTheVal){ alert('Số thẻ không được để trống'); m_soThe.focus(); return; }
+  if (!soTheVal) { alert('Số thẻ không được để trống'); m_soThe.focus(); return; }
 
-  // format ngay mua
-  let ngayMuaFormatted='';
+  // format ngày mua
+  let ngayMuaFormatted = '';
   const inputVal = m_ngayMua.value.trim();
-  if (inputVal){
+  if (inputVal) {
     const parts = inputVal.split('/');
-    if (parts.length === 3){
+    if (parts.length === 3) {
       let dd = parts[0].padStart(2,'0'), mm = parts[1].padStart(2,'0'), yyyy = parts[2];
-      if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)){ alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy'); m_ngayMua.focus(); return; }
+      if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) { alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy'); m_ngayMua.focus(); return; }
       ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
     } else { alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy'); m_ngayMua.focus(); return; }
   } else if (editingIndex !== null && allData[editingIndex].ngayMua) {
     ngayMuaFormatted = allData[editingIndex].ngayMua;
   }
+
+  // dữ liệu bảo dưỡng Q1..Q4
+  const bdNgayObj = {
+    Q1: m_bdQ1_ngay.value.trim(),
+    Q2: m_bdQ2_ngay.value.trim(),
+    Q3: m_bdQ3_ngay.value.trim(),
+    Q4: m_bdQ4_ngay.value.trim()
+  };
 
   const obj = {
     soThe: soTheVal,
@@ -604,24 +584,26 @@ const obj = {
     chonIn: m_chonIn.checked,
     ngayMua: ngayMuaFormatted,
     noiMua: m_noiMua.value.trim(),
-    // maintenance quarters
     bdQ1: !!m_bdQ1.checked,
     bdQ2: !!m_bdQ2.checked,
     bdQ3: !!m_bdQ3.checked,
     bdQ4: !!m_bdQ4.checked,
-    // sửa chữa text
+    bdNgay: JSON.stringify(bdNgayObj),
     suaChua: m_suaChua.value.trim()
   };
 
-  if (editingIndex === null){
+  if (editingIndex === null) {
     allData.push(obj);
     autoSyncRow(allData.length - 1);
   } else {
     allData[editingIndex] = obj;
     autoSyncRow(editingIndex);
   }
-  closeModal(); renderTable(); highlightFromHash();
-}
+
+  closeModal();
+  renderTable();
+  highlightFromHash();
+};
 
 // Scroll modal khi focus input
 const modalInputs=modal.querySelectorAll('input, textarea');
