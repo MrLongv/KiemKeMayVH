@@ -106,6 +106,27 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
   padding-left: 8px;
   text-align: left;
 }
+/* --- Bảo dưỡng modal Q1..Q4 --- */
+.modal-bao-duong {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.modal-bao-duong label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.modal-bao-duong input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+}
 
 </style>
 </head>
@@ -180,12 +201,12 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
     <label>Nơi mua</label><input id="m_noiMua" />
     <!-- NEW: Bảo dưỡng Q1..Q4 -->
     <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ1" /> Q1</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ2" /> Q2</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ3" /> Q3</label>
-      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ4" /> Q4</label>
-    </div>
+<div class="modal-bao-duong">
+  <label><input type="checkbox" id="m_bdQ1" /> Q1</label>
+  <label><input type="checkbox" id="m_bdQ2" /> Q2</label>
+  <label><input type="checkbox" id="m_bdQ3" /> Q3</label>
+  <label><input type="checkbox" id="m_bdQ4" /> Q4</label>
+</div>
 
     <!-- NEW: Sửa chữa text -->
     <label style="margin-top:10px">Sửa chữa</label>
