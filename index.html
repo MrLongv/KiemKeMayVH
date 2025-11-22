@@ -86,7 +86,8 @@ body.modal-open {
 .highlight-row { background: yellow !important; transition: background 0.2s; }
 .small-checkbox{transform:scale(1);margin:0}
 /* Giới hạn tối đa 2 dòng cho Ghi chú và Sửa chữa, phần dư ẩn với ellipsis */
-td.col-ghi-chu, td.col-sua-chua {
+/* Giới hạn tối đa 2 dòng cho Ghi chú, Sửa chữa, Nơi mua */
+td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
   display: -webkit-box;
   -webkit-line-clamp: 2;  /* giới hạn 2 dòng */
   -webkit-box-orient: vertical;
@@ -301,7 +302,7 @@ function renderTable() {
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
         <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
-        <td>${safeText(r.noiMua)}</td>
+        <td class="col-noi-mua">${r.noiMua ? safeText(r.noiMua) : ''}</td>
         <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
