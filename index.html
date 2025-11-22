@@ -176,15 +176,6 @@ td .clamp-2 {
   line-height: 1.2em;
   max-height: calc(1.2em * 2);
 }
-/* Không áp dụng clamp cho modal */
-.modal-body td * {
-  display: block !important;
-  -webkit-line-clamp: unset !important;
-  -webkit-box-orient: unset !important;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  max-height: none !important;
-}
 
 td.col-ghi-chu,
 td.col-sua-chua,
@@ -198,10 +189,37 @@ td.col-noi-mua {
   .table-wrap{overflow:auto}
 }
 
-@media(max-width:640px){
-  .controls{flex-direction:column;align-items:stretch}
-  .controls input[type="text"],.controls select{width:100%}
+/* ---- FIX LỆCH MODAL TRÊN MOBILE ---- */
+@media (max-width: 640px) {
+
+  /* Giữ table layout chuẩn trong modal */
+  .modal-body table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .modal-body td {
+    display: table-cell !important;
+    vertical-align: middle;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  /* Ngăn clamp ảnh hưởng modal */
+  .modal-body .clamp-2 {
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Checkbox Q1–Q4 không bị ép width */
+  .modal-body .bdQ {
+    transform: scale(1.2);
+    margin-right: 8px;
+  }
 }
+
 </style>
 
 </head>
