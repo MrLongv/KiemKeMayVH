@@ -16,7 +16,7 @@ header{display:flex;justify-content:center;align-items:center;background:#0b74d1
 .note{padding:8px 12px;color:#666;font-size:13px}
 .table-wrap{display:block;width:100%;overflow-x:auto;overflow-y:auto;box-sizing:border-box}
 table{min-width:1200px;border-collapse:collapse;background:#fff}
-th,td{border:1px solid #ddd;padding:8px;text-align:center;white-space:nowrap}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;white-space:nowrap;vertical-align:top}
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center}
@@ -29,6 +29,20 @@ body.modal-open{position:fixed;width:100%;overflow:hidden;height:100%;top:0}
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
 .highlight-row{background:yellow !important;transition:background 0.2s}
 .small-checkbox{transform:scale(1);margin:0}
+
+/* ===== CỘT GHI CHÚ & SỬA CHỮA 2 DÒNG ===== */
+.col-ghi-chu, .col-sua-chua {
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Hiển thị tối đa 2 dòng */
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    text-align: left;
+    padding-left: 8px;
+    max-width: 200px; /* điều chỉnh theo ý */
+}
 </style>
 </head>
 <body>
@@ -107,7 +121,8 @@ body.modal-open{position:fixed;width:100%;overflow:hidden;height:100%;top:0}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbzY2d-PGtLLnS15qkvObOcZZ9anit3mhYFVvNn7djXI-0ody8RFZC-ugbPwvFphQ4_r/exec';
+// ==== BIẾN ==== //
+const GAS_URL='https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // đổi theo script của bạn
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
 const modal=document.getElementById('editModal');
@@ -125,35 +140,7 @@ function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusE
 function safeText(v){return v==null?'':String(v);}
 function formatDateDDMMYYYY(d){if (!d && d!==0) return ""; if(typeof d==='string' && d.includes('/')) return d; if(typeof d==='string'){const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m) return `${m[3]}/${m[2]}/${m[1]}`;} let date=(d instanceof Date)?d:new Date(d); if(isNaN(date)) return String(d); const day=String(date.getDate()).padStart(2,'0'); const month=String(date.getMonth()+1).padStart(2,'0'); const year=date.getFullYear(); return `${day}/${month}/${year}`;}
 
-// ==== PHẦN MẬT KHẨU ====
-const PASSWORD='12345';
-const mainUI=[document.querySelector('header'),document.querySelector('.controls'),document.querySelector('.note'),document.querySelector('.table-wrap')];
-mainUI.forEach(el=>el.style.display='none');
-
-const pwdModal=document.createElement('div');
-pwdModal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
-pwdModal.innerHTML=`
-  <div style="background:#fff;padding:20px;border-radius:8px;width:300px;text-align:center">
-    <h3>🔒 Nhập mật khẩu</h3>
-    <input id="pwdInput" type="password" style="width:80%;padding:6px;margin-top:10px" />
-    <div style="margin-top:12px">
-      <button id="pwdBtn" style="padding:6px 12px;background:#0b74d1;color:#fff;border:none;border-radius:4px;cursor:pointer">Đăng nhập</button>
-    </div>
-  </div>`;
-document.body.appendChild(pwdModal);
-const pwdInput=document.getElementById('pwdInput'), pwdBtn=document.getElementById('pwdBtn');
-function initUI(){pwdModal.style.display='none';mainUI.forEach(el=>el.style.display='flex');loadData();}
-const loginTime=localStorage.getItem('loginTime');
-if(loginTime && Date.now()-loginTime<3600*1000) initUI();
-else{
-  pwdInput.focus();
-  pwdInput.addEventListener("keydown",e=>{if(e.key==="Enter") pwdBtn.click();});
-  pwdBtn.onclick=()=>{if(pwdInput.value===PASSWORD){localStorage.setItem('loginTime',Date.now());initUI();}
-    else{alert('Mật khẩu sai!');pwdInput.value='';pwdInput.focus();}};
-}
-modal.style.display='none';
-
-// ==== RENDER TABLE ====
+// ==== RENDER TABLE ==== //
 function renderTable(){
   const filter=filterBox.value, search=(searchBox.value||'').toLowerCase();
   tbody.innerHTML='';
@@ -176,7 +163,7 @@ function renderTable(){
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
-        <td>${safeText(r.ghiChu)}</td>
+        <td class="col-ghi-chu">${safeText(r.ghiChu)}</td>
         <td>
           <button data-act="edit" data-i="${idx}">✏️</button>
           <button data-act="qr" data-i="${idx}">🔗</button>
@@ -189,7 +176,7 @@ function renderTable(){
         <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2?'checked':''}></td>
         <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3?'checked':''}></td>
         <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
-        <td class="col-sua-chua" style="text-align:left;padding-left:8px">${safeText(r.suaChua)}</td>
+        <td class="col-sua-chua">${safeText(r.suaChua)}</td>
       `;
       tbody.appendChild(tr);
     }
