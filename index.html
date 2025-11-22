@@ -551,7 +551,44 @@ function closeModal(){
 }
 document.getElementById('cancelBtn').onclick=closeModal;
 
-document.getElementById('saveBtn').onclick
+document.getElementById('saveBtn').onclick = () => {
+  if(editingIndex === null) editingIndex = allData.length;
+
+  // Lấy dữ liệu từ modal
+  const r = {
+    soThe: m_soThe.value.trim(),
+    soMay: m_soMay.value.trim(),
+    loaiMay: m_loaiMay.value.trim(),
+    viTri: m_viTri.value.trim(),
+    ghiChu: m_ghiChu.value.trim(),
+    daKiemKe: m_daKiemKe.checked,
+    chonIn: m_chonIn.checked,
+    ngayMua: m_ngayMua.value.trim(),
+    noiMua: m_noiMua.value.trim(),
+    bdQ1: m_bdQ1.checked,
+    bdQ2: m_bdQ2.checked,
+    bdQ3: m_bdQ3.checked,
+    bdQ4: m_bdQ4.checked,
+    bdQ1_ngay: m_bdQ1_ngay.value.trim(),
+    bdQ2_ngay: m_bdQ2_ngay.value.trim(),
+    bdQ3_ngay: m_bdQ3_ngay.value.trim(),
+    bdQ4_ngay: m_bdQ4_ngay.value.trim(),
+    suaChua: m_suaChua.value.trim()
+  };
+
+  // Cập nhật vào allData
+  allData[editingIndex] = r;
+
+  // Đồng bộ dòng này lên Sheet
+  autoSyncRow(editingIndex);
+
+  // Cập nhật lại table
+  renderTable();
+  highlightFromHash();
+
+  // Đóng modal
+  closeModal();
+};
 
 // Scroll modal khi focus input
 const modalInputs=modal.querySelectorAll('input, textarea');
