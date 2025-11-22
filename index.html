@@ -114,18 +114,30 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
   margin-top: 6px;
 }
 
-.modal-bao-duong label {
+.modal-bao-duong .bd-item {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
   font-size: 14px;
 }
 
-.modal-bao-duong input[type="checkbox"] {
+.modal-bao-duong .bd-item label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-bao-duong .bd-item input[type="checkbox"] {
   width: 16px;
   height: 16px;
   margin: 0;
-  flex-shrink: 0;
+}
+
+.modal-bao-duong .bd-item input[type="text"] {
+  margin-top: 2px;
+  width: 100px;
+  padding: 2px 4px;
+  font-size: 13px;
 }
 
 </style>
@@ -200,12 +212,24 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
     <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
     <!-- NEW: Bảo dưỡng Q1..Q4 -->
-    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
+   <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
 <div class="modal-bao-duong">
-  <label><input type="checkbox" id="m_bdQ1" /> Q1</label>
-  <label><input type="checkbox" id="m_bdQ2" /> Q2</label>
-  <label><input type="checkbox" id="m_bdQ3" /> Q3</label>
-  <label><input type="checkbox" id="m_bdQ4" /> Q4</label>
+  <div class="bd-item">
+    <label><input type="checkbox" id="m_bdQ1" /> Q1</label>
+    <input type="text" id="m_bdQ1_ngay" placeholder="dd/MM/yyyy" />
+  </div>
+  <div class="bd-item">
+    <label><input type="checkbox" id="m_bdQ2" /> Q2</label>
+    <input type="text" id="m_bdQ2_ngay" placeholder="dd/MM/yyyy" />
+  </div>
+  <div class="bd-item">
+    <label><input type="checkbox" id="m_bdQ3" /> Q3</label>
+    <input type="text" id="m_bdQ3_ngay" placeholder="dd/MM/yyyy" />
+  </div>
+  <div class="bd-item">
+    <label><input type="checkbox" id="m_bdQ4" /> Q4</label>
+    <input type="text" id="m_bdQ4_ngay" placeholder="dd/MM/yyyy" />
+  </div>
 </div>
 
     <!-- NEW: Sửa chữa text -->
@@ -234,6 +258,10 @@ const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementByI
       m_bdQ1=document.getElementById('m_bdQ1'), m_bdQ2=document.getElementById('m_bdQ2'),
       m_bdQ3=document.getElementById('m_bdQ3'), m_bdQ4=document.getElementById('m_bdQ4'),
       m_suaChua=document.getElementById('m_suaChua');
+const m_bdQ1_ngay = document.getElementById('m_bdQ1_ngay');
+const m_bdQ2_ngay = document.getElementById('m_bdQ2_ngay');
+const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
+const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 
 let allData=[], editingIndex=null;
 
@@ -461,6 +489,18 @@ function openEditModal(idx) {
     m_bdQ4.checked = !!r.bdQ4;
     m_suaChua.value = r.suaChua || '';
   }
+  if(r.bdNgay){
+  try{
+    const bd = JSON.parse(r.bdNgay);
+    m_bdQ1_ngay.value = bd.Q1 || '';
+    m_bdQ2_ngay.value = bd.Q2 || '';
+    m_bdQ3_ngay.value = bd.Q3 || '';
+    m_bdQ4_ngay.value = bd.Q4 || '';
+  } catch(e){}
+} else {
+  m_bdQ1_ngay.value = m_bdQ2_ngay.value = m_bdQ3_ngay.value = m_bdQ4_ngay.value = '';
+}
+
   modal.style.display = 'flex';
   document.body.classList.add('modal-open');
   const scrollY = window.scrollY;
@@ -479,6 +519,33 @@ function closeModal(){
 document.getElementById('cancelBtn').onclick=closeModal;
 
 document.getElementById('saveBtn').onclick=()=>{
+  // bảo dưỡng + ngày
+bdNgayObj = {
+  Q1: m_bdQ1_ngay.value.trim(),
+  Q2: m_bdQ2_ngay.value.trim(),
+  Q3: m_bdQ3_ngay.value.trim(),
+  Q4: m_bdQ4_ngay.value.trim()
+}
+
+const obj = {
+  soThe: soTheVal,
+  soMay: m_soMay.value.trim(),
+  loaiMay: m_loaiMay.value.trim(),
+  viTri: m_viTri.value.trim(),
+  ghiChu: m_ghiChu.value.trim(),
+  daKiemKe: m_daKiemKe.checked,
+  chonIn: m_chonIn.checked,
+  ngayMua: ngayMuaFormatted,
+  noiMua: m_noiMua.value.trim(),
+  bdQ1: !!m_bdQ1.checked,
+  bdQ2: !!m_bdQ2.checked,
+  bdQ3: !!m_bdQ3.checked,
+  bdQ4: !!m_bdQ4.checked,
+  // **thêm dữ liệu ngày bảo dưỡng**
+  bdNgay: JSON.stringify(bdNgayObj),
+  suaChua: m_suaChua.value.trim()
+};
+
   // validate soThe
   const soTheVal = m_soThe.value.trim();
   if (!soTheVal){ alert('Số thẻ không được để trống'); m_soThe.focus(); return; }
