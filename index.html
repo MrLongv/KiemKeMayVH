@@ -421,7 +421,7 @@ function autoSyncRow(i){
   if(i == null || !allData[i]) return;
   const rowData = allData[i];
 
-  // chuẩn bị dữ liệu để gửi lên sheet, bao gồm cả ngày bảo dưỡng
+  // gửi dữ liệu lên Sheet, map đúng các cột Q1-Q4 và ngày
   const payload = {
     soThe: rowData.soThe || "",
     soMay: rowData.soMay || "",
@@ -436,10 +436,10 @@ function autoSyncRow(i){
     bdQ2: !!rowData.bdQ2,
     bdQ3: !!rowData.bdQ3,
     bdQ4: !!rowData.bdQ4,
-    bdNgayQ1: rowData.bdNgayQ1 || "",
-    bdNgayQ2: rowData.bdNgayQ2 || "",
-    bdNgayQ3: rowData.bdNgayQ3 || "",
-    bdNgayQ4: rowData.bdNgayQ4 || "",
+    bdQ1_ngay: rowData.bdQ1_ngay || "",
+    bdQ2_ngay: rowData.bdQ2_ngay || "",
+    bdQ3_ngay: rowData.bdQ3_ngay || "",
+    bdQ4_ngay: rowData.bdQ4_ngay || "",
     suaChua: rowData.suaChua || ""
   };
 
@@ -458,7 +458,6 @@ function autoSyncRow(i){
   script.src = GAS_URL+'?update=1&row='+(i+1)+'&data='+encodeURIComponent(JSON.stringify(payload))+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
 }
-
 
 // ==== EVENTS ====
 filterBox.addEventListener('change',renderTable);
@@ -492,8 +491,7 @@ let lastScrollY = 0;
 function openEditModal(idx) {
   lastScrollY = window.scrollY;
 
-  if (idx === null || idx === undefined) {
-    // THÊM MỚI
+  if(idx === null || idx === undefined){
     editingIndex = null;
     m_soThe.value = "";
     m_soMay.value = "";
@@ -514,10 +512,8 @@ function openEditModal(idx) {
     m_bdQ4_ngay.value = '';
     m_suaChua.value = '';
   } else {
-    // CHỈNH SỬA
     editingIndex = idx;
     const r = allData[idx] || {};
-
     m_soThe.value = r.soThe || '';
     m_soMay.value = r.soMay || '';
     m_loaiMay.value = r.loaiMay || '';
@@ -525,41 +521,22 @@ function openEditModal(idx) {
     m_ghiChu.value = r.ghiChu || '';
     m_daKiemKe.checked = !!r.daKiemKe;
     m_chonIn.checked = !!r.chonIn;
-    m_ngayMua.value = r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : '';
+    m_ngayMua.value = r.ngayMua || '';
     m_noiMua.value = r.noiMua || '';
     m_bdQ1.checked = !!r.bdQ1;
     m_bdQ2.checked = !!r.bdQ2;
     m_bdQ3.checked = !!r.bdQ3;
     m_bdQ4.checked = !!r.bdQ4;
+    m_bdQ1_ngay.value = r.bdQ1_ngay || '';
+    m_bdQ2_ngay.value = r.bdQ2_ngay || '';
+    m_bdQ3_ngay.value = r.bdQ3_ngay || '';
+    m_bdQ4_ngay.value = r.bdQ4_ngay || '';
     m_suaChua.value = r.suaChua || '';
-
-    // ---- LOAD NGÀY BẢO DƯỠNG Q1..Q4 ----
-    if (r.bdNgay) {
-      try {
-        const bd = JSON.parse(r.bdNgay);
-        m_bdQ1_ngay.value = bd.Q1 || '';
-        m_bdQ2_ngay.value = bd.Q2 || '';
-        m_bdQ3_ngay.value = bd.Q3 || '';
-        m_bdQ4_ngay.value = bd.Q4 || '';
-      } catch(e) {
-        m_bdQ1_ngay.value = '';
-        m_bdQ2_ngay.value = '';
-        m_bdQ3_ngay.value = '';
-        m_bdQ4_ngay.value = '';
-      }
-    } else {
-      m_bdQ1_ngay.value = '';
-      m_bdQ2_ngay.value = '';
-      m_bdQ3_ngay.value = '';
-      m_bdQ4_ngay.value = '';
-    }
   }
 
-  // HIỂN THỊ MODAL
   modal.style.display = 'flex';
   document.body.classList.add('modal-open');
-  const scrollY = window.scrollY;
-  document.body.style.top = `-${scrollY}px`;
+  document.body.style.top = `-${window.scrollY}px`;
   setTimeout(()=> m_soThe.scrollIntoView({behavior:'smooth', block:'center'}),300);
   m_soThe.focus();
 }
@@ -574,42 +551,7 @@ function closeModal(){
 }
 document.getElementById('cancelBtn').onclick=closeModal;
 
-document.getElementById('saveBtn').onclick = () => {
-  if(editingIndex === null) editingIndex = allData.length;
-
-  const r = {
-    soThe: m_soThe.value.trim(),
-    soMay: m_soMay.value.trim(),
-    loaiMay: m_loaiMay.value.trim(),
-    viTri: m_viTri.value.trim(),
-    ghiChu: m_ghiChu.value.trim(),
-    daKiemKe: m_daKiemKe.checked,
-    chonIn: m_chonIn.checked,
-    ngayMua: m_ngayMua.value.trim(),
-    noiMua: m_noiMua.value.trim(),
-    bdQ1: m_bdQ1.checked,
-    bdQ2: m_bdQ2.checked,
-    bdQ3: m_bdQ3.checked,
-    bdQ4: m_bdQ4.checked,
-    suaChua: m_suaChua.value.trim()
-  };
-
-  // tạo JSON cho ngày bảo dưỡng
-  const bdNgayObj = {
-    Q1: m_bdQ1_ngay.value.trim(),
-    Q2: m_bdQ2_ngay.value.trim(),
-    Q3: m_bdQ3_ngay.value.trim(),
-    Q4: m_bdQ4_ngay.value.trim()
-  };
-  r.bdNgay = JSON.stringify(bdNgayObj);
-
-  allData[editingIndex] = r;
-  autoSyncRow(editingIndex);
-
-  closeModal();
-  renderTable();
-  highlightFromHash();
-};
+document.getElementById('saveBtn').onclick
 
 // Scroll modal khi focus input
 const modalInputs=modal.querySelectorAll('input, textarea');
