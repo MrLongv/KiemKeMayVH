@@ -85,6 +85,31 @@ body.modal-open {
 @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
 .highlight-row { background: yellow !important; transition: background 0.2s; }
 .small-checkbox{transform:scale(1);margin:0}
+  <style>
+/* ... các CSS cũ của bạn ... */
+
+
+/* --- clamp nội dung 2 dòng bằng div bên trong td (an toàn cho layout bảng) --- */
+/* style cho div chứa nội dung (áp dụng clamp 2 dòng) */
+td .clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;        /* giới hạn 2 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;          /* cho phép xuống dòng */
+  word-wrap: break-word;
+  line-height: 1.2em;           
+  max-height: calc(1.2em * 2);  
+}
+
+/* đảm bảo td vẫn giữ display table-cell */
+td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
+  padding-left: 8px;
+  text-align: left;
+}
+</style>
+
 /* Giới hạn tối đa 2 dòng cho Ghi chú và Sửa chữa, phần dư ẩn với ellipsis */
 /* Giới hạn tối đa 2 dòng cho Ghi chú, Sửa chữa, Nơi mua */
 td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
@@ -288,13 +313,14 @@ function renderTable() {
     if (show) {
       const tr = document.createElement('tr');
       tr.dataset.index = idx;
+
       tr.innerHTML = `
         <td>${idx + 1}</td>
         <td class="col-so-the">${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
         <td>${safeText(r.loaiMay)}</td>
         <td>${safeText(r.viTri)}</td>
-        <td class="col-ghi-chu">${r.ghiChu ? safeText(r.ghiChu) : ''}</td>
+        <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
         <td>
           <button data-act="edit" data-i="${idx}">✏️</button>
           <button data-act="qr" data-i="${idx}">🔗</button>
@@ -302,18 +328,18 @@ function renderTable() {
         <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
         <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
         <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
-        <td class="col-noi-mua">${r.noiMua ? safeText(r.noiMua) : ''}</td>
+        <td class="col-noi-mua"><div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div></td>
         <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
         <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
-        <td class="col-sua-chua">${r.suaChua ? safeText(r.suaChua) : ''}</td>
+        <td class="col-sua-chua"><div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div></td>
       `;
+
       tbody.appendChild(tr);
     }
   });
 }
-
 
 // ==== LOAD DATA JSONP ====
 function loadData(){
