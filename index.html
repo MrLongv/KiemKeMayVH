@@ -526,10 +526,13 @@ function openEditModal(idx) {
     m_bdQ2.checked = !!r.bdQ2;
     m_bdQ3.checked = !!r.bdQ3;
     m_bdQ4.checked = !!r.bdQ4;
-    m_bdQ1_ngay.value = r.bdQ1_ngay || '';
-    m_bdQ2_ngay.value = r.bdQ2_ngay || '';
-    m_bdQ3_ngay.value = r.bdQ3_ngay || '';
-    m_bdQ4_ngay.value = r.bdQ4_ngay || '';
+
+    // ==== SỬA ĐỔI Ở ĐÂY ====
+    m_bdQ1_ngay.value = r.bdNgayQ1 || '';
+    m_bdQ2_ngay.value = r.bdNgayQ2 || '';
+    m_bdQ3_ngay.value = r.bdNgayQ3 || '';
+    m_bdQ4_ngay.value = r.bdNgayQ4 || '';
+
     m_suaChua.value = r.suaChua || '';
   }
 
