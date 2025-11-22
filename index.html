@@ -418,21 +418,47 @@ function loadData(){
 
 // ==== AUTO SYNC ROW ====
 function autoSyncRow(i){
-  if(i==null||!allData[i]) return;
-  const row=allData[i];
-  const encoded=encodeURIComponent(JSON.stringify(row));
-  const cb='__auto_cb_'+Date.now();
-  window[cb]=function(res){
-    try{
-      if(res&&res.success) setStatus('✅ Đã lưu dòng '+(i+1));
-      else setStatus('❌ Lỗi lưu dòng '+(i+1),false);
-    } finally { delete window[cb]; script.remove(); }
+  if(i == null || !allData[i]) return;
+  const rowData = allData[i];
+
+  // chuẩn bị dữ liệu để gửi lên sheet, bao gồm cả ngày bảo dưỡng
+  const payload = {
+    soThe: rowData.soThe || "",
+    soMay: rowData.soMay || "",
+    loaiMay: rowData.loaiMay || "",
+    viTri: rowData.viTri || "",
+    ghiChu: rowData.ghiChu || "",
+    daKiemKe: !!rowData.daKiemKe,
+    chonIn: !!rowData.chonIn,
+    ngayMua: rowData.ngayMua || "",
+    noiMua: rowData.noiMua || "",
+    bdQ1: !!rowData.bdQ1,
+    bdQ2: !!rowData.bdQ2,
+    bdQ3: !!rowData.bdQ3,
+    bdQ4: !!rowData.bdQ4,
+    bdNgayQ1: rowData.bdNgayQ1 || "",
+    bdNgayQ2: rowData.bdNgayQ2 || "",
+    bdNgayQ3: rowData.bdNgayQ3 || "",
+    bdNgayQ4: rowData.bdNgayQ4 || "",
+    suaChua: rowData.suaChua || ""
   };
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?update=1&row='+(i+1)+'&data='+encoded+'&callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{console.warn('⚠️ AutoSync lỗi mạng'); delete window[cb]; script.remove();};
+
+  const cb = '__auto_cb_' + Date.now();
+  window[cb] = function(res){
+    try {
+      if(res && res.success) setStatus('✅ Đã lưu dòng '+(i+1));
+      else setStatus('❌ Lỗi lưu dòng '+(i+1), false);
+    } finally {
+      delete window[cb];
+      script.remove();
+    }
+  };
+
+  const script = document.createElement('script');
+  script.src = GAS_URL+'?update=1&row='+(i+1)+'&data='+encodeURIComponent(JSON.stringify(payload))+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
 }
+
 
 // ==== EVENTS ====
 filterBox.addEventListener('change',renderTable);
@@ -549,57 +575,40 @@ function closeModal(){
 document.getElementById('cancelBtn').onclick=closeModal;
 
 document.getElementById('saveBtn').onclick = () => {
-  const soTheVal = m_soThe.value.trim();
-  if (!soTheVal) { alert('Số thẻ không được để trống'); m_soThe.focus(); return; }
-
-  // format ngày mua
-  let ngayMuaFormatted = '';
-  const inputVal = m_ngayMua.value.trim();
-  if (inputVal) {
-    const parts = inputVal.split('/');
-    if (parts.length === 3) {
-      let dd = parts[0].padStart(2,'0'), mm = parts[1].padStart(2,'0'), yyyy = parts[2];
-      if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) { alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy'); m_ngayMua.focus(); return; }
-      ngayMuaFormatted = `${dd}/${mm}/${yyyy}`;
-    } else { alert('Ngày mua không hợp lệ, dùng dd/MM/yyyy'); m_ngayMua.focus(); return; }
-  } else if (editingIndex !== null && allData[editingIndex].ngayMua) {
-    ngayMuaFormatted = allData[editingIndex].ngayMua;
+  if(editingIndex === null) {
+    // thêm mới
+    editingIndex = allData.length;
   }
 
-  // dữ liệu bảo dưỡng Q1..Q4
-  const bdNgayObj = {
-    Q1: m_bdQ1_ngay.value.trim(),
-    Q2: m_bdQ2_ngay.value.trim(),
-    Q3: m_bdQ3_ngay.value.trim(),
-    Q4: m_bdQ4_ngay.value.trim()
-  };
-
-  const obj = {
-    soThe: soTheVal,
+  // lấy giá trị từ modal
+  const r = {
+    soThe: m_soThe.value.trim(),
     soMay: m_soMay.value.trim(),
     loaiMay: m_loaiMay.value.trim(),
     viTri: m_viTri.value.trim(),
     ghiChu: m_ghiChu.value.trim(),
     daKiemKe: m_daKiemKe.checked,
     chonIn: m_chonIn.checked,
-    ngayMua: ngayMuaFormatted,
+    ngayMua: m_ngayMua.value.trim(),
     noiMua: m_noiMua.value.trim(),
-    bdQ1: !!m_bdQ1.checked,
-    bdQ2: !!m_bdQ2.checked,
-    bdQ3: !!m_bdQ3.checked,
-    bdQ4: !!m_bdQ4.checked,
-    bdNgay: JSON.stringify(bdNgayObj),
+    bdQ1: m_bdQ1.checked,
+    bdQ2: m_bdQ2.checked,
+    bdQ3: m_bdQ3.checked,
+    bdQ4: m_bdQ4.checked,
+    bdNgayQ1: m_bdQ1_ngay.value.trim(),
+    bdNgayQ2: m_bdQ2_ngay.value.trim(),
+    bdNgayQ3: m_bdQ3_ngay.value.trim(),
+    bdNgayQ4: m_bdQ4_ngay.value.trim(),
     suaChua: m_suaChua.value.trim()
   };
 
-  if (editingIndex === null) {
-    allData.push(obj);
-    autoSyncRow(allData.length - 1);
-  } else {
-    allData[editingIndex] = obj;
-    autoSyncRow(editingIndex);
-  }
+  // lưu vào allData
+  allData[editingIndex] = r;
 
+  // gửi auto sync lên sheet
+  autoSyncRow(editingIndex);
+
+  // đóng modal & render lại bảng
   closeModal();
   renderTable();
   highlightFromHash();
