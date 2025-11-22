@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
-
 header {
   display: flex;
   justify-content: center;
@@ -26,7 +25,6 @@ header {
 .controls button{background:#0b74d1;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
 .controls button.ghost{background:#eee;color:#333}
 .note{padding:8px 12px;color:#666;font-size:13px}
-
 .table-wrap {
   display: block;
   width: 100%;
@@ -36,21 +34,19 @@ header {
 }
 
 table {
-  min-width: 1200px;
+  min-width: 1200px;  /* đảm bảo bảng đủ rộng để chứa tất cả cột */
   border-collapse: collapse;
   background: #fff;
 }
-
 th, td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
-  white-space: nowrap;
+  white-space: nowrap;  /* không xuống dòng */
 }
 
 th{background:#0b74d1;color:#fff}
 tr.highlight{background:#ffeaa7 !important}
-
 .modal {
   display: none;
   position: fixed;
@@ -61,7 +57,6 @@ tr.highlight{background:#ffeaa7 !important}
   align-items: center;
   justify-content: center;
 }
-
 .modal .card {
   background: #fff;
   padding: 16px;
@@ -70,9 +65,9 @@ tr.highlight{background:#ffeaa7 !important}
   max-width: 95%;
   max-height: 80vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
-
 body.modal-open {
   position: fixed;
   width: 100%;
@@ -80,66 +75,16 @@ body.modal-open {
   height: 100%;
   top: 0;
 }
-
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-
-/* clamp 2 dòng cho ghi chú / sửa chữa / nơi mua */
-td .clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal;
-  word-wrap: break-word;
-  line-height: 1.2em;
-  max-height: calc(1.2em * 2);
-}
-
-td.col-ghi-chu,
-td.col-sua-chua,
-td.col-noi-mua {
-  text-align:left;
-  padding-left:8px;
-}
-
-/* table header center */
-th input[type="checkbox"] {
-  transform: scale(1.2);
-  margin-top:4px;
-}
-
-/* table Q1–Q4 checkbox center */
-td.bdQ input[type="checkbox"] {
-  transform: scale(1.1);
-  margin:0 auto;
-  display:block;
-}
-
-/* modal Q1–Q4 */
-.modal .bdQ-group{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
-  justify-content:center;
-}
-.modal .bdQ-group input[type=checkbox]{
-  transform: scale(1.2);
-  margin:0;
-  vertical-align:middle;
-}
-
-/* responsive */
 @media(max-width:920px){
+  /* make maintenance columns wrap nicer on narrow screens */
   .table-wrap{overflow:auto}
 }
-@media(max-width:640px){
-  .controls{flex-direction:column;align-items:stretch}
-  .controls input[type="text"],.controls select{width:100%}
-}
+@media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
+.highlight-row { background: yellow !important; transition: background 0.2s; }
+.small-checkbox{transform:scale(1);margin:0}
 </style>
 </head>
 <body>
@@ -166,6 +111,7 @@ td.bdQ input[type="checkbox"] {
 <div class="table-wrap">
   <table id="dataTable">
     <thead>
+      <!-- Row 1: parent headers (Bảo dưỡng is a parent spanning 4) -->
       <tr>
         <th rowspan="2">STT</th>
         <th rowspan="2">Số thẻ</th>
@@ -174,18 +120,23 @@ td.bdQ input[type="checkbox"] {
         <th rowspan="2">Vị trí</th>
         <th rowspan="2">Ghi chú</th>
         <th rowspan="2">Hành động</th>
-        <th rowspan="2">Đã KK<br><input type="checkbox" id="checkAllKK"></th>
-        <th rowspan="2">In QR<br><input type="checkbox" id="checkAllQR"></th>
+        <th rowspan="2" style="text-align:center;">
+          Đã KK<br><input type="checkbox" id="checkAllKK">
+        </th>
+        <th rowspan="2" style="text-align:center;">
+          In QR<br><input type="checkbox" id="checkAllQR">
+        </th>
         <th rowspan="2">Ngày mua</th>
         <th rowspan="2">Nơi mua</th>
         <th colspan="4">Bảo dưỡng</th>
         <th rowspan="2">Sửa chữa</th>
       </tr>
+      <!-- Row 2: Q1..Q4 -->
       <tr>
-        <th> </th>
-        <th> </th>
-        <th> </th>
-        <th> </th>
+        <th>Q1</th>
+        <th>Q2</th>
+        <th>Q3</th>
+        <th>Q4</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -202,19 +153,21 @@ td.bdQ input[type="checkbox"] {
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
     <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
     <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
-    <label>Ngày mua</label><input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
+    <label>Ngày mua</label>
+    <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
-
-    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (Q1–Q4)</label>
-    <div class="bdQ-group">
-      <input type="checkbox" id="m_bdQ1">
-      <input type="checkbox" id="m_bdQ2">
-      <input type="checkbox" id="m_bdQ3">
-      <input type="checkbox" id="m_bdQ4">
+    <!-- NEW: Bảo dưỡng Q1..Q4 -->
+    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ1" /> Q1</label>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ2" /> Q2</label>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ3" /> Q3</label>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="m_bdQ4" /> Q4</label>
     </div>
 
+    <!-- NEW: Sửa chữa text -->
     <label style="margin-top:10px">Sửa chữa</label>
-    <textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa"></textarea>
+    <textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa (vd: thay motor, thay dây...)"></textarea>
 
     <div class="actions">
       <button id="cancelBtn" class="ghost">Hủy</button>
@@ -222,15 +175,6 @@ td.bdQ input[type="checkbox"] {
     </div>
   </div>
 </div>
-  
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-// === Tất cả JS cũ của bạn giữ nguyên ===
-// loadData, renderTable, modal, autoSyncRow, highlightFromHash, print, checkbox all, filter/search, pwd lock...
-// Bạn copy toàn bộ JS từ file gốc vào đây. Không cần thay đổi gì
-</script>
-</body>
-</html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
@@ -305,49 +249,55 @@ modal.style.display = 'none';
 
 // ==== RENDER BẢNG ====
 function renderTable(){
+  const filter=filterBox.value;
+  const search=(searchBox.value||'').toLowerCase();
   tbody.innerHTML='';
   allData.forEach((r,idx)=>{
-    const tr=document.createElement('tr');
-    tr.dataset.index=idx;
-    tr.innerHTML=`
-      <td>${idx+1}</td>
-      <td class="col-so-the">${r.soThe||''}</td>
-      <td>${r.soMay||''}</td>
-      <td>${r.loaiMay||''}</td>
-      <td>${r.viTri||''}</td>
-      <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu||''}</div></td>
-      <td>
-        <button data-act="edit" data-i="${idx}">✏️</button>
-        <button data-act="qr" data-i="${idx}">🔗</button>
-      </td>
-      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-      <td>${r.ngayMua||''}</td>
-      <td class="col-noi-mua"><div class="clamp-2">${r.noiMua||''}</div></td>
-      <td class="bdQ"><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1?'checked':''}></td>
-      <td class="bdQ"><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2?'checked':''}></td>
-      <td class="bdQ"><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3?'checked':''}></td>
-      <td class="bdQ"><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
-      <td class="col-sua-chua"><div class="clamp-2">${r.suaChua||''}</div></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  highlightFromHash(); // highlight QR scan sau khi render xong
-}
+    let show=true;
+    if(filter==='daKiemKe'&&!r.daKiemKe) show=false;
+    if(filter==='chuaKiemKe'&&r.daKiemKe) show=false;
+    if(filter==='daIn'&&!r.chonIn) show=false;
+    if(filter==='chuaIn'&&r.chonIn) show=false;
+    if (search){
+      const haystack = [
+        r.soThe, r.soMay, r.loaiMay, r.viTri, r.ghiChu, r.noiMua, r.ngayMua, r.suaChua,
+        r.bdQ1, r.bdQ2, r.bdQ3, r.bdQ4
+      ].map(x => (x||'').toString().toLowerCase()).join(' ');
+      if (!haystack.includes(search)) show = false;
+    }
 
-// highlight QR
-function highlightFromHash(){
-  const code=location.hash.slice(1);
-  if(!code) return;
-  document.querySelectorAll('#dataTable tbody tr').forEach(tr=>{
-    tr.classList.remove('highlight-row');
-    const soThe=tr.querySelector('.col-so-the');
-    if(soThe && soThe.textContent.trim()===code){
-      tr.classList.add('highlight-row');
-      tr.scrollIntoView({behavior:'smooth',block:'center'});
+    if(show){
+      const tr=document.createElement('tr'); tr.dataset.index=idx;
+      tr.innerHTML=`
+        <td>${idx+1}</td>
+        <td class="col-so-the">${safeText(r.soThe)}</td>
+        <td>${safeText(r.soMay)}</td>
+        <td>${safeText(r.loaiMay)}</td>
+        <td>${safeText(r.viTri)}</td>
+        <td>${safeText(r.ghiChu)}</td>
+        <td>
+          <button data-act="edit" data-i="${idx}">✏️</button>
+          <button data-act="qr" data-i="${idx}">🔗</button>
+        </td>
+        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+        <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+        <td>${r.ngayMua?formatDateDDMMYYYY(r.ngayMua):''}</td>
+        <td>${safeText(r.noiMua)}</td>
+
+        <!-- Bảo dưỡng Q1..Q4 -->
+        <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1?'checked':''}></td>
+        <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2?'checked':''}></td>
+        <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3?'checked':''}></td>
+        <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4?'checked':''}></td>
+
+        <!-- Sửa chữa (text) -->
+        <td class="col-sua-chua" style="text-align:left;padding-left:8px">${safeText(r.suaChua)}</td>
+      `;
+      tbody.appendChild(tr);
     }
   });
 }
+
 // ==== LOAD DATA JSONP ====
 function loadData(){
   setStatus('Đang tải dữ liệu...');
