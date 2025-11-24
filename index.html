@@ -146,7 +146,7 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
 <header>📋 Kiểm kê máy Việt Hồng</header>
 
 <div class="controls">
-  <input id="searchBox" type="text" placeholder="🔍 Gõ nội dung " />
+  <input id="searchBox" type="text" placeholder="🔍 Tìm kiếm tất cả !" />
   <select id="filterBox">
     <option value="all">📋 Hiện tất cả</option>
     <option value="daKiemKe">✅ Đã kiểm kê</option>
@@ -188,10 +188,18 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
       </tr>
       <!-- Row 2: Q1..Q4 -->
       <tr>
-        <th>Q1</th>
-        <th>Q2</th>
-        <th>Q3</th>
-        <th>Q4</th>
+       <th>
+    Q1<br><input type="checkbox" id="checkAllQ1">
+  </th>
+  <th>
+    Q2<br><input type="checkbox" id="checkAllQ2">
+  </th>
+  <th>
+    Q3<br><input type="checkbox" id="checkAllQ3">
+  </th>
+  <th>
+    Q4<br><input type="checkbox" id="checkAllQ4">
+  </th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -734,37 +742,46 @@ document.getElementById("checkAllQR").addEventListener("change", function() {
   });
   renderTable();
 });
-// Q1
-document.getElementById("chkAllQ1").onclick = (e) => {
-  const v = e.target.checked;
-  allData.forEach(r => r.bdQ1 = v);
+// Check / Uncheck tất cả Q1..Q4
+document.getElementById("checkAllQ1").addEventListener("change", function() {
+  document.querySelectorAll(".bdQ1").forEach(cb => {
+    cb.checked = this.checked;
+    const idx = Number(cb.closest("tr").dataset.index);
+    allData[idx].bdQ1 = this.checked;
+    autoSyncRow(idx);
+  });
   renderTable();
-  saveAll();
-};
+});
 
-// Q2
-document.getElementById("chkAllQ2").onclick = (e) => {
-  const v = e.target.checked;
-  allData.forEach(r => r.bdQ2 = v);
+document.getElementById("checkAllQ2").addEventListener("change", function() {
+  document.querySelectorAll(".bdQ2").forEach(cb => {
+    cb.checked = this.checked;
+    const idx = Number(cb.closest("tr").dataset.index);
+    allData[idx].bdQ2 = this.checked;
+    autoSyncRow(idx);
+  });
   renderTable();
-  saveAll();
-};
+});
 
-// Q3
-document.getElementById("chkAllQ3").onclick = (e) => {
-  const v = e.target.checked;
-  allData.forEach(r => r.bdQ3 = v);
+document.getElementById("checkAllQ3").addEventListener("change", function() {
+  document.querySelectorAll(".bdQ3").forEach(cb => {
+    cb.checked = this.checked;
+    const idx = Number(cb.closest("tr").dataset.index);
+    allData[idx].bdQ3 = this.checked;
+    autoSyncRow(idx);
+  });
   renderTable();
-  saveAll();
-};
+});
 
-// Q4
-document.getElementById("chkAllQ4").onclick = (e) => {
-  const v = e.target.checked;
-  allData.forEach(r => r.bdQ4 = v);
+document.getElementById("checkAllQ4").addEventListener("change", function() {
+  document.querySelectorAll(".bdQ4").forEach(cb => {
+    cb.checked = this.checked;
+    const idx = Number(cb.closest("tr").dataset.index);
+    allData[idx].bdQ4 = this.checked;
+    autoSyncRow(idx);
+  });
   renderTable();
-  saveAll();
-};
+});
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
