@@ -103,7 +103,7 @@ td .clamp-2 {
 
 /* đảm bảo td vẫn giữ display table-cell (không override) */
 /* (nếu bạn trước đó thêm min-height vào td thì hãy xóa rule đó) */
-td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
+td.col-sua-chua, td.col-noi-mua {
   /* chỉ dùng để căn padding / text-align, KHÔNG đổi display */
   padding-left: 8px;
   text-align: left;
@@ -147,6 +147,25 @@ td.col-so-may {
 td.col-so-may .clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;  /* giới hạn 2 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2em;
+  max-height: calc(1.2em * 2);
+}
+/* Cố định cột Ghi chú */
+td.col-ghi-chu {
+  max-width: 180px;       /* bạn chỉnh width tùy ý */
+  min-width: 120px;
+  white-space: normal;    /* cho phép xuống dòng */
+  word-break: break-word;
+  overflow: hidden;
+}
+
+/* Clamp 2 dòng bên trong div */
+td.col-ghi-chu .clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;  
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
