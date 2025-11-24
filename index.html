@@ -734,6 +734,37 @@ document.getElementById("checkAllQR").addEventListener("change", function() {
   });
   renderTable();
 });
+// Q1
+document.getElementById("chkAllQ1").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ1 = v);
+  renderTable();
+  saveAll();
+};
+
+// Q2
+document.getElementById("chkAllQ2").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ2 = v);
+  renderTable();
+  saveAll();
+};
+
+// Q3
+document.getElementById("chkAllQ3").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ3 = v);
+  renderTable();
+  saveAll();
+};
+
+// Q4
+document.getElementById("chkAllQ4").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ4 = v);
+  renderTable();
+  saveAll();
+};
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
