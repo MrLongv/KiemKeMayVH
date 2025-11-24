@@ -121,6 +121,20 @@ td.colLoaiMay .clamp-2 {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+td.col-vi-tri {
+  max-width: 140px;       /* giới hạn width, tùy chỉnh */
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+td.col-vi-tri .clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;      /* clamp 2 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* --- Bảo dưỡng modal Q1..Q4 --- */
 .modal-bao-duong {
@@ -377,7 +391,9 @@ function renderTable() {
         <td class="colLoaiMay">
         <div class="clamp-2">${safeText(r.loaiMay)}</div>
         </td>
-        <td>${safeText(r.viTri)}</td>
+        <td class="col-vi-tri">
+        <div class="clamp-2">${r.viTri ? safeText(r.viTri) : ''}</div>
+        </td>
         <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
         <td>
           <button data-act="edit" data-i="${idx}">✏️</button>
