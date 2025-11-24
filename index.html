@@ -332,36 +332,46 @@ else {
 modal.style.display = 'none';
 // =======================
 // CHECK ALL BẢO DƯỠNG
-// Q1
-document.getElementById("chkAllQ1").onclick = (e) => {
+document.getElementById("bdAllQ1").onclick = (e) => {
   const v = e.target.checked;
-  allData.forEach(r => r.bdQ1 = v);
+
+  allData.forEach((r, idx) => {
+    r.bdQ1 = v;
+    autoSyncRow(idx);   // 🔥 GIỐNG HỆ “ĐÃ KK” & “IN QR”
+  });
+
   renderTable();
-  saveAll();
+};
+document.getElementById("bdAllQ2").onclick = (e) => {
+  const v = e.target.checked;
+
+  allData.forEach((r, idx) => {
+    r.bdQ2 = v;
+    autoSyncRow(idx);
+  });
+
+  renderTable();
+};
+document.getElementById("bdAllQ3").onclick = (e) => {
+  const v = e.target.checked;
+
+  allData.forEach((r, idx) => {
+    r.bdQ3 = v;
+    autoSyncRow(idx);
+  });
+
+  renderTable();
 };
 
-// Q2
-document.getElementById("chkAllQ2").onclick = (e) => {
+document.getElementById("bdAllQ4").onclick = (e) => {
   const v = e.target.checked;
-  allData.forEach(r => r.bdQ2 = v);
-  renderTable();
-  saveAll();
-};
 
-// Q3
-document.getElementById("chkAllQ3").onclick = (e) => {
-  const v = e.target.checked;
-  allData.forEach(r => r.bdQ3 = v);
-  renderTable();
-  saveAll();
-};
+  allData.forEach((r, idx) => {
+    r.bdQ4 = v;
+    autoSyncRow(idx);
+  });
 
-// Q4
-document.getElementById("chkAllQ4").onclick = (e) => {
-  const v = e.target.checked;
-  allData.forEach(r => r.bdQ4 = v);
   renderTable();
-  saveAll();
 };
 
 // ==== RENDER BẢNG ====
