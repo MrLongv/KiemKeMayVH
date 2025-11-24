@@ -18,7 +18,6 @@ header {
   font-weight: bold;
   letter-spacing: 1px;
 }
-
 .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
 .controls input[type="text"]{padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:220px}
 .controls select{padding:6px 8px;border:1px solid #ccc;border-radius:4px;}
@@ -243,10 +242,15 @@ td.col-noi-mua .clamp-2 {
   <button id="btnSync">☁️ Đồng bộ lên Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
   <button id="btnPrint">🖨️ In tem QR</button>
-  <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
+    <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 <div id="searchInfo" style="margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
 <div class="note"> Các thông tin chỉnh sửa trên điện thoại tự lưu, dùng máy tính thì bấm F5 load lại dữ liệu</div>
+<div style="margin-bottom:8px;">
+  <label>Số thẻ: <input type="text" id="soThePrint" style="width:100px;"></label>
+  <button id="btnPrintLyLich">🖨️ In lý lịch</button>
+  <span id="printStatus" style="margin-left:10px;color:green;"></span>
+</div>
 
 <div class="table-wrap">
   <table id="dataTable">
