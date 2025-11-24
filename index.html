@@ -34,10 +34,14 @@ header {
 }
 
 table {
-  min-width: 1200px;  /* đảm bảo bảng đủ rộng để chứa tất cả cột */
+  min-width: 1200px;  /* đã có */
   border-collapse: collapse;
   background: #fff;
+
+  table-layout: fixed; /* ✅ cố định bố cục cột */
+  width: 100%;         /* chiếm full width trong table-wrap */
 }
+
 th, td {
   border: 1px solid #ddd;
   padding: 8px;
@@ -106,12 +110,18 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
   padding-left: 8px;
   text-align: left;
 }
-  td.colLoaiMay {
-  width: 300px !important;
-  max-width: 300px;
-  padding-left: 8px;
-  text-align: left;
+ td.colLoaiMay {
+  max-width: 300px;       /* lớn nhất 300px */
+  min-width: 120px;       /* nhỏ nhất 120px */
   white-space: normal;
+  word-break: break-word;
+}
+td.colLoaiMay .clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- Bảo dưỡng modal Q1..Q4 --- */
