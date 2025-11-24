@@ -332,30 +332,32 @@ else {
 modal.style.display = 'none';
 // =======================
 // CHECK ALL BẢO DƯỠNG
-// =======================
-
-document.getElementById("bdAllQ1").onclick = (e) => {
+// Q1
+document.getElementById("chkAllQ1").onclick = (e) => {
   const v = e.target.checked;
   allData.forEach(r => r.bdQ1 = v);
   renderTable();
   saveAll();
 };
 
-document.getElementById("bdAllQ2").onclick = (e) => {
+// Q2
+document.getElementById("chkAllQ2").onclick = (e) => {
   const v = e.target.checked;
   allData.forEach(r => r.bdQ2 = v);
   renderTable();
   saveAll();
 };
 
-document.getElementById("bdAllQ3").onclick = (e) => {
+// Q3
+document.getElementById("chkAllQ3").onclick = (e) => {
   const v = e.target.checked;
   allData.forEach(r => r.bdQ3 = v);
   renderTable();
   saveAll();
 };
 
-document.getElementById("bdAllQ4").onclick = (e) => {
+// Q4
+document.getElementById("chkAllQ4").onclick = (e) => {
   const v = e.target.checked;
   allData.forEach(r => r.bdQ4 = v);
   renderTable();
