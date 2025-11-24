@@ -106,6 +106,17 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
   padding-left: 8px;
   text-align: left;
 }
+  td.colLoaiMay {
+  max-width: 140px;
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;       /* Giới hạn 2 dòng */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
 /* --- Bảo dưỡng modal Q1..Q4 --- */
 .modal-bao-duong {
   display: flex;
@@ -358,7 +369,7 @@ function renderTable() {
         <td>${idx + 1}</td>
         <td class="col-so-the">${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
-        <td>${safeText(r.loaiMay)}</td>
+        <td class="colLoaiMay">${r.loaiMay || ""}</td>
         <td>${safeText(r.viTri)}</td>
         <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
         <td>
