@@ -367,7 +367,7 @@ function renderTable() {
         <td class="col-so-the">${safeText(r.soThe)}</td>
         <td>${safeText(r.soMay)}</td>
         <td class="colLoaiMay">
-        <div class="clamp-2">${row.loaiMay}</div>
+        <div class="clamp-2">${safeText(r.loaiMay)}</div>
         </td>
         <td>${safeText(r.viTri)}</td>
         <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
