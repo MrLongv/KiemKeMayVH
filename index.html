@@ -188,10 +188,23 @@ td.col-ghi-chu, td.col-sua-chua, td.col-noi-mua {
       </tr>
       <!-- Row 2: Q1..Q4 -->
       <tr>
-        <th>Q1</th>
-        <th>Q2</th>
-        <th>Q3</th>
-        <th>Q4</th>
+        <th>
+  Q1<br>
+  <input type="checkbox" id="bdAllQ1">
+</th>
+<th>
+  Q2<br>
+  <input type="checkbox" id="bdAllQ2">
+</th>
+<th>
+  Q3<br>
+  <input type="checkbox" id="bdAllQ3">
+</th>
+<th>
+  Q4<br>
+  <input type="checkbox" id="bdAllQ4">
+</th>
+
       </tr>
     </thead>
     <tbody></tbody>
@@ -317,16 +330,45 @@ else {
   };
 }
 modal.style.display = 'none';
+// =======================
+// CHECK ALL BẢO DƯỠNG
+// =======================
+
+document.getElementById("bdAllQ1").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ1 = v);
+  renderTable();
+  saveAll();
+};
+
+document.getElementById("bdAllQ2").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ2 = v);
+  renderTable();
+  saveAll();
+};
+
+document.getElementById("bdAllQ3").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ3 = v);
+  renderTable();
+  saveAll();
+};
+
+document.getElementById("bdAllQ4").onclick = (e) => {
+  const v = e.target.checked;
+  allData.forEach(r => r.bdQ4 = v);
+  renderTable();
+  saveAll();
+};
 
 // ==== RENDER BẢNG ====
 function renderTable() {
   tbody.innerHTML = '';
   const filter = filterBox.value;
   const search = (searchBox.value || '').toLowerCase();
-
   allData.forEach((r, idx) => {
     let show = true;
-
     // filter theo checkbox
     if (filter === 'daKiemKe' && !r.daKiemKe) show = false;
     if (filter === 'chuaKiemKe' && r.daKiemKe) show = false;
