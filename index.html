@@ -522,6 +522,56 @@ function autoSyncRow(i){
   script.src = GAS_URL+'?update=1&row='+(i+1)+'&data='+encodeURIComponent(JSON.stringify(payload))+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
 }
+  function saveAllCheckAll(){
+  const payload=allData.map(r=>({
+    soThe: r.soThe || "",
+    soMay: r.soMay || "",
+    loaiMay: r.loaiMay || "",
+    viTri: r.viTri || "",
+    ghiChu: r.ghiChu || "",
+    daKiemKe: !!r.daKiemKe,
+    chonIn: !!r.chonIn,
+    ngayMua: r.ngayMua || "",
+    noiMua: r.noiMua || "",
+    bdQ1: !!r.bdQ1,
+    bdQ2: !!r.bdQ2,
+    bdQ3: !!r.bdQ3,
+    bdQ4: !!r.bdQ4,
+    bdNgayQ1: r.bdNgayQ1 || "",
+    bdNgayQ2: r.bdNgayQ2 || "",
+    bdNgayQ3: r.bdNgayQ3 || "",
+    bdNgayQ4: r.bdNgayQ4 || "",
+    suaChua: r.suaChua || ""
+  }));
+  const encoded=encodeURIComponent(JSON.stringify(payload));
+  const cb='__sync_cb_'+Date.now();
+  window[cb]=function(res){
+    try{
+      if(res && res.success) setStatus('✅ Đã lưu Check All');
+      else setStatus('❌ Lỗi lưu Check All', false);
+    }finally{delete window[cb]; script.remove();}
+  };
+  const script=document.createElement('script');
+  script.src=GAS_URL+'?updateAll=1&data='+encoded+'&callback='+cb+'&_='+Date.now();
+  document.head.appendChild(script);
+}
+function bindCheckAll(id, field){
+  document.getElementById(id).addEventListener('change', e=>{
+    const v = e.target.checked;
+    allData.forEach(r => r[field] = v);
+    renderTable();
+    saveAllCheckAll(); // 🔥 chỉ 1 request cho cả bảng
+  });
+}
+
+// Check All Q1–Q4, Đã KK, In QR
+bindCheckAll("checkAllKK", "daKiemKe");
+bindCheckAll("checkAllQR", "chonIn");
+bindCheckAll("bdAllQ1", "bdQ1");
+bindCheckAll("bdAllQ2", "bdQ2");
+bindCheckAll("bdAllQ3", "bdQ3");
+bindCheckAll("bdAllQ4", "bdQ4");
+
 // ==== EVENTS ====
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
