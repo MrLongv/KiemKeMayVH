@@ -817,6 +817,7 @@ w.document.write('</style></head><body>');
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soThe = document.getElementById('soThePrint').value.trim();
   if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
+
   const row = allData.find(r => r.soThe == soThe);
   if(!row) { alert('Không tìm thấy số thẻ này'); return; }
 
@@ -826,35 +827,38 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.document.write(`
     body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
     h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
-    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
-    table {border-collapse: collapse; width: 100%;}
+    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;}
+    table {border-collapse: collapse; width: 100%; margin-top: 10px;}
     th, td {border: 1px solid #ccc; padding: 8px 12px;}
     th {background-color: #f0f0f0; text-align: left; width: 30%;}
     td {text-align: left;}
     tr:nth-child(even) td {background-color: #fafafa;}
     td.center {text-align: center;}
-    .qr {display:block; margin: 15px auto; width:150px; height:150px;}
+    .qr-container {text-align:center; margin:20px 0;}
     @media print {
       body {margin: 10mm;}
       h1 {font-size: 24px;}
       h2 {font-size: 20px;}
-      .qr {width:120px; height:120px;}
     }
   `);
   w.document.write('</style>');
   w.document.write('</head><body>');
 
-  // Tiêu đề công ty + Lý lịch
+  // Tiêu đề
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
 
-  // QR code (nếu cần)
-  if(row.chonIn){ // hoặc row.qrCode nếu bạn lưu link QR
-    w.document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${soThe}" class="qr" alt="QR Code">`);
+  // Chèn QR code ở giữa
+  if(row.qrData) {
+    w.document.write('<div class="qr-container">');
+    w.document.write('<img src="'+row.qrData+'" style="width:150px; height:150px;" />');
+    w.document.write('</div>');
   }
 
-  // Bảng dữ liệu nguyên bản
+  // Bảng dữ liệu
   w.document.write('<table>');
+
+  // Các trường dữ liệu
   const fields = [
     ['Số thẻ', row.soThe],
     ['Số máy', row.soMay],
@@ -865,18 +869,21 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['In QR', row.chonIn?'✅':'❌'],
     ['Ngày mua', row.ngayMua],
     ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
+    ['Bảo dưỡng Q1', (row.bdQ1?'✅':'') + ' ' + (row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', (row.bdQ2?'✅':'') + ' ' + (row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', (row.bdQ3?'✅':'') + ' ' + (row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', (row.bdQ4?'✅':'') + ' ' + (row.bdNgayQ4||'')],
     ['Sửa chữa', row.suaChua]
   ];
+
+  // In các dòng
   fields.forEach(f => {
     w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
   });
-  w.document.write('</table>');
 
+  w.document.write('</table>');
   w.document.write('</body></html>');
+
   w.document.close();
   w.focus();
   w.print();
