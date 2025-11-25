@@ -816,20 +816,25 @@ w.document.write('</style></head><body>');
 };
 const soThe = document.getElementById('soThePrint').value.trim();
 let machines;
+
 if(!soThe){
-  // nếu bỏ trống → in tất cả
+  // Nếu bỏ trống → in tất cả
   machines = allData;
 } else {
   machines = allData.filter(r => r.soThe == soThe);
-  if(machines.length === 0){ alert('Không tìm thấy máy với số thẻ này'); return; }
+  if(machines.length === 0){ 
+    alert('Không tìm thấy máy với số thẻ này'); 
+    return; 
+  }
 }
 
-  // Tạo nội dung HTML cho Word
+// Lặp qua từng máy để tạo và tải file Word
+machines.forEach(r => {
   const content = `
     <html xmlns:o='urn:schemas-microsoft-com:office:office'
           xmlns:w='urn:schemas-microsoft-com:office:word'
           xmlns='http://www.w3.org/TR/REC-html40'>
-    <head><meta charset='utf-8'><title>Ly Lich May</title></head>
+    <head><meta charset='utf-8'><title>Lý lịch máy</title></head>
     <body>
       <h2>📋 Lý lịch máy VH-${r.soThe}</h2>
       <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
@@ -860,7 +865,8 @@ if(!soThe){
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-};
+});
+
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
