@@ -821,78 +821,70 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   const row = allData.find(r => r.soThe == soThe);
   if(!row) { alert('Không tìm thấy số thẻ này'); return; }
 
-  // --- Tạo đúng URL QR như hệ thống đang dùng ---
+  // --- Tạo URL QR giống hệt hệ thống đang dùng ---
   const qrURL = `https://mrlongv.github.io/KiemKeMayVH/#${soThe}`;
 
-  // --- Tạo QR code tạm bằng canvas để in ---
-  const tempCanvas = document.createElement("canvas");
-  QRCode.toCanvas(tempCanvas, qrURL, { width: 180 }, function (error) {
-    if (error) {
-      console.error(error);
-      alert("Không tạo được QR code");
-      return;
-    }
+  // --- Tạo ảnh QR code bằng Google Chart API (không đơ, không lỗi) ---
+  const qrImg = `https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(qrURL)}`;
 
-    const qrDataURL = tempCanvas.toDataURL(); // ảnh QR hoàn chỉnh
+  // --- Mở cửa sổ in ---
+  const w = window.open('', '_blank');
+  w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
 
-    // --- Mở cửa sổ in ---
-    const w = window.open('', '_blank');
-    w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
+  w.document.write(`
+    <style>
+      body {font-family: Arial; margin:20px;}
+      h1 {text-align:center; font-size:26px;}
+      h2 {text-align:center; font-size:22px; border-bottom:2px solid #333; padding-bottom:8px;}
+      table {border-collapse: collapse; width: 100%; margin-top:20px;}
+      th,td {border:1px solid #ccc; padding:8px;}
+      th {background:#eee; width:30%;}
+      tr:nth-child(even) td {background:#fafafa;}
+    </style>
+  `);
 
-    w.document.write(`
-      <style>
-        body {font-family: Arial; margin:20px;}
-        h1{text-align:center;font-size:26px;margin-bottom:5px;}
-        h2{text-align:center;font-size:20px;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:8px;}
-        table{border-collapse:collapse;width:100%;margin-bottom:20px;}
-        th,td{border:1px solid #ccc;padding:8px 12px;}
-        th{background:#eee;width:30%;}
-        tr:nth-child(even) td{background:#fafafa;}
-      </style>
-    `);
+  w.document.write('</head><body>');
+  w.document.write(`<h1>Công ty TNHH may XK Việt Hồng</h1>`);
+  w.document.write(`<h2>Lý lịch máy VH-${soThe}</h2>`);
 
-    w.document.write('</head><body>');
-    w.document.write(`<h1>Công ty TNHH may XK Việt Hồng</h1>`);
-    w.document.write(`<h2>Lý lịch máy VH-${soThe}</h2>`);
+  // --- Bảng thông tin ---
+  w.document.write('<table>');
+  const fields = [
+    ['Số thẻ', row.soThe],
+    ['Số máy', row.soMay],
+    ['Loại máy', row.loaiMay],
+    ['Vị trí', row.viTri],
+    ['Ghi chú', row.ghiChu],
+    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
+    ['In QR', row.chonIn?'✅':'❌'],
+    ['Ngày mua', row.ngayMua],
+    ['Nơi mua', row.noiMua],
+    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
+    ['Sửa chữa', row.suaChua]
+  ];
 
-    // --- Bảng thông tin ---
-    w.document.write('<table>');
-    const fields = [
-      ['Số thẻ', row.soThe],
-      ['Số máy', row.soMay],
-      ['Loại máy', row.loaiMay],
-      ['Vị trí', row.viTri],
-      ['Ghi chú', row.ghiChu],
-      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
-      ['In QR', row.chonIn ? '✅' : '❌'],
-      ['Ngày mua', row.ngayMua],
-      ['Nơi mua', row.noiMua],
-      ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
-      ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
-      ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
-      ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
-      ['Sửa chữa', row.suaChua]
-    ];
-    fields.forEach(f=>{
-      w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
-    });
-    w.document.write('</table>');
-
-    // --- Chèn QR code đúng 100% ---
-    w.document.write(`
-      <div style="text-align:center;margin-top:20px;">
-        <h3>Mã QR thiết bị</h3>
-        <img src="${qrDataURL}" style="width:180px;height:180px;">
-      </div>
-    `);
-
-    w.document.write('</body></html>');
-    w.document.close();
-    w.focus();
-    w.print();
+  fields.forEach(f => {
+    w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
   });
-};
 
+  w.document.write('</table>');
+
+  // --- Hiển thị QR code ---
+  w.document.write(`
+    <div style="text-align:center; margin-top:30px;">
+      <h3>Mã QR</h3>
+      <img src="${qrImg}" style="width:250px;height:250px;">
+    </div>
+  `);
+
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
+};
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
