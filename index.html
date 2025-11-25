@@ -774,14 +774,14 @@ document.getElementById('btnPrint').onclick = () => {
     @page { size: A4 portrait; margin: 4mm; }
     body { font-family: Arial,sans-serif; margin:0; padding:0;
            display:grid; grid-template-columns:repeat(5,1fr);
-           grid-auto-rows:auto; gap:2mm; justify-items:center; align-items:center; }
-    .tem { width:34mm; height:40mm; border:1px solid #000; border-radius:2px;
+           grid-auto-rows:auto; gap:1mm; justify-items:center; align-items:center; }
+    .tem { width:34mm; height:40mm; border:1px solid #000; border-radius:1px;
            display:flex; flex-direction:column; justify-content:center; align-items:center;
            padding:1mm; box-sizing:border-box; text-align:center; page-break-inside:avoid; }
     .tem .top { font-weight:bold; font-size:13px; margin:0.2mm 0; }
     .tem .qr { margin:0; padding:0; line-height:0; }
     .tem .bottom { font-weight:bold; font-size:12px; margin:1mm 0 0.2mm 0; }
-    canvas { display:block; margin:0; width:82px !important; height:75px !important; }
+    canvas { display:block; margin:0; width:76px !important; height:76px !important; }
   `);
 w.document.write('</style></head><body>');
   printData.forEach(r => {
