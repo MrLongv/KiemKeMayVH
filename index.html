@@ -813,163 +813,95 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-// in lý lịch
-document.getElementById('btnPrintLyLich').onclick = () => {
+document.getElementById('btnPrintLyLich').onclick = async () => {
   const input = document.getElementById('soThePrint').value.trim();
-
-  if (!input) {
-    alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!");
-    return;
-  }
+  if (!input) { alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!"); return; }
 
   let listSoThe = [];
+  if (input.toLowerCase() === "all") listSoThe = allData.map(r => r.soThe);
+  else listSoThe = input.split(',').map(s => s.trim()).filter(s => s);
 
-  if (input.toLowerCase() === "all") {
-    listSoThe = allData.map(r => r.soThe);
-  } else {
-    listSoThe = input.split(',').map(s => s.trim()).filter(s => s);
-  }
-
-  if (listSoThe.length === 0) {
-    alert("Không có số thẻ hợp lệ.");
-    return;
-  }
+  if (listSoThe.length === 0) { alert("Không có số thẻ hợp lệ."); return; }
 
   const baseURL = location.href.split('#')[0];
-
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>In Lý Lịch</title>');
-
   w.document.write(`
     <style>
-      body {font-family: Arial; margin: 20px; color:#333;}
-
-      /* Khối header 2 dòng */
-      .header-logo {
-        text-align: left;
-        line-height: 1.2;
-        margin-bottom: 10px;
-      }
-      .header-top {
-        font-size: 22px;
-        font-weight: bold;
-      }
-      .header-bottom {
-        font-size: 22px;
-        font-weight: bold;
-        text-align: center;
-        width: 100%;
-        position: relative;
-        left: -12px;   /* canh giữa 100% tuyệt đối */
-      }
-
-      h2 {
-        text-align: center;
-        font-size: 22px;
-        padding-bottom: 8px;
-        margin-bottom: 10px;
-        margin-top: 10px;
-      }
-
-      .qr-box {
-        text-align:center;
-        margin: 10px 0 20px 0;
-      }
-
-      table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 10px;
-      }
-      th, td {
-        border: 1px solid #ccc;
-        padding: 8px;
-      }
-      th {
-        background: #eee;
-        width: 30%;
-      }
-      tr:nth-child(even) td { background: #fafafa; }
-
-      .page-break { page-break-after: always; }
+      body {font-family: Arial; margin:20px; color:#333;}
+      table {border-collapse: collapse; width: 100%; margin-top:10px;}
+      th, td {border:1px solid #ccc; padding:8px;}
+      th {background:#eee; width:30%;}
+      tr:nth-child(even) td {background:#fafafa;}
+      .page-break {page-break-after:always;}
     </style>
   `);
-
   w.document.write('</head><body>');
 
-  // === LẶP TỪNG SỐ THẺ ===
-  listSoThe.forEach((soThe, idx) => {
-
+  for (let idx = 0; idx < listSoThe.length; idx++) {
+    const soThe = listSoThe[idx];
     const row = allData.find(r => r.soThe == soThe);
     if (!row) {
       w.document.write(`<h3 style="color:red">⚠ Không tìm thấy số thẻ: ${soThe}</h3>`);
       w.document.write('<div class="page-break"></div>');
-      return;
+      continue;
     }
 
-    // ---- SINH QR CODE ----
-    const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
-    const tempDiv = document.createElement("div");
-    new QRCode(tempDiv, { text: qrText, width: 110, height: 110 });
+    // --- Tạo QR code trực tiếp DataURL ---
+    const qrCanvas = document.createElement("canvas");
+    await new Promise(resolve => {
+      new QRCode(qrCanvas, {
+        text: `${baseURL}#${encodeURIComponent(soThe)}`,
+        width: 110,
+        height: 110
+      });
+      setTimeout(resolve, 50); // đợi render
+    });
+    const qrImg = qrCanvas.toDataURL();
 
-    const qrImg =
-      tempDiv.querySelector("img")?.src ||
-      tempDiv.querySelector("canvas")?.toDataURL();
+    // --- HEADER: cột trái QR + công ty, cột phải Lý lịch ---
+    w.document.write(`
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <!-- Cột trái -->
+        <div style="text-align:left;">
+          <div style="font-size:22px; font-weight:bold;">CÔNG TY TNHH MAY XK VIỆT HỒNG</div>
+          <div style="margin-top:5px;">
+            <img src="${qrImg}" style="width:110px;height:110px;">
+          </div>
+        </div>
 
-    // ---- HEADER CHUẨN NHƯ YÊU CẦU ----
-w.document.write(`
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
-    <!-- Cột trái: công ty và QR -->
-    <div style="text-align:left;">
-      <div style="font-size:22px; font-weight:bold;">CÔNG TY TNHH MAY XK VIỆT HỒNG</div>
-      <div class="qr-box" style="margin-top:5px;">
-        <img src="${qrImg}" style="width:110px;height:110px;">
+        <!-- Cột phải -->
+        <div style="font-size:22px; font-weight:bold; text-align:center;">
+          LÝ LỊCH MÁY VH-${soThe}
+        </div>
       </div>
-    </div>
+    `);
 
-    <!-- Cột phải: Lý lịch máy -->
-    <div style="text-align:center; font-size:22px; font-weight:bold;">
-      LÝ LỊCH MÁY VH-${soThe}
-    </div>
-  </div>
-`);
-
-    // ---- BẢNG THÔNG TIN ----
+    // --- BẢNG THÔNG TIN ---
     const fields = [
-      ['Số thẻ', row.soThe],
-      ['Số máy', row.soMay],
-      ['Loại máy', row.loaiMay],
-      ['Vị trí', row.viTri],
-      ['Ghi chú', row.ghiChu],
-      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
-      ['In QR', row.chonIn ? '✅' : '❌'],
-      ['Ngày mua', row.ngayMua],
-      ['Nơi mua', row.noiMua],
-      ['Bảo dưỡng Q1', row.bdQ1 ? '✅ ' + (row.bdNgayQ1 || '') : ''],
-      ['Bảo dưỡng Q2', row.bdQ2 ? '✅ ' + (row.bdNgayQ2 || '') : ''],
-      ['Bảo dưỡng Q3', row.bdQ3 ? '✅ ' + (row.bdNgayQ3 || '') : ''],
-      ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4 || '') : ''],
+      ['Số thẻ', row.soThe], ['Số máy', row.soMay], ['Loại máy', row.loaiMay],
+      ['Vị trí', row.viTri], ['Ghi chú', row.ghiChu], ['Đã kiểm kê', row.daKiemKe ? '✅':'❌'],
+      ['In QR', row.chonIn ? '✅':'❌'], ['Ngày mua', row.ngayMua], ['Nơi mua', row.noiMua],
+      ['Bảo dưỡng Q1', row.bdQ1 ? '✅ '+(row.bdNgayQ1||'') : ''],
+      ['Bảo dưỡng Q2', row.bdQ2 ? '✅ '+(row.bdNgayQ2||'') : ''],
+      ['Bảo dưỡng Q3', row.bdQ3 ? '✅ '+(row.bdNgayQ3||'') : ''],
+      ['Bảo dưỡng Q4', row.bdQ4 ? '✅ '+(row.bdNgayQ4||'') : ''],
       ['Sửa chữa', row.suaChua]
     ];
 
     w.document.write('<table>');
-    fields.forEach(f => {
-      w.document.write(`<tr><th>${f[0]}</th><td>${f[1] ?? ''}</td></tr>`);
-    });
+    fields.forEach(f => w.document.write(`<tr><th>${f[0]}</th><td>${f[1]??''}</td></tr>`));
     w.document.write('</table>');
 
-    if (idx < listSoThe.length - 1) {
-      w.document.write('<div class="page-break"></div>');
-    }
-
-  });
+    if (idx < listSoThe.length-1) w.document.write('<div class="page-break"></div>');
+  }
 
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
   w.print();
 };
-  
+
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
   const items = document.querySelectorAll(".daKiemKe");
