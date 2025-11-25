@@ -822,7 +822,6 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
-
   w.document.write('<style>');
   w.document.write(`
     body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
@@ -834,7 +833,6 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     td {text-align: left;}
     tr:nth-child(even) td {background-color: #fafafa;}
     td.center {text-align: center;}
-    .qr {text-align: center; margin: 20px 0;}
     @media print {
       body {margin: 10mm;}
       h1 {font-size: 24px;}
@@ -842,14 +840,9 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     }
   `);
   w.document.write('</style>');
-
   w.document.write('</head><body>');
-
-  // Tiêu đề công ty và lý lịch
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
-
-  // Bảng thông tin máy
   w.document.write('<table>');
   const fields = [
     ['Số thẻ', row.soThe],
@@ -857,26 +850,20 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['Loại máy', row.loaiMay],
     ['Vị trí', row.viTri],
     ['Ghi chú', row.ghiChu],
-    ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
-    ['In QR', row.chonIn ? '✅' : '❌'],
+    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
+    ['In QR', row.chonIn?'✅':'❌'],
     ['Ngày mua', row.ngayMua],
     ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', (row.bdQ1 ? '✅' : '') + ' ' + (row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', (row.bdQ2 ? '✅' : '') + ' ' + (row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', (row.bdQ3 ? '✅' : '') + ' ' + (row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', (row.bdQ4 ? '✅' : '') + ' ' + (row.bdNgayQ4||'')],
+    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
     ['Sửa chữa', row.suaChua]
   ];
   fields.forEach(f => {
     w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
   });
   w.document.write('</table>');
-
-  // QR code y hệt nút in QR
-  w.document.write('<div class="qr">');
-  w.document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(row.soThe)}" alt="QR Code">`);
-  w.document.write('</div>');
-
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
