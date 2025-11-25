@@ -814,12 +814,15 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-document.getElementById('btnPrintLyLich').onclick = () => {
-  const soThe = document.getElementById('soThePrint').value.trim();
-  if (!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
-
-  const r = allData.find(x => x.soThe === soThe);
-  if (!r) { alert('Không tìm thấy máy với số thẻ này'); return; }
+const soThe = document.getElementById('soThePrint').value.trim();
+let machines;
+if(!soThe){
+  // nếu bỏ trống → in tất cả
+  machines = allData;
+} else {
+  machines = allData.filter(r => r.soThe == soThe);
+  if(machines.length === 0){ alert('Không tìm thấy máy với số thẻ này'); return; }
+}
 
   // Tạo nội dung HTML cho Word
   const content = `
