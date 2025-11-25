@@ -814,74 +814,70 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-document.getElementById('btnPrint').onclick = () => {
-  const printData = allData.filter(r => r.chonIn);
-  if (printData.length === 0) { alert('Chọn ít nhất 1 dòng để in'); return; }
+document.getElementById('btnPrintLyLich').onclick = () => {
+  const soThe = document.getElementById('soThePrint').value.trim();
+  if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
+  const row = allData.find(r => r.soThe == soThe);
+  if(!row) { alert('Không tìm thấy số thẻ này'); return; }
 
   const w = window.open('', '_blank');
-  w.document.write('<html><head><title>In Lý Lịch Máy</title>');
+  w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
   w.document.write('<style>');
   w.document.write(`
+    body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
+    h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
+    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
+    table {border-collapse: collapse; width: 100%;}
+    th, td {border: 1px solid #ccc; padding: 8px 12px;}
+    th {background-color: #f0f0f0; text-align: left; width: 30%;}
+    td {text-align: left;}
+    tr:nth-child(even) td {background-color: #fafafa;}
+    td.center {text-align: center;}
+    .qr {text-align: center; margin-top: 15px;}
     @media print {
-      @page { size: A4; margin: 20mm; }
+      body {margin: 10mm;}
+      h1 {font-size: 24px;}
+      h2 {font-size: 20px;}
     }
-    body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
-    h2, h3 { margin: 5px 0; text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #000; padding: 5px; text-align: left; }
-    .qr { text-align: center; margin-top: 10px; }
-    .page-break { page-break-after: always; }
   `);
-  w.document.write('</style></head><body>');
+  w.document.write('</style>');
+  w.document.write('</head><body>');
 
-  printData.forEach((row, idx) => {
-    w.document.write('<h2>Công ty TNHH may XK Việt Hồng</h2>');
-    w.document.write('<h3>Lý lịch máy</h3>');
+  w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
+  w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
 
-    w.document.write('<table>');
-    const basicFields = [
-      ['Số thẻ', row.soThe],
-      ['Số máy', row.soMay],
-      ['Loại máy', row.loaiMay],
-      ['Vị trí', row.viTri],
-      ['Ghi chú', row.ghiChu],
-      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
-      ['In QR', row.chonIn ? '✅' : '❌'],
-      ['Ngày mua', row.ngayMua],
-      ['Nơi mua', row.noiMua],
-      ['Sửa chữa', row.suaChua]
-    ];
-    basicFields.forEach(f => {
-      w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
-    });
+  // QR code
+  if(row.qrCode) {
+    w.document.write('<div class="qr"><img src="'+row.qrCode+'" alt="QR code" style="width:150px;height:150px;"></div>');
+  }
 
-    const quarters = [
-      ['Q1', row.bdQ1, row.bdNgayQ1],
-      ['Q2', row.bdQ2, row.bdNgayQ2],
-      ['Q3', row.bdQ3, row.bdNgayQ3],
-      ['Q4', row.bdQ4, row.bdNgayQ4]
-    ];
-    quarters.forEach(q => {
-      const status = q[1] ? '✅' : '❌';
-      const date = q[2] ? q[2] : '';
-      w.document.write(`<tr><th>${q[0]}</th><td>${status} ${date}</td></tr>`);
-    });
-
-    w.document.write('</table>');
-
-    w.document.write('<div class="qr">');
-    w.document.write(`<img src="${row.qrCode}" alt="QR code" style="width:150px;height:150px;">`);
-    w.document.write('</div>');
-
-    if(idx < printData.length - 1) w.document.write('<div class="page-break"></div>');
+  w.document.write('<table>');
+  const fields = [
+    ['Số thẻ', row.soThe],
+    ['Số máy', row.soMay],
+    ['Loại máy', row.loaiMay],
+    ['Vị trí', row.viTri],
+    ['Ghi chú', row.ghiChu],
+    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
+    ['In QR', row.chonIn?'✅':'❌'],
+    ['Ngày mua', row.ngayMua],
+    ['Nơi mua', row.noiMua],
+    ['Bảo dưỡng Q1', (row.bdQ1?'✅':'❌') + ' ' + (row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', (row.bdQ2?'✅':'❌') + ' ' + (row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', (row.bdQ3?'✅':'❌') + ' ' + (row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', (row.bdQ4?'✅':'❌') + ' ' + (row.bdNgayQ4||'')],
+    ['Sửa chữa', row.suaChua]
+  ];
+  fields.forEach(f => {
+    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1].includes('✅')?'center':''}">${f[1]}</td></tr>`);
   });
+  w.document.write('</table>');
 
   w.document.write('</body></html>');
   w.document.close();
-
-  w.print(); // <-- gọi in ngay
+  w.focus();
+  w.print();
 };
-
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
