@@ -904,7 +904,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     // ---- SINH QR CODE ĐÚNG CHUẨN ----
     const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
     const tempDiv = document.createElement("div");
-    new QRCode(tempDiv, { text: qrText, width: 200, height: 200 });
+    new QRCode(tempDiv, { text: qrText, width: 100, height: 100 });
 
     const qrImg =
       tempDiv.querySelector("img")?.src ||
@@ -920,7 +920,7 @@ w.document.write(`
   <div style="position: relative; margin-bottom: 20px;">
     <!-- QR code phía trên, cách trái 20px -->
     <div style="position: absolute; left:20px; top:0;">
-      <img src="${qrImg}" style="width:160px;height:160px;">
+      <img src="${qrImg}" style="width:100px;height:100px;">
     </div>
 
     <!-- Lý lịch máy canh giữa trang A4 -->
