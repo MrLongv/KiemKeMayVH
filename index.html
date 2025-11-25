@@ -910,14 +910,14 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       tempDiv.querySelector("img")?.src ||
       tempDiv.querySelector("canvas")?.toDataURL();
 
-    // ---- PHẦN HEADER MỚI ----
+    // ---- PHẦN HEADER chuẩn ----
 w.document.write(`
-  <div class="header-logo" style="margin-left:30px; font-size:20px; font-weight:bold; line-height:1.2;">
-    CÔNG TY TNHH MAY XK<br>
-    <span style="display:block;">VIỆT HỒNG</span>
+  <div class="header-logo" style="font-size:20px; font-weight:bold; line-height:1.2;">
+    <div style="margin-left:5px;">CÔNG TY TNHH MAY XK</div>
+    <div style="margin-left:40px;">VIỆT HỒNG</div>
   </div>
   <div style="position: relative; margin-bottom: 40px;">
-    <!-- QR code phía trên, cách trái 20px -->
+    <!-- QR code phía trên, cách trái 60px -->
     <div style="position: absolute; left:60px; top:0;">
       <img src="${qrImg}" style="width:100px;height:100px;">
     </div>
@@ -927,6 +927,7 @@ w.document.write(`
     </div>
   </div>
 `);
+
     // ---- BẢNG THÔNG TIN ----
     const fields = [
       ['Số thẻ', row.soThe],
