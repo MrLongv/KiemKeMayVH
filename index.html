@@ -814,17 +814,21 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-  // In lý lịch máy
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soTheInput = document.getElementById('soThePrint').value.trim();
 
   let listSoThe = [];
 
   if (!soTheInput) {
-    // Không nhập → in toàn bộ
+    alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!");
+    return;
+  }
+
+  if (soTheInput.toLowerCase() === 'all') {
+    // Gõ "all" → in toàn bộ
     listSoThe = allData.map(r => r.soThe);
   } else {
-    // Tách theo dấu phẩy
+    // Tách nhiều số thẻ
     listSoThe = soTheInput.split(',').map(s => s.trim()).filter(s => s);
   }
 
@@ -851,7 +855,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   `);
   w.document.write('</style></head><body>');
 
-  // === LẶP QUA TỪNG SỐ THẺ ===
+  // === Lặp từng số thẻ ===
   listSoThe.forEach((st, idx) => {
     const row = allData.find(r => r.soThe == st);
 
@@ -894,18 +898,11 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
       const rows = ${JSON.stringify(allData)};
-
       rows.forEach(r => {
         const box = document.getElementById("qr_" + r.soThe);
         if (!box) return;
-
         const url = location.href.split("#")[0] + "#" + encodeURIComponent(r.soThe);
-
-        new QRCode(box, {
-          text: url,
-          width: 120,
-          height: 120
-        });
+        new QRCode(box, { text: url, width: 120, height: 120 });
       });
     </script>
   `);
@@ -915,7 +912,6 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.focus();
   w.print();
 };
-
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
