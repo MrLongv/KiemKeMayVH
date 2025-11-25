@@ -814,6 +814,7 @@ w.document.write('</style></head><body>');
   };
 };
 // in lý lịch
+// in lý lịch
 document.getElementById('btnPrintLyLich').onclick = () => {
   const input = document.getElementById('soThePrint').value.trim();
 
@@ -843,17 +844,24 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.document.write(`
     <style>
       body {font-family: Arial; margin: 20px; color:#333;}
-      
-      /* Logo trái */
+
+      /* Khối header 2 dòng */
       .header-logo {
         text-align: left;
-        font-size: 20px;
-        font-weight: bold;
-        line-height: 1.1;
+        line-height: 1.2;
         margin-bottom: 10px;
       }
-      .header-logo span {
-        display: block;
+      .header-top {
+        font-size: 22px;
+        font-weight: bold;
+      }
+      .header-bottom {
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        width: 100%;
+        position: relative;
+        left: -12px;   /* canh giữa 100% tuyệt đối */
       }
 
       h2 {
@@ -862,9 +870,9 @@ document.getElementById('btnPrintLyLich').onclick = () => {
         border-bottom: 2px solid #333;
         padding-bottom: 8px;
         margin-bottom: 10px;
+        margin-top: 10px;
       }
 
-      /* QR nằm phía trên */
       .qr-box {
         text-align:center;
         margin: 10px 0 20px 0;
@@ -901,7 +909,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       return;
     }
 
-    // ---- SINH QR CODE ĐÚNG CHUẨN ----
+    // ---- SINH QR CODE ----
     const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
     const tempDiv = document.createElement("div");
     new QRCode(tempDiv, { text: qrText, width: 200, height: 200 });
@@ -910,17 +918,17 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       tempDiv.querySelector("img")?.src ||
       tempDiv.querySelector("canvas")?.toDataURL();
 
-    // ---- PHẦN HEADER MỚI ----
+    // ---- HEADER CHUẨN NHƯ YÊU CẦU ----
     w.document.write(`
       <div class="header-logo">
-        <span>CÔNG TY TNHH MAY XK</span>
-        <span style="font-size:26px;">VIỆT HỒNG</span>
+        <div class="header-top">CÔNG TY TNHH MAY XK</div>
+        <div class="header-bottom">VIỆT HỒNG</div>
       </div>
 
       <h2>LÝ LỊCH MÁY VH-${soThe}</h2>
 
       <div class="qr-box">
-        <img src="${qrImg}" style="width:160px;height:160px;">
+        <img src="${qrImg}" style="width:150px;height:150px;">
       </div>
     `);
 
@@ -944,7 +952,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
     w.document.write('<table>');
     fields.forEach(f => {
-      w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
+      w.document.write(`<tr><th>${f[0]}</th><td>${f[1] ?? ''}</td></tr>`);
     });
     w.document.write('</table>');
 
