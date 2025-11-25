@@ -822,30 +822,54 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
-  w.document.write('<style>body{font-family:Arial;padding:16px;} h2{margin-bottom:8px;} table{border-collapse:collapse;width:100%;} td,th{border:1px solid #333;padding:6px;text-align:left;}</style>');
+  w.document.write('<style>');
+  w.document.write(`
+    body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
+    h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
+    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
+    table {border-collapse: collapse; width: 100%;}
+    th, td {border: 1px solid #ccc; padding: 8px 12px;}
+    th {background-color: #f0f0f0; text-align: left; width: 30%;}
+    td {text-align: left;}
+    tr:nth-child(even) td {background-color: #fafafa;}
+    td.center {text-align: center;}
+    @media print {
+      body {margin: 10mm;}
+      h1 {font-size: 24px;}
+      h2 {font-size: 20px;}
+    }
+  `);
+  w.document.write('</style>');
   w.document.write('</head><body>');
+  w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
   w.document.write('<table>');
-  w.document.write(`<tr><th>Số thẻ</th><td>${row.soThe}</td></tr>`);
-  w.document.write(`<tr><th>Số máy</th><td>${row.soMay}</td></tr>`);
-  w.document.write(`<tr><th>Loại máy</th><td>${row.loaiMay}</td></tr>`);
-  w.document.write(`<tr><th>Vị trí</th><td>${row.viTri}</td></tr>`);
-  w.document.write(`<tr><th>Ghi chú</th><td>${row.ghiChu}</td></tr>`);
-  w.document.write(`<tr><th>Đã kiểm kê</th><td>${row.daKiemKe?'✅':'❌'}</td></tr>`);
-  w.document.write(`<tr><th>In QR</th><td>${row.chonIn?'✅':'❌'}</td></tr>`);
-  w.document.write(`<tr><th>Ngày mua</th><td>${row.ngayMua}</td></tr>`);
-  w.document.write(`<tr><th>Nơi mua</th><td>${row.noiMua}</td></tr>`);
-  w.document.write(`<tr><th>Bảo dưỡng Q1</th><td>${row.bdQ1?'✅':''} ${row.bdNgayQ1||''}</td></tr>`);
-  w.document.write(`<tr><th>Bảo dưỡng Q2</th><td>${row.bdQ2?'✅':''} ${row.bdNgayQ2||''}</td></tr>`);
-  w.document.write(`<tr><th>Bảo dưỡng Q3</th><td>${row.bdQ3?'✅':''} ${row.bdNgayQ3||''}</td></tr>`);
-  w.document.write(`<tr><th>Bảo dưỡng Q4</th><td>${row.bdQ4?'✅':''} ${row.bdNgayQ4||''}</td></tr>`);
-  w.document.write(`<tr><th>Sửa chữa</th><td>${row.suaChua}</td></tr>`);
+  const fields = [
+    ['Số thẻ', row.soThe],
+    ['Số máy', row.soMay],
+    ['Loại máy', row.loaiMay],
+    ['Vị trí', row.viTri],
+    ['Ghi chú', row.ghiChu],
+    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
+    ['In QR', row.chonIn?'✅':'❌'],
+    ['Ngày mua', row.ngayMua],
+    ['Nơi mua', row.noiMua],
+    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
+    ['Sửa chữa', row.suaChua]
+  ];
+  fields.forEach(f => {
+    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
+  });
   w.document.write('</table>');
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
   w.print();
 };
+
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
