@@ -816,21 +816,60 @@ w.document.write('</style></head><body>');
 };
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soThe = document.getElementById('soThePrint').value.trim();
-  if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
-  const row = allData.find(r => r.soThe == soThe);
-  if(!row) { alert('Không tìm thấy số thẻ này'); return; }
+  if(!soThe) { 
+    alert('Nhập số thẻ để in lý lịch'); 
+    return; 
+  }
 
+  const row = allData.find(r => r.soThe == soThe);
+  if(!row) { 
+    alert('Không tìm thấy số thẻ này'); 
+    return; 
+  }
+
+  // --- TÌM QR CODE TỰ ĐỘNG ---
+  let qrDataURL = "";
+
+  // 1. Tìm theo ID kiểu qr-123
+  let qrEl = document.getElementById(`qr-${soThe}`);
+
+  // 2. Nếu chưa có → tìm IMG có data-sothe hoặc alt chứa số thẻ
+  if(!qrEl){
+    qrEl = document.querySelector(`img[data-sothe="${soThe}"], img[alt*="${soThe}"]`);
+  }
+
+  // 3. Nếu chưa có → tìm canvas QR có data-sothe hoặc id chứa số thẻ
+  if(!qrEl){
+    qrEl = document.querySelector(`canvas[data-sothe="${soThe}"], canvas[id*="${soThe}"]`);
+  }
+
+  // 4. Nếu tìm thấy QR IMG
+  if(qrEl && qrEl.tagName === "IMG"){
+    qrDataURL = qrEl.src;
+  }
+
+  // 5. Nếu tìm thấy QR CANVAS
+  if(qrEl && qrEl.tagName === "CANVAS"){
+    try {
+      qrDataURL = qrEl.toDataURL();
+    } catch(e){
+      console.error("Canvas QR không convert được:", e);
+    }
+  }
+
+  // --- Mở cửa sổ in ---
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
+
+  // CSS
   w.document.write('<style>');
   w.document.write(`
     body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
     h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
     h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
-    table {border-collapse: collapse; width: 100%;}
+    table {border-collapse: collapse; width: 100%; margin-bottom: 20px;}
     th, td {border: 1px solid #ccc; padding: 8px 12px;}
     th {background-color: #f0f0f0; text-align: left; width: 30%;}
-    td {text-align: left;}
     tr:nth-child(even) td {background-color: #fafafa;}
     td.center {text-align: center;}
     @media print {
@@ -839,10 +878,13 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       h2 {font-size: 20px;}
     }
   `);
-  w.document.write('</style>');
-  w.document.write('</head><body>');
+  w.document.write('</style></head><body>');
+
+  // Header
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
+
+  // Bảng dữ liệu
   w.document.write('<table>');
   const fields = [
     ['Số thẻ', row.soThe],
@@ -861,9 +903,22 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['Sửa chữa', row.suaChua]
   ];
   fields.forEach(f => {
-    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
+    w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
   });
   w.document.write('</table>');
+
+  // --- Chèn QR Code nếu có ---
+  if(qrDataURL){
+    w.document.write(`
+      <div style="text-align:center; margin-top:10px;">
+        <h3>Mã QR</h3>
+        <img src="${qrDataURL}" style="width:150px;height:150px;" />
+      </div>
+    `);
+  } else {
+    w.document.write(`<p style="color:red; text-align:center;">⚠ Không tìm thấy QR code để in.</p>`);
+  }
+
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
