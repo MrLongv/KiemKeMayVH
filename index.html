@@ -833,7 +833,6 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     td {text-align: left;}
     tr:nth-child(even) td {background-color: #fafafa;}
     td.center {text-align: center;}
-    .qr {text-align: center; margin-top: 15px;}
     @media print {
       body {margin: 10mm;}
       h1 {font-size: 24px;}
@@ -842,15 +841,8 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   `);
   w.document.write('</style>');
   w.document.write('</head><body>');
-
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
-
-  // QR code
-  if(row.qrCode) {
-    w.document.write('<div class="qr"><img src="'+row.qrCode+'" alt="QR code" style="width:150px;height:150px;"></div>');
-  }
-
   w.document.write('<table>');
   const fields = [
     ['Số thẻ', row.soThe],
@@ -862,17 +854,16 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['In QR', row.chonIn?'✅':'❌'],
     ['Ngày mua', row.ngayMua],
     ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', (row.bdQ1?'✅':'❌') + ' ' + (row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', (row.bdQ2?'✅':'❌') + ' ' + (row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', (row.bdQ3?'✅':'❌') + ' ' + (row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', (row.bdQ4?'✅':'❌') + ' ' + (row.bdNgayQ4||'')],
+    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
     ['Sửa chữa', row.suaChua]
   ];
   fields.forEach(f => {
-    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1].includes('✅')?'center':''}">${f[1]}</td></tr>`);
+    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
   });
   w.document.write('</table>');
-
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
