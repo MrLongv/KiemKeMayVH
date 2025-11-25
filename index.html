@@ -814,58 +814,37 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-document.getElementById('btnPrintWord').addEventListener('click', function() {
-    const soThe = document.getElementById('soThePrint').value.trim();
-    let machines;
+document.getElementById("btnInLyLich").onclick = function() {
+  const soThe = document.getElementById("inputSoThe").value.trim();
+  if(!soThe) { 
+    alert("Nhập mã thẻ!"); 
+    return; 
+  }
 
-    if(!soThe){
-      machines = allData; // in tất cả
-    } else {
-      machines = allData.filter(r => r.soThe == soThe);
-      if(machines.length === 0){ 
-        alert('Không tìm thấy máy với số thẻ này'); 
-        return; 
-      }
-    }
+  const may = allData.find(m => m.soThe === soThe);
+  if(!may) { 
+    alert("Không tìm thấy máy!"); 
+    return; 
+  }
 
-    machines.forEach(r => {
-      const content = `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office'
-              xmlns:w='urn:schemas-microsoft-com:office:word'
-              xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>Lý lịch máy</title></head>
-        <body>
-          <h2>📋 Lý lịch máy VH-${r.soThe}</h2>
-          <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
-            <tr><th>Số thẻ</th><td>${r.soThe}</td></tr>
-            <tr><th>Số máy</th><td>${r.soMay}</td></tr>
-            <tr><th>Loại máy</th><td>${r.loaiMay}</td></tr>
-            <tr><th>Vị trí</th><td>${r.viTri}</td></tr>
-            <tr><th>Ghi chú</th><td>${r.ghiChu}</td></tr>
-            <tr><th>Đã kiểm kê</th><td>${r.daKiemKe ? '✅' : '❌'}</td></tr>
-            <tr><th>Chọn in</th><td>${r.chonIn ? '✅' : '❌'}</td></tr>
-            <tr><th>Ngày mua</th><td>${r.ngayMua}</td></tr>
-            <tr><th>Nơi mua</th><td>${r.noiMua}</td></tr>
-            <tr><th>Bảo dưỡng Q1</th><td>${r.bdQ1 ? '✅' : '❌'} - ${r.bdNgayQ1 || ''}</td></tr>
-            <tr><th>Bảo dưỡng Q2</th><td>${r.bdQ2 ? '✅' : '❌'} - ${r.bdNgayQ2 || ''}</td></tr>
-            <tr><th>Bảo dưỡng Q3</th><td>${r.bdQ3 ? '✅' : '❌'} - ${r.bdNgayQ3 || ''}</td></tr>
-            <tr><th>Bảo dưỡng Q4</th><td>${r.bdQ4 ? '✅' : '❌'} - ${r.bdNgayQ4 || ''}</td></tr>
-            <tr><th>Sửa chữa</th><td>${r.suaChua}</td></tr>
-          </table>
-        </body></html>
-      `;
+  const content = `
+    <h2>Lý lịch máy</h2>
+    <p><strong>Số thẻ:</strong> ${may.soThe}</p>
+    <p><strong>Số máy:</strong> ${may.soMay}</p>
+    <p><strong>Loại máy:</strong> ${may.loaiMay}</p>
+    <p><strong>Vị trí:</strong> ${may.viTri}</p>
+    <p><strong>Ghi chú:</strong> ${may.ghiChu}</p>
+  `;
 
-      const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `LyLich_May_VH-${r.soThe}.doc`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
-});
+  const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `LyLichMay_${may.soThe}.doc`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
