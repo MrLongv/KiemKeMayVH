@@ -903,10 +903,26 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       return;
     }
 
-    // ---- TẠO QR CODE TRONG TẠM DIV ----
-    const tempDiv = document.createElement("div");
-    new QRCode(tempDiv, { text: `${baseURL}#${encodeURIComponent(soThe)}`, width:110, height:110 });
-    const qrImg = tempDiv.querySelector("img")?.src || tempDiv.querySelector("canvas")?.toDataURL();
+    // ---- TẠO QR CODE TRONG TẠM DIV (luôn render ngay) ----
+const tempDiv = document.createElement("div");
+tempDiv.style.position = "absolute";
+tempDiv.style.left = "-9999px"; // ẩn ra ngoài màn hình
+document.body.appendChild(tempDiv);
+
+new QRCode(tempDiv, { text: `${baseURL}#${encodeURIComponent(soThe)}`, width:110, height:110 });
+
+// Lấy QR từ canvas hoặc img
+let qrImg;
+const canvas = tempDiv.querySelector("canvas");
+if (canvas) {
+  qrImg = canvas.toDataURL();
+} else {
+  qrImg = tempDiv.querySelector("img")?.src;
+}
+
+// Xoá div tạm
+document.body.removeChild(tempDiv);
+
 
     // ---- HEADER: Công ty + QR bên trái, Lý lịch bên phải ----
     w.document.write(`
