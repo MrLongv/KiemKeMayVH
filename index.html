@@ -826,15 +826,14 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.document.write(`
     body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
     h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
-    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 10px;}
-    table {border-collapse: collapse; width: 100%; margin-top: 10px;}
+    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
+    table {border-collapse: collapse; width: 100%;}
     th, td {border: 1px solid #ccc; padding: 8px 12px;}
     th {background-color: #f0f0f0; text-align: left; width: 30%;}
     td {text-align: left;}
     tr:nth-child(even) td {background-color: #fafafa;}
     td.center {text-align: center;}
     .qr {display:block; margin: 15px auto; width:150px; height:150px;}
-    .quarter-row th, .quarter-row td {text-align:center;}
     @media print {
       body {margin: 10mm;}
       h1 {font-size: 24px;}
@@ -844,19 +843,18 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   `);
   w.document.write('</style>');
   w.document.write('</head><body>');
-  
+
   // Tiêu đề công ty + Lý lịch
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
 
-  // QR code nếu có
-  if(row.qrCode){
-    w.document.write(`<img src="${row.qrCode}" class="qr" alt="QR Code">`);
+  // QR code (nếu cần)
+  if(row.chonIn){ // hoặc row.qrCode nếu bạn lưu link QR
+    w.document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${soThe}" class="qr" alt="QR Code">`);
   }
 
-  // Bảng dữ liệu
+  // Bảng dữ liệu nguyên bản
   w.document.write('<table>');
-
   const fields = [
     ['Số thẻ', row.soThe],
     ['Số máy', row.soMay],
@@ -867,21 +865,17 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['In QR', row.chonIn?'✅':'❌'],
     ['Ngày mua', row.ngayMua],
     ['Nơi mua', row.noiMua],
-    // Q1-Q4 giữ chung dòng với ngày
-    ['Bảo dưỡng Q1', (row.bdQ1?'✅':'') + ' ' + (row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', (row.bdQ2?'✅':'') + ' ' + (row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', (row.bdQ3?'✅':'') + ' ' + (row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', (row.bdQ4?'✅':'') + ' ' + (row.bdNgayQ4||'')],
+    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
     ['Sửa chữa', row.suaChua]
   ];
-
   fields.forEach(f => {
-    // Thêm class center nếu giá trị là ✅
-    const isCenter = f[1].trim() === '✅' || f[1].trim().startsWith('✅') ? 'center' : '';
-    w.document.write(`<tr${f[0].startsWith('Bảo dưỡng') ? ' class="quarter-row"' : ''}><th>${f[0]}</th><td class="${isCenter}">${f[1]}</td></tr>`);
+    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
   });
-
   w.document.write('</table>');
+
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
