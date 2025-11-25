@@ -821,6 +821,10 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   const row = allData.find(r => r.soThe == soThe);
   if(!row) { alert('Không tìm thấy số thẻ này'); return; }
 
+  // --- Dùng đúng QR code như bên in QR ---
+  // Ví dụ logic QR code bên in QR:
+  const qrUrl = row.qrData || ('https://viet-hong.com/qr?soThe=' + row.soThe);
+
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
   w.document.write('<style>');
@@ -848,17 +852,14 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
 
-  // Chèn QR code ở giữa
-  if(row.qrData) {
-    w.document.write('<div class="qr-container">');
-    w.document.write('<img src="'+row.qrData+'" style="width:150px; height:150px;" />');
-    w.document.write('</div>');
-  }
+  // Chèn QR code chính xác y chang bên in QR
+  w.document.write('<div class="qr-container">');
+  w.document.write('<img src="'+qrUrl+'" style="width:150px; height:150px;" />');
+  w.document.write('</div>');
 
   // Bảng dữ liệu
   w.document.write('<table>');
 
-  // Các trường dữ liệu
   const fields = [
     ['Số thẻ', row.soThe],
     ['Số máy', row.soMay],
@@ -876,7 +877,6 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['Sửa chữa', row.suaChua]
   ];
 
-  // In các dòng
   fields.forEach(f => {
     w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
   });
