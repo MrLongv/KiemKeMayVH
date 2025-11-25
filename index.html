@@ -814,7 +814,6 @@ w.document.write('</style></head><body>');
   };
 };
 // in lý lịch
-// in lý lịch
 document.getElementById('btnPrintLyLich').onclick = () => {
   const input = document.getElementById('soThePrint').value.trim();
 
@@ -911,7 +910,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     // ---- SINH QR CODE ----
     const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
     const tempDiv = document.createElement("div");
-    new QRCode(tempDiv, { text: qrText, width: 100, height: 100 });
+    new QRCode(tempDiv, { text: qrText, width: 110, height: 110 });
 
     const qrImg =
       tempDiv.querySelector("img")?.src ||
@@ -920,7 +919,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     // ---- HEADER CHUẨN NHƯ YÊU CẦU ----
 w.document.write(`
   <div class="header-logo">
-    <div class="header-top" style="text-align:left; display:inline-block; font-size:22px; font-weight:bold;">
+    <div class="header-top" style="text-align:left; display:inline-block; font-size:20px; font-weight:bold;">
       CÔNG TY TNHH MAY XK VIỆT HỒNG
     </div>
     </div>
@@ -928,7 +927,7 @@ w.document.write(`
   <h2>LÝ LỊCH MÁY VH-${soThe}</h2>
 
   <div class="qr-box">
-    <img src="${qrImg}" style="width:100px;height:100px;">
+    <img src="${qrImg}" style="width:110px;height:110px;">
   </div>
 `);
 
@@ -967,7 +966,7 @@ w.document.write(`
   w.focus();
   w.print();
 };
-
+  
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
   const items = document.querySelectorAll(".daKiemKe");
