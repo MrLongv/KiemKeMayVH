@@ -842,15 +842,50 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
   w.document.write(`
     <style>
-      body {font-family: Arial; margin: 20px;}
-      h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
-      h2 {text-align: center; font-size: 20px; border-bottom: 2px solid #333; padding-bottom: 8px;}
-      table {border-collapse: collapse; width: 100%; margin-top: 20px;}
-      th, td {border: 1px solid #ccc; padding: 8px;}
-      th {background: #eee; width: 30%;}
-      tr:nth-child(even) td {background: #fafafa;}
-      .qr-box {text-align:center; margin-top: 25px;}
-      .page-break {page-break-after: always;}
+      body {font-family: Arial; margin: 20px; color:#333;}
+      
+      /* Logo trái */
+      .header-logo {
+        text-align: left;
+        font-size: 20px;
+        font-weight: bold;
+        line-height: 1.1;
+        margin-bottom: 10px;
+      }
+      .header-logo span {
+        display: block;
+      }
+
+      h2 {
+        text-align: center;
+        font-size: 22px;
+        border-bottom: 2px solid #333;
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+      }
+
+      /* QR nằm phía trên */
+      .qr-box {
+        text-align:center;
+        margin: 10px 0 20px 0;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 10px;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+      }
+      th {
+        background: #eee;
+        width: 30%;
+      }
+      tr:nth-child(even) td { background: #fafafa; }
+
+      .page-break { page-break-after: always; }
     </style>
   `);
 
@@ -875,12 +910,21 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       tempDiv.querySelector("img")?.src ||
       tempDiv.querySelector("canvas")?.toDataURL();
 
-    // ---- IN LÝ LỊCH ----
+    // ---- PHẦN HEADER MỚI ----
     w.document.write(`
-      <h1>Công ty TNHH may XK Việt Hồng</h1>
-      <h2>Lý lịch máy VH-${soThe}</h2>
+      <div class="header-logo">
+        <span>CÔNG TY TNHH MAY XK</span>
+        <span style="font-size:26px;">VIỆT HỒNG</span>
+      </div>
+
+      <h2>LÝ LỊCH MÁY VH-${soThe}</h2>
+
+      <div class="qr-box">
+        <img src="${qrImg}" style="width:160px;height:160px;">
+      </div>
     `);
 
+    // ---- BẢNG THÔNG TIN ----
     const fields = [
       ['Số thẻ', row.soThe],
       ['Số máy', row.soMay],
@@ -904,18 +948,10 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     });
     w.document.write('</table>');
 
-    // QR Code
-    w.document.write(`
-      <div class="qr-box">
-        <h3>Mã QR thiết bị</h3>
-        <img src="${qrImg}" style="width:200px;height:200px;">
-      </div>
-    `);
-
-    // Ngắt trang nếu không phải bản cuối
     if (idx < listSoThe.length - 1) {
       w.document.write('<div class="page-break"></div>');
     }
+
   });
 
   w.document.write('</body></html>');
