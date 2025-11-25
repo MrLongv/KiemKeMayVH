@@ -241,20 +241,11 @@ td.col-noi-mua .clamp-2 {
   <button id="btnSync">☁️ Đồng bộ lên Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
   <button id="btnPrint">🖨️ In tem QR</button>
-  <!-- đặt ngay sau nút In tem QR -->
-<div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
-  <label>Số thẻ: <input type="text" id="soThePrint" style="width:80px;"></label>
-  <label>Năm: <input type="number" id="yearPrint" value="2025" style="width:90px;"></label>
-  <button id="btnPrintLyLich" class="btn-regular">🖨️ In lý lịch</button>
-  <span id="printStatus" style="margin-left:8px;color:green;"></span>
-</div>
-
   <div style="margin-bottom:1px;">
   <label>Số thẻ: <input type="text" id="soThePrint" style="width:40px;"></label>
   <button id="btnPrintLyLich">🖨️ In lý lịch</button>
   <span id="printStatus" style="margin-left:8px;color:green;"></span>
 </div>
-  
     <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 <div id="searchInfo" style="margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
@@ -349,11 +340,6 @@ td.col-noi-mua .clamp-2 {
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- docx (build browser) -->
-<script src="https://unpkg.com/docx@7.6.0/build/index.umd.js"></script>
-<!-- qrcodejs nếu chưa có -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
 const GAS_URL='https://script.google.com/macros/s/AKfycbypLeqRNba8KKBy9V_eb3s8HIvr57UAFhZN6L2ya2nCYHSzuRBqND7w1j8Qlb7RY5rw/exec';
 
@@ -830,12 +816,47 @@ w.document.write('</style></head><body>');
 };
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soThe = document.getElementById('soThePrint').value.trim();
-  if (!soThe) { alert('Nhập số thẻ!'); return; }
+  if (!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
 
-  const device = allData.find(r => r.soThe === soThe);
-  if (!device) { alert('Không tìm thấy số thẻ này!'); return; }
+  const r = allData.find(x => x.soThe === soThe);
+  if (!r) { alert('Không tìm thấy máy với số thẻ này'); return; }
 
-  printDeviceWord(device);
+  // Tạo nội dung HTML cho Word
+  const content = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office'
+          xmlns:w='urn:schemas-microsoft-com:office:word'
+          xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'><title>Ly Lich May</title></head>
+    <body>
+      <h2>📋 Lý lịch máy VH-${r.soThe}</h2>
+      <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+        <tr><th>Số thẻ</th><td>${r.soThe}</td></tr>
+        <tr><th>Số máy</th><td>${r.soMay}</td></tr>
+        <tr><th>Loại máy</th><td>${r.loaiMay}</td></tr>
+        <tr><th>Vị trí</th><td>${r.viTri}</td></tr>
+        <tr><th>Ghi chú</th><td>${r.ghiChu}</td></tr>
+        <tr><th>Đã kiểm kê</th><td>${r.daKiemKe ? '✅' : '❌'}</td></tr>
+        <tr><th>Chọn in</th><td>${r.chonIn ? '✅' : '❌'}</td></tr>
+        <tr><th>Ngày mua</th><td>${r.ngayMua}</td></tr>
+        <tr><th>Nơi mua</th><td>${r.noiMua}</td></tr>
+        <tr><th>Bảo dưỡng Q1</th><td>${r.bdQ1 ? '✅' : '❌'} - ${r.bdNgayQ1 || ''}</td></tr>
+        <tr><th>Bảo dưỡng Q2</th><td>${r.bdQ2 ? '✅' : '❌'} - ${r.bdNgayQ2 || ''}</td></tr>
+        <tr><th>Bảo dưỡng Q3</th><td>${r.bdQ3 ? '✅' : '❌'} - ${r.bdNgayQ3 || ''}</td></tr>
+        <tr><th>Bảo dưỡng Q4</th><td>${r.bdQ4 ? '✅' : '❌'} - ${r.bdNgayQ4 || ''}</td></tr>
+        <tr><th>Sửa chữa</th><td>${r.suaChua}</td></tr>
+      </table>
+    </body></html>
+  `;
+
+  const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `LyLich_May_VH-${r.soThe}.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
 
 // Check / Uncheck tất cả "Đã KK"
@@ -901,317 +922,9 @@ document.getElementById("checkAllQ4").addEventListener("change", function() {
   });
   renderTable();
 });
-  document.getElementById('btnPrintLyLich').addEventListener('click', () => {
-  const soThe = document.getElementById('soThePrint').value.trim();
-  const year = document.getElementById('yearPrint').value.trim();
-  if (!soThe) { alert('Nhập số thẻ cần in'); return; }
-  if (!year) { alert('Nhập năm cần in (ví dụ: 2025)'); return; }
-
-  const device = allData.find(r => String((r.soThe||'')).trim() === String(soThe).trim());
-  if (!device) { alert('Không tìm thấy số thẻ: ' + soThe); return; }
-
-  document.getElementById('printStatus').textContent = `✅ Đang tạo file lý lịch ${soThe} (${year})...`;
-  printDeviceYearWord(device, year).then(() => {
-    document.getElementById('printStatus').textContent = `✅ Tải xong: LyLich_${soThe}_${year}.docx`;
-    setTimeout(()=> document.getElementById('printStatus').textContent = '', 4000);
-  }).catch(err => {
-    console.error(err);
-    alert('Lỗi khi tạo file: ' + err.message);
-    document.getElementById('printStatus').textContent = '';
-  });
-});
-
-// --- Hàm tiện ích: convert dataURL -> Uint8Array ---
-function dataURLToUint8Array(dataURL) {
-  const base64 = dataURL.split(',')[1];
-  const raw = atob(base64);
-  const uint8 = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) uint8[i] = raw.charCodeAt(i);
-  return uint8;
-}
-
-// Hàm tạo QR image dataURL (trả về Promise)
-function generateQrDataUrl(text, size = 150) {
-  return new Promise((resolve) => {
-    const tmp = document.createElement('div');
-    tmp.style.position = 'fixed';
-    tmp.style.left = '-10000px';
-    document.body.appendChild(tmp);
-    const qr = new QRCode(tmp, {
-      text: text,
-      width: size,
-      height: size,
-      correctLevel: QRCode.CorrectLevel.H
-    });
-    // QRCode lib tạo <img> hoặc <canvas> bên trong.
-    setTimeout(() => {
-      const img = tmp.querySelector('img');
-      const canvas = tmp.querySelector('canvas');
-      let dataUrl = null;
-      if (img && img.src) dataUrl = img.src;
-      else if (canvas) dataUrl = canvas.toDataURL('image/png');
-      document.body.removeChild(tmp);
-      resolve(dataUrl);
-    }, 120); // short delay để QR render
-  });
-}
-
-// Hàm chính: tạo file Word cho 1 thiết bị ở 1 năm
-async function printDeviceYearWord(device, year) {
-  if (!device) { alert('Không tìm thấy thiết bị'); return; }
-
-  // 1) tạo QR -> link tới app + #sothe (bạn có thể đổi URL)
-  const appLink = location.href.split('#')[0] + '#' + encodeURIComponent(device.soThe || '');
-  const qrDataUrl = await generateQrDataUrl(appLink, 160);
-
-  // 2) build docx dùng docx library (window.docx)
-  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ImageRun } = window.docx;
-
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        // Header: company + QR
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'CÔNG TY TNHH MAY XK', bold: true, size: 28 }),
-          ],
-        }),
-        new Paragraph({ text: 'VIỆT HỒNG', spacing: { after: 200 } }),
-        // QR và metadata ngang hàng (dùng 2 paragraph: QR then info)
-        new Paragraph({
-          children: [
-            // QR as image (ImageRun)
-            new ImageRun({
-              data: dataURLToUint8Array(qrDataUrl),
-              transformation: { width: 120, height: 120 }
-            }),
-            new TextRun({ text: '\t\t\t' }), // spacing
-            new TextRun({ text: `Đơn vị: Phòng Cơ điện\n\nVĩnh Long, ngày     tháng     năm ${year}`, break: 1 })
-          ]
-        }),
-        new Paragraph({ text: '\nLÝ LỊCH THIẾT BỊ', heading: 'Heading2', spacing: { after: 200 } }),
-
-        // Thông tin thiết bị (cột đơn)
-        new Paragraph({ children: [ new TextRun({ text: `1. TÊN THIẾT BỊ: `, bold: true }), new TextRun({ text: device.loaiMay || '' }) ] }),
-        new Paragraph({ children: [ new TextRun({ text: `2. SỐ MÁY: `, bold: true }), new TextRun({ text: device.soMay || '' }) ] }),
-        new Paragraph({ children: [ new TextRun({ text: `3. VỊ TRÍ: `, bold: true }), new TextRun({ text: device.viTri || '' }) ] }),
-        new Paragraph({ children: [ new TextRun({ text: `4. GHI CHÚ: `, bold: true }), new TextRun({ text: device.ghiChu || '' }) ] }),
-        new Paragraph({ children: [ new TextRun({ text: `5. NGÀY MUA: `, bold: true }), new TextRun({ text: device.ngayMua || '' }) ] }),
-        new Paragraph({ children: [ new TextRun({ text: `6. NƠI MUA: `, bold: true }), new TextRun({ text: device.noiMua || '' }) ] }),
-        new Paragraph({ text: '\n7. - XEM XÉT BẢO DƯỠNG: 03 THÁNG\n   - BẢO TRÌ ĐỊNH KỲ: 4 LẦN / NĂM\n', spacing: { after: 200 } }),
-
-        // Bảng bảo dưỡng: Năm | Q1 | Q2 | Q3 | Q4 | Nội dung (ngày)
-        (() => {
-          // tạo hàng header và hàng ngày/sửa chữa
-          const rows = [];
-
-          // header
-          rows.push(new TableRow({
-            children: [
-              new TableCell({ children: [ new Paragraph({ text: `Năm`, bold: true }) ], width: { size: 120, type: WidthType.DXA } }),
-              new TableCell({ children: [ new Paragraph({ text: `Bảo dưỡng Q1`, bold: true }) ], width: { size: 120, type: WidthType.DXA } }),
-              new TableCell({ children: [ new Paragraph({ text: `Bảo dưỡng Q2`, bold: true }) ], width: { size: 120, type: WidthType.DXA } }),
-              new TableCell({ children: [ new Paragraph({ text: `Bảo dưỡng Q3`, bold: true }) ], width: { size: 120, type: WidthType.DXA } }),
-              new TableCell({ children: [ new Paragraph({ text: `Bảo dưỡng Q4`, bold: true }) ], width: { size: 120, type: WidthType.DXA } }),
-              new TableCell({ children: [ new Paragraph({ text: `Nội dung (Sửa chữa)`, bold: true }) ], width: { size: 300, type: WidthType.DXA } }),
-            ]
-          }));
-
-          // content row for the selected year
-          rows.push(new TableRow({
-            children: [
-              new TableCell({ children: [ new Paragraph({ text: `${year}` }) ] }),
-              new TableCell({ children: [ new Paragraph({ text: device.bdNgayQ1 ? (device.bdNgayQ1) : '' }) ] }),
-              new TableCell({ children: [ new Paragraph({ text: device.bdNgayQ2 ? (device.bdNgayQ2) : '' }) ] }),
-              new TableCell({ children: [ new Paragraph({ text: device.bdNgayQ3 ? (device.bdNgayQ3) : '' }) ] }),
-              new TableCell({ children: [ new Paragraph({ text: device.bdNgayQ4 ? (device.bdNgayQ4) : '' }) ] }),
-              new TableCell({ children: [ new Paragraph({ text: device.suaChua ? device.suaChua : '' }) ] }),
-            ]
-          }));
-
-          return new Table({
-            rows: rows,
-            width: { size: 100, type: WidthType.PERCENTAGE },
-          });
-        })(),
-
-        // phần để trống (dành cho ghi chú / chữ ký)
-        new Paragraph({ text: '\n\nGhi chú: ........................................................................................................' }),
-        new Paragraph({ text: '\nNgười lập: ..........................    Trưởng bộ phận: ..........................    Người duyệt: ..........................' })
-      ]
-    }]
-  });
-
-  // 3) generate file
-  const blob = await Packer.toBlob(doc);
-  const name = `LyLich_${device.soThe || device.soMay || 'unk'}_${year}.docx`;
-
-  // trigger download
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
-  async function printDeviceWord(device) {
-    const year = new Date().getFullYear();
-
-    // ======== QR CODE BASE64 ========
-    async function generateQR(text) {
-        const url = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(text);
-        const res = await fetch(url);
-        const blob = await res.blob();
-
-        return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(",")[1]);
-            reader.readAsDataURL(blob);
-        });
-    }
-
-    const qrBase64 = await generateQR(`${location.href.split("#")[0]}#${device.soThe}`);
-
-    // ======== TẠO TÀI LIỆU WORD ========
-    const doc = new docx.Document({
-        sections: [{
-            properties: {},
-            children: [
-
-                // --- HEADER ---
-                new docx.Paragraph({
-                    children: [
-                        new docx.TextRun({ text: "CÔNG TY TNHH MAY XK", bold: true }),
-                    ],
-                    alignment: docx.AlignmentType.LEFT
-                }),
-                new docx.Paragraph({
-                    children: [
-                        new docx.TextRun({ text: "VIỆT HỒNG", bold: true }),
-                    ],
-                    alignment: docx.AlignmentType.LEFT
-                }),
-                new docx.Paragraph({
-                    children: [
-                        new docx.TextRun({ text: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", bold: true }),
-                    ],
-                    alignment: docx.AlignmentType.CENTER
-                }),
-                new docx.Paragraph({
-                    children: [
-                        new docx.TextRun({ text: "Độc lập - Tự do - Hạnh phúc", bold: true }),
-                    ],
-                    alignment: docx.AlignmentType.CENTER
-                }),
-                new docx.Paragraph(""),
-                new docx.Paragraph("Đơn vị: Phòng Cơ điện"),
-
-                // --- ĐỊA ĐIỂM NGÀY THÁNG NĂM (ĐỂ TRỐNG) ---
-                new docx.Paragraph({
-                    children: [
-                        new docx.TextRun(`Vĩnh Long, ngày     tháng     năm  ${year}`),
-                    ],
-                    alignment: docx.AlignmentType.RIGHT
-                }),
-
-                new docx.Paragraph(""),
-                new docx.Paragraph(""),
-
-                // QR CODE
-                new docx.Paragraph({
-                    children: [
-                        new docx.ImageRun({
-                            data: Buffer.from(qrBase64, 'base64'),
-                            transformation: { width: 120, height: 120 }
-                        })
-                    ],
-                    alignment: docx.AlignmentType.CENTER
-                }),
-
-                new docx.Paragraph({
-                    text: "LÝ LỊCH THIẾT BỊ",
-                    heading: docx.HeadingLevel.HEADING_1,
-                    alignment: docx.AlignmentType.CENTER
-                }),
-
-                // --- THÔNG TIN ---
-                new docx.Paragraph(`1. TÊN THIẾT BỊ: ${device.loaiMay || ""}`),
-                new docx.Paragraph(`2. SỐ MÁY: ${device.soMay || ""}`),
-                new docx.Paragraph(`3. VỊ TRÍ: ${device.viTri || ""}`),
-                new docx.Paragraph(`4. GHI CHÚ: ${device.ghiChu || ""}`),
-                new docx.Paragraph(`5. NGÀY MUA: ${device.ngayMua || ""}`),
-                new docx.Paragraph(`6. NƠI MUA: ${device.noiMua || ""}`),
-
-                new docx.Paragraph(""),
-                new docx.Paragraph("- XEM XÉT BẢO DƯỠNG: 03 THÁNG"),
-                new docx.Paragraph("- BẢO TRÌ ĐỊNH KỲ: 4 LẦN / NĂM"),
-
-                new docx.Paragraph(""),
-                new docx.Paragraph(`Năm ${year}`),
-
-                // ======== TABLE BẢO DƯỠNG ========
-                new docx.Table({
-                    width: { size: 100, type: docx.WidthType.PERCENTAGE },
-                    rows: [
-                        new docx.TableRow({
-                            children: [
-                                new docx.TableCell({ children: [new docx.Paragraph("Bảo dưỡng Q1")] }),
-                                new docx.TableCell({ children: [new docx.Paragraph(device.bdNgayQ1 || "")] }),
-
-                                new docx.TableCell({ children: [new docx.Paragraph("Bảo dưỡng Q2")] }),
-                                new docx.TableCell({ children: [new docx.Paragraph(device.bdNgayQ2 || "")] }),
-                            ]
-                        }),
-                        new docx.TableRow({
-                            children: [
-                                new docx.TableCell({ children: [new docx.Paragraph("Bảo dưỡng Q3")] }),
-                                new docx.TableCell({ children: [new docx.Paragraph(device.bdNgayQ3 || "")] }),
-
-                                new docx.TableCell({ children: [new docx.Paragraph("Bảo dưỡng Q4")] }),
-                                new docx.TableCell({ children: [new docx.Paragraph(device.bdNgayQ4 || "")] }),
-                            ]
-                        }),
-                        new docx.TableRow({
-                            children: [
-                                new docx.TableCell({
-                                    children: [new docx.Paragraph("Nội dung sửa chữa")],
-                                    columnSpan: 4
-                                }),
-                            ]
-                        }),
-                        new docx.TableRow({
-                            children: [
-                                new docx.TableCell({
-                                    children: [new docx.Paragraph(device.suaChua || "")],
-                                    columnSpan: 4
-                                }),
-                            ]
-                        })
-                    ]
-                })
-            ]
-        }]
-    });
-
-    // ======== LƯU FILE ========
-    docx.Packer.toBlob(doc).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `LyLich_${device.soThe}.docx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    });
-}
-
 </script>
 </body>
 </html>
