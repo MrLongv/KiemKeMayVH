@@ -844,25 +844,31 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
   w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
   w.document.write('<table>');
-  const fields = [
-    ['Số thẻ', row.soThe],
-    ['Số máy', row.soMay],
-    ['Loại máy', row.loaiMay],
-    ['Vị trí', row.viTri],
-    ['Ghi chú', row.ghiChu],
-    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
-    ['In QR', row.chonIn?'✅':'❌'],
-    ['Ngày mua', row.ngayMua],
-    ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
-    ['Sửa chữa', row.suaChua]
-  ];
-  fields.forEach(f => {
-    w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
-  });
+ const fields = [
+  ['Số thẻ', row.soThe],
+  ['Số máy', row.soMay],
+  ['Loại máy', row.loaiMay],
+  ['Vị trí', row.viTri],
+  ['Ghi chú', row.ghiChu],
+  ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
+  ['In QR', row.chonIn?'✅':'❌'],
+  ['Ngày mua', row.ngayMua],
+  ['Nơi mua', row.noiMua],
+  ['Q1', row.bdQ1?'✅':'❌'],
+  ['Ngày Q1', row.bdNgayQ1 || ''],
+  ['Q2', row.bdQ2?'✅':'❌'],
+  ['Ngày Q2', row.bdNgayQ2 || ''],
+  ['Q3', row.bdQ3?'✅':'❌'],
+  ['Ngày Q3', row.bdNgayQ3 || ''],
+  ['Q4', row.bdQ4?'✅':'❌'],
+  ['Ngày Q4', row.bdNgayQ4 || ''],
+  ['Sửa chữa', row.suaChua]
+];
+
+fields.forEach(f => {
+  w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
+});
+
   w.document.write('</table>');
   w.document.write('</body></html>');
   w.document.close();
