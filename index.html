@@ -816,12 +816,13 @@ w.document.write('</style></head><body>');
 };
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soThe = document.getElementById('soThePrint').value.trim();
-  if (!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
+  if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
   const row = allData.find(r => r.soThe == soThe);
-  if (!row) { alert('Không tìm thấy số thẻ này'); return; }
+  if(!row) { alert('Không tìm thấy số thẻ này'); return; }
 
   const w = window.open('', '_blank');
-  w.document.write('<html><head><title>Lý lịch máy VH-' + soThe + '</title>');
+  w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
+
   w.document.write('<style>');
   w.document.write(`
     body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
@@ -833,31 +834,22 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     td {text-align: left;}
     tr:nth-child(even) td {background-color: #fafafa;}
     td.center {text-align: center;}
-    .qr-container {text-align:center; margin: 15px 0;}
+    .qr {text-align: center; margin: 20px 0;}
     @media print {
       body {margin: 10mm;}
       h1 {font-size: 24px;}
       h2 {font-size: 20px;}
     }
   `);
-  w.document.write('</style></head><body>');
+  w.document.write('</style>');
 
+  w.document.write('</head><body>');
+
+  // Tiêu đề công ty và lý lịch
   w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
-  w.document.write('<h2>Lý lịch máy VH-' + soThe + '</h2>');
+  w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
 
-  // Chèn QR code ở giữa
-  w.document.write('<div class="qr-container">');
-  // Lấy QR code y chang nút in QR: dùng canvas dataURL từ QR code hiện tại
-  // Giả sử bạn có 1 canvas QR sẵn ở app, ví dụ: row.qrCanvas
-  if (row.qrCanvas) {
-    w.document.write('<img src="' + row.qrCanvas.toDataURL() + '" style="width:150px; height:150px;">');
-  } else {
-    // fallback: tạo QR code tạm thời nếu chưa có
-    w.document.write('<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(row.soThe) + '" style="width:150px; height:150px;">');
-  }
-  w.document.write('</div>');
-
-  // Bảng dữ liệu
+  // Bảng thông tin máy
   w.document.write('<table>');
   const fields = [
     ['Số thẻ', row.soThe],
@@ -869,10 +861,10 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     ['In QR', row.chonIn ? '✅' : '❌'],
     ['Ngày mua', row.ngayMua],
     ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', row.bdQ1 ? '✅' : '' + ' ' + (row.bdNgayQ1 || '')],
-    ['Bảo dưỡng Q2', row.bdQ2 ? '✅' : '' + ' ' + (row.bdNgayQ2 || '')],
-    ['Bảo dưỡng Q3', row.bdQ3 ? '✅' : '' + ' ' + (row.bdNgayQ3 || '')],
-    ['Bảo dưỡng Q4', row.bdQ4 ? '✅' : '' + ' ' + (row.bdNgayQ4 || '')],
+    ['Bảo dưỡng Q1', (row.bdQ1 ? '✅' : '') + ' ' + (row.bdNgayQ1||'')],
+    ['Bảo dưỡng Q2', (row.bdQ2 ? '✅' : '') + ' ' + (row.bdNgayQ2||'')],
+    ['Bảo dưỡng Q3', (row.bdQ3 ? '✅' : '') + ' ' + (row.bdNgayQ3||'')],
+    ['Bảo dưỡng Q4', (row.bdQ4 ? '✅' : '') + ' ' + (row.bdNgayQ4||'')],
     ['Sửa chữa', row.suaChua]
   ];
   fields.forEach(f => {
@@ -880,12 +872,16 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   });
   w.document.write('</table>');
 
+  // QR code y hệt nút in QR
+  w.document.write('<div class="qr">');
+  w.document.write(`<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(row.soThe)}" alt="QR Code">`);
+  w.document.write('</div>');
+
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
   w.print();
 };
-
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
