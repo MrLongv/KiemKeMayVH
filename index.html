@@ -816,30 +816,46 @@ w.document.write('</style></head><body>');
 };
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soThe = document.getElementById('soThePrint').value.trim();
-  if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
+  if (!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
 
   const row = allData.find(r => r.soThe == soThe);
-  if(!row) { alert('Không tìm thấy số thẻ này'); return; }
+  if (!row) { alert('Không tìm thấy số thẻ này'); return; }
 
-  // --- Tạo URL QR giống hệt hệ thống đang dùng ---
-  const qrURL = `https://mrlongv.github.io/KiemKeMayVH/#${soThe}`;
+  // ---- LẤY ĐÚNG URL QR GIỐNG HỆ THỐNG ----
+  const baseURL = location.href.split('#')[0];  
+  const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
 
-  // --- Tạo ảnh QR code bằng Google Chart API (không đơ, không lỗi) ---
-  const qrImg = `https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(qrURL)}`;
+  // ---- TẠO DIV TẠM ĐỂ SINH QR ----
+  const tempDiv = document.createElement("div");
+  new QRCode(tempDiv, {
+    text: qrText,
+    width: 200,
+    height: 200
+  });
 
-  // --- Mở cửa sổ in ---
+  // Lấy ảnh từ QR đã sinh
+  const qrImg = tempDiv.querySelector("img")?.src ||
+                tempDiv.querySelector("canvas")?.toDataURL();
+
+  if (!qrImg) {
+    alert("Không thể tạo QR code để in.");
+    return;
+  }
+
+  // ---- MỞ CỬA SỔ IN ----
   const w = window.open('', '_blank');
-  w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
+  w.document.write('<html><head><title>Lý lịch máy VH-' + soThe + '</title>');
 
   w.document.write(`
     <style>
-      body {font-family: Arial; margin:20px;}
-      h1 {text-align:center; font-size:26px;}
-      h2 {text-align:center; font-size:22px; border-bottom:2px solid #333; padding-bottom:8px;}
-      table {border-collapse: collapse; width: 100%; margin-top:20px;}
-      th,td {border:1px solid #ccc; padding:8px;}
-      th {background:#eee; width:30%;}
-      tr:nth-child(even) td {background:#fafafa;}
+      body {font-family: Arial; margin: 20px;}
+      h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
+      h2 {text-align: center; font-size: 20px; border-bottom: 2px solid #333; padding-bottom: 8px;}
+      table {border-collapse: collapse; width: 100%; margin-top: 20px;}
+      th, td {border: 1px solid #ccc; padding: 8px;}
+      th {background: #eee; width: 30%;}
+      tr:nth-child(even) td {background: #fafafa;}
+      .qr-box {text-align:center; margin-top: 25px;}
     </style>
   `);
 
@@ -847,36 +863,35 @@ document.getElementById('btnPrintLyLich').onclick = () => {
   w.document.write(`<h1>Công ty TNHH may XK Việt Hồng</h1>`);
   w.document.write(`<h2>Lý lịch máy VH-${soThe}</h2>`);
 
-  // --- Bảng thông tin ---
-  w.document.write('<table>');
+  // ---- BẢNG THÔNG TIN ----
   const fields = [
     ['Số thẻ', row.soThe],
     ['Số máy', row.soMay],
     ['Loại máy', row.loaiMay],
     ['Vị trí', row.viTri],
     ['Ghi chú', row.ghiChu],
-    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
-    ['In QR', row.chonIn?'✅':'❌'],
+    ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
+    ['In QR', row.chonIn ? '✅' : '❌'],
     ['Ngày mua', row.ngayMua],
     ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
+    ['Bảo dưỡng Q1', row.bdQ1 ? '✅ ' + (row.bdNgayQ1||'') : ''],
+    ['Bảo dưỡng Q2', row.bdQ2 ? '✅ ' + (row.bdNgayQ2||'') : ''],
+    ['Bảo dưỡng Q3', row.bdQ3 ? '✅ ' + (row.bdNgayQ3||'') : ''],
+    ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4||'') : ''],
     ['Sửa chữa', row.suaChua]
   ];
 
+  w.document.write('<table>');
   fields.forEach(f => {
     w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
   });
-
   w.document.write('</table>');
 
-  // --- Hiển thị QR code ---
+  // ---- THÊM QR CODE CHUẨN ----
   w.document.write(`
-    <div style="text-align:center; margin-top:30px;">
-      <h3>Mã QR</h3>
-      <img src="${qrImg}" style="width:250px;height:250px;">
+    <div class="qr-box">
+      <h3>Mã QR thiết bị</h3>
+      <img src="${qrImg}" style="width:200px;height:200px;">
     </div>
   `);
 
