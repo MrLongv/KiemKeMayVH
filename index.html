@@ -813,88 +813,140 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-document.getElementById('btnPrintLyLich').onclick = async () => {
+// in lý lịch
+document.getElementById('btnPrintLyLich').onclick = () => {
   const input = document.getElementById('soThePrint').value.trim();
-  if (!input) { alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!"); return; }
+
+  if (!input) {
+    alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!");
+    return;
+  }
 
   let listSoThe = [];
-  if (input.toLowerCase() === "all") listSoThe = allData.map(r => r.soThe);
-  else listSoThe = input.split(',').map(s => s.trim()).filter(s => s);
+  if (input.toLowerCase() === "all") {
+    listSoThe = allData.map(r => r.soThe);
+  } else {
+    listSoThe = input.split(',').map(s => s.trim()).filter(s => s);
+  }
 
-  if (listSoThe.length === 0) { alert("Không có số thẻ hợp lệ."); return; }
+  if (listSoThe.length === 0) {
+    alert("Không có số thẻ hợp lệ.");
+    return;
+  }
 
   const baseURL = location.href.split('#')[0];
+
   const w = window.open('', '_blank');
   w.document.write('<html><head><title>In Lý Lịch</title>');
+
   w.document.write(`
     <style>
-      body {font-family: Arial; margin:20px; color:#333;}
-      table {border-collapse: collapse; width: 100%; margin-top:10px;}
-      th, td {border:1px solid #ccc; padding:8px;}
-      th {background:#eee; width:30%;}
-      tr:nth-child(even) td {background:#fafafa;}
-      .page-break {page-break-after:always;}
+      body {font-family: Arial; margin: 20px; color:#333;}
+
+      .header-section {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .company-qr {
+        text-align: left;
+      }
+
+      .company-name {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .qr-box img {
+        width: 110px;
+        height: 110px;
+        display: block;
+      }
+
+      .ly-lich {
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        margin-left: 50px;
+        align-self: center;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 10px;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+      }
+      th {
+        background: #eee;
+        width: 30%;
+      }
+      tr:nth-child(even) td { background: #fafafa; }
+
+      .page-break { page-break-after: always; }
     </style>
   `);
+
   w.document.write('</head><body>');
 
-  for (let idx = 0; idx < listSoThe.length; idx++) {
-    const soThe = listSoThe[idx];
+  listSoThe.forEach((soThe, idx) => {
     const row = allData.find(r => r.soThe == soThe);
     if (!row) {
       w.document.write(`<h3 style="color:red">⚠ Không tìm thấy số thẻ: ${soThe}</h3>`);
       w.document.write('<div class="page-break"></div>');
-      continue;
+      return;
     }
 
-    // --- Tạo QR code trực tiếp DataURL ---
-    const qrCanvas = document.createElement("canvas");
-    await new Promise(resolve => {
-      new QRCode(qrCanvas, {
-        text: `${baseURL}#${encodeURIComponent(soThe)}`,
-        width: 110,
-        height: 110
-      });
-      setTimeout(resolve, 50); // đợi render
-    });
-    const qrImg = qrCanvas.toDataURL();
+    // ---- TẠO QR CODE TRONG TẠM DIV ----
+    const tempDiv = document.createElement("div");
+    new QRCode(tempDiv, { text: `${baseURL}#${encodeURIComponent(soThe)}`, width:110, height:110 });
+    const qrImg = tempDiv.querySelector("img")?.src || tempDiv.querySelector("canvas")?.toDataURL();
 
-    // --- HEADER: cột trái QR + công ty, cột phải Lý lịch ---
+    // ---- HEADER: Công ty + QR bên trái, Lý lịch bên phải ----
     w.document.write(`
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <!-- Cột trái -->
-        <div style="text-align:left;">
-          <div style="font-size:22px; font-weight:bold;">CÔNG TY TNHH MAY XK VIỆT HỒNG</div>
-          <div style="margin-top:5px;">
-            <img src="${qrImg}" style="width:110px;height:110px;">
-          </div>
+      <div class="header-section">
+        <div class="company-qr">
+          <div class="company-name">CÔNG TY TNHH MAY XK VIỆT HỒNG</div>
+          <div class="qr-box"><img src="${qrImg}"></div>
         </div>
-
-        <!-- Cột phải -->
-        <div style="font-size:22px; font-weight:bold; text-align:center;">
-          LÝ LỊCH MÁY VH-${soThe}
-        </div>
+        <div class="ly-lich">LÝ LỊCH MÁY VH-${soThe}</div>
       </div>
     `);
 
-    // --- BẢNG THÔNG TIN ---
+    // ---- BẢNG THÔNG TIN ----
     const fields = [
-      ['Số thẻ', row.soThe], ['Số máy', row.soMay], ['Loại máy', row.loaiMay],
-      ['Vị trí', row.viTri], ['Ghi chú', row.ghiChu], ['Đã kiểm kê', row.daKiemKe ? '✅':'❌'],
-      ['In QR', row.chonIn ? '✅':'❌'], ['Ngày mua', row.ngayMua], ['Nơi mua', row.noiMua],
-      ['Bảo dưỡng Q1', row.bdQ1 ? '✅ '+(row.bdNgayQ1||'') : ''],
-      ['Bảo dưỡng Q2', row.bdQ2 ? '✅ '+(row.bdNgayQ2||'') : ''],
-      ['Bảo dưỡng Q3', row.bdQ3 ? '✅ '+(row.bdNgayQ3||'') : ''],
-      ['Bảo dưỡng Q4', row.bdQ4 ? '✅ '+(row.bdNgayQ4||'') : ''],
+      ['Số thẻ', row.soThe],
+      ['Số máy', row.soMay],
+      ['Loại máy', row.loaiMay],
+      ['Vị trí', row.viTri],
+      ['Ghi chú', row.ghiChu],
+      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
+      ['In QR', row.chonIn ? '✅' : '❌'],
+      ['Ngày mua', row.ngayMua],
+      ['Nơi mua', row.noiMua],
+      ['Bảo dưỡng Q1', row.bdQ1 ? '✅ ' + (row.bdNgayQ1 || '') : ''],
+      ['Bảo dưỡng Q2', row.bdQ2 ? '✅ ' + (row.bdNgayQ2 || '') : ''],
+      ['Bảo dưỡng Q3', row.bdQ3 ? '✅ ' + (row.bdNgayQ3 || '') : ''],
+      ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4 || '') : ''],
       ['Sửa chữa', row.suaChua]
     ];
 
     w.document.write('<table>');
-    fields.forEach(f => w.document.write(`<tr><th>${f[0]}</th><td>${f[1]??''}</td></tr>`));
+    fields.forEach(f => {
+      w.document.write(`<tr><th>${f[0]}</th><td>${f[1] ?? ''}</td></tr>`);
+    });
     w.document.write('</table>');
 
-    if (idx < listSoThe.length-1) w.document.write('<div class="page-break"></div>');
-  }
+    if (idx < listSoThe.length - 1) {
+      w.document.write('<div class="page-break"></div>');
+    }
+  });
 
   w.document.write('</body></html>');
   w.document.close();
