@@ -814,37 +814,31 @@ w.document.write('</style></head><body>');
   };
 };
 // in lý lịch
-  document.getElementById('btnPrintLyLich').onclick = () => {
-  const soThe = document.getElementById('soThePrint').value.trim();
-  if (!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
+document.getElementById('btnPrintLyLich').onclick = () => {
+  const input = document.getElementById('soThePrint').value.trim();
 
-  const row = allData.find(r => r.soThe == soThe);
-  if (!row) { alert('Không tìm thấy số thẻ này'); return; }
-
-  // ---- LẤY ĐÚNG URL QR GIỐNG HỆ THỐNG ----
-  const baseURL = location.href.split('#')[0];  
-  const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
-
-  // ---- TẠO DIV TẠM ĐỂ SINH QR ----
-  const tempDiv = document.createElement("div");
-  new QRCode(tempDiv, {
-    text: qrText,
-    width: 200,
-    height: 200
-  });
-
-  // Lấy ảnh từ QR đã sinh
-  const qrImg = tempDiv.querySelector("img")?.src ||
-                tempDiv.querySelector("canvas")?.toDataURL();
-
-  if (!qrImg) {
-    alert("Không thể tạo QR code để in.");
+  if (!input) {
+    alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!");
     return;
   }
 
-  // ---- MỞ CỬA SỔ IN ----
+  let listSoThe = [];
+
+  if (input.toLowerCase() === "all") {
+    listSoThe = allData.map(r => r.soThe);
+  } else {
+    listSoThe = input.split(',').map(s => s.trim()).filter(s => s);
+  }
+
+  if (listSoThe.length === 0) {
+    alert("Không có số thẻ hợp lệ.");
+    return;
+  }
+
+  const baseURL = location.href.split('#')[0];
+
   const w = window.open('', '_blank');
-  w.document.write('<html><head><title>Lý lịch máy VH-' + soThe + '</title>');
+  w.document.write('<html><head><title>In Lý Lịch</title>');
 
   w.document.write(`
     <style>
@@ -856,44 +850,73 @@ w.document.write('</style></head><body>');
       th {background: #eee; width: 30%;}
       tr:nth-child(even) td {background: #fafafa;}
       .qr-box {text-align:center; margin-top: 25px;}
+      .page-break {page-break-after: always;}
     </style>
   `);
 
   w.document.write('</head><body>');
-  w.document.write(`<h1>Công ty TNHH may XK Việt Hồng</h1>`);
-  w.document.write(`<h2>Lý lịch máy VH-${soThe}</h2>`);
 
-  // ---- BẢNG THÔNG TIN ----
-  const fields = [
-    ['Số thẻ', row.soThe],
-    ['Số máy', row.soMay],
-    ['Loại máy', row.loaiMay],
-    ['Vị trí', row.viTri],
-    ['Ghi chú', row.ghiChu],
-    ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
-    ['In QR', row.chonIn ? '✅' : '❌'],
-    ['Ngày mua', row.ngayMua],
-    ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', row.bdQ1 ? '✅ ' + (row.bdNgayQ1||'') : ''],
-    ['Bảo dưỡng Q2', row.bdQ2 ? '✅ ' + (row.bdNgayQ2||'') : ''],
-    ['Bảo dưỡng Q3', row.bdQ3 ? '✅ ' + (row.bdNgayQ3||'') : ''],
-    ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4||'') : ''],
-    ['Sửa chữa', row.suaChua]
-  ];
+  // === LẶP TỪNG SỐ THẺ ===
+  listSoThe.forEach((soThe, idx) => {
 
-  w.document.write('<table>');
-  fields.forEach(f => {
-    w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
+    const row = allData.find(r => r.soThe == soThe);
+    if (!row) {
+      w.document.write(`<h3 style="color:red">⚠ Không tìm thấy số thẻ: ${soThe}</h3>`);
+      w.document.write('<div class="page-break"></div>');
+      return;
+    }
+
+    // ---- SINH QR CODE ĐÚNG CHUẨN ----
+    const qrText = `${baseURL}#${encodeURIComponent(soThe)}`;
+    const tempDiv = document.createElement("div");
+    new QRCode(tempDiv, { text: qrText, width: 200, height: 200 });
+
+    const qrImg =
+      tempDiv.querySelector("img")?.src ||
+      tempDiv.querySelector("canvas")?.toDataURL();
+
+    // ---- IN LÝ LỊCH ----
+    w.document.write(`
+      <h1>Công ty TNHH may XK Việt Hồng</h1>
+      <h2>Lý lịch máy VH-${soThe}</h2>
+    `);
+
+    const fields = [
+      ['Số thẻ', row.soThe],
+      ['Số máy', row.soMay],
+      ['Loại máy', row.loaiMay],
+      ['Vị trí', row.viTri],
+      ['Ghi chú', row.ghiChu],
+      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
+      ['In QR', row.chonIn ? '✅' : '❌'],
+      ['Ngày mua', row.ngayMua],
+      ['Nơi mua', row.noiMua],
+      ['Bảo dưỡng Q1', row.bdQ1 ? '✅ ' + (row.bdNgayQ1 || '') : ''],
+      ['Bảo dưỡng Q2', row.bdQ2 ? '✅ ' + (row.bdNgayQ2 || '') : ''],
+      ['Bảo dưỡng Q3', row.bdQ3 ? '✅ ' + (row.bdNgayQ3 || '') : ''],
+      ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4 || '') : ''],
+      ['Sửa chữa', row.suaChua]
+    ];
+
+    w.document.write('<table>');
+    fields.forEach(f => {
+      w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
+    });
+    w.document.write('</table>');
+
+    // QR Code
+    w.document.write(`
+      <div class="qr-box">
+        <h3>Mã QR thiết bị</h3>
+        <img src="${qrImg}" style="width:200px;height:200px;">
+      </div>
+    `);
+
+    // Ngắt trang nếu không phải bản cuối
+    if (idx < listSoThe.length - 1) {
+      w.document.write('<div class="page-break"></div>');
+    }
   });
-  w.document.write('</table>');
-
-  // ---- THÊM QR CODE CHUẨN ----
-  w.document.write(`
-    <div class="qr-box">
-      <h3>Mã QR thiết bị</h3>
-      <img src="${qrImg}" style="width:200px;height:200px;">
-    </div>
-  `);
 
   w.document.write('</body></html>');
   w.document.close();
