@@ -912,22 +912,20 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
     // ---- PHẦN HEADER MỚI ----
 w.document.write(`
-  <div class="header-logo">
-    <span>CÔNG TY TNHH MAY XK VIỆT HỒNG</span>
+  <div class="header-logo" style="margin-left:0; font-size:22px; font-weight:bold;">
+    CÔNG TY TNHH MAY XK VIỆT HỒNG
   </div>
   <div style="position: relative; margin-bottom: 40px;">
     <!-- QR code phía trên, cách trái 70px -->
     <div style="position: absolute; left:70px; top:0;">
       <img src="${qrImg}" style="width:100px;height:100px;">
     </div>
-
     <!-- Lý lịch máy canh giữa trang A4 -->
     <div style="text-align:center; font-size:22px; font-weight:bold; margin-left:0; padding-top:60px;">
       LÝ LỊCH MÁY VH-${soThe}
     </div>
   </div>
 `);
-
     // ---- BẢNG THÔNG TIN ----
     const fields = [
       ['Số thẻ', row.soThe],
@@ -945,7 +943,6 @@ w.document.write(`
       ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4 || '') : ''],
       ['Sửa chữa', row.suaChua]
     ];
-
     w.document.write('<table>');
     fields.forEach(f => {
       w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
@@ -955,9 +952,7 @@ w.document.write(`
     if (idx < listSoThe.length - 1) {
       w.document.write('<div class="page-break"></div>');
     }
-
   });
-
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
