@@ -918,16 +918,19 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
     // ---- HEADER CHUẨN NHƯ YÊU CẦU ----
 w.document.write(`
-  <div class="header-logo">
-    <div class="header-logo" style="text-align:left; font-size:22px; font-weight:bold; line-height:1.1;">
-  CÔNG TY TNHH MAY XK <span style="display:block; font-size:22px;">VIỆT HỒNG</span>
-</div>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+    <!-- Cột trái: công ty và QR -->
+    <div style="text-align:left;">
+      <div style="font-size:22px; font-weight:bold;">CÔNG TY TNHH MAY XK VIỆT HỒNG</div>
+      <div class="qr-box" style="margin-top:5px;">
+        <img src="${qrImg}" style="width:110px;height:110px;">
+      </div>
     </div>
 
-  <h2>LÝ LỊCH MÁY VH-${soThe}</h2>
-
-  <div class="qr-box">
-    <img src="${qrImg}" style="width:110px;height:110px;">
+    <!-- Cột phải: Lý lịch máy -->
+    <div style="text-align:center; font-size:22px; font-weight:bold;">
+      LÝ LỊCH MÁY VH-${soThe}
+    </div>
   </div>
 `);
 
