@@ -814,68 +814,72 @@ w.document.write('</style></head><body>');
     setTimeout(() => { w.focus(); w.print(); }, 500);
   };
 };
-document.getElementById('btnPrintLyLich').onclick = () => {
-  const soThe = document.getElementById('soThePrint').value.trim();
-  if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
-  const row = allData.find(r => r.soThe == soThe);
-  if(!row) { alert('Không tìm thấy số thẻ này'); return; }
+document.getElementById('btnPrint').onclick = () => {
+  const printData = allData.filter(r => r.chonIn);
+  if (printData.length === 0) { alert('Chọn ít nhất 1 dòng để in'); return; }
 
   const w = window.open('', '_blank');
-  w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
+  w.document.write('<html><head><title>In Lý Lịch Máy</title>');
   w.document.write('<style>');
   w.document.write(`
-    body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
-    h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
-    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
-    table {border-collapse: collapse; width: 100%;}
-    th, td {border: 1px solid #ccc; padding: 8px 12px;}
-    th {background-color: #f0f0f0; text-align: left; width: 30%;}
-    td {text-align: left;}
-    tr:nth-child(even) td {background-color: #fafafa;}
-    td.center {text-align: center;}
-    @media print {
-      body {margin: 10mm;}
-      h1 {font-size: 24px;}
-      h2 {font-size: 20px;}
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2, h3 { margin: 5px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #000; padding: 6px; text-align: left; }
+    .qr { text-align: center; margin-top: 20px; }
   `);
-  w.document.write('</style>');
-  w.document.write('</head><body>');
-  w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
-  w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
-  w.document.write('<table>');
- const fields = [
-  ['Số thẻ', row.soThe],
-  ['Số máy', row.soMay],
-  ['Loại máy', row.loaiMay],
-  ['Vị trí', row.viTri],
-  ['Ghi chú', row.ghiChu],
-  ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
-  ['In QR', row.chonIn?'✅':'❌'],
-  ['Ngày mua', row.ngayMua],
-  ['Nơi mua', row.noiMua],
-  ['Q1', row.bdQ1?'✅':'❌'],
-  ['Ngày Q1', row.bdNgayQ1 || ''],
-  ['Q2', row.bdQ2?'✅':'❌'],
-  ['Ngày Q2', row.bdNgayQ2 || ''],
-  ['Q3', row.bdQ3?'✅':'❌'],
-  ['Ngày Q3', row.bdNgayQ3 || ''],
-  ['Q4', row.bdQ4?'✅':'❌'],
-  ['Ngày Q4', row.bdNgayQ4 || ''],
-  ['Sửa chữa', row.suaChua]
-];
+  w.document.write('</style></head><body>');
 
-fields.forEach(f => {
-  w.document.write(`<tr><th>${f[0]}</th><td class="${f[1]==='✅'?'center':''}">${f[1]}</td></tr>`);
-});
+  printData.forEach(row => {
+    // Tiêu đề
+    w.document.write('<h2 style="text-align:center;">Công ty TNHH may XK Việt Hồng</h2>');
+    w.document.write('<h3 style="text-align:center;">Lý lịch máy</h3>');
 
-  w.document.write('</table>');
+    // Bảng thông tin cơ bản
+    w.document.write('<table>');
+    const basicFields = [
+      ['Số thẻ', row.soThe],
+      ['Số máy', row.soMay],
+      ['Loại máy', row.loaiMay],
+      ['Vị trí', row.viTri],
+      ['Ghi chú', row.ghiChu],
+      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
+      ['In QR', row.chonIn ? '✅' : '❌'],
+      ['Ngày mua', row.ngayMua],
+      ['Nơi mua', row.noiMua],
+      ['Sửa chữa', row.suaChua]
+    ];
+    basicFields.forEach(f => {
+      w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
+    });
+
+    // Q1–Q4 + ngày chung dòng
+    const quarters = [
+      ['Q1', row.bdQ1, row.bdNgayQ1],
+      ['Q2', row.bdQ2, row.bdNgayQ2],
+      ['Q3', row.bdQ3, row.bdNgayQ3],
+      ['Q4', row.bdQ4, row.bdNgayQ4]
+    ];
+    quarters.forEach(q => {
+      const status = q[1] ? '✅' : '❌';
+      const date = q[2] ? q[2] : '';
+      w.document.write(`<tr><th>${q[0]}</th><td>${status} ${date}</td></tr>`);
+    });
+
+    w.document.write('</table>');
+
+    // QR code giữa trang
+    w.document.write('<div class="qr">');
+    w.document.write(`<img src="${row.qrCode}" alt="QR code" style="width:150px;height:150px;">`);
+    w.document.write('</div>');
+
+    // Ngắt trang giữa các máy nếu in nhiều
+    w.document.write('<div style="page-break-after:always;"></div>');
+  });
+
   w.document.write('</body></html>');
   w.document.close();
-  w.focus();
-  w.print();
 };
-
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
