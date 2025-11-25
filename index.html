@@ -816,114 +816,83 @@ w.document.write('</style></head><body>');
 };
 document.getElementById('btnPrintLyLich').onclick = () => {
   const soThe = document.getElementById('soThePrint').value.trim();
-  if(!soThe) { 
-    alert('Nhập số thẻ để in lý lịch'); 
-    return; 
-  }
+  if(!soThe) { alert('Nhập số thẻ để in lý lịch'); return; }
 
   const row = allData.find(r => r.soThe == soThe);
-  if(!row) { 
-    alert('Không tìm thấy số thẻ này'); 
-    return; 
-  }
+  if(!row) { alert('Không tìm thấy số thẻ này'); return; }
 
-  // --- TÌM QR CODE TỰ ĐỘNG ---
-  let qrDataURL = "";
+  // --- Tạo đúng URL QR như hệ thống đang dùng ---
+  const qrURL = `https://mrlongv.github.io/KiemKeMayVH/#${soThe}`;
 
-  // 1. Tìm theo ID kiểu qr-123
-  let qrEl = document.getElementById(`qr-${soThe}`);
-
-  // 2. Nếu chưa có → tìm IMG có data-sothe hoặc alt chứa số thẻ
-  if(!qrEl){
-    qrEl = document.querySelector(`img[data-sothe="${soThe}"], img[alt*="${soThe}"]`);
-  }
-
-  // 3. Nếu chưa có → tìm canvas QR có data-sothe hoặc id chứa số thẻ
-  if(!qrEl){
-    qrEl = document.querySelector(`canvas[data-sothe="${soThe}"], canvas[id*="${soThe}"]`);
-  }
-
-  // 4. Nếu tìm thấy QR IMG
-  if(qrEl && qrEl.tagName === "IMG"){
-    qrDataURL = qrEl.src;
-  }
-
-  // 5. Nếu tìm thấy QR CANVAS
-  if(qrEl && qrEl.tagName === "CANVAS"){
-    try {
-      qrDataURL = qrEl.toDataURL();
-    } catch(e){
-      console.error("Canvas QR không convert được:", e);
+  // --- Tạo QR code tạm bằng canvas để in ---
+  const tempCanvas = document.createElement("canvas");
+  QRCode.toCanvas(tempCanvas, qrURL, { width: 180 }, function (error) {
+    if (error) {
+      console.error(error);
+      alert("Không tạo được QR code");
+      return;
     }
-  }
 
-  // --- Mở cửa sổ in ---
-  const w = window.open('', '_blank');
-  w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
+    const qrDataURL = tempCanvas.toDataURL(); // ảnh QR hoàn chỉnh
 
-  // CSS
-  w.document.write('<style>');
-  w.document.write(`
-    body {font-family: Arial, sans-serif; margin: 20px; color: #333;}
-    h1 {text-align: center; font-size: 26px; margin-bottom: 5px;}
-    h2 {text-align: center; font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px;}
-    table {border-collapse: collapse; width: 100%; margin-bottom: 20px;}
-    th, td {border: 1px solid #ccc; padding: 8px 12px;}
-    th {background-color: #f0f0f0; text-align: left; width: 30%;}
-    tr:nth-child(even) td {background-color: #fafafa;}
-    td.center {text-align: center;}
-    @media print {
-      body {margin: 10mm;}
-      h1 {font-size: 24px;}
-      h2 {font-size: 20px;}
-    }
-  `);
-  w.document.write('</style></head><body>');
+    // --- Mở cửa sổ in ---
+    const w = window.open('', '_blank');
+    w.document.write('<html><head><title>Lý lịch máy VH-'+soThe+'</title>');
 
-  // Header
-  w.document.write('<h1>Công ty TNHH may XK Việt Hồng</h1>');
-  w.document.write('<h2>Lý lịch máy VH-'+soThe+'</h2>');
-
-  // Bảng dữ liệu
-  w.document.write('<table>');
-  const fields = [
-    ['Số thẻ', row.soThe],
-    ['Số máy', row.soMay],
-    ['Loại máy', row.loaiMay],
-    ['Vị trí', row.viTri],
-    ['Ghi chú', row.ghiChu],
-    ['Đã kiểm kê', row.daKiemKe?'✅':'❌'],
-    ['In QR', row.chonIn?'✅':'❌'],
-    ['Ngày mua', row.ngayMua],
-    ['Nơi mua', row.noiMua],
-    ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
-    ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
-    ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
-    ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
-    ['Sửa chữa', row.suaChua]
-  ];
-  fields.forEach(f => {
-    w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
-  });
-  w.document.write('</table>');
-
-  // --- Chèn QR Code nếu có ---
-  if(qrDataURL){
     w.document.write(`
-      <div style="text-align:center; margin-top:10px;">
-        <h3>Mã QR</h3>
-        <img src="${qrDataURL}" style="width:150px;height:150px;" />
+      <style>
+        body {font-family: Arial; margin:20px;}
+        h1{text-align:center;font-size:26px;margin-bottom:5px;}
+        h2{text-align:center;font-size:20px;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:8px;}
+        table{border-collapse:collapse;width:100%;margin-bottom:20px;}
+        th,td{border:1px solid #ccc;padding:8px 12px;}
+        th{background:#eee;width:30%;}
+        tr:nth-child(even) td{background:#fafafa;}
+      </style>
+    `);
+
+    w.document.write('</head><body>');
+    w.document.write(`<h1>Công ty TNHH may XK Việt Hồng</h1>`);
+    w.document.write(`<h2>Lý lịch máy VH-${soThe}</h2>`);
+
+    // --- Bảng thông tin ---
+    w.document.write('<table>');
+    const fields = [
+      ['Số thẻ', row.soThe],
+      ['Số máy', row.soMay],
+      ['Loại máy', row.loaiMay],
+      ['Vị trí', row.viTri],
+      ['Ghi chú', row.ghiChu],
+      ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'],
+      ['In QR', row.chonIn ? '✅' : '❌'],
+      ['Ngày mua', row.ngayMua],
+      ['Nơi mua', row.noiMua],
+      ['Bảo dưỡng Q1', row.bdQ1?'✅':''+' '+(row.bdNgayQ1||'')],
+      ['Bảo dưỡng Q2', row.bdQ2?'✅':''+' '+(row.bdNgayQ2||'')],
+      ['Bảo dưỡng Q3', row.bdQ3?'✅':''+' '+(row.bdNgayQ3||'')],
+      ['Bảo dưỡng Q4', row.bdQ4?'✅':''+' '+(row.bdNgayQ4||'')],
+      ['Sửa chữa', row.suaChua]
+    ];
+    fields.forEach(f=>{
+      w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);
+    });
+    w.document.write('</table>');
+
+    // --- Chèn QR code đúng 100% ---
+    w.document.write(`
+      <div style="text-align:center;margin-top:20px;">
+        <h3>Mã QR thiết bị</h3>
+        <img src="${qrDataURL}" style="width:180px;height:180px;">
       </div>
     `);
-  } else {
-    w.document.write(`<p style="color:red; text-align:center;">⚠ Không tìm thấy QR code để in.</p>`);
-  }
 
-  w.document.write('</body></html>');
-  w.document.close();
-  w.focus();
-  w.print();
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    w.print();
+  });
 };
+
 
 // Check / Uncheck tất cả "Đã KK"
 document.getElementById("checkAllKK").addEventListener("change", function() {
