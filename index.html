@@ -911,18 +911,24 @@ document.getElementById('btnPrintLyLich').onclick = () => {
       tempDiv.querySelector("canvas")?.toDataURL();
 
     // ---- PHẦN HEADER MỚI ----
-    w.document.write(`
-      <div class="header-logo">
-        <span>CÔNG TY TNHH MAY XK</span>
-        <span style="font-size:26px;">VIỆT HỒNG</span>
-      </div>
+w.document.write(`
+  <div class="header-logo">
+    <span>CÔNG TY TNHH MAY XK</span>
+    <span style="font-size:26px;">VIỆT HỒNG</span>
+  </div>
 
-      <h2>LÝ LỊCH MÁY VH-${soThe}</h2>
+  <div style="position: relative; margin-bottom: 20px;">
+    <!-- QR code phía trên, cách trái 20px -->
+    <div style="position: absolute; left:20px; top:0;">
+      <img src="${qrImg}" style="width:160px;height:160px;">
+    </div>
 
-      <div class="qr-box">
-        <img src="${qrImg}" style="width:160px;height:160px;">
-      </div>
-    `);
+    <!-- Lý lịch máy canh giữa trang A4 -->
+    <div style="text-align:center; font-size:22px; font-weight:bold; margin-left:0; padding-top:60px;">
+      LÝ LỊCH MÁY VH-${soThe}
+    </div>
+  </div>
+`);
 
     // ---- BẢNG THÔNG TIN ----
     const fields = [
