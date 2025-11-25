@@ -912,12 +912,13 @@ document.getElementById('btnPrintLyLich').onclick = () => {
 
     // ---- PHẦN HEADER MỚI ----
 w.document.write(`
-  <div class="header-logo" style="margin-left:0; font-size:20px; font-weight:bold;">
-    CÔNG TY TNHH MAY XK VIỆT HỒNG
+  <div class="header-logo" style="margin-left:30px; font-size:20px; font-weight:bold; line-height:1.2;">
+    CÔNG TY TNHH MAY XK<br>
+    <span style="display:block;">VIỆT HỒNG</span>
   </div>
   <div style="position: relative; margin-bottom: 40px;">
-    <!-- QR code phía trên, cách trái 70px -->
-    <div style="position: absolute; left:55px; top:0;">
+    <!-- QR code phía trên, cách trái 20px -->
+    <div style="position: absolute; left:60px; top:0;">
       <img src="${qrImg}" style="width:100px;height:100px;">
     </div>
     <!-- Lý lịch máy canh giữa trang A4 -->
