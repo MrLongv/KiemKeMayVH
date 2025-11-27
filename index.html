@@ -230,17 +230,6 @@ button[data-act="qr"] {
 </head>
 <body>
 <header>📋 Kiểm kê máy Việt Hồng</header>
-  <div style="margin: 10px 0;">
-  <label><b>Chọn năm:</b></label>
-  <select id="selectYear" style="padding:6px 10px;">
-    <option value="2025">2025</option>
-    <option value="2026">2026</option>
-    <option value="2027">2027</option>
-    <option value="2028">2028</option>
-    <option value="2029">2029</option>
-    <option value="2030">2030</option>
-  </select>
-</div>
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm kiếm " />
   <select id="filterBox">
@@ -354,8 +343,7 @@ button[data-act="qr"] {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const GAS_URL='https://script.google.com/macros/s/AKfycbypLeqRNba8KKBy9V_eb3s8HIvr57UAFhZN6L2ya2nCYHSzuRBqND7w1j8Qlb7RY5rw/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbypLeqRNba8KKBy9V_eb3s8HIvr57UAFhZN6L2ya2nCYHSzuRBqND7w1j8Qlb7RY5rw/exec';
 
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
@@ -373,18 +361,7 @@ const m_bdQ2_ngay = document.getElementById('m_bdQ2_ngay');
 const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
 const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 
-let currentYear = 2025;
-
-const YEAR_CONFIG = {
-  2025: { loadUrl: "https://script.google.com/macros/s/AKfycbxa3BbVeaEURF9_6w-djUGeIJ28IWQ_7-8STuIsI0ytKMaJjjfk7QZjc-4yilRPN-Iy/exec" },
-  2026: { loadUrl: "https://script.google.com/macros/s/AKfycbxMLXmLSNIqubF2y1qoiOF9SpNSudrnkQ_8_dz9Q0KhDgqtzpOGF3porN1vOA9i3689/exec" },
-  2027: { loadUrl: "URL_LOAD_2027" },
-  2028: { loadUrl: "URL_LOAD_2028" },
-  2029: { loadUrl: "URL_LOAD_2029" },
-  2030: { loadUrl: "URL_LOAD_2030" }
-};
-
-  let allData=[], editingIndex=null;
+let allData=[], editingIndex=null;
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
@@ -504,41 +481,6 @@ function renderTable() {
     searchInfo.textContent = `Tìm thấy ${countVisible} dòng`;
   }
 }
-// =================== LOAD DỮ LIỆU THEO NĂM (JSONP + TIMEOUT) ===================
-async function loadDataByYear(year) {
-  const url = YEAR_CONFIG[year].loadUrl + '&_=' + Date.now();
-  return new Promise((resolve, reject) => {
-    const cb = '__load_cb_' + Date.now();
-    window[cb] = function(res) {
-      try {
-        if (res && res.success && Array.isArray(res.data)) {
-          allData = res.data;
-          saveLocal();
-          renderTable();
-          highlightFromHash();
-          setStatus('Đã tải ' + allData.length + ' dòng cho năm ' + year);
-          resolve();
-        } else {
-          setStatus('Lỗi tải dữ liệu năm ' + year, false);
-          reject(new Error('Không có dữ liệu hợp lệ'));
-        }
-      } finally {
-        delete window[cb];
-        script.remove();
-      }
-    };
-    const script = document.createElement('script');
-    script.src = url + '&callback=' + cb;
-    script.onerror = () => {
-      setStatus('Lỗi kết nối năm ' + year, false);
-      delete window[cb];
-      script.remove();
-      reject(new Error('Lỗi kết nối'));
-    };
-    document.head.appendChild(script);
-  });
-}
-
 // ==== LOAD DATA JSONP ====
 function loadData(){
   setStatus('Đang tải dữ liệu...');
@@ -596,6 +538,7 @@ function autoSyncRow(i){
   if(i == null || !allData[i]) return;
   const rowData = allData[i];
 
+  // gửi dữ liệu lên Sheet, map đúng các cột Q1-Q4, ngày BD và sửa chữa
   const payload = {
     soThe: rowData.soThe || "",
     soMay: rowData.soMay || "",
@@ -620,33 +563,18 @@ function autoSyncRow(i){
   const cb = '__auto_cb_' + Date.now();
   window[cb] = function(res){
     try {
-      if(res && res.success) setStatus('✅ Đã lưu dòng ' + (i+1));
-      else setStatus('❌ Lỗi lưu dòng ' + (i+1), false);
+      if(res && res.success) setStatus('✅ Đã lưu dòng '+(i+1));
+      else setStatus('❌ Lỗi lưu dòng '+(i+1), false);
     } finally {
       delete window[cb];
       script.remove();
     }
   };
 
-  // *** ĐIỂM QUAN TRỌNG NHẤT ***
-  // Luôn dùng GAS_URL hiện tại (đã đổi theo năm)
   const script = document.createElement('script');
-  script.src =
-    GAS_URL +
-    '?callback=' + cb +
-    '&action=update' +
-    '&row=' + i +
-    '&data=' + encodeURIComponent(JSON.stringify(payload));
-
-  script.onerror = () => {
-    setStatus('❌ Lỗi kết nối khi lưu dòng ' + (i+1), false);
-    delete window[cb];
-    script.remove();
-  };
-
+  script.src = GAS_URL+'?update=1&row='+(i+1)+'&data='+encodeURIComponent(JSON.stringify(payload))+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
 }
-
 // ==== EVENTS ====
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
@@ -806,37 +734,14 @@ modalInputs.forEach(input=>{
     },300);
   });
 });
-// =================== EVENT CHỌN NĂM ===================
-document.getElementById("selectYear").addEventListener("change", async function() {
-  const selectedYear = Number(this.value);
-  if (!YEAR_CONFIG[selectedYear]) {
-    setStatus("Năm " + selectedYear + " chưa được cấu hình!", false);
-    return;
-  }
-  currentYear = selectedYear;
-  try {
-    await loadDataByYear(currentYear);
-  } catch (err) {
-    console.error(err);
-  }
-});
-  // =================== KHỞI TẠO BAN ĐẦU ===================
-(async function init() {
-  const select = document.getElementById("selectYear");
-  if (select) select.value = currentYear;
-  try {
-    await loadDataByYear(currentYear);
-  } catch (err) {
-    console.error(err);
-  }
-})();
+
 // ==== SYNC THỦ CÔNG ====
 document.getElementById('btnSync').onclick=()=>{
   const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
   const cb='__sync_cb_'+Date.now();
   window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đồng bộ thành công'); else setStatus('❌ Lỗi đồng bộ',false);}finally{delete window[cb]; script.remove();}};
   const script=document.createElement('script');
-  script.src = GAS_URL+'?callback='+cb+'&year='+currentYear+'&_='+Date.now();
+  script.src=GAS_URL+'?updateAll=1&data='+encoded+'&callback='+cb+'&_='+Date.now();
   document.head.appendChild(script);
 };
 document.getElementById('btnRefresh').onclick=loadData;
@@ -1132,7 +1037,6 @@ document.getElementById("checkAllQ4").addEventListener("change", function() {
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
-});
 </script>
 </body>
 </html>
