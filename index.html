@@ -362,7 +362,9 @@ const API_BY_YEAR = {
   2030: "URL_APP_SCRIPT_2030"
 };
 /* ===================================================== */
-
+document.getElementById("select-year").addEventListener("change", () => {
+  loadData();
+});
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
 const modal=document.getElementById('editModal');
