@@ -735,67 +735,90 @@ function closeModal(){
 }
 document.getElementById('cancelBtn').onclick=closeModal;
 // Cập nhật
-document.getElementById('saveBtn').onclick = () => {
-  // Lấy năm hiện tại
+document.getElementById('saveBtn').onclick = async () => {
+  if (!API_BY_YEAR) return alert("Chưa cấu hình API_BY_YEAR");
+
   const currentYear = document.getElementById("select-year").value;
   const apiUrl = API_BY_YEAR[currentYear];
-  if(!apiUrl){
-    alert("Không tìm thấy URL AppScript cho năm " + currentYear);
-    return;
+  if (!apiUrl) return alert("Chưa có URL AppScript cho năm " + currentYear);
+
+  if (editingIndex == null) {
+    // Thêm mới
+    const newRow = {
+      soThe: m_soThe.value.trim(),
+      soMay: m_soMay.value.trim(),
+      loaiMay: m_loaiMay.value.trim(),
+      viTri: m_viTri.value.trim(),
+      ghiChu: m_ghiChu.value.trim(),
+      daKiemKe: m_daKiemKe.checked,
+      chonIn: m_chonIn.checked,
+      ngayMua: m_ngayMua.value.trim(),
+      noiMua: m_noiMua.value.trim(),
+      bdQ1: m_bdQ1.checked,
+      bdQ2: m_bdQ2.checked,
+      bdQ3: m_bdQ3.checked,
+      bdQ4: m_bdQ4.checked,
+      bdNgayQ1: m_bdQ1_ngay.value.trim(),
+      bdNgayQ2: m_bdQ2_ngay.value.trim(),
+      bdNgayQ3: m_bdQ3_ngay.value.trim(),
+      bdNgayQ4: m_bdQ4_ngay.value.trim(),
+      suaChua: m_suaChua.value.trim()
+    };
+    allData.push(newRow);
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRow)
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Server báo lỗi");
+      setStatus("Thêm mới thành công");
+    } catch (err) {
+      console.error(err);
+      setStatus("Lỗi kết nối hoặc server", false);
+      return;
+    }
+  } else {
+    // Chỉnh sửa
+    const r = allData[editingIndex];
+    r.soThe = m_soThe.value.trim();
+    r.soMay = m_soMay.value.trim();
+    r.loaiMay = m_loaiMay.value.trim();
+    r.viTri = m_viTri.value.trim();
+    r.ghiChu = m_ghiChu.value.trim();
+    r.daKiemKe = m_daKiemKe.checked;
+    r.chonIn = m_chonIn.checked;
+    r.ngayMua = m_ngayMua.value.trim();
+    r.noiMua = m_noiMua.value.trim();
+    r.bdQ1 = m_bdQ1.checked;
+    r.bdQ2 = m_bdQ2.checked;
+    r.bdQ3 = m_bdQ3.checked;
+    r.bdQ4 = m_bdQ4.checked;
+    r.bdNgayQ1 = m_bdQ1_ngay.value.trim();
+    r.bdNgayQ2 = m_bdQ2_ngay.value.trim();
+    r.bdNgayQ3 = m_bdQ3_ngay.value.trim();
+    r.bdNgayQ4 = m_bdQ4_ngay.value.trim();
+    r.suaChua = m_suaChua.value.trim();
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(r)
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Server báo lỗi");
+      setStatus("Cập nhật thành công");
+    } catch (err) {
+      console.error(err);
+      setStatus("Lỗi kết nối hoặc server", false);
+      return;
+    }
   }
 
-  // Chuẩn bị dữ liệu row
-  const rowData = {
-    soThe: m_soThe.value,
-    soMay: m_soMay.value,
-    loaiMay: m_loaiMay.value,
-    viTri: m_viTri.value,
-    ghiChu: m_ghiChu.value,
-    daKiemKe: m_daKiemKe.checked,
-    chonIn: m_chonIn.checked,
-    ngayMua: m_ngayMua.value,
-    noiMua: m_noiMua.value,
-    bdQ1: m_bdQ1.checked,
-    bdQ2: m_bdQ2.checked,
-    bdQ3: m_bdQ3.checked,
-    bdQ4: m_bdQ4.checked,
-    bdNgayQ1: m_bdQ1_ngay.value,
-    bdNgayQ2: m_bdQ2_ngay.value,
-    bdNgayQ3: m_bdQ3_ngay.value,
-    bdNgayQ4: m_bdQ4_ngay.value,
-    suaChua: m_suaChua.value,
-    editingIndex: editingIndex // gửi index để server biết là thêm mới hay chỉnh sửa
-  };
-
-  // Gửi dữ liệu lên AppScript
-  fetch(apiUrl, {
-    method: "POST",
-    body: JSON.stringify(rowData)
-  })
-  .then(res => res.json())
-  .then(res => {
-    if(res.success){
-      // Cập nhật dữ liệu local
-      if(editingIndex == null){
-        allData.push(rowData); // thêm mới
-      } else {
-        allData[editingIndex] = rowData; // chỉnh sửa
-      }
-
-      renderTable();
-      closeModal();
-      alert("Đã lưu thành công!");
-
-      // Tải lại dữ liệu năm hiện tại từ sheet
-      loadData();
-    } else {
-      alert("Lỗi khi lưu dữ liệu: " + (res.message || ""));
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Lỗi kết nối hoặc server.");
-  });
+  renderTable();
+  closeModal();
 };
 
 // Scroll modal khi focus input
