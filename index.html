@@ -505,8 +505,8 @@ function renderTable() {
   }
 }
 // =================== LOAD DỮ LIỆU THEO NĂM (JSONP + TIMEOUT) ===================
-async function loadDataByYearDebug(year) {
-  console.log('=== START loadDataByYearDebug ===');
+async function loadDataByYearDebug2(year) {
+  console.log('=== START loadDataByYearDebug2 ===');
   if (!YEAR_CONFIG[year] || !YEAR_CONFIG[year].loadUrl) {
     console.error('❌ Năm', year, 'chưa được cấu hình!');
     setStatus('Năm ' + year + ' chưa được cấu hình!', false);
@@ -519,7 +519,7 @@ async function loadDataByYearDebug(year) {
   console.log('🔗 URL GAS:', url);
 
   return new Promise((resolve, reject) => {
-    const cbName = '__load_cb_debug_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const cbName = '__load_cb_debug2_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     console.log('🆔 Callback function name:', cbName);
 
     let timeoutId;
@@ -545,10 +545,8 @@ async function loadDataByYearDebug(year) {
         console.error('❌ Lỗi xử lý callback:', e);
         reject(e);
       } finally {
-        // Tạm thời không xóa script để kiểm tra
-        // delete window[cbName];
-        // script.remove();
-        console.log('⚠ Callback kết thúc nhưng chưa xoá script để debug.');
+        // Xoá callback và script sau khi callback chạy xong
+        try { delete window[cbName]; script.remove(); } catch(e){}
       }
     };
 
@@ -558,8 +556,7 @@ async function loadDataByYearDebug(year) {
       clearTimeout(timeoutId);
       console.error('❌ Lỗi kết nối khi tải dữ liệu năm', year);
       setStatus('Lỗi kết nối năm ' + year, false);
-      // delete window[cbName]; // tạm comment nếu muốn debug
-      // script.remove();       // tạm comment nếu muốn debug
+      try { delete window[cbName]; script.remove(); } catch(e){}
       reject(new Error('Lỗi kết nối'));
     };
 
@@ -569,9 +566,8 @@ async function loadDataByYearDebug(year) {
     timeoutId = setTimeout(() => {
       console.error('⏰ Timeout 10s tải dữ liệu năm', year);
       setStatus('Hết thời gian chờ tải dữ liệu năm ' + year, false);
-      // delete window[cbName]; // tạm comment nếu muốn debug
-      // script.remove();       // tạm comment nếu muốn debug
-      reject(new Error('Timeout JSONP'));
+      try { delete window[cbName]; script.remove(); } catch(e){}
+      reject(new Error('Timeout JSONP: callback không gọi'));
     }, 10000);
   });
 }
