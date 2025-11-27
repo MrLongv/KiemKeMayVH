@@ -734,60 +734,70 @@ function closeModal(){
   window.scrollTo(0, lastScrollY);
 }
 document.getElementById('cancelBtn').onclick=closeModal;
-
+// Cập nhật
 document.getElementById('saveBtn').onclick = () => {
-  if(editingIndex == null) {
-    // thêm mới
-    const newRow = {
-      soThe: m_soThe.value,
-      soMay: m_soMay.value,
-      loaiMay: m_loaiMay.value,
-      viTri: m_viTri.value,
-      ghiChu: m_ghiChu.value,
-      daKiemKe: m_daKiemKe.checked,
-      chonIn: m_chonIn.checked,
-      ngayMua: m_ngayMua.value,
-      noiMua: m_noiMua.value,
-      bdQ1: m_bdQ1.checked,
-      bdQ2: m_bdQ2.checked,
-      bdQ3: m_bdQ3.checked,
-      bdQ4: m_bdQ4.checked,
-      bdNgayQ1: m_bdQ1_ngay.value,
-      bdNgayQ2: m_bdQ2_ngay.value,
-      bdNgayQ3: m_bdQ3_ngay.value,
-      bdNgayQ4: m_bdQ4_ngay.value,
-      suaChua: m_suaChua.value
-    };
-    allData.push(newRow);
-    autoSyncRow(allData.length - 1);
-  } else {
-    // chỉnh sửa
-    const r = allData[editingIndex];
-    r.soThe = m_soThe.value;
-    r.soMay = m_soMay.value;
-    r.loaiMay = m_loaiMay.value;
-    r.viTri = m_viTri.value;
-    r.ghiChu = m_ghiChu.value;
-    r.daKiemKe = m_daKiemKe.checked;
-    r.chonIn = m_chonIn.checked;
-    r.ngayMua = m_ngayMua.value;
-    r.noiMua = m_noiMua.value;
-    r.bdQ1 = m_bdQ1.checked;
-    r.bdQ2 = m_bdQ2.checked;
-    r.bdQ3 = m_bdQ3.checked;
-    r.bdQ4 = m_bdQ4.checked;
-    r.bdNgayQ1 = m_bdQ1_ngay.value;
-    r.bdNgayQ2 = m_bdQ2_ngay.value;
-    r.bdNgayQ3 = m_bdQ3_ngay.value;
-    r.bdNgayQ4 = m_bdQ4_ngay.value;
-    r.suaChua = m_suaChua.value;
-
-    autoSyncRow(editingIndex);
+  // Lấy năm hiện tại
+  const currentYear = document.getElementById("select-year").value;
+  const apiUrl = API_BY_YEAR[currentYear];
+  if(!apiUrl){
+    alert("Không tìm thấy URL AppScript cho năm " + currentYear);
+    return;
   }
 
-  renderTable();
-  closeModal();
+  // Chuẩn bị dữ liệu row
+  const rowData = {
+    soThe: m_soThe.value,
+    soMay: m_soMay.value,
+    loaiMay: m_loaiMay.value,
+    viTri: m_viTri.value,
+    ghiChu: m_ghiChu.value,
+    daKiemKe: m_daKiemKe.checked,
+    chonIn: m_chonIn.checked,
+    ngayMua: m_ngayMua.value,
+    noiMua: m_noiMua.value,
+    bdQ1: m_bdQ1.checked,
+    bdQ2: m_bdQ2.checked,
+    bdQ3: m_bdQ3.checked,
+    bdQ4: m_bdQ4.checked,
+    bdNgayQ1: m_bdQ1_ngay.value,
+    bdNgayQ2: m_bdQ2_ngay.value,
+    bdNgayQ3: m_bdQ3_ngay.value,
+    bdNgayQ4: m_bdQ4_ngay.value,
+    suaChua: m_suaChua.value,
+    editingIndex: editingIndex // gửi index để server biết là thêm mới hay chỉnh sửa
+  };
+
+  // Gửi dữ liệu lên AppScript
+  fetch(apiUrl, {
+    method: "POST",
+    body: JSON.stringify(rowData)
+  })
+  .then(res => res.json())
+  .then(res => {
+    if(res.success){
+      // Cập nhật dữ liệu local
+      if(editingIndex == null){
+        allData.push(rowData); // thêm mới
+      } else {
+        allData[editingIndex] = rowData; // chỉnh sửa
+      }
+
+      renderTable();
+      closeModal();
+      alert("Đã lưu thành công!");
+
+      // Tải lại dữ liệu năm hiện tại từ sheet
+      loadData();
+    } else {
+      alert("Lỗi khi lưu dữ liệu: " + (res.message || ""));
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Lỗi kết nối hoặc server.");
+  });
 };
+
 // Scroll modal khi focus input
 const modalInputs=modal.querySelectorAll('input, textarea');
 modalInputs.forEach(input=>{
