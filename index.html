@@ -505,88 +505,65 @@ function renderTable() {
   }
 }
 // =================== LOAD DỮ LIỆU THEO NĂM (JSONP + TIMEOUT) ===================
-// =================== LOAD DỮ LIỆU THEO NĂM (FETCH, debug chi tiết) ===================
 async function loadDataByYear(year) {
   if (!YEAR_CONFIG[year] || !YEAR_CONFIG[year].loadUrl) {
-    console.error(`❌ Năm ${year} chưa được cấu hình!`);
     setStatus('Năm ' + year + ' chưa được cấu hình!', false);
+    console.error('YEAR_CONFIG missing for', year);
     return;
   }
 
+  setStatus('Đang tải dữ liệu năm ' + year + '...');
   const baseUrl = YEAR_CONFIG[year].loadUrl;
   const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
 
-  console.log(`ℹ️ [DEBUG] Bắt đầu tải dữ liệu năm ${year}`);
-  console.log(`ℹ️ [DEBUG] URL: ${url}`);
-  setStatus(`Đang tải dữ liệu năm ${year}...`);
+  console.log('Fetching URL:', url);
 
   try {
-    const response = await fetch(url, { cache: "no-store" });
-    console.log('ℹ️ [DEBUG] Response status:', response.status);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      }
+    });
+
+    console.log('HTTP status:', response.status);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      setStatus('Lỗi kết nối năm ' + year + ' (HTTP ' + response.status + ')', false);
+      console.error('Fetch response not OK', response);
+      return;
     }
-
-    const text = await response.text();
-    console.log('ℹ️ [DEBUG] Raw response text:', text);
 
     let data;
     try {
-      data = JSON.parse(text);
-      console.log('ℹ️ [DEBUG] Parsed JSON:', data);
-    } catch(parseErr) {
-      console.error('❌ Lỗi parse JSON:', parseErr);
-      console.warn('⚠️ Có thể đây là JSONP, không phải JSON thuần. Cần GAS trả JSON thuần để fetch hoạt động.');
-      setStatus(`Lỗi parse dữ liệu năm ${year}`, false);
+      data = await response.json();
+      console.log('Raw JSON data:', data);
+    } catch (err) {
+      const text = await response.text();
+      setStatus('Lỗi parse dữ liệu năm ' + year, false);
+      console.error('Parse error:', err, '\nRaw response text:', text);
       return;
     }
 
-    if (!data || !Array.isArray(data.data)) {
-      console.error('❌ Dữ liệu không hợp lệ:', data);
-      setStatus(`Dữ liệu năm ${year} không hợp lệ`, false);
+    // Kiểm tra dữ liệu
+    if (!data || !data.success || !Array.isArray(data.data)) {
+      setStatus('Dữ liệu không hợp lệ năm ' + year, false);
+      console.error('Invalid data format', data);
       return;
     }
 
-    allData = data.data.map(r => ({
-      soThe: r.soThe || '',
-      soMay: r.soMay || '',
-      loaiMay: r.loaiMay || '',
-      viTri: r.viTri || '',
-      ghiChu: r.ghiChu || '',
-      daKiemKe: !!r.daKiemKe,
-      chonIn: !!r.chonIn,
-      ngayMua: r.ngayMua || '',
-      noiMua: r.noiMua || '',
-      bdQ1: !!r.bdQ1,
-      bdQ2: !!r.bdQ2,
-      bdQ3: !!r.bdQ3,
-      bdQ4: !!r.bdQ4,
-      bdNgayQ1: r.bdNgayQ1 || '',
-      bdNgayQ2: r.bdNgayQ2 || '',
-      bdNgayQ3: r.bdNgayQ3 || '',
-      bdNgayQ4: r.bdNgayQ4 || '',
-      suaChua: r.suaChua || ''
-    }));
-
-    console.log(`✅ Đã tải ${allData.length} dòng cho năm ${year}`);
-    setStatus(`Đã tải ${allData.length} dòng cho năm ${year}`);
-
-    // Chuẩn hóa ngày
-    allData.forEach(r => {
-      if (r.ngayMua) r.ngayMua = formatDateDDMMYYYY(r.ngayMua);
-      if (r.bdNgayQ1) r.bdNgayQ1 = formatDateDDMMYYYY(r.bdNgayQ1);
-      if (r.bdNgayQ2) r.bdNgayQ2 = formatDateDDMMYYYY(r.bdNgayQ2);
-      if (r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
-      if (r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
-    });
-
+    // Nếu OK, load vào allData
+    allData = data.data;
+    saveLocal && saveLocal(); // nếu có hàm lưu localStorage
     renderTable();
     highlightFromHash();
 
-  } catch(err) {
-    console.error(`❌ Lỗi tải dữ liệu năm ${year}:`, err);
-    setStatus(`Lỗi tải dữ liệu năm ${year}: ${err.message}`, false);
+    setStatus('✅ Đã tải ' + allData.length + ' dòng cho năm ' + year);
+
+  } catch (err) {
+    setStatus('Lỗi tải dữ liệu năm ' + year, false);
+    console.error('Fetch error:', err);
   }
 }
 
