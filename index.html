@@ -376,8 +376,8 @@ const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 let currentYear = 2025;
 
 const YEAR_CONFIG = {
-  2025: { loadUrl: "https://script.google.com/macros/s/AKfycbx9ha3Sum5sGdPFBmVyEBsIbBa20zu70g12j9aIWdGG_DZHnUDpn52jW7NW816o4t5T/exec" },
-  2026: { loadUrl: "https://script.google.com/macros/s/AKfycbyNO9qFZqSyjvKs28Nia49itBkArU8kEnYFEwyI2_hdM3ScGu2_uPW7LQesQhhBaVT5/exec" },
+  2025: { loadUrl: "https://script.google.com/macros/s/AKfycbxa3BbVeaEURF9_6w-djUGeIJ28IWQ_7-8STuIsI0ytKMaJjjfk7QZjc-4yilRPN-Iy/exec" },
+  2026: { loadUrl: "https://script.google.com/macros/s/AKfycbxMLXmLSNIqubF2y1qoiOF9SpNSudrnkQ_8_dz9Q0KhDgqtzpOGF3porN1vOA9i3689/exec" },
   2027: { loadUrl: "URL_LOAD_2027" },
   2028: { loadUrl: "URL_LOAD_2028" },
   2029: { loadUrl: "URL_LOAD_2029" },
@@ -506,65 +506,37 @@ function renderTable() {
 }
 // =================== LOAD DỮ LIỆU THEO NĂM (JSONP + TIMEOUT) ===================
 async function loadDataByYear(year) {
-  if (!YEAR_CONFIG[year] || !YEAR_CONFIG[year].loadUrl) {
-    setStatus('Năm ' + year + ' chưa được cấu hình!', false);
-    console.error('YEAR_CONFIG missing for', year);
-    return;
-  }
-
-  setStatus('Đang tải dữ liệu năm ' + year + '...');
-  const baseUrl = YEAR_CONFIG[year].loadUrl;
-  const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
-
-  console.log('Fetching URL:', url);
-
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
+  const url = YEAR_CONFIG[year].loadUrl + '&_=' + Date.now();
+  return new Promise((resolve, reject) => {
+    const cb = '__load_cb_' + Date.now();
+    window[cb] = function(res) {
+      try {
+        if (res && res.success && Array.isArray(res.data)) {
+          allData = res.data;
+          saveLocal();
+          renderTable();
+          highlightFromHash();
+          setStatus('Đã tải ' + allData.length + ' dòng cho năm ' + year);
+          resolve();
+        } else {
+          setStatus('Lỗi tải dữ liệu năm ' + year, false);
+          reject(new Error('Không có dữ liệu hợp lệ'));
+        }
+      } finally {
+        delete window[cb];
+        script.remove();
       }
-    });
-
-    console.log('HTTP status:', response.status);
-
-    if (!response.ok) {
-      setStatus('Lỗi kết nối năm ' + year + ' (HTTP ' + response.status + ')', false);
-      console.error('Fetch response not OK', response);
-      return;
-    }
-
-    let data;
-    try {
-      data = await response.json();
-      console.log('Raw JSON data:', data);
-    } catch (err) {
-      const text = await response.text();
-      setStatus('Lỗi parse dữ liệu năm ' + year, false);
-      console.error('Parse error:', err, '\nRaw response text:', text);
-      return;
-    }
-
-    // Kiểm tra dữ liệu
-    if (!data || !data.success || !Array.isArray(data.data)) {
-      setStatus('Dữ liệu không hợp lệ năm ' + year, false);
-      console.error('Invalid data format', data);
-      return;
-    }
-
-    // Nếu OK, load vào allData
-    allData = data.data;
-    saveLocal && saveLocal(); // nếu có hàm lưu localStorage
-    renderTable();
-    highlightFromHash();
-
-    setStatus('✅ Đã tải ' + allData.length + ' dòng cho năm ' + year);
-
-  } catch (err) {
-    setStatus('Lỗi tải dữ liệu năm ' + year, false);
-    console.error('Fetch error:', err);
-  }
+    };
+    const script = document.createElement('script');
+    script.src = url + '&callback=' + cb;
+    script.onerror = () => {
+      setStatus('Lỗi kết nối năm ' + year, false);
+      delete window[cb];
+      script.remove();
+      reject(new Error('Lỗi kết nối'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ==== LOAD DATA JSONP ====
