@@ -671,6 +671,12 @@ function closeModal(){
 document.getElementById('cancelBtn').onclick=closeModal;
 
 document.getElementById('saveBtn').onclick = () => {
+   // Kiểm tra trước khi thêm mới
+  const hasData = m_soThe.value.trim() || m_soMay.value.trim(); // có thể thêm các trường khác nếu muốn
+  if(editingIndex == null && !hasData){
+    alert('Không có dữ liệu để thêm!');
+    return;
+  }
   if(editingIndex == null) {
     // thêm mới
     const newRow = {
