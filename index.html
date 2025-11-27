@@ -504,14 +504,60 @@ function renderTable() {
     searchInfo.textContent = `Tìm thấy ${countVisible} dòng`;
   }
 }
-  async function loadDataByYear(year) {
-  const url = YEAR_CONFIG[year].loadUrl;
+async function loadDataByYear(year) {
+  try {
+    const url = YEAR_CONFIG[year].loadUrl;
+    // Thêm param _ để chống cache
+    const fetchUrl = url + (url.includes("?") ? "&" : "?") + "_=" + Date.now();
+    
+    setStatus(`Đang tải dữ liệu năm ${year}...`);
+    
+    const res = await fetch(fetchUrl);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    
+    const json = await res.json();
+    if (!json.data || !Array.isArray(json.data)) throw new Error("Dữ liệu không hợp lệ");
 
-  const res = await fetch(url);
-  const json = await res.json();
+    // Gán dữ liệu mới
+    allData = json.data.map(r => ({
+      soThe: r.soThe || r.SoThe || r['Số thẻ'] || '',
+      soMay: r.soMay || r.SoMay || r['Số máy'] || '',
+      loaiMay: r.loaiMay || r.LoaiMay || r['Loại máy'] || '',
+      viTri: r.viTri || r.ViTri || r['Vị trí'] || '',
+      ghiChu: r.ghiChu || r.GhiChu || r['Ghi chú'] || '',
+      daKiemKe: !!(r.daKiemKe || r['Đã KK']),
+      chonIn: !!(r.chonIn || r['chonIn']),
+      ngayMua: r.ngayMua || r.NgayMua || r['Ngày mua'] || '',
+      noiMua: r.noiMua || r.NoiMua || r['Nơi mua'] || '',
+      bdQ1: !!(r.bdQ1 || r['Bảo dưỡng Q1']),
+      bdQ2: !!(r.bdQ2 || r['Bảo dưỡng Q2']),
+      bdQ3: !!(r.bdQ3 || r['Bảo dưỡng Q3']),
+      bdQ4: !!(r.bdQ4 || r['Bảo dưỡng Q4']),
+      bdNgayQ1: r.bdNgayQ1 || r['Bảo dưỡng Q1 Ngày'] || '',
+      bdNgayQ2: r.bdNgayQ2 || r['Bảo dưỡng Q2 Ngày'] || '',
+      bdNgayQ3: r.bdNgayQ3 || r['Bảo dưỡng Q3 Ngày'] || '',
+      bdNgayQ4: r.bdNgayQ4 || r['Bảo dưỡng Q4 Ngày'] || '',
+      suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
+    }));
 
-  allData = json.data || [];
-  saveLocal();
+    // Chuẩn hóa format ngày
+    allData.forEach(r => {
+      r.ngayMua = r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : '';
+      r.bdNgayQ1 = r.bdNgayQ1 ? formatDateDDMMYYYY(r.bdNgayQ1) : '';
+      r.bdNgayQ2 = r.bdNgayQ2 ? formatDateDDMMYYYY(r.bdNgayQ2) : '';
+      r.bdNgayQ3 = r.bdNgayQ3 ? formatDateDDMMYYYY(r.bdNgayQ3) : '';
+      r.bdNgayQ4 = r.bdNgayQ4 ? formatDateDDMMYYYY(r.bdNgayQ4) : '';
+    });
+
+    renderTable();
+    highlightFromHash();
+    setStatus(`Đã tải ${allData.length} dòng năm ${year}`);
+    console.log('Loaded rows:', allData.length);
+    
+  } catch (err) {
+    console.error(err);
+    setStatus(`Lỗi tải dữ liệu năm ${year}: ${err.message}`, false);
+  }
 }
 
 // ==== LOAD DATA JSONP ====
@@ -781,12 +827,17 @@ modalInputs.forEach(input=>{
     },300);
   });
 });
+// =================== EVENT CHỌN NĂM ===================
 document.getElementById("selectYear").addEventListener("change", async function() {
- currentYear = Number(this.value);
-  await loadDataByYear(currentYear);
-  renderTable();
-  highlightFromHash();
+  const selectedYear = Number(this.value);
+  if (!YEAR_CONFIG[selectedYear]) {
+    alert("Năm này chưa được cấu hình!");
+    return;
+  }
+  currentYear = selectedYear;
+  await loadDataByYear(currentYear); // fetch sheet mới, render table luôn
 });
+
 
 // ==== SYNC THỦ CÔNG ====
 document.getElementById('btnSync').onclick=()=>{
