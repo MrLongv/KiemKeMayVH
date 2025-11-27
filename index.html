@@ -239,6 +239,15 @@ button[data-act="qr"] {
     <option value="daIn">🖨️ Đã chọn in</option>
     <option value="chuaIn">📄 Chưa chọn in</option>
   </select>
+  <select id="select-year" style="padding:6px 10px;">
+  <option value="2025">2025</option>
+  <option value="2026">2026</option>
+  <option value="2027">2027</option>
+  <option value="2028">2028</option>
+  <option value="2029">2029</option>
+  <option value="2030">2030</option>
+</select>
+
   <button id="btnAdd">➕ Thêm</button>
   <button id="btnSync">☁️ Đồng bộ lên Sheet</button>
   <button id="btnRefresh" class="ghost">🔄 Tải lại từ Sheet</button>
@@ -343,7 +352,16 @@ button[data-act="qr"] {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbyKud4dR7r5ihRHfMN9PYkMx-B2zKENTSyS7DbNZXYTkk1ZDy1afa4yLUgyGeFynnG1/exec';
+/* ============ URL AppScript theo từng năm ============ */
+const API_BY_YEAR = {
+  2025: "https://script.google.com/macros/s/AKfycbyKud4dR7r5ihRHfMN9PYkMx-B2zKENTSyS7DbNZXYTkk1ZDy1afa4yLUgyGeFynnG1/exec",
+  2026: "https://script.google.com/macros/s/AKfycbwy2Iod5V7qV494UrD4tSVcVqkGNWSdlfHYz_EUsataMDLSrsoppA9Hqrd4LPsEdHF8/exec",
+  2027: "URL_APP_SCRIPT_2027",
+  2028: "URL_APP_SCRIPT_2028",
+  2029: "URL_APP_SCRIPT_2029",
+  2030: "URL_APP_SCRIPT_2030"
+};
+/* ===================================================== */
 
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
@@ -481,55 +499,87 @@ function renderTable() {
     searchInfo.textContent = `Tìm thấy ${countVisible} dòng`;
   }
 }
-// ==== LOAD DATA JSONP ====
-function loadData(){
+// ==== LOAD DATA JSONP THEO NĂM ====
+function loadData() {
   setStatus('Đang tải dữ liệu...');
-  const cb='__load_cb_'+Date.now();
-  window[cb]=function(res){
-    try{
-      if(res && res.success && Array.isArray(res.data)){
-        // assume sheet will include columns: soThe, soMay, loaiMay, viTri, ghiChu, daKiemKe, chonIn, ngayMua, noiMua, bdQ1,bdQ2,bdQ3,bdQ4, suaChua
-        allData = res.data.map(r=>{
-          // normalize booleans and missing fields
+
+  // Lấy năm đang chọn trên web
+  const year = document.getElementById("select-year").value;
+
+  // Lấy URL theo năm
+  const GAS_URL = API_BY_YEAR[year];
+  if (!GAS_URL) {
+    setStatus("Không tìm thấy URL AppScript cho năm " + year, false);
+    return;
+  }
+
+  // Tạo callback JSONP
+  const cb = '__load_cb_' + Date.now();
+  window[cb] = function (res) {
+    try {
+      if (res && res.success && Array.isArray(res.data)) {
+
+        allData = res.data.map(r => {
           return {
             soThe: r.soThe || r.SoThe || r['Số thẻ'] || '',
             soMay: r.soMay || r.SoMay || r['Số máy'] || '',
             loaiMay: r.loaiMay || r.LoaiMay || r['Loại máy'] || '',
             viTri: r.viTri || r.ViTri || r['Vị trí'] || '',
             ghiChu: r.ghiChu || r.GhiChu || r['Ghi chú'] || '',
-            daKiemKe: !!(r.daKiemKe || r.daKiemKe===true || r['Đã KK'] || r['daKiemKe'] || r['daKiemKe']=='TRUE' || r['daKiemKe']=='true'),
-            chonIn: !!(r.chonIn || r.chonIn===true || r['chonIn'] || r['chonIn']=='TRUE' || r['chonIn']=='true'),
+
+            daKiemKe: !!(r.daKiemKe || r['Đã KK'] || r['daKiemKe']=='TRUE' || r['daKiemKe']=='true'),
+            chonIn:   !!(r.chonIn   || r['chonIn']=='TRUE' || r['chonIn']=='true'),
+
             ngayMua: r.ngayMua || r.NgayMua || r['Ngày mua'] || '',
-            noiMua: r.noiMua || r.NoiMua || r['Nơi mua'] || '',
-            bdQ1: !!(r.bdQ1 || r['Bảo dưỡng Q1'] || r['bdQ1']),
-            bdQ2: !!(r.bdQ2 || r['Bảo dưỡng Q2'] || r['bdQ2']),
-            bdQ3: !!(r.bdQ3 || r['Bảo dưỡng Q3'] || r['bdQ3']),
-            bdQ4: !!(r.bdQ4 || r['Bảo dưỡng Q4'] || r['bdQ4']),
-            bdNgayQ1: r.bdNgayQ1 || r['bdNgayQ1'] || r['Bảo dưỡng Q1 Ngày'] || r['Ngày BD Q1'] || '',
-            bdNgayQ2: r.bdNgayQ2 || r['bdNgayQ2'] || r['Bảo dưỡng Q2 Ngày'] || r['Ngày BD Q2'] || '',
-            bdNgayQ3: r.bdNgayQ3 || r['bdNgayQ3'] || r['Bảo dưỡng Q3 Ngày'] || r['Ngày BD Q3'] || '',
-            bdNgayQ4: r.bdNgayQ4 || r['bdNgayQ4'] || r['Bảo dưỡng Q4 Ngày'] || r['Ngày BD Q4'] || '',
+            noiMua:  r.noiMua  || r.NoiMua  || r['Nơi mua'] || '',
+
+            bdQ1: !!(r.bdQ1 || r['Bảo dưỡng Q1']),
+            bdQ2: !!(r.bdQ2 || r['Bảo dưỡng Q2']),
+            bdQ3: !!(r.bdQ3 || r['Bảo dưỡng Q3']),
+            bdQ4: !!(r.bdQ4 || r['Bảo dưỡng Q4']),
+
+            bdNgayQ1: r.bdNgayQ1 || r['Bảo dưỡng Q1 Ngày'] || '',
+            bdNgayQ2: r.bdNgayQ2 || r['Bảo dưỡng Q2 Ngày'] || '',
+            bdNgayQ3: r.bdNgayQ3 || r['Bảo dưỡng Q3 Ngày'] || '',
+            bdNgayQ4: r.bdNgayQ4 || r['Bảo dưỡng Q4 Ngày'] || '',
+
             suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
           };
         });
 
-        // normalize ngay mua format
+        // Chuẩn hoá ngày
         allData.forEach(r => {
-  if (r && r.ngayMua) r.ngayMua = formatDateDDMMYYYY(r.ngayMua);
-  if (r && r.bdNgayQ1) r.bdNgayQ1 = formatDateDDMMYYYY(r.bdNgayQ1);
-  if (r && r.bdNgayQ2) r.bdNgayQ2 = formatDateDDMMYYYY(r.bdNgayQ2);
-  if (r && r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
-  if (r && r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
-});
+          if (r.ngayMua) r.ngayMua = formatDateDDMMYYYY(r.ngayMua);
+          if (r.bdNgayQ1) r.bdNgayQ1 = formatDateDDMMYYYY(r.bdNgayQ1);
+          if (r.bdNgayQ2) r.bdNgayQ2 = formatDateDDMMYYYY(r.bdNgayQ2);
+          if (r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
+          if (r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
+        });
+
         renderTable();
-        setStatus('Đã tải '+allData.length+' dòng');
+        setStatus("Đã tải " + allData.length + " dòng");
         highlightFromHash();
-      } else setStatus('Lỗi tải dữ liệu',false);
-    } finally{ delete window[cb]; script.remove(); }
+
+      } else {
+        setStatus("Lỗi dữ liệu nhận được", false);
+      }
+
+    } finally {
+      delete window[cb];
+      script.remove();
+    }
   };
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?callback='+cb+'&_='+Date.now();
-  script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
+
+  // Tạo thẻ script JSONP
+  const script = document.createElement("script");
+  script.src = GAS_URL + "?callback=" + cb + "&_=" + Date.now();
+  
+  script.onerror = () => {
+    setStatus("Lỗi tải dữ liệu", false);
+    delete window[cb];
+    script.remove();
+  };
+
   document.head.appendChild(script);
 }
 
