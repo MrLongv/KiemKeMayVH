@@ -505,82 +505,90 @@ function renderTable() {
   }
 }
 // =================== LOAD DỮ LIỆU THEO NĂM (JSONP + TIMEOUT) ===================
-async function loadDataByYearDebug(year) {
+// =================== LOAD DỮ LIỆU THEO NĂM (FETCH, debug chi tiết) ===================
+async function loadDataByYear(year) {
   if (!YEAR_CONFIG[year] || !YEAR_CONFIG[year].loadUrl) {
-    console.error('❌ Năm ' + year + ' chưa được cấu hình!');
+    console.error(`❌ Năm ${year} chưa được cấu hình!`);
     setStatus('Năm ' + year + ' chưa được cấu hình!', false);
     return;
   }
 
   const baseUrl = YEAR_CONFIG[year].loadUrl;
   const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
-  console.log(`🔹 Bắt đầu load dữ liệu năm ${year}, URL:`, url);
 
-  setStatus('Đang tải dữ liệu năm ' + year + '...');
+  console.log(`ℹ️ [DEBUG] Bắt đầu tải dữ liệu năm ${year}`);
+  console.log(`ℹ️ [DEBUG] URL: ${url}`);
+  setStatus(`Đang tải dữ liệu năm ${year}...`);
 
-  return new Promise((resolve, reject) => {
-    const cbName = '__load_cb_debug_' + Date.now() + '_' + Math.floor(Math.random()*1000);
-    let timeoutId;
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    console.log('ℹ️ [DEBUG] Response status:', response.status);
 
-    // JSONP callback
-    window[cbName] = function(res) {
-      clearTimeout(timeoutId);
-      console.log('✅ Callback GAS đã chạy:', res);
-      try {
-        if (res && res.success && Array.isArray(res.data)) {
-          allData = res.data;
-          console.log('📊 Số dòng nhận được:', allData.length);
-          saveLocal();
-          renderTable();
-          highlightFromHash();
-          setStatus('Đã tải ' + allData.length + ' dòng cho năm ' + year);
-          resolve();
-        } else {
-          console.error('❌ Dữ liệu không hợp lệ từ GAS:', res);
-          setStatus('Lỗi dữ liệu năm ' + year, false);
-          reject(new Error('Dữ liệu không hợp lệ'));
-        }
-      } finally {
-        delete window[cbName];
-        script.remove();
-      }
-    };
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-    // Thêm script JSONP
-    const script = document.createElement('script');
-    script.src = url + '&callback=' + cbName;
+    const text = await response.text();
+    console.log('ℹ️ [DEBUG] Raw response text:', text);
 
-    script.onload = () => {
-      console.log('📄 Script GAS năm', year, 'đã load xong.');
-      // Log thử nội dung script thực tế
-      fetch(script.src)
-        .then(r => r.text())
-        .then(txt => console.log('📄 Nội dung script GAS:\n', txt))
-        .catch(err => console.error('❌ Không thể đọc script:', err));
-    };
+    let data;
+    try {
+      data = JSON.parse(text);
+      console.log('ℹ️ [DEBUG] Parsed JSON:', data);
+    } catch(parseErr) {
+      console.error('❌ Lỗi parse JSON:', parseErr);
+      console.warn('⚠️ Có thể đây là JSONP, không phải JSON thuần. Cần GAS trả JSON thuần để fetch hoạt động.');
+      setStatus(`Lỗi parse dữ liệu năm ${year}`, false);
+      return;
+    }
 
-    script.onerror = (e) => {
-      clearTimeout(timeoutId);
-      console.error('❌ Lỗi kết nối khi load script GAS năm', year, e);
-      setStatus('Lỗi kết nối năm ' + year, false);
-      delete window[cbName];
-      script.remove();
-      reject(new Error('Lỗi kết nối JSONP'));
-    };
+    if (!data || !Array.isArray(data.data)) {
+      console.error('❌ Dữ liệu không hợp lệ:', data);
+      setStatus(`Dữ liệu năm ${year} không hợp lệ`, false);
+      return;
+    }
 
-    document.head.appendChild(script);
+    allData = data.data.map(r => ({
+      soThe: r.soThe || '',
+      soMay: r.soMay || '',
+      loaiMay: r.loaiMay || '',
+      viTri: r.viTri || '',
+      ghiChu: r.ghiChu || '',
+      daKiemKe: !!r.daKiemKe,
+      chonIn: !!r.chonIn,
+      ngayMua: r.ngayMua || '',
+      noiMua: r.noiMua || '',
+      bdQ1: !!r.bdQ1,
+      bdQ2: !!r.bdQ2,
+      bdQ3: !!r.bdQ3,
+      bdQ4: !!r.bdQ4,
+      bdNgayQ1: r.bdNgayQ1 || '',
+      bdNgayQ2: r.bdNgayQ2 || '',
+      bdNgayQ3: r.bdNgayQ3 || '',
+      bdNgayQ4: r.bdNgayQ4 || '',
+      suaChua: r.suaChua || ''
+    }));
 
-    // Timeout 15s
-    timeoutId = setTimeout(() => {
-      console.error('⏱ Hết thời gian chờ tải dữ liệu năm ' + year);
-      setStatus('Hết thời gian chờ tải dữ liệu năm ' + year, false);
-      delete window[cbName];
-      script.remove();
-      reject(new Error('Timeout JSONP'));
-    }, 15000);
-  });
+    console.log(`✅ Đã tải ${allData.length} dòng cho năm ${year}`);
+    setStatus(`Đã tải ${allData.length} dòng cho năm ${year}`);
+
+    // Chuẩn hóa ngày
+    allData.forEach(r => {
+      if (r.ngayMua) r.ngayMua = formatDateDDMMYYYY(r.ngayMua);
+      if (r.bdNgayQ1) r.bdNgayQ1 = formatDateDDMMYYYY(r.bdNgayQ1);
+      if (r.bdNgayQ2) r.bdNgayQ2 = formatDateDDMMYYYY(r.bdNgayQ2);
+      if (r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
+      if (r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
+    });
+
+    renderTable();
+    highlightFromHash();
+
+  } catch(err) {
+    console.error(`❌ Lỗi tải dữ liệu năm ${year}:`, err);
+    setStatus(`Lỗi tải dữ liệu năm ${year}: ${err.message}`, false);
+  }
 }
-
 
 // ==== LOAD DATA JSONP ====
 function loadData(){
