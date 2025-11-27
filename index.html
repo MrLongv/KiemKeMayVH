@@ -365,6 +365,19 @@ const API_BY_YEAR = {
 document.getElementById("select-year").addEventListener("change", () => {
   loadData();
 });
+  // ========= TỰ CHỌN NĂM HIỆN HÀNH + TỰ LOAD =========
+document.addEventListener("DOMContentLoaded", function () {
+  const select = document.getElementById("select-year");
+  const thisYear = new Date().getFullYear();  // ví dụ: 2026
+
+  // Nếu năm hiện hành có trong API_BY_YEAR → tự chọn
+  if (API_BY_YEAR[thisYear]) {
+    select.value = thisYear;
+  }
+
+  // Tự load theo năm đã chọn
+  loadData();
+});
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
 const modal=document.getElementById('editModal');
