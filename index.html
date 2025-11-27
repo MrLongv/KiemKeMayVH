@@ -513,7 +513,8 @@ async function loadDataByYear(year) {
 
   setStatus('Đang tải dữ liệu năm ' + year + '...');
 
-  const url = YEAR_CONFIG[year].loadUrl + '&_=' + Date.now(); // chống cache
+  const baseUrl = YEAR_CONFIG[year].loadUrl;
+  const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
 
   return new Promise((resolve, reject) => {
     const cbName = '__load_cb_' + Date.now();
@@ -820,15 +821,11 @@ modalInputs.forEach(input=>{
 document.getElementById("selectYear").addEventListener("change", async function() {
   const selectedYear = Number(this.value);
   if (!YEAR_CONFIG[selectedYear]) {
-    alert("Năm này chưa được cấu hình!");
+    setStatus("Năm " + selectedYear + " chưa được cấu hình!", false);
     return;
   }
   currentYear = selectedYear;
-  try {
-    await loadDataByYear(currentYear);
-  } catch (err) {
-    console.error(err);
-  }
+  await loadDataByYear(currentYear);
 });
 
 // ==== SYNC THỦ CÔNG ====
