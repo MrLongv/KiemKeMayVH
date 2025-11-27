@@ -230,6 +230,17 @@ button[data-act="qr"] {
 </head>
 <body>
 <header>📋 Kiểm kê máy Việt Hồng</header>
+  <div style="margin: 10px 0;">
+  <label><b>Chọn năm:</b></label>
+  <select id="selectYear" style="padding:6px 10px;">
+    <option value="2025">2025</option>
+    <option value="2026">2026</option>
+    <option value="2027">2027</option>
+    <option value="2028">2028</option>
+    <option value="2029">2029</option>
+    <option value="2030">2030</option>
+  </select>
+</div>
 <div class="controls">
   <input id="searchBox" type="text" placeholder="🔍 Tìm kiếm " />
   <select id="filterBox">
@@ -343,7 +354,8 @@ button[data-act="qr"] {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const GAS_URL='https://script.google.com/macros/s/AKfycbypLeqRNba8KKBy9V_eb3s8HIvr57UAFhZN6L2ya2nCYHSzuRBqND7w1j8Qlb7RY5rw/exec';
+document.addEventListener("DOMContentLoaded", function () {
+  const GAS_URL='https://script.google.com/macros/s/AKfycbypLeqRNba8KKBy9V_eb3s8HIvr57UAFhZN6L2ya2nCYHSzuRBqND7w1j8Qlb7RY5rw/exec';
 
 const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
 const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
@@ -361,7 +373,18 @@ const m_bdQ2_ngay = document.getElementById('m_bdQ2_ngay');
 const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
 const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 
-let allData=[], editingIndex=null;
+let currentYear = 2025;
+
+const YEAR_CONFIG = {
+  2025: { loadUrl: "https://script.google.com/macros/s/AKfycbx9ha3Sum5sGdPFBmVyEBsIbBa20zu70g12j9aIWdGG_DZHnUDpn52jW7NW816o4t5T/exec", saveUrl: "https://script.google.com/macros/s/AKfycbx9ha3Sum5sGdPFBmVyEBsIbBa20zu70g12j9aIWdGG_DZHnUDpn52jW7NW816o4t5T/exec" },
+  2026: { loadUrl: "https://script.google.com/macros/s/AKfycbwmV65VFUDLxRgE6a23vi2jqS9Trq8UhsOGEtaIpY-DWbUt46wQjG0yPdOod1sZxMSk/exec", saveUrl: "https://script.google.com/macros/s/AKfycbwmV65VFUDLxRgE6a23vi2jqS9Trq8UhsOGEtaIpY-DWbUt46wQjG0yPdOod1sZxMSk/exec" },
+  2027: { loadUrl: "URL_LOAD_2027", saveUrl: "URL_SAVE_2027" },
+  2028: { loadUrl: "URL_LOAD_2028", saveUrl: "URL_SAVE_2028" },
+  2029: { loadUrl: "URL_LOAD_2029", saveUrl: "URL_SAVE_2029" },
+  2030: { loadUrl: "URL_LOAD_2030", saveUrl: "URL_SAVE_2030" }
+};
+
+  let allData=[], editingIndex=null;
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
@@ -481,6 +504,16 @@ function renderTable() {
     searchInfo.textContent = `Tìm thấy ${countVisible} dòng`;
   }
 }
+  async function loadDataByYear(year) {
+  const url = YEAR_CONFIG[year].loadUrl;
+
+  const res = await fetch(url);
+  const json = await res.json();
+
+  allData = json.data || [];
+  saveLocal();
+}
+
 // ==== LOAD DATA JSONP ====
 function loadData(){
   setStatus('Đang tải dữ liệu...');
@@ -538,7 +571,6 @@ function autoSyncRow(i){
   if(i == null || !allData[i]) return;
   const rowData = allData[i];
 
-  // gửi dữ liệu lên Sheet, map đúng các cột Q1-Q4, ngày BD và sửa chữa
   const payload = {
     soThe: rowData.soThe || "",
     soMay: rowData.soMay || "",
@@ -563,18 +595,33 @@ function autoSyncRow(i){
   const cb = '__auto_cb_' + Date.now();
   window[cb] = function(res){
     try {
-      if(res && res.success) setStatus('✅ Đã lưu dòng '+(i+1));
-      else setStatus('❌ Lỗi lưu dòng '+(i+1), false);
+      if(res && res.success) setStatus('✅ Đã lưu dòng ' + (i+1));
+      else setStatus('❌ Lỗi lưu dòng ' + (i+1), false);
     } finally {
       delete window[cb];
       script.remove();
     }
   };
 
+  // *** ĐIỂM QUAN TRỌNG NHẤT ***
+  // Luôn dùng GAS_URL hiện tại (đã đổi theo năm)
   const script = document.createElement('script');
-  script.src = GAS_URL+'?update=1&row='+(i+1)+'&data='+encodeURIComponent(JSON.stringify(payload))+'&callback='+cb+'&_='+Date.now();
+  script.src =
+    GAS_URL +
+    '?callback=' + cb +
+    '&action=update' +
+    '&row=' + i +
+    '&data=' + encodeURIComponent(JSON.stringify(payload));
+
+  script.onerror = () => {
+    setStatus('❌ Lỗi kết nối khi lưu dòng ' + (i+1), false);
+    delete window[cb];
+    script.remove();
+  };
+
   document.head.appendChild(script);
 }
+
 // ==== EVENTS ====
 filterBox.addEventListener('change',renderTable);
 searchBox.addEventListener('input',renderTable);
@@ -734,6 +781,12 @@ modalInputs.forEach(input=>{
     },300);
   });
 });
+document.getElementById("selectYear").addEventListener("change", async function() {
+ currentYear = Number(this.value);
+  await loadDataByYear(currentYear);
+  renderTable();
+  highlightFromHash();
+});
 
 // ==== SYNC THỦ CÔNG ====
 document.getElementById('btnSync').onclick=()=>{
@@ -741,7 +794,7 @@ document.getElementById('btnSync').onclick=()=>{
   const cb='__sync_cb_'+Date.now();
   window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đồng bộ thành công'); else setStatus('❌ Lỗi đồng bộ',false);}finally{delete window[cb]; script.remove();}};
   const script=document.createElement('script');
-  script.src=GAS_URL+'?updateAll=1&data='+encoded+'&callback='+cb+'&_='+Date.now();
+  script.src = GAS_URL+'?callback='+cb+'&year='+currentYear+'&_='+Date.now();
   document.head.appendChild(script);
 };
 document.getElementById('btnRefresh').onclick=loadData;
@@ -1037,6 +1090,7 @@ document.getElementById("checkAllQ4").addEventListener("change", function() {
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
+});
 </script>
 </body>
 </html>
