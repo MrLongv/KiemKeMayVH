@@ -505,59 +505,37 @@ function renderTable() {
   }
 }
 async function loadDataByYear(year) {
-  try {
-    const url = YEAR_CONFIG[year].loadUrl;
-    // Thêm param _ để chống cache
-    const fetchUrl = url + (url.includes("?") ? "&" : "?") + "_=" + Date.now();
-    
-    setStatus(`Đang tải dữ liệu năm ${year}...`);
-    
-    const res = await fetch(fetchUrl);
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    
-    const json = await res.json();
-    if (!json.data || !Array.isArray(json.data)) throw new Error("Dữ liệu không hợp lệ");
-
-    // Gán dữ liệu mới
-    allData = json.data.map(r => ({
-      soThe: r.soThe || r.SoThe || r['Số thẻ'] || '',
-      soMay: r.soMay || r.SoMay || r['Số máy'] || '',
-      loaiMay: r.loaiMay || r.LoaiMay || r['Loại máy'] || '',
-      viTri: r.viTri || r.ViTri || r['Vị trí'] || '',
-      ghiChu: r.ghiChu || r.GhiChu || r['Ghi chú'] || '',
-      daKiemKe: !!(r.daKiemKe || r['Đã KK']),
-      chonIn: !!(r.chonIn || r['chonIn']),
-      ngayMua: r.ngayMua || r.NgayMua || r['Ngày mua'] || '',
-      noiMua: r.noiMua || r.NoiMua || r['Nơi mua'] || '',
-      bdQ1: !!(r.bdQ1 || r['Bảo dưỡng Q1']),
-      bdQ2: !!(r.bdQ2 || r['Bảo dưỡng Q2']),
-      bdQ3: !!(r.bdQ3 || r['Bảo dưỡng Q3']),
-      bdQ4: !!(r.bdQ4 || r['Bảo dưỡng Q4']),
-      bdNgayQ1: r.bdNgayQ1 || r['Bảo dưỡng Q1 Ngày'] || '',
-      bdNgayQ2: r.bdNgayQ2 || r['Bảo dưỡng Q2 Ngày'] || '',
-      bdNgayQ3: r.bdNgayQ3 || r['Bảo dưỡng Q3 Ngày'] || '',
-      bdNgayQ4: r.bdNgayQ4 || r['Bảo dưỡng Q4 Ngày'] || '',
-      suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
-    }));
-
-    // Chuẩn hóa format ngày
-    allData.forEach(r => {
-      r.ngayMua = r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : '';
-      r.bdNgayQ1 = r.bdNgayQ1 ? formatDateDDMMYYYY(r.bdNgayQ1) : '';
-      r.bdNgayQ2 = r.bdNgayQ2 ? formatDateDDMMYYYY(r.bdNgayQ2) : '';
-      r.bdNgayQ3 = r.bdNgayQ3 ? formatDateDDMMYYYY(r.bdNgayQ3) : '';
-      r.bdNgayQ4 = r.bdNgayQ4 ? formatDateDDMMYYYY(r.bdNgayQ4) : '';
-    });
-
-    renderTable();
-    highlightFromHash();
-    setStatus(`Đã tải ${allData.length} dòng năm ${year}`);
-    console.log('Loaded rows:', allData.length);
-    
-  } catch (err) {
-    console.error(err);
-    setStatus(`Lỗi tải dữ liệu năm ${year}: ${err.message}`, false);
-  }
+  const url = YEAR_CONFIG[year].loadUrl + '&_=' + Date.now();
+  return new Promise((resolve, reject) => {
+    const cb = '__load_cb_' + Date.now();
+    window[cb] = function(res) {
+      try {
+        if (res && res.success && Array.isArray(res.data)) {
+          allData = res.data;
+          saveLocal();
+          renderTable();
+          highlightFromHash();
+          setStatus('Đã tải ' + allData.length + ' dòng cho năm ' + year);
+          resolve();
+        } else {
+          setStatus('Lỗi tải dữ liệu năm ' + year, false);
+          reject(new Error('Không có dữ liệu hợp lệ'));
+        }
+      } finally {
+        delete window[cb];
+        script.remove();
+      }
+    };
+    const script = document.createElement('script');
+    script.src = url + '&callback=' + cb;
+    script.onerror = () => {
+      setStatus('Lỗi kết nối năm ' + year, false);
+      delete window[cb];
+      script.remove();
+      reject(new Error('Lỗi kết nối'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ==== LOAD DATA JSONP ====
