@@ -2,223 +2,248 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kiểm kê VH theo năm</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kiểm kê VH</title>
 <style>
-body { font-family: Arial; margin:0; background:#f4f6f8; }
-header { padding:10px; background:#1e90ff; color:white; display:flex; justify-content:space-between; align-items:center; }
-button { padding:5px 10px; margin-right:5px; }
-table { border-collapse: collapse; width:100%; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:5px; text-align:center; }
+body { font-family: Arial,sans-serif; margin:0; padding:10px; background:#f4f6f8; }
+h1 { text-align:center; }
+button { margin:2px; padding:4px 8px; }
+table { width:100%; border-collapse: collapse; margin-top:10px; }
+th, td { border:1px solid #ccc; padding:6px; text-align:center; }
 th { background:#eee; }
-.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; }
-.modal-content { background:white; padding:20px; width:400px; max-height:90%; overflow:auto; border-radius:5px; }
-.modal-content input[type=text], .modal-content input[type=date] { width:100%; margin-bottom:10px; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+.modal-content { background:#fff; padding:20px; width:400px; border-radius:5px; position:relative; }
+.close { position:absolute; top:10px; right:10px; cursor:pointer; font-weight:bold; }
+input[type="text"], input[type="number"], input[type="date"] { width:100%; margin-bottom:6px; }
 </style>
 </head>
 <body>
-<header>
-  <div>Kiểm kê VH theo năm</div>
-  <div>
+<h1>Kiểm kê VH</h1>
+<div>
+  <label>Năm: 
     <select id="selectYear"></select>
-    <button id="btnAdd">Thêm</button>
-    <button id="btnRefresh">Tải lại</button>
-    <button id="btnPrintQR">In QR</button>
-    <button id="btnPrintLyLich">In lý lịch</button>
-  </div>
-</header>
-
+  </label>
+  <button id="btnAdd">Thêm</button>
+</div>
 <table id="dataTable">
-  <thead>
-    <tr>
-      <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
-      <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
-      <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
+<thead>
+<tr>
+  <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
+  <th>Đã KK</th><th>In QR</th>
+  <th>Ngày mua</th><th>Nơi mua</th>
+  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
+  <th>Sửa chữa</th><th>Hành động</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Chỉnh sửa / Thêm máy</h3>
+    <span class="close" id="modalClose">&times;</span>
+    <h3 id="modalTitle">Chỉnh sửa máy</h3>
     <input type="hidden" id="modalId">
-    <label>Số thẻ</label><input type="text" id="m_soThe">
-    <label>Số máy</label><input type="text" id="m_soMay">
-    <label>Loại máy</label><input type="text" id="m_loaiMay">
-    <label>Vị trí</label><input type="text" id="m_viTri">
-    <label>Ghi chú</label><input type="text" id="m_ghiChu">
-    <label>Ngày mua</label><input type="date" id="m_ngayMua">
-    <label>Nơi mua</label><input type="text" id="m_noiMua">
-    <label>Sửa chữa</label><input type="text" id="m_suaChua">
-    <div><input type="checkbox" id="m_daKiemKe"> Đã KK</div>
-    <div><input type="checkbox" id="m_chonIn"> In QR</div>
-    <div><input type="checkbox" id="m_bdQ1"> Q1 <input type="date" id="m_bdNgayQ1"></div>
-    <div><input type="checkbox" id="m_bdQ2"> Q2 <input type="date" id="m_bdNgayQ2"></div>
-    <div><input type="checkbox" id="m_bdQ3"> Q3 <input type="date" id="m_bdNgayQ3"></div>
-    <div><input type="checkbox" id="m_bdQ4"> Q4 <input type="date" id="m_bdNgayQ4"></div>
+    <label>Số thẻ: <input type="text" id="mSoThe"></label>
+    <label>Số máy: <input type="text" id="mSoMay"></label>
+    <label>Loại máy: <input type="text" id="mLoaiMay"></label>
+    <label>Vị trí: <input type="text" id="mViTri"></label>
+    <label>Ghi chú: <input type="text" id="mGhiChu"></label>
+    <label>Đã KK: <input type="checkbox" id="mDaKiemKe"></label>
+    <label>In QR: <input type="checkbox" id="mChonIn"></label>
+    <label>Ngày mua: <input type="date" id="mNgayMua"></label>
+    <label>Nơi mua: <input type="text" id="mNoiMua"></label>
+    <label>Q1: <input type="checkbox" id="mBdQ1"><input type="text" id="mBdNgayQ1" placeholder="Ngày"></label>
+    <label>Q2: <input type="checkbox" id="mBdQ2"><input type="text" id="mBdNgayQ2" placeholder="Ngày"></label>
+    <label>Q3: <input type="checkbox" id="mBdQ3"><input type="text" id="mBdNgayQ3" placeholder="Ngày"></label>
+    <label>Q4: <input type="checkbox" id="mBdQ4"><input type="text" id="mBdNgayQ4" placeholder="Ngày"></label>
+    <label>Sửa chữa: <input type="text" id="mSuaChua"></label>
     <button id="modalSave">Lưu</button>
-    <button id="modalClose">Đóng</button>
   </div>
 </div>
 
 <script>
-const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
+const WORKER_URL = 'https://snowy-surf-e985.hoalangiongxoai.workers.dev';
 let allData = [];
 let currentYear = new Date().getFullYear();
 
-// init year dropdown
-const yearSelect = document.getElementById("selectYear");
-for(let y=currentYear-1; y<=currentYear+1; y++){
-  const opt = document.createElement("option"); opt.value=y; opt.text=y;
-  if(y===currentYear) opt.selected=true;
-  yearSelect.appendChild(opt);
+const modal = document.getElementById('modal');
+const modalClose = document.getElementById('modalClose');
+const modalSave = document.getElementById('modalSave');
+
+const mId = document.getElementById('modalId');
+const mSoThe = document.getElementById('mSoThe');
+const mSoMay = document.getElementById('mSoMay');
+const mLoaiMay = document.getElementById('mLoaiMay');
+const mViTri = document.getElementById('mViTri');
+const mGhiChu = document.getElementById('mGhiChu');
+const mDaKiemKe = document.getElementById('mDaKiemKe');
+const mChonIn = document.getElementById('mChonIn');
+const mNgayMua = document.getElementById('mNgayMua');
+const mNoiMua = document.getElementById('mNoiMua');
+const mBdQ1 = document.getElementById('mBdQ1');
+const mBdNgayQ1 = document.getElementById('mBdNgayQ1');
+const mBdQ2 = document.getElementById('mBdQ2');
+const mBdNgayQ2 = document.getElementById('mBdNgayQ2');
+const mBdQ3 = document.getElementById('mBdQ3');
+const mBdNgayQ3 = document.getElementById('mBdNgayQ3');
+const mBdQ4 = document.getElementById('mBdQ4');
+const mBdNgayQ4 = document.getElementById('mBdNgayQ4');
+const mSuaChua = document.getElementById('mSuaChua');
+
+const selectYear = document.getElementById('selectYear');
+
+// ==== NĂM ====
+function initYearDropdown() {
+  const startYear = 2024;
+  const endYear = new Date().getFullYear() + 5;
+  for(let y=startYear;y<=endYear;y++){
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if(y===currentYear) opt.selected = true;
+    selectYear.appendChild(opt);
+  }
+  selectYear.addEventListener('change',()=>{ currentYear=Number(selectYear.value); loadData(); });
 }
-yearSelect.onchange = ()=>{ currentYear = Number(yearSelect.value); loadData(currentYear); };
 
-// modal elements
-const modal=document.getElementById("modal");
-const m_id=document.getElementById("modalId");
-const m_soThe=document.getElementById("m_soThe");
-const m_soMay=document.getElementById("m_soMay");
-const m_loaiMay=document.getElementById("m_loaiMay");
-const m_viTri=document.getElementById("m_viTri");
-const m_ghiChu=document.getElementById("m_ghiChu");
-const m_ngayMua=document.getElementById("m_ngayMua");
-const m_noiMua=document.getElementById("m_noiMua");
-const m_suaChua=document.getElementById("m_suaChua");
-const m_daKiemKe=document.getElementById("m_daKiemKe");
-const m_chonIn=document.getElementById("m_chonIn");
-const m_bdQ1=document.getElementById("m_bdQ1");
-const m_bdNgayQ1=document.getElementById("m_bdNgayQ1");
-const m_bdQ2=document.getElementById("m_bdQ2");
-const m_bdNgayQ2=document.getElementById("m_bdNgayQ2");
-const m_bdQ3=document.getElementById("m_bdQ3");
-const m_bdNgayQ3=document.getElementById("m_bdNgayQ3");
-const m_bdQ4=document.getElementById("m_bdQ4");
-const m_bdNgayQ4=document.getElementById("m_bdNgayQ4");
+// ==== MODAL ====
+function openModal(row=null){
+  modal.style.display='flex';
+  if(row){
+    mId.value=row.id||'';
+    mSoThe.value=row.soThe||'';
+    mSoMay.value=row.soMay||'';
+    mLoaiMay.value=row.loaiMay||'';
+    mViTri.value=row.viTri||'';
+    mGhiChu.value=row.ghiChu||'';
+    mDaKiemKe.checked=row.daKiemKe==1;
+    mChonIn.checked=row.chonIn==1;
+    mNgayMua.value=row.ngayMua||'';
+    mNoiMua.value=row.noiMua||'';
+    mBdQ1.checked=row.bdQ1==1; mBdNgayQ1.value=row.bdNgayQ1||'';
+    mBdQ2.checked=row.bdQ2==1; mBdNgayQ2.value=row.bdNgayQ2||'';
+    mBdQ3.checked=row.bdQ3==1; mBdNgayQ3.value=row.bdQ3||'';
+    mBdQ4.checked=row.bdQ4==1; mBdNgayQ4.value=row.bdQ4||'';
+    mSuaChua.value=row.suaChua||'';
+  } else {
+    mId.value=''; mSoThe.value=''; mSoMay.value=''; mLoaiMay.value='';
+    mViTri.value=''; mGhiChu.value=''; mDaKiemKe.checked=false; mChonIn.checked=false;
+    mNgayMua.value=''; mNoiMua.value='';
+    mBdQ1.checked=false; mBdNgayQ1.value='';
+    mBdQ2.checked=false; mBdNgayQ2.value='';
+    mBdQ3.checked=false; mBdNgayQ3.value='';
+    mBdQ4.checked=false; mBdNgayQ4.value='';
+    mSuaChua.value='';
+  }
+}
+modalClose.onclick=()=>modal.style.display='none';
 
-document.getElementById("btnAdd").onclick=()=>openEditModal(null);
-document.getElementById("modalClose").onclick=()=>modal.style.display="none";
-
-async function loadData(year){
+// ==== LOAD DỮ LIỆU ====
+async function loadData(){
   try{
-    const res = await fetch(`${WORKER_URL}/?nam=${year}`);
+    const res = await fetch(`${WORKER_URL}?nam=${currentYear}`);
     const data = await res.json();
-    if(!data.success) throw new Error(data.error||"Không có data");
-    allData = data.data;
+    if(!data.success) throw new Error(data.error||'Không xác định');
+    allData = data.data||[];
     renderTable();
-  }catch(e){ alert("Lỗi khi load dữ liệu: "+e);}
-}
-
-function renderTable(){
-  const tbody=document.querySelector("#dataTable tbody");
-  tbody.innerHTML="";
-  allData.forEach((r,idx)=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${r.id}</td>
-      <td>${r.soThe}</td>
-      <td>${r.soMay}</td>
-      <td>${r.loaiMay}</td>
-      <td>${r.viTri}</td>
-      <td>${r.ghiChu}</td>
-      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?"checked":""}></td>
-      <td><input type="checkbox" class="chonIn" ${r.chonIn?"checked":""}></td>
-      <td>${r.ngayMua||""}</td>
-      <td>${r.noiMua||""}</td>
-      <td><input type="checkbox" class="bdQ1" ${r.bdQ1?"checked":""}></td>
-      <td><input type="checkbox" class="bdQ2" ${r.bdQ2?"checked":""}></td>
-      <td><input type="checkbox" class="bdQ3" ${r.bdQ3?"checked":""}></td>
-      <td><input type="checkbox" class="bdQ4" ${r.bdQ4?"checked":""}></td>
-      <td>${r.suaChua||""}</td>
-      <td><button class="editBtn">Sửa</button></td>
-    `;
-    tbody.appendChild(tr);
-    tr.querySelector(".editBtn").onclick=()=>openEditModal(idx);
-    tr.querySelector(".daKiemKe").onchange=e=>{ r.daKiemKe=e.target.checked; updateRow(r); };
-    tr.querySelector(".chonIn").onchange=e=>{ r.chonIn=e.target.checked; updateRow(r); };
-    tr.querySelector(".bdQ1").onchange=e=>{ r.bdQ1=e.target.checked; updateRow(r); };
-    tr.querySelector(".bdQ2").onchange=e=>{ r.bdQ2=e.target.checked; updateRow(r); };
-    tr.querySelector(".bdQ3").onchange=e=>{ r.bdQ3=e.target.checked; updateRow(r); };
-    tr.querySelector(".bdQ4").onchange=e=>{ r.bdQ4=e.target.checked; updateRow(r); };
-  });
-}
-
-function openEditModal(idx){
-  modal.style.display="flex";
-  if(idx===null){
-    m_id.value="";
-    m_soThe.value="";
-    m_soMay.value="";
-    m_loaiMay.value="";
-    m_viTri.value="";
-    m_ghiChu.value="";
-    m_ngayMua.value="";
-    m_noiMua.value="";
-    m_suaChua.value="";
-    m_daKiemKe.checked=false;
-    m_chonIn.checked=false;
-    m_bdQ1.checked=false; m_bdNgayQ1.value="";
-    m_bdQ2.checked=false; m_bdNgayQ2.value="";
-    m_bdQ3.checked=false; m_bdNgayQ3.value="";
-    m_bdQ4.checked=false; m_bdNgayQ4.value="";
-  }else{
-    const r=allData[idx];
-    m_id.value=r.id;
-    m_soThe.value=r.soThe||"";
-    m_soMay.value=r.soMay||"";
-    m_loaiMay.value=r.loaiMay||"";
-    m_viTri.value=r.viTri||"";
-    m_ghiChu.value=r.ghiChu||"";
-    m_ngayMua.value=r.ngayMua||"";
-    m_noiMua.value=r.noiMua||"";
-    m_suaChua.value=r.suaChua||"";
-    m_daKiemKe.checked=r.daKiemKe;
-    m_chonIn.checked=r.chonIn;
-    m_bdQ1.checked=r.bdQ1; m_bdNgayQ1.value=r.bdNgayQ1||"";
-    m_bdQ2.checked=r.bdQ2; m_bdNgayQ2.value=r.bdNgayQ2||"";
-    m_bdQ3.checked=r.bdQ3; m_bdNgayQ3.value=r.bdNgayQ3||"";
-    m_bdQ4.checked=r.bdQ4; m_bdNgayQ4.value=r.bdNgayQ4||"";
+  }catch(e){
+    alert('Lỗi khi load dữ liệu: '+e);
+    console.error(e);
   }
 }
 
-document.getElementById("modalSave").onclick = async ()=>{
-  const payload={
-    id: m_id.value,
-    soThe: m_soThe.value,
-    soMay: m_soMay.value,
-    loaiMay: m_loaiMay.value,
-    viTri: m_viTri.value,
-    ghiChu: m_ghiChu.value,
-    ngayMua: m_ngayMua.value,
-    noiMua: m_noiMua.value,
-    suaChua: m_suaChua.value,
-    daKiemKe: m_daKiemKe.checked,
-    chonIn: m_chonIn.checked,
-    bdQ1: m_bdQ1.checked, bdNgayQ1: m_bdNgayQ1.value,
-    bdQ2: m_bdQ2.checked, bdNgayQ2: m_bdNgayQ2.value,
-    bdQ3: m_bdQ3.checked, bdNgayQ3: m_bdNgayQ3.value,
-    bdQ4: m_bdQ4.checked, bdNgayQ4: m_bdNgayQ4.value,
-    nam: currentYear
-  };
+function renderTable(){
+  const tbody=document.querySelector('#dataTable tbody');
+  tbody.innerHTML='';
+  allData.forEach(row=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${row.id}</td>
+      <td>${row.soThe||''}</td>
+      <td>${row.soMay||''}</td>
+      <td>${row.loaiMay||''}</td>
+      <td>${row.viTri||''}</td>
+      <td>${row.ghiChu||''}</td>
+      <td><input type="checkbox" class="cbDaKiemKe" ${row.daKiemKe==1?'checked':''}></td>
+      <td><input type="checkbox" class="cbChonIn" ${row.chonIn==1?'checked':''}></td>
+      <td>${row.ngayMua||''}</td>
+      <td>${row.noiMua||''}</td>
+      <td><input type="checkbox" class="cbBdQ1" ${row.bdQ1==1?'checked':''}></td>
+      <td><input type="checkbox" class="cbBdQ2" ${row.bdQ2==1?'checked':''}></td>
+      <td><input type="checkbox" class="cbBdQ3" ${row.bdQ3==1?'checked':''}></td>
+      <td><input type="checkbox" class="cbBdQ4" ${row.bdQ4==1?'checked':''}></td>
+      <td>${row.suaChua||''}</td>
+      <td><button class="btnEdit">Sửa</button></td>
+    `;
+    tbody.appendChild(tr);
+
+    // Checkbox thay đổi trực tiếp
+    tr.querySelector('.cbDaKiemKe').addEventListener('change',()=>updateRowCheckbox(row.id,'daKiemKe',tr.querySelector('.cbDaKiemKe').checked));
+    tr.querySelector('.cbChonIn').addEventListener('change',()=>updateRowCheckbox(row.id,'chonIn',tr.querySelector('.cbChonIn').checked));
+    tr.querySelector('.cbBdQ1').addEventListener('change',()=>updateRowCheckbox(row.id,'bdQ1',tr.querySelector('.cbBdQ1').checked));
+    tr.querySelector('.cbBdQ2').addEventListener('change',()=>updateRowCheckbox(row.id,'bdQ2',tr.querySelector('.cbBdQ2').checked));
+    tr.querySelector('.cbBdQ3').addEventListener('change',()=>updateRowCheckbox(row.id,'bdQ3',tr.querySelector('.cbBdQ3').checked));
+    tr.querySelector('.cbBdQ4').addEventListener('change',()=>updateRowCheckbox(row.id,'bdQ4',tr.querySelector('.cbBdQ4').checked));
+
+    tr.querySelector('.btnEdit').addEventListener('click',()=>openModal(row));
+  });
+}
+
+// ==== UPDATE CHECKBOX TRỰC TIẾP ====
+async function updateRowCheckbox(id,field,value){
   try{
-    let url = WORKER_URL + (payload.id ? "/update" : "/add");
-    const res = await fetch(url,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
+    const row = allData.find(r=>r.id==id);
+    if(!row) return;
+    row[field] = value?1:0;
+    const body={...row, nam:currentYear};
+    const res = await fetch(`${WORKER_URL}/update`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
     });
     const data = await res.json();
-    if(!data.success) throw new Error(data.error||"Lỗi lưu dữ liệu");
-    modal.style.display="none";
-    loadData(currentYear);
-  }catch(e){ alert("Lỗi khi lưu: "+e);}
-};
+    if(!data.success) throw new Error(data.error||'Không nhận được phản hồi từ Worker');
+    loadData();
+  }catch(e){ console.error(e); alert('Lỗi khi cập nhật: '+e); }
+}
 
-// load data ban đầu
-loadData(currentYear);
+// ==== SAVE MODAL ====
+modalSave.onclick=async()=>{
+  try{
+    const body = {
+      id: mId.value||null,
+      soThe:mSoThe.value, soMay:mSoMay.value, loaiMay:mLoaiMay.value, viTri:mViTri.value,
+      ghiChu:mGhiChu.value,
+      daKiemKe:mDaKiemKe.checked?1:0,
+      chonIn:mChonIn.checked?1:0,
+      bdQ1:mBdQ1.checked?1:0, bdNgayQ1:mBdNgayQ1.value,
+      bdQ2:mBdQ2.checked?1:0, bdNgayQ2:mBdNgayQ2.value,
+      bdQ3:mBdQ3.checked?1:0, bdNgayQ3:mBdNgayQ3.value,
+      bdQ4:mBdQ4.checked?1:0, bdNgayQ4:mBdNgayQ4.value,
+      ngayMua:mNgayMua.value,
+      noiMua:mNoiMua.value,
+      suaChua:mSuaChua.value,
+      nam:currentYear
+    };
+    const url = body.id?`${WORKER_URL}/update`:`${WORKER_URL}/add`;
+    const res = await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error||'Không nhận được phản hồi từ Worker');
+    modal.style.display='none';
+    loadData();
+  }catch(e){ console.error(e); alert('Lỗi khi lưu: '+e); }
+}
+
+// ==== ADD ====
+document.getElementById('btnAdd').onclick=()=>openModal(null);
+
+// ==== INIT ====
+initYearDropdown();
+loadData();
 </script>
 </body>
 </html>
