@@ -152,56 +152,60 @@ async function loadData() {
         `;
     });
 }
-
 async function save() {
-    const id = document.getElementById("m-id").value;
+    try {
+        const id = document.getElementById("m-id").value || "";
 
-    const payload = {
-        id: id ? Number(id) : undefined,
-        soThe: m-soThe.value,
-        soMay: m-soMay.value,
-        loaiMay: m-loaiMay.value,
-        viTri: m-viTri.value,
-        ghiChu: m-ghiChu.value,
+        const payload = {
+            id: id ? Number(id) : undefined,
+            soThe: document.getElementById("m-soThe").value || "",
+            soMay: document.getElementById("m-soMay").value || "",
+            loaiMay: document.getElementById("m-loaiMay").value || "",
+            viTri: document.getElementById("m-viTri").value || "",
+            ghiChu: document.getElementById("m-ghiChu").value || "",
 
-        daKiemKe: m-daKiemKe.checked,
-        chonIn: m-chonIn.checked,
+            daKiemKe: document.getElementById("m-daKiemKe").checked ? 1 : 0,
+            chonIn: document.getElementById("m-chonIn").checked ? 1 : 0,
 
-        bdQ1: m-bdQ1.checked,
-        bdNgayQ1: m-bdNgayQ1.value,
+            bdQ1: document.getElementById("m-bdQ1").checked ? 1 : 0,
+            bdNgayQ1: document.getElementById("m-bdNgayQ1").value || "",
+            bdQ2: document.getElementById("m-bdQ2").checked ? 1 : 0,
+            bdNgayQ2: document.getElementById("m-bdNgayQ2").value || "",
+            bdQ3: document.getElementById("m-bdQ3").checked ? 1 : 0,
+            bdNgayQ3: document.getElementById("m-bdNgayQ3").value || "",
+            bdQ4: document.getElementById("m-bdQ4").checked ? 1 : 0,
+            bdNgayQ4: document.getElementById("m-bdNgayQ4").value || "",
 
-        bdQ2: m-bdQ2.checked,
-        bdNgayQ2: m-bdNgayQ2.value,
+            ngayMua: document.getElementById("m-ngayMua").value || "",
+            noiMua: document.getElementById("m-noiMua").value || "",
+            suaChua: document.getElementById("m-suaChua").value || ""
+        };
 
-        bdQ3: m-bdQ3.checked,
-        bdNgayQ3: m-bdNgayQ3.value,
+        const url = id ? (API_URL + "/update") : (API_URL + "/add");
 
-        bdQ4: m-bdQ4.checked,
-        bdNgayQ4: m-bdNgayQ4.value,
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-        ngayMua: m-ngayMua.value,
-        noiMua: m-noiMua.value,
-        suaChua: m-suaChua.value
-    };
+        const js = await res.json();
 
-    const url = id ? API_URL + "/update" : API_URL + "/add";
+        if (!js || !js.success) {
+            alert("Lỗi khi lưu: " + (js && js.error ? js.error : "Không xác định"));
+            console.error("Save error response:", js);
+            return;
+        }
 
-    const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    const js = await res.json();
-
-    if (!js.success) {
-        alert("Lỗi lưu: " + js.error);
-        return;
+        // thành công
+        closeModal();
+        await loadData();
+    } catch (e) {
+        console.error("Save exception:", e);
+        alert("Lỗi khi lưu: " + e.message);
     }
-
-    closeModal();
-    loadData();
 }
+
 
 loadData();
 </script>
