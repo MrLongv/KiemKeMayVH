@@ -186,20 +186,61 @@ function renderTable(){
 }
 
 // --- Save row ---
+// --- Save row ---
 async function saveRow(row){
   try{
-    const url = row.id ? WORKER_URL+"/update" : WORKER_URL+"/add";
+    let url = row.id ? WORKER_URL+"/update" : WORKER_URL+"/add";
+    let payload = {...row};
+    // Convert checkbox boolean thành 1/0 nếu cần
+    ['daKiemKe','chonIn','bdQ1','bdQ2','bdQ3','bdQ4'].forEach(k=>{
+      payload[k] = payload[k]?1:0;
+    });
     const res = await fetch(url,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(row)
+      body:JSON.stringify(payload)
     });
     const data = await res.json();
-    if(data.success){
-      if(!row.id) row.id = data.insertedId;
-      renderTable();
-    } else alert("Lỗi khi lưu: "+data.error);
+    if(!data.success) { alert("Lỗi khi lưu: "+data.error); return; }
+
+    if(!row.id){
+      // Thêm mới: gán id trả về từ D1
+      row.id = data.insertedId;
+      allData.push(row);
+    } else {
+      // Sửa: cập nhật allData
+      const idx = allData.findIndex(r=>r.id==row.id);
+      if(idx>=0) allData[idx] = {...row};
+    }
+    renderTable();
   }catch(e){console.error(e); alert("Error: Không nhận được phản hồi từ Worker");}
+}
+
+// --- Modal Save ---
+modalSave.onclick = async()=>{
+  const row = {
+    id:m_id.value||null,
+    soThe:m_soThe.value,
+    soMay:m_soMay.value,
+    loaiMay:m_loaiMay.value,
+    viTri:m_viTri.value,
+    ghiChu:m_ghiChu.value,
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    ngayMua:m_ngayMua.value,
+    noiMua:m_noiMua.value,
+    bdQ1:m_bdNgayQ1.value?true:false,
+    bdNgayQ1:m_bdNgayQ1.value,
+    bdQ2:m_bdNgayQ2.value?true:false,
+    bdNgayQ2:m_bdNgayQ2.value,
+    bdQ3:m_bdNgayQ3.value?true:false,
+    bdNgayQ3:m_bdNgayQ3.value,
+    bdQ4:m_bdNgayQ4.value?true:false,
+    bdNgayQ4:m_bdNgayQ4.value,
+    suaChua:m_suaChua.value
+  };
+  await saveRow(row);
+  modal.style.display='none';
 }
 
 // --- Modal Save ---
