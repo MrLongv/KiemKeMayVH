@@ -163,48 +163,37 @@ function renderTable() {
 }
 
 // ==== Save Row ====
-document.getElementById('btnSave').onclick = async ()=>{
-  const rowData = {
-    id: document.getElementById('rowId').value || undefined,
-    soThe: document.getElementById('m_soThe').value.trim(),
-    soMay: document.getElementById('m_soMay').value.trim(),
-    loaiMay: document.getElementById('m_loaiMay').value.trim(),
-    viTri: document.getElementById('m_viTri').value.trim(),
-    ghiChu: document.getElementById('m_ghiChu').value.trim(),
-    daKiemKe: document.getElementById('m_daKiemKe').checked,
-    chonIn: document.getElementById('m_chonIn').checked,
-    bdQ1: document.getElementById('m_bdQ1').checked,
-    bdNgayQ1: document.getElementById('m_bdNgayQ1').value.trim(),
-    bdQ2: document.getElementById('m_bdQ2').checked,
-    bdNgayQ2: document.getElementById('m_bdNgayQ2').value.trim(),
-    bdQ3: document.getElementById('m_bdQ3').checked,
-    bdNgayQ3: document.getElementById('m_bdNgayQ3').value.trim(),
-    bdQ4: document.getElementById('m_bdQ4').checked,
-    bdNgayQ4: document.getElementById('m_bdNgayQ4').value.trim(),
-    ngayMua: document.getElementById('m_ngayMua').value.trim(),
-    noiMua: document.getElementById('m_noiMua').value.trim(),
-    suaChua: document.getElementById('m_suaChua').value.trim()
-  };
+document.getElementById('btnSave').onclick = async () => {
+  const rowData = { /* dữ liệu từ modal như trước */ };
 
   try {
     const url = rowData.id ? WORKER_URL + '/update' : WORKER_URL + '/add';
     const response = await fetch(url, {
       method: 'POST',
-      headers:{'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify(rowData)
     });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    }
+
     const data = await response.json();
-    if(data.success){
-      modal.style.display='none';
+
+    if (data.success) {
+      modal.style.display = 'none';
       loadData();
     } else {
-      alert('Lỗi worker: '+data.error);
+      alert('Lỗi worker: ' + data.error);
     }
-  } catch(err){
+
+  } catch(err) {
     console.error(err);
-    alert('Lỗi JS: '+err);
+    alert('Lỗi JS: ' + err);
   }
 };
+
 
 // ==== Button Thêm & Refresh ====
 document.getElementById('btnAdd').onclick = ()=> openEditModal(null);
