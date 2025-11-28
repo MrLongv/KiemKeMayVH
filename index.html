@@ -133,15 +133,30 @@ function edit(id) {
 async function save() {
     const id = document.getElementById("m-id").value;
 
+    // 🚀 Gửi đủ 18 field đúng worker.js
     const payload = {
         id: id ? Number(id) : undefined,
-        soThe: document.getElementById("m-soThe").value,
-        soMay: document.getElementById("m-soMay").value,
-        loaiMay: document.getElementById("m-loaiMay").value,
-        viTri: document.getElementById("m-viTri").value,
-        ghiChu: document.getElementById("m-ghiChu").value,
+        soThe: document.getElementById("m-soThe").value || "",
+        soMay: document.getElementById("m-soMay").value || "",
+        loaiMay: document.getElementById("m-loaiMay").value || "",
+        viTri: document.getElementById("m-viTri").value || "",
+        ghiChu: document.getElementById("m-ghiChu").value || "",
         daKiemKe: document.getElementById("m-daKiemKe").checked,
         chonIn: document.getElementById("m-chonIn").checked,
+
+        // Các trường bổ sung bắt buộc phải gửi đúng Worker.js
+        bdQ1: false,
+        bdNgayQ1: "",
+        bdQ2: false,
+        bdNgayQ2: "",
+        bdQ3: false,
+        bdNgayQ3: "",
+        bdQ4: false,
+        bdNgayQ4: "",
+
+        ngayMua: "",
+        noiMua: "",
+        suaChua: ""
     };
 
     let url = API_URL + "/add";
@@ -161,6 +176,7 @@ async function save() {
         alert("Lỗi khi lưu: " + js.error);
     }
 }
+
 </script>
 
 </body>
