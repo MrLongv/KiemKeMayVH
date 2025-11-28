@@ -33,7 +33,7 @@ header {
 }
 
 table {
-  min-width: 100%;  /* đã có */
+  min-width: 1200px;  /* đã có */
   border-collapse: collapse;
   background: #fff;
   width: 100%;         /* chiếm full width trong table-wrap */
@@ -250,8 +250,8 @@ button[data-act="qr"] {
 </div>
     <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
-<div id="searchInfo" style="margin-left:20px; margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
-<div class="note"> Cuối năm nhớ tải file exel, lý lịch máy về lưu lại trong máy tính !</div>
+<div id="searchInfo" style="margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
+<div class="note"> Web tự lưu dữ liệu về sheet,bấm F5 load lại dữ liệu, in lý lịch máy nhập số thẻ, in nhiều thêm dấu ","</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -671,12 +671,6 @@ function closeModal(){
 document.getElementById('cancelBtn').onclick=closeModal;
 
 document.getElementById('saveBtn').onclick = () => {
-   // Kiểm tra trước khi thêm mới
-  const hasData = m_soThe.value.trim() || m_soMay.value.trim(); // có thể thêm các trường khác nếu muốn
-  if(editingIndex == null && !hasData){
-    alert('Không có dữ liệu để thêm!');
-    return;
-  }
   if(editingIndex == null) {
     // thêm mới
     const newRow = {
