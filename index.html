@@ -2,287 +2,223 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📋 Kiểm kê VH</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiểm kê VH theo năm</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f4f4f4; }
-h1 { text-align:center; }
-table { border-collapse: collapse; width: 100%; background:#fff; }
-th, td { border: 1px solid #ccc; padding: 6px; text-align:center; font-size:14px; }
+body { font-family: Arial; margin:0; background:#f4f6f8; }
+header { padding:10px; background:#1e90ff; color:white; display:flex; justify-content:space-between; align-items:center; }
+button { padding:5px 10px; margin-right:5px; }
+table { border-collapse: collapse; width:100%; margin-top:10px; }
+th, td { border:1px solid #ccc; padding:5px; text-align:center; }
 th { background:#eee; }
-button { padding:4px 8px; }
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-.modal-content { background:#fff; padding:20px; width:400px; border-radius:5px; position:relative; }
-.modal-content input, .modal-content textarea { width:100%; margin-bottom:8px; padding:4px; }
-.close { position:absolute; top:5px; right:10px; cursor:pointer; font-size:18px; }
+.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; }
+.modal-content { background:white; padding:20px; width:400px; max-height:90%; overflow:auto; border-radius:5px; }
+.modal-content input[type=text], .modal-content input[type=date] { width:100%; margin-bottom:10px; }
 </style>
 </head>
 <body>
-<h1>Kiểm kê VH</h1>
-<button id="btnAdd">Thêm mới</button>
-<button id="btnRefresh">Tải lại</button>
-<button id="btnPrintQR">In QR</button>
-<button id="btnPrintLyLich">In Lý Lịch</button>
+<header>
+  <div>Kiểm kê VH theo năm</div>
+  <div>
+    <select id="selectYear"></select>
+    <button id="btnAdd">Thêm</button>
+    <button id="btnRefresh">Tải lại</button>
+    <button id="btnPrintQR">In QR</button>
+    <button id="btnPrintLyLich">In lý lịch</button>
+  </div>
+</header>
 
 <table id="dataTable">
   <thead>
     <tr>
-      <th>ID</th>
-      <th>Số thẻ</th>
-      <th>Số máy</th>
-      <th>Loại máy</th>
-      <th>Vị trí</th>
-      <th>Ghi chú</th>
-      <th><label><input type="checkbox" id="checkAllKK">Đã KK</label></th>
-      <th><label><input type="checkbox" id="checkAllQR">In QR</label></th>
-      <th>Ngày mua</th>
-      <th>Nơi mua</th>
-      <th><label><input type="checkbox" id="checkAllQ1">Q1</label></th>
-      <th><label><input type="checkbox" id="checkAllQ2">Q2</label></th>
-      <th><label><input type="checkbox" id="checkAllQ3">Q3</label></th>
-      <th><label><input type="checkbox" id="checkAllQ4">Q4</label></th>
-      <th>Sửa chữa</th>
-      <th>Hành động</th>
+      <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
+      <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
+      <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th>
     </tr>
   </thead>
   <tbody></tbody>
 </table>
 
-<!-- Modal -->
 <div class="modal" id="modal">
   <div class="modal-content">
-    <span class="close" id="modalClose">&times;</span>
-    <h3>Thông tin máy</h3>
-    <input type="hidden" id="m_id">
-    <input placeholder="Số thẻ" id="m_soThe">
-    <input placeholder="Số máy" id="m_soMay">
-    <input placeholder="Loại máy" id="m_loaiMay">
-    <input placeholder="Vị trí" id="m_viTri">
-    <textarea placeholder="Ghi chú" id="m_ghiChu"></textarea>
-    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label><br>
-    <label><input type="checkbox" id="m_chonIn"> In QR</label><br>
-    <input type="date" id="m_ngayMua" placeholder="Ngày mua">
-    <input placeholder="Nơi mua" id="m_noiMua">
-    <input placeholder="Bảo dưỡng Q1" id="m_bdNgayQ1">
-    <input placeholder="Bảo dưỡng Q2" id="m_bdNgayQ2">
-    <input placeholder="Bảo dưỡng Q3" id="m_bdNgayQ3">
-    <input placeholder="Bảo dưỡng Q4" id="m_bdNgayQ4">
-    <input placeholder="Sửa chữa" id="m_suaChua">
+    <h3>Chỉnh sửa / Thêm máy</h3>
+    <input type="hidden" id="modalId">
+    <label>Số thẻ</label><input type="text" id="m_soThe">
+    <label>Số máy</label><input type="text" id="m_soMay">
+    <label>Loại máy</label><input type="text" id="m_loaiMay">
+    <label>Vị trí</label><input type="text" id="m_viTri">
+    <label>Ghi chú</label><input type="text" id="m_ghiChu">
+    <label>Ngày mua</label><input type="date" id="m_ngayMua">
+    <label>Nơi mua</label><input type="text" id="m_noiMua">
+    <label>Sửa chữa</label><input type="text" id="m_suaChua">
+    <div><input type="checkbox" id="m_daKiemKe"> Đã KK</div>
+    <div><input type="checkbox" id="m_chonIn"> In QR</div>
+    <div><input type="checkbox" id="m_bdQ1"> Q1 <input type="date" id="m_bdNgayQ1"></div>
+    <div><input type="checkbox" id="m_bdQ2"> Q2 <input type="date" id="m_bdNgayQ2"></div>
+    <div><input type="checkbox" id="m_bdQ3"> Q3 <input type="date" id="m_bdNgayQ3"></div>
+    <div><input type="checkbox" id="m_bdQ4"> Q4 <input type="date" id="m_bdNgayQ4"></div>
     <button id="modalSave">Lưu</button>
+    <button id="modalClose">Đóng</button>
   </div>
 </div>
 
 <script>
-const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev"; // Thay bằng URL Worker bạn
+const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
 let allData = [];
+let currentYear = new Date().getFullYear();
 
-// --- Modal ---
-const modal = document.getElementById('modal');
-const m_id = document.getElementById('m_id');
-const m_soThe = document.getElementById('m_soThe');
-const m_soMay = document.getElementById('m_soMay');
-const m_loaiMay = document.getElementById('m_loaiMay');
-const m_viTri = document.getElementById('m_viTri');
-const m_ghiChu = document.getElementById('m_ghiChu');
-const m_daKiemKe = document.getElementById('m_daKiemKe');
-const m_chonIn = document.getElementById('m_chonIn');
-const m_ngayMua = document.getElementById('m_ngayMua');
-const m_noiMua = document.getElementById('m_noiMua');
-const m_bdNgayQ1 = document.getElementById('m_bdNgayQ1');
-const m_bdNgayQ2 = document.getElementById('m_bdNgayQ2');
-const m_bdNgayQ3 = document.getElementById('m_bdNgayQ3');
-const m_bdNgayQ4 = document.getElementById('m_bdNgayQ4');
-const m_suaChua = document.getElementById('m_suaChua');
-const modalClose = document.getElementById('modalClose');
-const modalSave = document.getElementById('modalSave');
+// init year dropdown
+const yearSelect = document.getElementById("selectYear");
+for(let y=currentYear-1; y<=currentYear+1; y++){
+  const opt = document.createElement("option"); opt.value=y; opt.text=y;
+  if(y===currentYear) opt.selected=true;
+  yearSelect.appendChild(opt);
+}
+yearSelect.onchange = ()=>{ currentYear = Number(yearSelect.value); loadData(currentYear); };
 
-modalClose.onclick = ()=> modal.style.display='none';
-window.onclick = e=>{if(e.target===modal) modal.style.display='none';};
+// modal elements
+const modal=document.getElementById("modal");
+const m_id=document.getElementById("modalId");
+const m_soThe=document.getElementById("m_soThe");
+const m_soMay=document.getElementById("m_soMay");
+const m_loaiMay=document.getElementById("m_loaiMay");
+const m_viTri=document.getElementById("m_viTri");
+const m_ghiChu=document.getElementById("m_ghiChu");
+const m_ngayMua=document.getElementById("m_ngayMua");
+const m_noiMua=document.getElementById("m_noiMua");
+const m_suaChua=document.getElementById("m_suaChua");
+const m_daKiemKe=document.getElementById("m_daKiemKe");
+const m_chonIn=document.getElementById("m_chonIn");
+const m_bdQ1=document.getElementById("m_bdQ1");
+const m_bdNgayQ1=document.getElementById("m_bdNgayQ1");
+const m_bdQ2=document.getElementById("m_bdQ2");
+const m_bdNgayQ2=document.getElementById("m_bdNgayQ2");
+const m_bdQ3=document.getElementById("m_bdQ3");
+const m_bdNgayQ3=document.getElementById("m_bdNgayQ3");
+const m_bdQ4=document.getElementById("m_bdQ4");
+const m_bdNgayQ4=document.getElementById("m_bdNgayQ4");
 
-function openModal(row){
-  modal.style.display='flex';
-  if(row){
-    m_id.value=row.id;
-    m_soThe.value=row.soThe||'';
-    m_soMay.value=row.soMay||'';
-    m_loaiMay.value=row.loaiMay||'';
-    m_viTri.value=row.viTri||'';
-    m_ghiChu.value=row.ghiChu||'';
-    m_daKiemKe.checked=row.daKiemKe||false;
-    m_chonIn.checked=row.chonIn||false;
-    m_ngayMua.value=row.ngayMua||'';
-    m_noiMua.value=row.noiMua||'';
-    m_bdNgayQ1.value=row.bdNgayQ1||'';
-    m_bdNgayQ2.value=row.bdNgayQ2||'';
-    m_bdNgayQ3.value=row.bdNgayQ3||'';
-    m_bdNgayQ4.value=row.bdNgayQ4||'';
-    m_suaChua.value=row.suaChua||'';
-  } else {
-    m_id.value='';
-    m_soThe.value='';
-    m_soMay.value='';
-    m_loaiMay.value='';
-    m_viTri.value='';
-    m_ghiChu.value='';
+document.getElementById("btnAdd").onclick=()=>openEditModal(null);
+document.getElementById("modalClose").onclick=()=>modal.style.display="none";
+
+async function loadData(year){
+  try{
+    const res = await fetch(`${WORKER_URL}/?nam=${year}`);
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error||"Không có data");
+    allData = data.data;
+    renderTable();
+  }catch(e){ alert("Lỗi khi load dữ liệu: "+e);}
+}
+
+function renderTable(){
+  const tbody=document.querySelector("#dataTable tbody");
+  tbody.innerHTML="";
+  allData.forEach((r,idx)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${r.id}</td>
+      <td>${r.soThe}</td>
+      <td>${r.soMay}</td>
+      <td>${r.loaiMay}</td>
+      <td>${r.viTri}</td>
+      <td>${r.ghiChu}</td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?"checked":""}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?"checked":""}></td>
+      <td>${r.ngayMua||""}</td>
+      <td>${r.noiMua||""}</td>
+      <td><input type="checkbox" class="bdQ1" ${r.bdQ1?"checked":""}></td>
+      <td><input type="checkbox" class="bdQ2" ${r.bdQ2?"checked":""}></td>
+      <td><input type="checkbox" class="bdQ3" ${r.bdQ3?"checked":""}></td>
+      <td><input type="checkbox" class="bdQ4" ${r.bdQ4?"checked":""}></td>
+      <td>${r.suaChua||""}</td>
+      <td><button class="editBtn">Sửa</button></td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector(".editBtn").onclick=()=>openEditModal(idx);
+    tr.querySelector(".daKiemKe").onchange=e=>{ r.daKiemKe=e.target.checked; updateRow(r); };
+    tr.querySelector(".chonIn").onchange=e=>{ r.chonIn=e.target.checked; updateRow(r); };
+    tr.querySelector(".bdQ1").onchange=e=>{ r.bdQ1=e.target.checked; updateRow(r); };
+    tr.querySelector(".bdQ2").onchange=e=>{ r.bdQ2=e.target.checked; updateRow(r); };
+    tr.querySelector(".bdQ3").onchange=e=>{ r.bdQ3=e.target.checked; updateRow(r); };
+    tr.querySelector(".bdQ4").onchange=e=>{ r.bdQ4=e.target.checked; updateRow(r); };
+  });
+}
+
+function openEditModal(idx){
+  modal.style.display="flex";
+  if(idx===null){
+    m_id.value="";
+    m_soThe.value="";
+    m_soMay.value="";
+    m_loaiMay.value="";
+    m_viTri.value="";
+    m_ghiChu.value="";
+    m_ngayMua.value="";
+    m_noiMua.value="";
+    m_suaChua.value="";
     m_daKiemKe.checked=false;
     m_chonIn.checked=false;
-    m_ngayMua.value='';
-    m_noiMua.value='';
-    m_bdNgayQ1.value='';
-    m_bdNgayQ2.value='';
-    m_bdNgayQ3.value='';
-    m_bdNgayQ4.value='';
-    m_suaChua.value='';
+    m_bdQ1.checked=false; m_bdNgayQ1.value="";
+    m_bdQ2.checked=false; m_bdNgayQ2.value="";
+    m_bdQ3.checked=false; m_bdNgayQ3.value="";
+    m_bdQ4.checked=false; m_bdNgayQ4.value="";
+  }else{
+    const r=allData[idx];
+    m_id.value=r.id;
+    m_soThe.value=r.soThe||"";
+    m_soMay.value=r.soMay||"";
+    m_loaiMay.value=r.loaiMay||"";
+    m_viTri.value=r.viTri||"";
+    m_ghiChu.value=r.ghiChu||"";
+    m_ngayMua.value=r.ngayMua||"";
+    m_noiMua.value=r.noiMua||"";
+    m_suaChua.value=r.suaChua||"";
+    m_daKiemKe.checked=r.daKiemKe;
+    m_chonIn.checked=r.chonIn;
+    m_bdQ1.checked=r.bdQ1; m_bdNgayQ1.value=r.bdNgayQ1||"";
+    m_bdQ2.checked=r.bdQ2; m_bdNgayQ2.value=r.bdNgayQ2||"";
+    m_bdQ3.checked=r.bdQ3; m_bdNgayQ3.value=r.bdNgayQ3||"";
+    m_bdQ4.checked=r.bdQ4; m_bdNgayQ4.value=r.bdNgayQ4||"";
   }
 }
 
-// --- Load data ---
-async function loadData(){
+document.getElementById("modalSave").onclick = async ()=>{
+  const payload={
+    id: m_id.value,
+    soThe: m_soThe.value,
+    soMay: m_soMay.value,
+    loaiMay: m_loaiMay.value,
+    viTri: m_viTri.value,
+    ghiChu: m_ghiChu.value,
+    ngayMua: m_ngayMua.value,
+    noiMua: m_noiMua.value,
+    suaChua: m_suaChua.value,
+    daKiemKe: m_daKiemKe.checked,
+    chonIn: m_chonIn.checked,
+    bdQ1: m_bdQ1.checked, bdNgayQ1: m_bdNgayQ1.value,
+    bdQ2: m_bdQ2.checked, bdNgayQ2: m_bdNgayQ2.value,
+    bdQ3: m_bdQ3.checked, bdNgayQ3: m_bdNgayQ3.value,
+    bdQ4: m_bdQ4.checked, bdNgayQ4: m_bdNgayQ4.value,
+    nam: currentYear
+  };
   try{
-    const res = await fetch(WORKER_URL);
-    const data = await res.json();
-    if(data.success){
-      allData = data.data;
-      renderTable();
-    } else alert("Lỗi khi load dữ liệu: "+data.error);
-  }catch(e){console.error(e); alert("Lỗi khi load dữ liệu")};
-}
-
-// --- Render table ---
-function renderTable(){
-  const tbody = document.querySelector('#dataTable tbody');
-  tbody.innerHTML='';
-  allData.forEach((r, idx)=>{
-    const tr = document.createElement('tr');
-    tr.dataset.index=idx;
-    tr.innerHTML=`
-      <td>${r.id}</td>
-      <td>${r.soThe||''}</td>
-      <td>${r.soMay||''}</td>
-      <td>${r.loaiMay||''}</td>
-      <td>${r.viTri||''}</td>
-      <td>${r.ghiChu||''}</td>
-      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-      <td>${r.ngayMua||''}</td>
-      <td>${r.noiMua||''}</td>
-      <td><input type="checkbox" class="bdQ1" ${r.bdQ1?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ2" ${r.bdQ2?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ3" ${r.bdQ3?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ4" ${r.bdQ4?'checked':''}></td>
-      <td>${r.suaChua||''}</td>
-      <td><button onclick="openModal(allData[${idx}])">Sửa</button></td>
-    `;
-    tbody.appendChild(tr);
-
-    ['daKiemKe','chonIn','bdQ1','bdQ2','bdQ3','bdQ4'].forEach(cls=>{
-      tr.querySelector('.'+cls).addEventListener('change', async function(){
-        allData[idx][cls]=this.checked;
-        await saveRow(allData[idx]);
-      });
-    });
-  });
-}
-
-// --- Save row ---
-// --- Save row ---
-async function saveRow(row){
-  try{
-    let url = row.id ? WORKER_URL+"/update" : WORKER_URL+"/add";
-    let payload = {...row};
-    // Convert checkbox boolean thành 1/0 nếu cần
-    ['daKiemKe','chonIn','bdQ1','bdQ2','bdQ3','bdQ4'].forEach(k=>{
-      payload[k] = payload[k]?1:0;
-    });
+    let url = WORKER_URL + (payload.id ? "/update" : "/add");
     const res = await fetch(url,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify(payload)
     });
     const data = await res.json();
-    if(!data.success) { alert("Lỗi khi lưu: "+data.error); return; }
+    if(!data.success) throw new Error(data.error||"Lỗi lưu dữ liệu");
+    modal.style.display="none";
+    loadData(currentYear);
+  }catch(e){ alert("Lỗi khi lưu: "+e);}
+};
 
-    if(!row.id){
-      // Thêm mới: gán id trả về từ D1
-      row.id = data.insertedId;
-      allData.push(row);
-    } else {
-      // Sửa: cập nhật allData
-      const idx = allData.findIndex(r=>r.id==row.id);
-      if(idx>=0) allData[idx] = {...row};
-    }
-    renderTable();
-  }catch(e){console.error(e); alert("Error: Không nhận được phản hồi từ Worker");}
-}
-
-// --- Modal Save ---
-modalSave.onclick = async()=>{
-  const row = {
-    id:m_id.value||null,
-    soThe:m_soThe.value,
-    soMay:m_soMay.value,
-    loaiMay:m_loaiMay.value,
-    viTri:m_viTri.value,
-    ghiChu:m_ghiChu.value,
-    daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,
-    ngayMua:m_ngayMua.value,
-    noiMua:m_noiMua.value,
-    bdQ1:m_bdNgayQ1.value?true:false,
-    bdNgayQ1:m_bdNgayQ1.value,
-    bdQ2:m_bdNgayQ2.value?true:false,
-    bdNgayQ2:m_bdNgayQ2.value,
-    bdQ3:m_bdNgayQ3.value?true:false,
-    bdNgayQ3:m_bdNgayQ3.value,
-    bdQ4:m_bdNgayQ4.value?true:false,
-    bdNgayQ4:m_bdNgayQ4.value,
-    suaChua:m_suaChua.value
-  };
-  await saveRow(row);
-  modal.style.display='none';
-}
-
-// --- Modal Save ---
-modalSave.onclick = async()=>{
-  const row = {
-    id:m_id.value||null,
-    soThe:m_soThe.value,
-    soMay:m_soMay.value,
-    loaiMay:m_loaiMay.value,
-    viTri:m_viTri.value,
-    ghiChu:m_ghiChu.value,
-    daKiemKe:m_daKiemKe.checked,
-    chonIn:m_chonIn.checked,
-    ngayMua:m_ngayMua.value,
-    noiMua:m_noiMua.value,
-    bdQ1:m_bdNgayQ1.value?true:false,
-    bdNgayQ1:m_bdNgayQ1.value,
-    bdQ2:m_bdNgayQ2.value?true:false,
-    bdNgayQ2:m_bdNgayQ2.value,
-    bdQ3:m_bdNgayQ3.value?true:false,
-    bdNgayQ3:m_bdNgayQ3.value,
-    bdQ4:m_bdNgayQ4.value?true:false,
-    bdNgayQ4:m_bdNgayQ4.value,
-    suaChua:m_suaChua.value
-  };
-  await saveRow(row);
-  modal.style.display='none';
-}
-
-// --- Add new ---
-document.getElementById('btnAdd').onclick=()=>openModal(null);
-document.getElementById('btnRefresh').onclick=loadData;
-
-// --- Check all header ---
-['KK','QR','Q1','Q2','Q3','Q4'].forEach(id=>{
-  document.getElementById('checkAll'+id).addEventListener('change',function(){
-    document.querySelectorAll('.'+(id==='KK'?'daKiemKe':id==='QR'?'chonIn':'bd'+id)).forEach(cb=>cb.checked=this.checked);
-  });
-});
-
-// --- Init ---
-loadData();
+// load data ban đầu
+loadData(currentYear);
 </script>
 </body>
 </html>
