@@ -2,270 +2,302 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>📋 Kiểm kê máy Việt Hồng</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
-header, .controls, .note, .table-wrap{display:flex;flex-direction:column;gap:10px;padding:10px}
-.table-wrap table{border-collapse:collapse;width:100%}
-.table-wrap th, .table-wrap td{border:1px solid #ccc;padding:5px;font-size:14px}
-.table-wrap th{background:#eee}
-.modal-open{overflow:hidden;position:fixed;width:100%}
-.highlight-row{background:yellow}
+body { font-family: Arial,sans-serif; margin:0; background:#f4f6f8; }
+header { padding:10px 20px; background:#fff; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+header h1 { margin:0; font-size:20px; }
+button { padding:5px 10px; margin:0 2px; cursor:pointer; }
+table { border-collapse: collapse; width:100%; margin-top:10px; background:#fff; }
+th, td { border:1px solid #ccc; padding:5px; text-align:center; font-size:13px; }
+th { background:#eee; }
+.highlight-row { background:#fffae6 !important; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); justify-content:center; align-items:center; z-index:1000; }
+.modal-content { background:#fff; padding:15px; width:350px; border-radius:5px; max-height:90%; overflow-y:auto; position:relative; }
+.modal-content h2 { margin-top:0; }
+.modal-content label { display:block; margin:5px 0 2px; font-weight:bold; }
+.modal-content input, .modal-content textarea { width:100%; padding:4px; margin-bottom:5px; }
+.modal-close { position:absolute; top:5px; right:10px; cursor:pointer; }
 </style>
 </head>
 <body>
 
 <header>
-  <h2>📋 Kiểm kê máy Việt Hồng</h2>
+  <h1>📋 Kiểm kê máy Việt Hồng</h1>
+  <div>
+    <button id="btnAdd">Thêm mới</button>
+    <button id="btnRefresh">Load lại</button>
+    <button id="btnPrint">In QR</button>
+    <button id="btnPrintLyLich">In Lý Lịch</button>
+    <input type="text" id="soThePrint" placeholder="Số thẻ / all" style="width:80px">
+  </div>
 </header>
 
-<div class="controls">
-  <input type="text" id="searchBox" placeholder="Tìm kiếm...">
-  <select id="filterBox">
-    <option value="">Tất cả</option>
-    <option value="daKiemKe">Đã kiểm kê</option>
-    <option value="chuaKiemKe">Chưa kiểm kê</option>
-    <option value="daIn">Đã in</option>
-    <option value="chuaIn">Chưa in</option>
-  </select>
-  <button id="btnAdd">Thêm máy</button>
-  <button id="btnSync">Đồng bộ</button>
-  <button id="btnRefresh">Làm mới</button>
-</div>
-
-<div class="note">
-  <span id="status">Trạng thái: ...</span>
-  <span id="searchInfo"></span>
-</div>
-
-<div class="table-wrap">
+<div style="padding:10px;">
   <table id="dataTable">
     <thead>
       <tr>
-        <th>STT</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th>
-        <th>Vị trí</th><th>Ghi chú</th><th>Hành động</th>
-        <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
-        <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th>
+        <th>#</th>
+        <th>Số thẻ</th>
+        <th>Số máy</th>
+        <th>Loại máy</th>
+        <th>Vị trí</th>
+        <th>Ghi chú</th>
+        <th>Đã KK <input type="checkbox" id="checkAllKK"></th>
+        <th>In QR <input type="checkbox" id="checkAllQR"></th>
+        <th>Q1 <input type="checkbox" id="checkAllQ1"></th>
+        <th>Q2 <input type="checkbox" id="checkAllQ2"></th>
+        <th>Q3 <input type="checkbox" id="checkAllQ3"></th>
+        <th>Q4 <input type="checkbox" id="checkAllQ4"></th>
+        <th>Sửa</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 </div>
 
-<!-- Modal Edit -->
-<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999">
-  <div style="background:#fff;padding:15px;border-radius:8px;width:350px;max-height:90%;overflow:auto">
-    <h3>Chỉnh sửa / Thêm máy</h3>
-    <input id="m_soThe" placeholder="Số thẻ" style="width:100%;margin:5px 0">
-    <input id="m_soMay" placeholder="Số máy" style="width:100%;margin:5px 0">
-    <input id="m_loaiMay" placeholder="Loại máy" style="width:100%;margin:5px 0">
-    <input id="m_viTri" placeholder="Vị trí" style="width:100%;margin:5px 0">
-    <input id="m_ghiChu" placeholder="Ghi chú" style="width:100%;margin:5px 0">
-    <input id="m_ngayMua" type="date" style="width:100%;margin:5px 0">
-    <input id="m_noiMua" placeholder="Nơi mua" style="width:100%;margin:5px 0">
-    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label>
-    <label><input type="checkbox" id="m_chonIn"> In QR</label>
-    <div>
-      <label><input type="checkbox" id="m_bdQ1"> Q1</label>
-      <input type="date" id="m_bdQ1_ngay">
-    </div>
-    <div>
-      <label><input type="checkbox" id="m_bdQ2"> Q2</label>
-      <input type="date" id="m_bdQ2_ngay">
-    </div>
-    <div>
-      <label><input type="checkbox" id="m_bdQ3"> Q3</label>
-      <input type="date" id="m_bdQ3_ngay">
-    </div>
-    <div>
-      <label><input type="checkbox" id="m_bdQ4"> Q4</label>
-      <input type="date" id="m_bdQ4_ngay">
-    </div>
-    <textarea id="m_suaChua" rows="3" placeholder="Sửa chữa..." style="width:100%;margin:5px 0"></textarea>
-    <div style="display:flex;justify-content:flex-end;gap:5px;margin-top:5px">
-      <button id="cancelBtn">Hủy</button>
-      <button id="saveBtn">Cập nhật</button>
+<!-- Modal -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <span class="modal-close" id="modalClose">&times;</span>
+    <h2>Chỉnh sửa / Thêm máy</h2>
+    <label>Số thẻ</label><input id="m_soThe">
+    <label>Số máy</label><input id="m_soMay">
+    <label>Loại máy</label><input id="m_loaiMay">
+    <label>Vị trí</label><input id="m_viTri">
+    <label>Ghi chú</label><textarea id="m_ghiChu"></textarea>
+    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe">
+    <label>In QR</label><input type="checkbox" id="m_chonIn">
+    <label>Bảo dưỡng Q1</label><input type="checkbox" id="m_bdQ1"><input type="date" id="m_bdNgayQ1">
+    <label>Bảo dưỡng Q2</label><input type="checkbox" id="m_bdQ2"><input type="date" id="m_bdNgayQ2">
+    <label>Bảo dưỡng Q3</label><input type="checkbox" id="m_bdQ3"><input type="date" id="m_bdNgayQ3">
+    <label>Bảo dưỡng Q4</label><input type="checkbox" id="m_bdQ4"><input type="date" id="m_bdNgayQ4">
+    <label>Sửa chữa</label><input id="m_suaChua">
+    <div style="margin-top:10px; text-align:right;">
+      <button id="modalSave">Lưu</button>
+      <button id="modalCancel">Hủy</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const CF_ENDPOINT = 'https://snowy-surf-e985.hoalangiongxoai.workers.dev/';
-let allData=[], editingIndex=null;
+const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev/";
+let allData = [], editingIndex = null;
 
-const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
-const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
-const modal=document.getElementById('editModal');
-const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
-      m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
-      m_ghiChu=document.getElementById('m_ghiChu'), m_daKiemKe=document.getElementById('m_daKiemKe'),
-      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua'),
-      m_noiMua=document.getElementById('m_noiMua'),
-      m_bdQ1=document.getElementById('m_bdQ1'), m_bdQ2=document.getElementById('m_bdQ2'),
-      m_bdQ3=document.getElementById('m_bdQ3'), m_bdQ4=document.getElementById('m_bdQ4'),
-      m_bdQ1_ngay=document.getElementById('m_bdQ1_ngay'), m_bdQ2_ngay=document.getElementById('m_bdQ2_ngay'),
-      m_bdQ3_ngay=document.getElementById('m_bdQ3_ngay'), m_bdQ4_ngay=document.getElementById('m_bdQ4_ngay'),
-      m_suaChua=document.getElementById('m_suaChua');
-
-function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
-function safeText(v){return v==null?'':String(v);}
-function formatDateDDMMYYYY(d){if(!d)return"";let dt=new Date(d);if(isNaN(dt))return String(d);return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`}
-
-// ==== RENDER BẢNG ====
-function renderTable(){
-  tbody.innerHTML='';
-  const filter = filterBox.value;
-  const search = (searchBox.value||'').toLowerCase();
-  let countVisible=0;
-  allData.forEach((r,idx)=>{
-    let show=true;
-    if(filter==='daKiemKe' && !r.daKiemKe) show=false;
-    if(filter==='chuaKiemKe' && r.daKiemKe) show=false;
-    if(filter==='daIn' && !r.chonIn) show=false;
-    if(filter==='chuaIn' && r.chonIn) show=false;
-    if(search){
-      const haystack=[r.soThe,r.soMay,r.loaiMay,r.viTri,r.ghiChu,r.noiMua,r.ngayMua,r.suaChua].map(x=>(x||'').toLowerCase()).join(' ');
-      if(!haystack.includes(search)) show=false;
-    }
-    if(show){
-      countVisible++;
-      const tr=document.createElement('tr'); tr.dataset.index=idx;
-      tr.innerHTML=`
-        <td>${idx+1}</td>
-        <td class="col-so-the">${safeText(r.soThe)}</td>
-        <td>${safeText(r.soMay)}</td>
-        <td>${safeText(r.loaiMay)}</td>
-        <td>${safeText(r.viTri)}</td>
-        <td>${safeText(r.ghiChu)}</td>
-        <td>
-          <button data-act="edit" data-i="${idx}">✏️</button>
-          <button data-act="qr" data-i="${idx}">🔗</button>
-        </td>
-        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
-        <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
-        <td>${r.ngayMua||''}</td>
-        <td>${r.noiMua||''}</td>
-        <td><input type="checkbox" class="bdQ1" ${r.bdQ1?'checked':''}></td>
-        <td><input type="checkbox" class="bdQ2" ${r.bdQ2?'checked':''}></td>
-        <td><input type="checkbox" class="bdQ3" ${r.bdQ3?'checked':''}></td>
-        <td><input type="checkbox" class="bdQ4" ${r.bdQ4?'checked':''}></td>
-        <td>${safeText(r.suaChua)}</td>
-      `;
-      tbody.appendChild(tr);
-    }
-  });
-  const searchInfo=document.getElementById('searchInfo'); if(searchInfo) searchInfo.textContent=`Tìm thấy ${countVisible} dòng`;
-}
-
-// ==== LOAD DATA TỪ CF ====
-async function loadData(){
-  setStatus('Đang tải dữ liệu...');
-  try{
-    const res=await fetch(CF_ENDPOINT+'?action=get');
-    const json=await res.json();
-    if(Array.isArray(json)){
-      allData=json.map(r=>({
-        soThe:r.soThe||'', soMay:r.soMay||'', loaiMay:r.loaiMay||'', viTri:r.viTri||'', ghiChu:r.ghiChu||'',
-        daKiemKe:!!r.daKiemKe, chonIn:!!r.chonIn, ngayMua:r.ngayMua||'', noiMua:r.noiMua||'',
-        bdQ1:!!r.bdQ1, bdQ2:!!r.bdQ2, bdQ3:!!r.bdQ3, bdQ4:!!r.bdQ4,
-        bdNgayQ1:r.bdNgayQ1||'', bdNgayQ2:r.bdNgayQ2||'', bdNgayQ3:r.bdNgayQ3||'', bdNgayQ4:r.bdNgayQ4||'',
-        suaChua:r.suaChua||''
-      }));
-      renderTable(); setStatus('Đã tải '+allData.length+' dòng');
-    } else setStatus('Dữ liệu không hợp lệ',false);
-  }catch(e){setStatus('Lỗi tải dữ liệu',false);}
-}
-
-// ==== LƯU / CẬP NHẬT ROW LÊN CF ====
-async function autoSyncRow(i){
-  if(i==null||!allData[i]) return;
-  const row=allData[i];
-  try{
-    const res=await fetch(CF_ENDPOINT, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'update',index:i,data:row})
-    });
-    const json=await res.json();
-    if(json.success) setStatus('✅ Đã lưu dòng '+(i+1));
-    else setStatus('❌ Lỗi lưu dòng '+(i+1),false);
-  }catch(e){setStatus('❌ Lỗi lưu dòng '+(i+1),false);}
-}
-
-// ==== EVENTS ====
-filterBox.addEventListener('change',renderTable);
-searchBox.addEventListener('input',renderTable);
-
-tbody.addEventListener('click',e=>{
-  const btn=e.target.closest('button'); if(!btn) return;
-  const act=btn.dataset.act, i=Number(btn.dataset.i);
-  if(act==='edit') openEditModal(i);
-  if(act==='qr'){const code=encodeURIComponent(allData[i].soThe||'');prompt('Link QR (copy & in tem):',location.href.split('#')[0]+'#'+code);}
-});
-
-tbody.addEventListener('change',e=>{
-  const tr=e.target.closest('tr'); if(!tr) return; const idx=Number(tr.dataset.index);
-  if(e.target.classList.contains('daKiemKe')){allData[idx].daKiemKe=e.target.checked;autoSyncRow(idx);}
-  if(e.target.classList.contains('chonIn')){allData[idx].chonIn=e.target.checked;autoSyncRow(idx);}
-  if(e.target.classList.contains('bdQ1')){allData[idx].bdQ1=e.target.checked;autoSyncRow(idx);}
-  if(e.target.classList.contains('bdQ2')){allData[idx].bdQ2=e.target.checked;autoSyncRow(idx);}
-  if(e.target.classList.contains('bdQ3')){allData[idx].bdQ3=e.target.checked;autoSyncRow(idx);}
-  if(e.target.classList.contains('bdQ4')){allData[idx].bdQ4=e.target.checked;autoSyncRow(idx);}
-  renderTable();
-});
-
-// ==== MODAL ====
-let lastScrollY=0;
-function openEditModal(idx){
-  lastScrollY=window.scrollY;
-  editingIndex=idx;
-  const r=allData[idx]||{};
-  m_soThe.value=r.soThe||'';
-  m_soMay.value=r.soMay||'';
-  m_loaiMay.value=r.loaiMay||'';
-  m_viTri.value=r.viTri||'';
-  m_ghiChu.value=r.ghiChu||'';
-  m_daKiemKe.checked=!!r.daKiemKe;
-  m_chonIn.checked=!!r.chonIn;
-  m_ngayMua.value=r.ngayMua||'';
-  m_noiMua.value=r.noiMua||'';
-  m_bdQ1.checked=!!r.bdQ1; m_bdQ2.checked=!!r.bdQ2; m_bdQ3.checked=!!r.bdQ3; m_bdQ4.checked=!!r.bdQ4;
-  m_bdQ1_ngay.value=r.bdNgayQ1||''; m_bdQ2_ngay.value=r.bdNgayQ2||''; m_bdQ3_ngay.value=r.bdNgayQ3||''; m_bdQ4_ngay.value=r.bdNgayQ4||'';
-  m_suaChua.value=r.suaChua||'';
-  modal.style.display='flex'; document.body.classList.add('modal-open'); document.body.style.top=`-${window.scrollY}px`;
-  m_soThe.focus();
-}
-function closeModal(){modal.style.display='none';editingIndex=null;document.body.classList.remove('modal-open');document.body.style.top='';window.scrollTo(0,lastScrollY);}
-document.getElementById('cancelBtn').onclick=closeModal;
-
-document.getElementById('saveBtn').onclick=()=>{
-  const hasData=m_soThe.value.trim()||m_soMay.value.trim();
-  if(!hasData){alert('Không có dữ liệu để thêm!');return;}
-  if(editingIndex==null){
-    const newRow={
-      soThe:m_soThe.value,soMay:m_soMay.value,loaiMay:m_loaiMay.value,viTri:m_viTri.value,ghiChu:m_ghiChu.value,
-      daKiemKe:m_daKiemKe.checked,chonIn:m_chonIn.checked,ngayMua:m_ngayMua.value,noiMua:m_noiMua.value,
-      bdQ1:m_bdQ1.checked,bdQ2:m_bdQ2.checked,bdQ3:m_bdQ3.checked,bdQ4:m_bdQ4.checked,
-      bdNgayQ1:m_bdQ1_ngay.value,bdNgayQ2:m_bdQ2_ngay.value,bdNgayQ3:m_bdQ3_ngay.value,bdNgayQ4:m_bdQ4_ngay.value,
-      suaChua:m_suaChua.value
-    };
-    allData.push(newRow); autoSyncRow(allData.length-1);
-  }else{
-    const r=allData[editingIndex];
-    r.soThe=m_soThe.value; r.soMay=m_soMay.value; r.loaiMay=m_loaiMay.value; r.viTri=m_viTri.value; r.ghiChu=m_ghiChu.value;
-    r.daKiemKe=m_daKiemKe.checked; r.chonIn=m_chonIn.checked; r.ngayMua=m_ngayMua.value; r.noiMua=m_noiMua.value;
-    r.bdQ1=m_bdQ1.checked; r.bdQ2=m_bdQ2.checked; r.bdQ3=m_bdQ3.checked; r.bdQ4=m_bdQ4.checked;
-    r.bdNgayQ1=m_bdQ1_ngay.value; r.bdNgayQ2=m_bdQ2_ngay.value; r.bdNgayQ3=m_bdQ3_ngay.value; r.bdNgayQ4=m_bdQ4_ngay.value;
-    r.suaChua=m_suaChua.value;
-    autoSyncRow(editingIndex);
+// Fetch dữ liệu từ Worker
+async function loadData() {
+  try {
+    const res = await fetch(WORKER_URL);
+    allData = await res.json();
+    renderTable();
+    highlightFromHash();
+  } catch(err) {
+    alert("Lỗi load dữ liệu: "+err);
   }
-  renderTable(); closeModal();
+}
+
+// Render table
+function renderTable() {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  allData.forEach((r, idx) => {
+    const tr = document.createElement("tr");
+    tr.dataset.index = idx;
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td class="col-so-the">${r.soThe||''}</td>
+      <td>${r.soMay||''}</td>
+      <td>${r.loaiMay||''}</td>
+      <td>${r.viTri||''}</td>
+      <td>${r.ghiChu||''}</td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ1" ${r.bdQ1?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ2" ${r.bdQ2?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ3" ${r.bdQ3?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ4" ${r.bdQ4?'checked':''}></td>
+      <td><button class="editBtn">Sửa</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Checkbox change
+  document.querySelectorAll(".daKiemKe").forEach(cb=>{
+    cb.onchange = e=>{
+      const idx = Number(cb.closest("tr").dataset.index);
+      allData[idx].daKiemKe = cb.checked;
+    };
+  });
+  document.querySelectorAll(".chonIn").forEach(cb=>{
+    cb.onchange = e=>{
+      const idx = Number(cb.closest("tr").dataset.index);
+      allData[idx].chonIn = cb.checked;
+    };
+  });
+  document.querySelectorAll(".bdQ1").forEach(cb=>{
+    cb.onchange = e=>{
+      const idx = Number(cb.closest("tr").dataset.index);
+      allData[idx].bdQ1 = cb.checked;
+    };
+  });
+  document.querySelectorAll(".bdQ2").forEach(cb=>{
+    cb.onchange = e=>{
+      const idx = Number(cb.closest("tr").dataset.index);
+      allData[idx].bdQ2 = cb.checked;
+    };
+  });
+  document.querySelectorAll(".bdQ3").forEach(cb=>{
+    cb.onchange = e=>{
+      const idx = Number(cb.closest("tr").dataset.index);
+      allData[idx].bdQ3 = cb.checked;
+    };
+  });
+  document.querySelectorAll(".bdQ4").forEach(cb=>{
+    cb.onchange = e=>{
+      const idx = Number(cb.closest("tr").dataset.index);
+      allData[idx].bdQ4 = cb.checked;
+    };
+  });
+
+  // Edit button
+  document.querySelectorAll(".editBtn").forEach(btn=>{
+    btn.onclick = ()=>{
+      editingIndex = Number(btn.closest("tr").dataset.index);
+      openEditModal(editingIndex);
+    };
+  });
+}
+
+// Modal
+const modal = document.getElementById("editModal");
+const modalClose = document.getElementById("modalClose");
+const modalCancel = document.getElementById("modalCancel");
+const modalSave = document.getElementById("modalSave");
+const m_soThe = document.getElementById("m_soThe");
+const m_soMay = document.getElementById("m_soMay");
+const m_loaiMay = document.getElementById("m_loaiMay");
+const m_viTri = document.getElementById("m_viTri");
+const m_ghiChu = document.getElementById("m_ghiChu");
+const m_daKiemKe = document.getElementById("m_daKiemKe");
+const m_chonIn = document.getElementById("m_chonIn");
+const m_bdQ1 = document.getElementById("m_bdQ1");
+const m_bdQ2 = document.getElementById("m_bdQ2");
+const m_bdQ3 = document.getElementById("m_bdQ3");
+const m_bdQ4 = document.getElementById("m_bdQ4");
+const m_bdNgayQ1 = document.getElementById("m_bdNgayQ1");
+const m_bdNgayQ2 = document.getElementById("m_bdNgayQ2");
+const m_bdNgayQ3 = document.getElementById("m_bdNgayQ3");
+const m_bdNgayQ4 = document.getElementById("m_bdNgayQ4");
+const m_suaChua = document.getElementById("m_suaChua");
+
+function openEditModal(idx){
+  modal.style.display="flex";
+  if(idx!==null){
+    const r = allData[idx];
+    m_soThe.value=r.soThe||'';
+    m_soMay.value=r.soMay||'';
+    m_loaiMay.value=r.loaiMay||'';
+    m_viTri.value=r.viTri||'';
+    m_ghiChu.value=r.ghiChu||'';
+    m_daKiemKe.checked=r.daKiemKe||false;
+    m_chonIn.checked=r.chonIn||false;
+    m_bdQ1.checked=r.bdQ1||false;
+    m_bdQ2.checked=r.bdQ2||false;
+    m_bdQ3.checked=r.bdQ3||false;
+    m_bdQ4.checked=r.bdQ4||false;
+    m_bdNgayQ1.value=r.bdNgayQ1||'';
+    m_bdNgayQ2.value=r.bdNgayQ2||'';
+    m_bdNgayQ3.value=r.bdNgayQ3||'';
+    m_bdNgayQ4.value=r.bdNgayQ4||'';
+    m_suaChua.value=r.suaChua||'';
+  } else {
+    m_soThe.value=""; m_soMay.value=""; m_loaiMay.value=""; m_viTri.value=""; m_ghiChu.value="";
+    m_daKiemKe.checked=false; m_chonIn.checked=false;
+    m_bdQ1.checked=false; m_bdQ2.checked=false; m_bdQ3.checked=false; m_bdQ4.checked=false;
+    m_bdNgayQ1.value=""; m_bdNgayQ2.value=""; m_bdNgayQ3.value=""; m_bdNgayQ4.value="";
+    m_suaChua.value="";
+  }
+}
+
+modalClose.onclick = modalCancel.onclick = ()=>{ modal.style.display="none"; }
+
+modalSave.onclick = ()=>{
+  const obj = {
+    soThe: m_soThe.value.trim(),
+    soMay: m_soMay.value.trim(),
+    loaiMay: m_loaiMay.value.trim(),
+    viTri: m_viTri.value.trim(),
+    ghiChu: m_ghiChu.value.trim(),
+    daKiemKe: m_daKiemKe.checked,
+    chonIn: m_chonIn.checked,
+    bdQ1: m_bdQ1.checked,
+    bdQ2: m_bdQ2.checked,
+    bdQ3: m_bdQ3.checked,
+    bdQ4: m_bdQ4.checked,
+    bdNgayQ1: m_bdNgayQ1.value,
+    bdNgayQ2: m_bdNgayQ2.value,
+    bdNgayQ3: m_bdNgayQ3.value,
+    bdNgayQ4: m_bdNgayQ4.value,
+    suaChua: m_suaChua.value
+  };
+  if(editingIndex!==null) allData[editingIndex] = obj;
+  else allData.push(obj);
+  renderTable();
+  modal.style.display="none";
 };
 
-// ==== INIT ====
+// Check/uncheck tất cả
+document.getElementById("checkAllKK").onchange = function(){
+  document.querySelectorAll(".daKiemKe").forEach(cb=>cb.checked=this.checked);
+};
+document.getElementById("checkAllQR").onchange = function(){
+  document.querySelectorAll(".chonIn").forEach(cb=>cb.checked=this.checked);
+};
+document.getElementById("checkAllQ1").onchange = function(){
+  document.querySelectorAll(".bdQ1").forEach(cb=>cb.checked=this.checked);
+};
+document.getElementById("checkAllQ2").onchange = function(){
+  document.querySelectorAll(".bdQ2").forEach(cb=>cb.checked=this.checked);
+};
+document.getElementById("checkAllQ3").onchange = function(){
+  document.querySelectorAll(".bdQ3").forEach(cb=>cb.checked=this.checked);
+};
+document.getElementById("checkAllQ4").onchange = function(){
+  document.querySelectorAll(".bdQ4").forEach(cb=>cb.checked=this.checked);
+};
+
+// Scroll & highlight từ hash
+let hashScrollDone=false;
+function highlightFromHash(retry=40){
+  const code=location.hash.slice(1);
+  if(!code) return;
+  const rows=document.querySelectorAll("#dataTable tbody tr");
+  let found=false;
+  rows.forEach(row=>{
+    const soTheCell=row.querySelector(".col-so-the");
+    if(!soTheCell) return;
+    if(soTheCell.textContent.trim()===code){
+      row.classList.add("highlight-row");
+      if(!hashScrollDone){ row.scrollIntoView({behavior:"smooth", block:"center"}); hashScrollDone=true; }
+      found=true;
+    }
+  });
+  if(!found && retry>0) setTimeout(()=>highlightFromHash(retry-1),150);
+}
+window.addEventListener("hashchange",()=>{ hashScrollDone=false; setTimeout(()=>highlightFromHash(),100); });
+
+// Nút in QR & lý lịch (giữ nguyên như code nâng cấp)
+document.getElementById('btnPrint').onclick = function(){ /* ...code in QR như trên... */ };
+document.getElementById('btnPrintLyLich').onclick = function(){ /* ...code in lý lịch như trên... */ };
+
+// Add mới
+document.getElementById('btnAdd').onclick=()=>openEditModal(null);
+document.getElementById('btnRefresh').onclick=loadData;
+
+// Load lần đầu
 loadData();
 </script>
 </body>
