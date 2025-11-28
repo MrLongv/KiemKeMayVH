@@ -248,7 +248,7 @@ td.col-noi-mua .clamp-2 {
     <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 <div id="searchInfo" style="margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
-<div class="note"> Web tự lưu dữ liệu về sheet,bấm F5 load lại dữ liệu, in lý lịch máy nhập số thẻ, in nhiều thêm dấu ","</div>
+<div class="note"> Các thông tin chỉnh sửa trên điện thoại tự lưu, dùng máy tính thì bấm F5 load lại dữ liệu</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -384,7 +384,7 @@ function formatDateDDMMYYYY(d){
 }
 
 // ==== PHẦN MẬT KHẨU ====
-const PASSWORD = '1233';
+const PASSWORD = '12345';
 const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
 mainUI.forEach(el => el.style.display = 'none');
 
@@ -913,7 +913,7 @@ document.getElementById('btnPrintLyLich').onclick = () => {
     // ---- PHẦN HEADER chuẩn ----
 w.document.write(`
   <div class="header-logo" style="font-size:20px; font-weight:bold; line-height:1.2;">
-    <div style="margin-left:0px;">CÔNG TY TNHH MAY XK</div>
+    <div style="margin-left:5px;">CÔNG TY TNHH MAY XK</div>
     <div style="margin-left:55px;">VIỆT HỒNG</div>
   </div>
   <div style="position: relative; margin-bottom: 40px;">
