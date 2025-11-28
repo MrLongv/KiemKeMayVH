@@ -2,165 +2,189 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quản lý Kiểm kê – Cloudflare D1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm kê máy Việt Hồng (Cloudflare D1)</title>
 <style>
-    body { font-family: Arial; margin: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px; font-size: 14px; }
+    body { font-family: Arial; margin: 20px; background: #f4f4f4; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 8px; border: 1px solid #ccc; }
     th { background: #eee; }
-    button { padding: 6px 10px; }
-    #modal { 
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center;
+    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
+    .modal {
+        position: fixed; inset: 0; display: none;
+        background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
     }
-    #modal-content {
-        background: white; padding: 20px; width: 400px; border-radius: 5px;
+    .modal-content {
+        background: white; padding: 20px; width: 400px;
+        border-radius: 8px; max-height: 90vh; overflow-y: auto;
     }
+    .row { margin-bottom: 8px; }
+    label { font-weight: bold; }
+    input[type=text], input[type=date] { width: 100%; padding: 6px; }
 </style>
 </head>
 <body>
 
-<h2>📋 Quản lý Kiểm kê Máy</h2>
-<button onclick="openModal()">+ Thêm mới</button>
+<h2>📋 Quản lý Kiểm kê Máy — Cloudflare D1</h2>
+
+<button onclick="openModal()">➕ Thêm</button>
 
 <table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Số thẻ</th>
-            <th>Số máy</th>
-            <th>Loại máy</th>
-            <th>Vị trí</th>
-            <th>Ghi chú</th>
-            <th>✔</th>
-            <th>📄</th>
-            <th>Sửa</th>
-        </tr>
-    </thead>
-    <tbody id="data-body"></tbody>
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Số thẻ</th>
+    <th>Số máy</th>
+    <th>Loại máy</th>
+    <th>Vị trí</th>
+    <th>Đã kiểm kê</th>
+    <th>Hành động</th>
+</tr>
+</thead>
+<tbody id="data-body"></tbody>
 </table>
 
 <!-- MODAL -->
-<div id="modal">
-    <div id="modal-content">
-        <h3 id="modal-title">Thêm</h3>
+<div class="modal" id="modal">
+<div class="modal-content">
+    <h3 id="modal-title">Thêm mới</h3>
 
-        <input type="hidden" id="m-id">
+    <input type="hidden" id="m-id">
 
-        <label>Số thẻ</label><br>
-        <input id="m-soThe" style="width:100%"><br><br>
+    <div class="row"><label>Số thẻ</label><input id="m-soThe"></div>
+    <div class="row"><label>Số máy</label><input id="m-soMay"></div>
+    <div class="row"><label>Loại máy</label><input id="m-loaiMay"></div>
+    <div class="row"><label>Vị trí</label><input id="m-viTri"></div>
+    <div class="row"><label>Ghi chú</label><input id="m-ghiChu"></div>
 
-        <label>Số máy</label><br>
-        <input id="m-soMay" style="width:100%"><br><br>
+    <div class="row"><label><input type="checkbox" id="m-daKiemKe"> Đã kiểm kê</label></div>
+    <div class="row"><label><input type="checkbox" id="m-chonIn"> Chọn in</label></div>
 
-        <label>Loại máy</label><br>
-        <input id="m-loaiMay" style="width:100%"><br><br>
+    <hr>
+    <h4>Thông tin bảo dưỡng</h4>
 
-        <label>Vị trí</label><br>
-        <input id="m-viTri" style="width:100%"><br><br>
+    Q1: <input type="checkbox" id="m-bdQ1"> Ngày: <input type="date" id="m-bdNgayQ1"><br><br>
+    Q2: <input type="checkbox" id="m-bdQ2"> Ngày: <input type="date" id="m-bdNgayQ2"><br><br>
+    Q3: <input type="checkbox" id="m-bdQ3"> Ngày: <input type="date" id="m-bdNgayQ3"><br><br>
+    Q4: <input type="checkbox" id="m-bdQ4"> Ngày: <input type="date" id="m-bdNgayQ4"><br><br>
 
-        <label>Ghi chú</label><br>
-        <input id="m-ghiChu" style="width:100%"><br><br>
+    <hr>
+    <h4>Thông tin mua / sửa chữa</h4>
 
-        <label><input type="checkbox" id="m-daKiemKe"> Đã kiểm kê</label><br>
-        <label><input type="checkbox" id="m-chonIn"> Chọn in lý lịch</label><br><br>
+    Ngày mua: <input type="date" id="m-ngayMua"><br><br>
+    Nơi mua: <input id="m-noiMua"><br><br>
+    Sửa chữa: <input id="m-suaChua"><br><br>
 
-        <button onclick="save()">💾 Lưu</button>
-        <button onclick="closeModal()">Đóng</button>
-    </div>
+    <button onclick="save()">💾 Lưu</button>
+    <button onclick="closeModal()">❌ Đóng</button>
+</div>
 </div>
 
 <script>
-const API_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";  // <<< sửa URL tại đây
+const API_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
 
-// ======================= LOAD DATA ==========================
-async function loadData() {
-    const res = await fetch(API_URL + "/", { method: "GET" });
-    const js = await res.json();
-
-    const tbody = document.getElementById("data-body");
-    tbody.innerHTML = "";
-
-    js.data.forEach(row => {
-        tbody.innerHTML += `
-        <tr>
-            <td>${row.id}</td>
-            <td>${row.soThe || ""}</td>
-            <td>${row.soMay || ""}</td>
-            <td>${row.loaiMay || ""}</td>
-            <td>${row.viTri || ""}</td>
-            <td>${row.ghiChu || ""}</td>
-            <td>${row.daKiemKe ? "✔" : ""}</td>
-            <td>${row.chonIn ? "📄" : ""}</td>
-            <td><button onclick="edit(${row.id})">Sửa</button></td>
-        </tr>`;
-    });
-}
-loadData();
-
-// ======================= MODAL CONTROL ==========================
-function openModal(editing = false) {
+function openModal(item = null) {
     document.getElementById("modal").style.display = "flex";
+
+    if (item) {
+        document.getElementById("modal-title").innerText = "Chỉnh sửa";
+        document.getElementById("m-id").value = item.id;
+        document.getElementById("m-soThe").value = item.soThe;
+        document.getElementById("m-soMay").value = item.soMay;
+        document.getElementById("m-loaiMay").value = item.loaiMay;
+        document.getElementById("m-viTri").value = item.viTri;
+        document.getElementById("m-ghiChu").value = item.ghiChu;
+
+        document.getElementById("m-daKiemKe").checked = item.daKiemKe == 1;
+        document.getElementById("m-chonIn").checked = item.chonIn == 1;
+
+        document.getElementById("m-bdQ1").checked = item.bdQ1 == 1;
+        document.getElementById("m-bdNgayQ1").value = item.bdNgayQ1 || "";
+
+        document.getElementById("m-bdQ2").checked = item.bdQ2 == 1;
+        document.getElementById("m-bdNgayQ2").value = item.bdNgayQ2 || "";
+
+        document.getElementById("m-bdQ3").checked = item.bdQ3 == 1;
+        document.getElementById("m-bdNgayQ3").value = item.bdNgayQ3 || "";
+
+        document.getElementById("m-bdQ4").checked = item.bdQ4 == 1;
+        document.getElementById("m-bdNgayQ4").value = item.bdNgayQ4 || "";
+
+        document.getElementById("m-ngayMua").value = item.ngayMua || "";
+        document.getElementById("m-noiMua").value = item.noiMua || "";
+        document.getElementById("m-suaChua").value = item.suaChua || "";
+    } else {
+        document.getElementById("modal-title").innerText = "Thêm mới";
+        document.querySelectorAll("#modal input").forEach(i => { 
+            if (i.type === "checkbox") i.checked = false;
+            else i.value = "";
+        });
+    }
 }
 
 function closeModal() {
     document.getElementById("modal").style.display = "none";
 }
 
-// ======================= EDIT ==========================
-function edit(id) {
-    fetch(API_URL + "/", { method: "GET" })
-    .then(res => res.json())
-    .then(js => {
-        const r = js.data.find(x => x.id === id);
-        if (!r) return;
+async function loadData() {
+    const res = await fetch(API_URL);
+    const js = await res.json();
 
-        document.getElementById("m-id").value = r.id;
-        document.getElementById("m-soThe").value = r.soThe || "";
-        document.getElementById("m-soMay").value = r.soMay || "";
-        document.getElementById("m-loaiMay").value = r.loaiMay || "";
-        document.getElementById("m-viTri").value = r.viTri || "";
-        document.getElementById("m-ghiChu").value = r.ghiChu || "";
-        document.getElementById("m-daKiemKe").checked = !!r.daKiemKe;
-        document.getElementById("m-chonIn").checked = !!r.chonIn;
+    if (!js.success) {
+        alert("Lỗi load: " + js.error);
+        return;
+    }
 
-        document.getElementById("modal-title").innerText = "Sửa dữ liệu";
-        openModal();
+    const tbody = document.getElementById("data-body");
+    tbody.innerHTML = "";
+
+    js.data.forEach(row => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${row.id}</td>
+                <td>${row.soThe}</td>
+                <td>${row.soMay}</td>
+                <td>${row.loaiMay}</td>
+                <td>${row.viTri}</td>
+                <td>${row.daKiemKe ? "✔" : ""}</td>
+                <td><button onclick='openModal(${JSON.stringify(row)})'>Sửa</button></td>
+            </tr>
+        `;
     });
 }
 
-// ======================= SAVE (ADD / UPDATE) ==========================
 async function save() {
     const id = document.getElementById("m-id").value;
 
-    // 🚀 Gửi đủ 18 field đúng worker.js
     const payload = {
         id: id ? Number(id) : undefined,
-        soThe: document.getElementById("m-soThe").value || "",
-        soMay: document.getElementById("m-soMay").value || "",
-        loaiMay: document.getElementById("m-loaiMay").value || "",
-        viTri: document.getElementById("m-viTri").value || "",
-        ghiChu: document.getElementById("m-ghiChu").value || "",
-        daKiemKe: document.getElementById("m-daKiemKe").checked,
-        chonIn: document.getElementById("m-chonIn").checked,
+        soThe: m-soThe.value,
+        soMay: m-soMay.value,
+        loaiMay: m-loaiMay.value,
+        viTri: m-viTri.value,
+        ghiChu: m-ghiChu.value,
 
-        // Các trường bổ sung bắt buộc phải gửi đúng Worker.js
-        bdQ1: false,
-        bdNgayQ1: "",
-        bdQ2: false,
-        bdNgayQ2: "",
-        bdQ3: false,
-        bdNgayQ3: "",
-        bdQ4: false,
-        bdNgayQ4: "",
+        daKiemKe: m-daKiemKe.checked,
+        chonIn: m-chonIn.checked,
 
-        ngayMua: "",
-        noiMua: "",
-        suaChua: ""
+        bdQ1: m-bdQ1.checked,
+        bdNgayQ1: m-bdNgayQ1.value,
+
+        bdQ2: m-bdQ2.checked,
+        bdNgayQ2: m-bdNgayQ2.value,
+
+        bdQ3: m-bdQ3.checked,
+        bdNgayQ3: m-bdNgayQ3.value,
+
+        bdQ4: m-bdQ4.checked,
+        bdNgayQ4: m-bdNgayQ4.value,
+
+        ngayMua: m-ngayMua.value,
+        noiMua: m-noiMua.value,
+        suaChua: m-suaChua.value
     };
 
-    let url = API_URL + "/add";
-    if (id) url = API_URL + "/update";
+    const url = id ? API_URL + "/update" : API_URL + "/add";
 
     const res = await fetch(url, {
         method: "POST",
@@ -169,15 +193,17 @@ async function save() {
     });
 
     const js = await res.json();
-    if (js.success) {
-        closeModal();
-        loadData();
-    } else {
-        alert("Lỗi khi lưu: " + js.error);
+
+    if (!js.success) {
+        alert("Lỗi lưu: " + js.error);
+        return;
     }
+
+    closeModal();
+    loadData();
 }
 
+loadData();
 </script>
-
 </body>
 </html>
