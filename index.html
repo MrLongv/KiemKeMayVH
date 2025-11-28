@@ -2,32 +2,27 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📋 Kiểm kê máy Việt Hồng</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm kê máy VH</title>
 <style>
-body { font-family: Arial,sans-serif; margin:0; background:#f4f6f8; }
-header { padding:10px; background:#0073e6; color:#fff; text-align:center; font-size:20px; }
-table { border-collapse: collapse; width:100%; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:6px; text-align:center; }
-th { background:#eee; }
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; }
+header { padding: 10px; background: #333; color: #fff; text-align: center; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th { background: #eee; }
+button { padding: 5px 10px; margin: 2px; }
+.modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+.modal-content { background:#fff; padding:20px; width:400px; max-height:90%; overflow:auto; border-radius:5px; }
+.modal-content input, .modal-content textarea { width:100%; margin-bottom:5px; padding:5px; }
 .highlight-row { background: #ffff99; }
-button { padding:5px 10px; margin:2px; }
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); justify-content:center; align-items:center; }
-.modal-content { background:#fff; padding:20px; border-radius:5px; width:300px; position:relative; }
-.modal-content h3 { margin-top:0; }
-.modal-content input, .modal-content textarea { width:100%; margin-bottom:10px; padding:5px; }
-.close { position:absolute; top:5px; right:10px; cursor:pointer; font-weight:bold; }
 </style>
 </head>
 <body>
 
-<header>📋 Kiểm kê máy Việt Hồng</header>
-
-<div style="padding:10px;">
+<header>
+  <h2>Kiểm kê máy Việt Hồng</h2>
   <button id="btnAdd">Thêm mới</button>
-  <button id="btnRefresh">Tải lại</button>
-</div>
+</header>
 
 <table id="dataTable">
   <thead>
@@ -37,149 +32,130 @@ button { padding:5px 10px; margin:2px; }
       <th>Số máy</th>
       <th>Loại máy</th>
       <th>Vị trí</th>
-      <th>Đã KK</th>
-      <th>In QR</th>
-      <th>Q1</th>
-      <th>Q2</th>
-      <th>Q3</th>
-      <th>Q4</th>
       <th>Hành động</th>
     </tr>
   </thead>
   <tbody></tbody>
 </table>
 
-<!-- Modal -->
-<div class="modal" id="editModal">
+<div class="modal" id="modal">
   <div class="modal-content">
-    <span class="close" id="closeModal">&times;</span>
-    <h3>Chỉnh sửa / Thêm máy</h3>
-    <input type="hidden" id="rowId">
-    <input placeholder="Số thẻ" id="m_soThe">
-    <input placeholder="Số máy" id="m_soMay">
-    <input placeholder="Loại máy" id="m_loaiMay">
-    <input placeholder="Vị trí" id="m_viTri">
-    <textarea placeholder="Ghi chú" id="m_ghiChu"></textarea>
-    <div>
-      <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label>
-      <label><input type="checkbox" id="m_chonIn"> In QR</label>
+    <h3 id="modalTitle">Thêm / Sửa</h3>
+    <input type="text" id="m_soThe" placeholder="Số thẻ">
+    <input type="text" id="m_soMay" placeholder="Số máy">
+    <input type="text" id="m_loaiMay" placeholder="Loại máy">
+    <input type="text" id="m_viTri" placeholder="Vị trí">
+    <textarea id="m_ghiChu" placeholder="Ghi chú"></textarea>
+    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label><br>
+    <label><input type="checkbox" id="m_chonIn"> In QR</label><br>
+    <input type="text" id="m_ngayMua" placeholder="Ngày mua">
+    <input type="text" id="m_noiMua" placeholder="Nơi mua">
+    <input type="text" id="m_suaChua" placeholder="Sửa chữa">
+    <div style="margin-top:10px;">
+      <button id="btnSave">Lưu</button>
+      <button onclick="modal.style.display='none'">Hủy</button>
     </div>
-    <div>
-      <label><input type="checkbox" id="m_bdQ1"> Q1</label>
-      <input type="text" id="m_bdNgayQ1" placeholder="Ngày Q1" style="width:100px;">
-      <label><input type="checkbox" id="m_bdQ2"> Q2</label>
-      <input type="text" id="m_bdNgayQ2" placeholder="Ngày Q2" style="width:100px;">
-      <label><input type="checkbox" id="m_bdQ3"> Q3</label>
-      <input type="text" id="m_bdNgayQ3" placeholder="Ngày Q3" style="width:100px;">
-      <label><input type="checkbox" id="m_bdQ4"> Q4</label>
-      <input type="text" id="m_bdNgayQ4" placeholder="Ngày Q4" style="width:100px;">
-    </div>
-    <input placeholder="Ngày mua" id="m_ngayMua">
-    <input placeholder="Nơi mua" id="m_noiMua">
-    <input placeholder="Sửa chữa" id="m_suaChua">
-    <button id="btnSave">Lưu</button>
   </div>
 </div>
 
 <script>
-const WORKER_URL = 'https://snowy-surf-e985.hoalangiongxoai.workers.dev'; // thay bằng Worker URL của bạn
+const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev"; // đổi thành URL Worker của bạn
 let allData = [];
+let editingIndex = null;
+const modal = document.getElementById('modal');
 
-// ==== Modal ====
-const modal = document.getElementById('editModal');
-const closeModalBtn = document.getElementById('closeModal');
-closeModalBtn.onclick = ()=> modal.style.display='none';
-window.onclick = e => { if(e.target===modal) modal.style.display='none'; }
-
-function openEditModal(row) {
-  modal.style.display = 'flex';
-  document.getElementById('rowId').value = row?.id || '';
-  document.getElementById('m_soThe').value = row?.soThe || '';
-  document.getElementById('m_soMay').value = row?.soMay || '';
-  document.getElementById('m_loaiMay').value = row?.loaiMay || '';
-  document.getElementById('m_viTri').value = row?.viTri || '';
-  document.getElementById('m_ghiChu').value = row?.ghiChu || '';
-  document.getElementById('m_daKiemKe').checked = row?.daKiemKe ? true:false;
-  document.getElementById('m_chonIn').checked = row?.chonIn ? true:false;
-  document.getElementById('m_bdQ1').checked = row?.bdQ1 ? true:false;
-  document.getElementById('m_bdNgayQ1').value = row?.bdNgayQ1 || '';
-  document.getElementById('m_bdQ2').checked = row?.bdQ2 ? true:false;
-  document.getElementById('m_bdNgayQ2').value = row?.bdNgayQ2 || '';
-  document.getElementById('m_bdQ3').checked = row?.bdQ3 ? true:false;
-  document.getElementById('m_bdNgayQ3').value = row?.bdNgayQ3 || '';
-  document.getElementById('m_bdQ4').checked = row?.bdQ4 ? true:false;
-  document.getElementById('m_bdNgayQ4').value = row?.bdNgayQ4 || '';
-  document.getElementById('m_ngayMua').value = row?.ngayMua || '';
-  document.getElementById('m_noiMua').value = row?.noiMua || '';
-  document.getElementById('m_suaChua').value = row?.suaChua || '';
-}
-
-// ==== Load Data ====
 async function loadData() {
   try {
-    const res = await fetch(WORKER_URL + '/');
-    const data = await res.json();
-    if(data.success){
-      allData = data.data;
+    const response = await fetch(WORKER_URL + '/');
+    if (!response) throw new Error('Không nhận được phản hồi từ Worker');
+    const data = await response.json();
+    if (data.success) {
+      allData = data.data || [];
       renderTable();
     } else {
-      alert('Lỗi worker: '+data.error);
+      alert('Lỗi Worker: ' + data.error);
     }
-  } catch(err) {
+  } catch (err) {
     console.error(err);
+    alert('Lỗi khi load dữ liệu: ' + err.message);
   }
 }
 
-// ==== Render Table ====
 function renderTable() {
   const tbody = document.querySelector("#dataTable tbody");
-  tbody.innerHTML = '';
-  allData.forEach((r, idx)=>{
+  tbody.innerHTML = "";
+  allData.forEach((r, idx) => {
     const tr = document.createElement('tr');
+    tr.dataset.index = idx;
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${r.soThe||''}</td>
-      <td>${r.soMay||''}</td>
-      <td>${r.loaiMay||''}</td>
-      <td>${r.viTri||''}</td>
-      <td><input type="checkbox" class="daKiemKe" data-idx="${idx}" ${r.daKiemKe?'checked':''}></td>
-      <td><input type="checkbox" class="chonIn" data-idx="${idx}" ${r.chonIn?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ1" data-idx="${idx}" ${r.bdQ1?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ2" data-idx="${idx}" ${r.bdQ2?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ3" data-idx="${idx}" ${r.bdQ3?'checked':''}></td>
-      <td><input type="checkbox" class="bdQ4" data-idx="${idx}" ${r.bdQ4?'checked':''}></td>
-      <td><button class="editBtn" data-idx="${idx}">Sửa</button></td>
+      <td>${r.soThe || ''}</td>
+      <td>${r.soMay || ''}</td>
+      <td>${r.loaiMay || ''}</td>
+      <td>${r.viTri || ''}</td>
+      <td>
+        <button class="editBtn">Sửa</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
 
-  // thêm event sửa
-  document.querySelectorAll(".editBtn").forEach(btn=>{
-    btn.onclick = e=>{
-      const idx = e.target.dataset.idx;
-      openEditModal(allData[idx]);
-    }
+  document.querySelectorAll('.editBtn').forEach((btn, idx) => {
+    btn.onclick = () => openEditModal(idx);
   });
 }
 
-// ==== Save Row ====
+function openEditModal(idx) {
+  editingIndex = idx !== null ? idx : null;
+  const r = idx !== null ? allData[idx] : {};
+  document.getElementById('m_soThe').value = r.soThe || '';
+  document.getElementById('m_soMay').value = r.soMay || '';
+  document.getElementById('m_loaiMay').value = r.loaiMay || '';
+  document.getElementById('m_viTri').value = r.viTri || '';
+  document.getElementById('m_ghiChu').value = r.ghiChu || '';
+  document.getElementById('m_daKiemKe').checked = r.daKiemKe ? true : false;
+  document.getElementById('m_chonIn').checked = r.chonIn ? true : false;
+  document.getElementById('m_ngayMua').value = r.ngayMua || '';
+  document.getElementById('m_noiMua').value = r.noiMua || '';
+  document.getElementById('m_suaChua').value = r.suaChua || '';
+  modal.style.display = 'flex';
+}
+
+document.getElementById('btnAdd').onclick = () => openEditModal(null);
+
 document.getElementById('btnSave').onclick = async () => {
-  const rowData = { /* dữ liệu từ modal như trước */ };
+  const rowData = {
+    id: editingIndex !== null ? allData[editingIndex].id : null,
+    soThe: document.getElementById('m_soThe').value.trim(),
+    soMay: document.getElementById('m_soMay').value.trim(),
+    loaiMay: document.getElementById('m_loaiMay').value.trim(),
+    viTri: document.getElementById('m_viTri').value.trim(),
+    ghiChu: document.getElementById('m_ghiChu').value.trim(),
+    daKiemKe: document.getElementById('m_daKiemKe').checked,
+    chonIn: document.getElementById('m_chonIn').checked,
+    ngayMua: document.getElementById('m_ngayMua').value.trim(),
+    noiMua: document.getElementById('m_noiMua').value.trim(),
+    suaChua: document.getElementById('m_suaChua').value.trim()
+  };
+
+  const url = rowData.id ? WORKER_URL + '/update' : WORKER_URL + '/add';
 
   try {
-    const url = rowData.id ? WORKER_URL + '/update' : WORKER_URL + '/add';
     const response = await fetch(url, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData)
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`HTTP ${response.status}: ${text}`);
-    }
+    if (!response) throw new Error('Không nhận được phản hồi từ Worker');
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      const text = await response.text().catch(() => '');
+      throw new Error('Worker trả về không phải JSON: ' + text);
+    }
 
     if (data.success) {
       modal.style.display = 'none';
@@ -188,40 +164,13 @@ document.getElementById('btnSave').onclick = async () => {
       alert('Lỗi worker: ' + data.error);
     }
 
-  } catch(err) {
+  } catch (err) {
     console.error(err);
-    alert('Lỗi JS: ' + err);
+    alert('Lỗi JS: ' + err.message);
   }
 };
 
-
-// ==== Button Thêm & Refresh ====
-document.getElementById('btnAdd').onclick = ()=> openEditModal(null);
-document.getElementById('btnRefresh').onclick = loadData;
-
-// ==== Checkbox tự động cập nhật ====
-document.addEventListener('change', async e=>{
-  if(e.target.classList.contains('daKiemKe') || e.target.classList.contains('chonIn') ||
-     e.target.classList.contains('bdQ1') || e.target.classList.contains('bdQ2') ||
-     e.target.classList.contains('bdQ3') || e.target.classList.contains('bdQ4')){
-    const idx = e.target.dataset.idx;
-    const row = allData[idx];
-    row[e.target.classList[0]] = e.target.checked;
-
-    try {
-      const response = await fetch(WORKER_URL+'/update',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(row)
-      });
-      const data = await response.json();
-      if(!data.success) console.error('Update error:',data.error);
-    } catch(err){
-      console.error(err);
-    }
-  }
-});
-
+// Load dữ liệu lúc mở trang
 loadData();
 </script>
 </body>
