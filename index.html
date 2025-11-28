@@ -2,127 +2,282 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Kiểm kê VH</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📋 Kiểm kê VH</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-body{font-family:Arial,sans-serif;margin:20px;}
-table{border-collapse:collapse;width:100%;}
-th,td{border:1px solid #ccc;padding:5px;text-align:left;}
-th{background:#eee;}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);}
-.modal-content{background:#fff;padding:20px;margin:50px auto;width:400px;position:relative;}
-.close{position:absolute;top:5px;right:10px;cursor:pointer;}
-button{padding:5px 10px;margin:2px;}
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
+header{padding:10px 20px;background:#fff;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+button{padding:6px 12px;margin:2px;font-size:14px;cursor:pointer}
+table{border-collapse:collapse;width:100%;margin-top:10px;background:#fff}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+th{background:#eee}
+.highlight-row{background:#ffff99 !important}
+.modal-bg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000}
+.modal{background:#fff;padding:20px;border-radius:8px;width:400px;max-width:95%}
+.modal input, .modal textarea{width:100%;margin:4px 0;padding:4px;font-size:14px}
+.close-modal{position:absolute;right:10px;top:10px;cursor:pointer;font-weight:bold}
+.checkbox-group{display:flex;gap:5px;justify-content:center}
 </style>
 </head>
 <body>
+<header>
+  <div>📋 Kiểm kê VH</div>
+  <div>
+    <button id="btnAdd">Thêm</button>
+    <button id="btnPrint">In QR</button>
+    <button id="btnPrintLyLich">In Lý Lịch</button>
+  </div>
+</header>
 
-<h2>Kiểm kê VH</h2>
-<button id="btnAdd">Thêm</button>
+<div style="padding:10px;">
+  <label><input type="checkbox" id="checkAllKK"> Đã KK</label>
+  <label><input type="checkbox" id="checkAllQR"> In QR</label>
+  <label><input type="checkbox" id="checkAllQ1"> Q1</label>
+  <label><input type="checkbox" id="checkAllQ2"> Q2</label>
+  <label><input type="checkbox" id="checkAllQ3"> Q3</label>
+  <label><input type="checkbox" id="checkAllQ4"> Q4</label>
+</div>
+
 <table id="dataTable">
-<thead>
-<tr>
-<th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Hành động</th>
-</tr>
-</thead>
-<tbody></tbody>
+  <thead>
+    <tr>
+      <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
 </table>
 
-<!-- Modal -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <span class="close" id="modalClose">&times;</span>
-    <h3>Chỉnh sửa / Thêm</h3>
-    <input id="mId" type="hidden">
-    <div>Số thẻ: <input id="mSoThe"></div>
-    <div>Số máy: <input id="mSoMay"></div>
-    <div>Loại máy: <input id="mLoaiMay"></div>
-    <div>Vị trí: <input id="mViTri"></div>
-    <div>Ghi chú: <input id="mGhiChu"></div>
-    <div><button id="btnSave">Lưu</button></div>
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="close-modal" id="closeModal">×</div>
+    <h3>Thêm / Sửa</h3>
+    <input type="hidden" id="modalId">
+    <input placeholder="Số thẻ" id="m_soThe">
+    <input placeholder="Số máy" id="m_soMay">
+    <input placeholder="Loại máy" id="m_loaiMay">
+    <input placeholder="Vị trí" id="m_viTri">
+    <textarea placeholder="Ghi chú" id="m_ghiChu"></textarea>
+    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label>
+    <label><input type="checkbox" id="m_chonIn"> In QR</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="m_bdQ1"> Q1</label>
+      <label><input type="checkbox" id="m_bdQ2"> Q2</label>
+      <label><input type="checkbox" id="m_bdQ3"> Q3</label>
+      <label><input type="checkbox" id="m_bdQ4"> Q4</label>
+    </div>
+    <input placeholder="Ngày mua" id="m_ngayMua">
+    <input placeholder="Nơi mua" id="m_noiMua">
+    <input placeholder="Sửa chữa" id="m_suaChua">
+    <button id="btnSave">Lưu</button>
   </div>
 </div>
 
 <script>
-const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
+const WORKER_URL = 'https://snowy-surf-e985.hoalangiongxoai.workers.dev';
+let allData = [];
 
-const modal = document.getElementById("modal");
-const mId = document.getElementById("mId");
-const mSoThe = document.getElementById("mSoThe");
-const mSoMay = document.getElementById("mSoMay");
-const mLoaiMay = document.getElementById("mLoaiMay");
-const mViTri = document.getElementById("mViTri");
-const mGhiChu = document.getElementById("mGhiChu");
+const modalBg = document.getElementById('modalBg');
+const modalId = document.getElementById('modalId');
+const m_soThe = document.getElementById('m_soThe');
+const m_soMay = document.getElementById('m_soMay');
+const m_loaiMay = document.getElementById('m_loaiMay');
+const m_viTri = document.getElementById('m_viTri');
+const m_ghiChu = document.getElementById('m_ghiChu');
+const m_daKiemKe = document.getElementById('m_daKiemKe');
+const m_chonIn = document.getElementById('m_chonIn');
+const m_bdQ1 = document.getElementById('m_bdQ1');
+const m_bdQ2 = document.getElementById('m_bdQ2');
+const m_bdQ3 = document.getElementById('m_bdQ3');
+const m_bdQ4 = document.getElementById('m_bdQ4');
+const m_ngayMua = document.getElementById('m_ngayMua');
+const m_noiMua = document.getElementById('m_noiMua');
+const m_suaChua = document.getElementById('m_suaChua');
 
-function openModal(row) {
-  modal.style.display = "block";
-  if(row){
-    mId.value = row.id;
-    mSoThe.value = row.soThe||"";
-    mSoMay.value = row.soMay||"";
-    mLoaiMay.value = row.loaiMay||"";
-    mViTri.value = row.viTri||"";
-    mGhiChu.value = row.ghiChu||"";
+document.getElementById('btnAdd').onclick = () => openModal();
+document.getElementById('closeModal').onclick = () => closeModal();
+
+function openModal(data=null){
+  modalBg.style.display='flex';
+  if(data){
+    modalId.value = data.id||'';
+    m_soThe.value = data.soThe||'';
+    m_soMay.value = data.soMay||'';
+    m_loaiMay.value = data.loaiMay||'';
+    m_viTri.value = data.viTri||'';
+    m_ghiChu.value = data.ghiChu||'';
+    m_daKiemKe.checked = data.daKiemKe?true:false;
+    m_chonIn.checked = data.chonIn?true:false;
+    m_bdQ1.checked = data.bdQ1?true:false;
+    m_bdQ2.checked = data.bdQ2?true:false;
+    m_bdQ3.checked = data.bdQ3?true:false;
+    m_bdQ4.checked = data.bdQ4?true:false;
+    m_ngayMua.value = data.ngayMua||'';
+    m_noiMua.value = data.noiMua||'';
+    m_suaChua.value = data.suaChua||'';
   } else {
-    mId.value="";
-    mSoThe.value="";
-    mSoMay.value="";
-    mLoaiMay.value="";
-    mViTri.value="";
-    mGhiChu.value="";
+    modalId.value='';
+    m_soThe.value=''; m_soMay.value=''; m_loaiMay.value=''; m_viTri.value='';
+    m_ghiChu.value=''; m_daKiemKe.checked=false; m_chonIn.checked=false;
+    m_bdQ1.checked=false; m_bdQ2.checked=false; m_bdQ3.checked=false; m_bdQ4.checked=false;
+    m_ngayMua.value=''; m_noiMua.value=''; m_suaChua.value='';
   }
 }
 
-document.getElementById("modalClose").onclick = ()=> modal.style.display="none";
-document.getElementById("btnAdd").onclick = ()=> openModal(null);
+function closeModal(){ modalBg.style.display='none'; }
 
 async function loadData(){
   try{
     const res = await fetch(WORKER_URL);
-    const json = await res.json();
-    if(json.success){
-      const tbody = document.querySelector("#dataTable tbody");
-      tbody.innerHTML="";
-      json.data.forEach(r=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${r.id}</td><td>${r.soThe||""}</td><td>${r.soMay||""}</td>
-        <td>
-          <button class="editBtn">Sửa</button>
-        </td>`;
-        tr.querySelector(".editBtn").onclick=()=> openModal(r);
-        tbody.appendChild(tr);
-      });
-    } else alert("Lỗi load: "+json.error);
-  }catch(err){
-    alert("Lỗi khi load dữ liệu: "+err);
-  }
-}
-
-document.getElementById("btnSave").onclick = async ()=>{
-  const id = mId.value;
-  const payload = {
-    id: id||0,
-    soThe:mSoThe.value,
-    soMay:mSoMay.value,
-    loaiMay:mLoaiMay.value,
-    viTri:mViTri.value,
-    ghiChu:mGhiChu.value
-  };
-  try{
-    let res;
-    if(id) res = await fetch(WORKER_URL+"/update",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    else res = await fetch(WORKER_URL+"/add",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const json = await res.json();
-    if(json.success){
-      modal.style.display="none";
-      loadData();
-    } else {
-      alert("Lỗi lưu: "+json.error);
+    const data = await res.json();
+    if(data.success){
+      allData = data.data;
+      renderTable();
+    }else{
+      alert('Lỗi khi load dữ liệu: '+data.error);
     }
-  }catch(err){
-    alert("Lỗi khi lưu: "+err);
-  }
+  }catch(err){ console.error(err); alert('Lỗi khi load dữ liệu'); }
 }
 
+function renderTable(){
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML='';
+  allData.forEach((r,idx)=>{
+    const tr = document.createElement('tr');
+    tr.dataset.index = idx;
+    tr.innerHTML = `
+      <td>${r.id}</td>
+      <td>${r.soThe||''}</td>
+      <td>${r.soMay||''}</td>
+      <td>
+        <button onclick="openModal(allData[${idx}])">Sửa</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('btnSave').onclick = async ()=>{
+  try{
+    const id = modalId.value;
+    const payload = {
+      id:id||undefined,
+      soThe:m_soThe.value,
+      soMay:m_soMay.value,
+      loaiMay:m_loaiMay.value,
+      viTri:m_viTri.value,
+      ghiChu:m_ghiChu.value,
+      daKiemKe:m_daKiemKe.checked,
+      chonIn:m_chonIn.checked,
+      bdQ1:m_bdQ1.checked,
+      bdQ2:m_bdQ2.checked,
+      bdQ3:m_bdQ3.checked,
+      bdQ4:m_bdQ4.checked,
+      ngayMua:m_ngayMua.value,
+      noiMua:m_noiMua.value,
+      suaChua:m_suaChua.value
+    };
+    let url = WORKER_URL+'/add';
+    if(id) url = WORKER_URL+'/update';
+    const res = await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.success){
+      alert('Lưu thành công');
+      closeModal();
+      loadData();
+    }else{
+      alert('Lỗi khi lưu: '+data.error);
+    }
+  }catch(err){ console.error(err); alert('Lỗi khi lưu: '+err); }
+}
+
+// Check/Uncheck toàn bộ
+['KK','QR','Q1','Q2','Q3','Q4'].forEach(code=>{
+  const el = document.getElementById('checkAll'+code);
+  if(el) el.addEventListener('change', function(){
+    const cls = {'KK':'daKiemKe','QR':'chonIn','Q1':'bdQ1','Q2':'bdQ2','Q3':'bdQ3','Q4':'bdQ4'}[code];
+    document.querySelectorAll(`.${cls}`).forEach(cb=>{
+      const idx = Number(cb.closest('tr').dataset.index);
+      allData[idx][cls] = this.checked;
+      updateRow(allData[idx]);
+    });
+  });
+});
+
+async function updateRow(row){
+  try{
+    const res = await fetch(WORKER_URL+'/update',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(row)
+    });
+    const data = await res.json();
+    if(!data.success) console.error('Update lỗi:',data.error);
+  }catch(err){ console.error(err); }
+}
+
+// --- In QR ---
+document.getElementById('btnPrint').onclick = ()=>{
+  const printData = allData.filter(r=>r.chonIn);
+  if(printData.length===0){ alert('Chọn ít nhất 1 dòng để in'); return; }
+  const w = window.open('','_blank');
+  w.document.write('<html><head><title>In Tem QR</title>');
+  w.document.write('<style>@page{size:A4;margin:5mm;}body{display:grid;grid-template-columns:repeat(5,1fr);gap:2mm;justify-items:center;align-items:center;font-family:Arial;}'+
+  '.tem{width:32mm;height:34mm;border:0.1px solid #000;border-radius:0.2px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0.1mm;text-align:center;page-break-inside:avoid;}'+
+  '.tem .top{font-weight:bold;font-size:12px;margin:0.2mm 0;}.tem .qr{margin:0;padding:0;line-height:0;}.tem .bottom{font-weight:bold;font-size:12px;margin:0.2mm 0 0.1mm 0;}canvas{display:block;margin:0;width:76px !important;height:76px !important;}</style></head><body>');
+  printData.forEach(r=>{
+    const code = encodeURIComponent(r.soThe||'');
+    const soThe = r.soThe||''; const soMay = r.soMay||'';
+    w.document.write(`<div class="tem"><div class="top">VH-${soThe}</div><div class="qr" id="qr_${code}"></div><div class="bottom">SM: ${soMay}</div></div>`);
+  });
+  w.document.write('</body></html>');
+  w.document.close();
+  w.onload = ()=>{
+    printData.forEach(r=>{
+      const code = encodeURIComponent(r.soThe||'');
+      const qrDiv = w.document.getElementById('qr_'+code);
+      if(qrDiv){
+        new QRCode(qrDiv,{text:location.href.split('#')[0]+'#'+code,width:90,height:90});
+      }
+    });
+    setTimeout(()=>{w.focus();w.print();},500);
+  };
+};
+
+// --- In Lý lịch ---
+document.getElementById('btnPrintLyLich').onclick = ()=>{
+  const input = prompt("Nhập số thẻ hoặc gõ 'all' để in toàn bộ").trim();
+  if(!input) return;
+  let listSoThe = [];
+  if(input.toLowerCase()==='all') listSoThe = allData.map(r=>r.soThe);
+  else listSoThe = input.split(',').map(s=>s.trim()).filter(s=>s);
+  const w = window.open('','_blank');
+  const baseURL = location.href.split('#')[0];
+  w.document.write('<html><head><title>In Lý Lịch</title><style>body{font-family:Arial;margin:20px;color:#333;}'+
+  '.header-logo div{font-size:20px;font-weight:bold;line-height:1.2;}h2{text-align:center;font-size:22px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:10px;}'+
+  'table{border-collapse:collapse;width:100%;margin-top:10px;}th,td{border:1px solid #ccc;padding:8px;}th{background:#eee;width:30%;}.page-break{page-break-after:always;}'+
+  '.sign-box{margin-top:10px;text-align:right;font-size:16px;line-height:1.5;}.sign1{margin-right:30px;}.sign2{margin-right:60px;}</style></head><body>');
+  listSoThe.forEach((soThe,idx)=>{
+    const row = allData.find(r=>r.soThe==soThe);
+    if(!row){ w.document.write(`<h3 style="color:red">⚠ Không tìm thấy số thẻ: ${soThe}</h3><div class="page-break"></div>`); return; }
+    const qrDiv = document.createElement('div'); new QRCode(qrDiv,{text:baseURL+'#'+encodeURIComponent(soThe),width:100,height:100});
+    const qrImg = qrDiv.querySelector('img')?.src || qrDiv.querySelector('canvas')?.toDataURL();
+    w.document.write(`<div class="header-logo"><div style="margin-left:0px;">CÔNG TY TNHH MAY XK</div><div style="margin-left:55px;">VIỆT HỒNG</div></div>`);
+    w.document.write(`<div style="position:relative;margin-bottom:40px;"><div style="position:absolute;left:60px;top:0;"><img src="${qrImg}" style="width:100px;height:100px;"></div><div style="text-align:center;font-size:20px;font-weight:bold;padding-top:60px;">LÝ LỊCH MÁY VH-${soThe}</div></div>`);
+    const fields = [['Số thẻ',row.soThe],['Số máy',row.soMay],['Loại máy',row.loaiMay],['Vị trí',row.viTri],['Ghi chú',row.ghiChu],['Đã kiểm kê',row.daKiemKe?'✅':'❌'],['In QR',row.chonIn?'✅':'❌'],['Ngày mua',row.ngayMua],['Nơi mua',row.noiMua],['Bảo dưỡng Q1',row.bdQ1?'✅ '+row.bdNgayQ1:''],['Bảo dưỡng Q2',row.bdQ2?'✅ '+row.bdNgayQ2:''],['Bảo dưỡng Q3',row.bdQ3?'✅ '+row.bdNgayQ3:''],['Bảo dưỡng Q4',row.bdQ4?'✅ '+row.bdNgayQ4:''],['Sửa chữa',row.suaChua]];
+    w.document.write('<table>'); fields.forEach(f=>{w.document.write(`<tr><th>${f[0]}</th><td>${f[1]}</td></tr>`);}); w.document.write('</table>');
+    w.document.write('<div class="sign-box"><div class="sign1" style="margin-right:1px;">Vĩnh Long, ngày ..... tháng ..... năm .....</div><div class="sign2" style="margin-right:105px;">Người lập</div></div>');
+    if(idx<listSoThe.length-1) w.document.write('<div class="page-break"></div>');
+  });
+  w.document.write('</body></html>'); w.document.close(); w.focus(); w.print();
+};
+
+// --- Init ---
 loadData();
 </script>
 </body>
