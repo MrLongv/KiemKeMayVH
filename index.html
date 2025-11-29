@@ -226,16 +226,15 @@ td.col-noi-mua .clamp-2 {
 button[data-act="qr"] {
   display: none !important;
 }
-  .modal .row-inline {
+  .checkbox-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin: 4px 0;
-}
-
-.modal .row-inline label {
-  min-width: 100px; /* canh thẳng hàng toàn bộ text */
   font-weight: 500;
+}
+.checkbox-row input[type="checkbox"] {
+  transform: scale(1.2);
 }
 
 </style>
@@ -316,15 +315,14 @@ button[data-act="qr"] {
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <div class="row-inline">
-  <label>Đã kiểm kê</label>
+   <label class="checkbox-row">
   <input type="checkbox" id="m_daKiemKe" />
-</div>
-
-<div class="row-inline">
-  <label>Chọn để in</label>
+  Đã kiểm kê
+</label>
+<label class="checkbox-row">
   <input type="checkbox" id="m_chonIn" />
-</div>
+  Chọn để in
+</label>
 
     <label>Ngày mua</label>
     <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
