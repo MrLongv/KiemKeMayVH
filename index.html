@@ -98,6 +98,24 @@ td .clamp-2 {
   line-height: 1.2em;           /* you can tweak */
   max-height: calc(1.2em * 2);  /* ensure visual clamp height */
 }
+/* Fix checkbox trong modal */
+.modal-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.modal-row label {
+  flex: 1;
+  font-size: 15px;
+}
+
+.modal-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-left: 10px;
+  cursor: pointer;
+}
 
 /* đảm bảo td vẫn giữ display table-cell (không override) */
 /* (nếu bạn trước đó thêm min-height vào td thì hãy xóa rule đó) */
@@ -251,7 +269,7 @@ button[data-act="qr"] {
     <span id="status" style="margin-left:8px;color:#333;font-size:14px">Trạng thái: offline</span>
 </div>
 <div id="searchInfo" style="margin-left:20px; margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
-<div class="note"> Cuối năm nhớ tải file exel, lý lịch máy về lưu lại trong máy tính !</div>
+<div class="note"> Cuối năm nhớ tải file exel, lý lịch máy lưu lại trong máy tính !</div>
 
 <div class="table-wrap">
   <table id="dataTable">
@@ -304,8 +322,16 @@ button[data-act="qr"] {
     <label>Loại máy</label><input id="m_loaiMay" />
     <label>Vị trí</label><input id="m_viTri" />
     <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-    <label>Đã kiểm kê</label><input type="checkbox" id="m_daKiemKe" />
-    <label>Chọn để in</label><input type="checkbox" id="m_chonIn" />
+    <div class="row-inline">
+  <label>Đã kiểm kê</label>
+  <input type="checkbox" id="m_daKiemKe" />
+</div>
+
+<div class="row-inline">
+  <label>Chọn để in</label>
+  <input type="checkbox" id="m_chonIn" />
+</div>
+
     <label>Ngày mua</label>
     <input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
     <label>Nơi mua</label><input id="m_noiMua" />
