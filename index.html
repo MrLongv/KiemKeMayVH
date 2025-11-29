@@ -228,23 +228,18 @@ button[data-act="qr"] {
 }
   .checkbox-row {
   display: flex;
-  flex-direction: row;
-  align-items: center;      /* Căn giữa theo trục dọc */
-  justify-content: flex-start;
-  gap: 10px;                /* Khoảng cách chữ – checkbox */
+  align-items: center;
+  gap: 8px;
   margin: 6px 0;
   font-weight: 500;
-  line-height: 1.4;
 }
 
 .checkbox-row input[type="checkbox"] {
+  transform: translateY(1px);   /* hạ xuống ~1mm */
   width: 18px;
   height: 18px;
-  margin: 0;                /* Xóa margin mặc định làm lệch */
-  position: relative;
-  top: 0;                   /* Đảm bảo không lệch lên/xuống */
+  margin: 0;
 }
-
 
 </style>
 </head>
