@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📋 Kiểm kê VH</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f4f4f4; }
+h1 { text-align:center; }
+table { border-collapse: collapse; width: 100%; background:#fff; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align:center; font-size:14px; }
+th { background:#eee; }
+button { padding:4px 8px; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+.modal-content { background:#fff; padding:20px; width:400px; border-radius:5px; position:relative; }
+.modal-content input, .modal-content textarea { width:100%; margin-bottom:8px; padding:4px; }
+.close { position:absolute; top:5px; right:10px; cursor:pointer; font-size:18px; }
+</style>
+</head>
+<body>
+<h1>Kiểm kê VH</h1>
+<button id="btnAdd">Thêm mới</button>
+<button id="btnRefresh">Tải lại</button>
+<button id="btnPrintQR">In QR</button>
+<button id="btnPrintLyLich">In Lý Lịch</button>
+
+<table id="dataTable">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Số thẻ</th>
+      <th>Số máy</th>
+      <th>Loại máy</th>
+      <th>Vị trí</th>
+      <th>Ghi chú</th>
+      <th><label><input type="checkbox" id="checkAllKK">Đã KK</label></th>
+      <th><label><input type="checkbox" id="checkAllQR">In QR</label></th>
+      <th>Ngày mua</th>
+      <th>Nơi mua</th>
+      <th><label><input type="checkbox" id="checkAllQ1">Q1</label></th>
+      <th><label><input type="checkbox" id="checkAllQ2">Q2</label></th>
+      <th><label><input type="checkbox" id="checkAllQ3">Q3</label></th>
+      <th><label><input type="checkbox" id="checkAllQ4">Q4</label></th>
+      <th>Sửa chữa</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="close" id="modalClose">&times;</span>
+    <h3>Thông tin máy</h3>
+    <input type="hidden" id="m_id">
+    <input placeholder="Số thẻ" id="m_soThe">
+    <input placeholder="Số máy" id="m_soMay">
+    <input placeholder="Loại máy" id="m_loaiMay">
+    <input placeholder="Vị trí" id="m_viTri">
+    <textarea placeholder="Ghi chú" id="m_ghiChu"></textarea>
+    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label><br>
+    <label><input type="checkbox" id="m_chonIn"> In QR</label><br>
+    <input type="date" id="m_ngayMua" placeholder="Ngày mua">
+    <input placeholder="Nơi mua" id="m_noiMua">
+    <input placeholder="Bảo dưỡng Q1" id="m_bdNgayQ1">
+    <input placeholder="Bảo dưỡng Q2" id="m_bdNgayQ2">
+    <input placeholder="Bảo dưỡng Q3" id="m_bdNgayQ3">
+    <input placeholder="Bảo dưỡng Q4" id="m_bdNgayQ4">
+    <input placeholder="Sửa chữa" id="m_suaChua">
+    <button id="modalSave">Lưu</button>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev"; // Thay bằng URL Worker bạn
+let allData = [];
+
+// --- Modal ---
+const modal = document.getElementById('modal');
+const m_id = document.getElementById('m_id');
+const m_soThe = document.getElementById('m_soThe');
+const m_soMay = document.getElementById('m_soMay');
+const m_loaiMay = document.getElementById('m_loaiMay');
+const m_viTri = document.getElementById('m_viTri');
+const m_ghiChu = document.getElementById('m_ghiChu');
+const m_daKiemKe = document.getElementById('m_daKiemKe');
+const m_chonIn = document.getElementById('m_chonIn');
+const m_ngayMua = document.getElementById('m_ngayMua');
+const m_noiMua = document.getElementById('m_noiMua');
+const m_bdNgayQ1 = document.getElementById('m_bdNgayQ1');
+const m_bdNgayQ2 = document.getElementById('m_bdNgayQ2');
+const m_bdNgayQ3 = document.getElementById('m_bdNgayQ3');
+const m_bdNgayQ4 = document.getElementById('m_bdNgayQ4');
+const m_suaChua = document.getElementById('m_suaChua');
+const modalClose = document.getElementById('modalClose');
+const modalSave = document.getElementById('modalSave');
+
+modalClose.onclick = ()=> modal.style.display='none';
+window.onclick = e=>{if(e.target===modal) modal.style.display='none';};
+
+function openModal(row){
+  modal.style.display='flex';
+  if(row){
+    m_id.value=row.id;
+    m_soThe.value=row.soThe||'';
+    m_soMay.value=row.soMay||'';
+    m_loaiMay.value=row.loaiMay||'';
+    m_viTri.value=row.viTri||'';
+    m_ghiChu.value=row.ghiChu||'';
+    m_daKiemKe.checked=row.daKiemKe||false;
+    m_chonIn.checked=row.chonIn||false;
+    m_ngayMua.value=row.ngayMua||'';
+    m_noiMua.value=row.noiMua||'';
+    m_bdNgayQ1.value=row.bdNgayQ1||'';
+    m_bdNgayQ2.value=row.bdNgayQ2||'';
+    m_bdNgayQ3.value=row.bdNgayQ3||'';
+    m_bdNgayQ4.value=row.bdNgayQ4||'';
+    m_suaChua.value=row.suaChua||'';
+  } else {
+    m_id.value='';
+    m_soThe.value='';
+    m_soMay.value='';
+    m_loaiMay.value='';
+    m_viTri.value='';
+    m_ghiChu.value='';
+    m_daKiemKe.checked=false;
+    m_chonIn.checked=false;
+    m_ngayMua.value='';
+    m_noiMua.value='';
+    m_bdNgayQ1.value='';
+    m_bdNgayQ2.value='';
+    m_bdNgayQ3.value='';
+    m_bdNgayQ4.value='';
+    m_suaChua.value='';
+  }
+}
+
+// --- Load data ---
+async function loadData(){
+  try{
+    const res = await fetch(WORKER_URL);
+    const data = await res.json();
+    if(data.success){
+      allData = data.data;
+      renderTable();
+    } else alert("Lỗi khi load dữ liệu: "+data.error);
+  }catch(e){console.error(e); alert("Lỗi khi load dữ liệu")};
+}
+
+// --- Render table ---
+function renderTable(){
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML='';
+  allData.forEach((r, idx)=>{
+    const tr = document.createElement('tr');
+    tr.dataset.index=idx;
+    tr.innerHTML=`
+      <td>${r.id}</td>
+      <td>${r.soThe||''}</td>
+      <td>${r.soMay||''}</td>
+      <td>${r.loaiMay||''}</td>
+      <td>${r.viTri||''}</td>
+      <td>${r.ghiChu||''}</td>
+      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe?'checked':''}></td>
+      <td><input type="checkbox" class="chonIn" ${r.chonIn?'checked':''}></td>
+      <td>${r.ngayMua||''}</td>
+      <td>${r.noiMua||''}</td>
+      <td><input type="checkbox" class="bdQ1" ${r.bdQ1?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ2" ${r.bdQ2?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ3" ${r.bdQ3?'checked':''}></td>
+      <td><input type="checkbox" class="bdQ4" ${r.bdQ4?'checked':''}></td>
+      <td>${r.suaChua||''}</td>
+      <td><button onclick="openModal(allData[${idx}])">Sửa</button></td>
+    `;
+    tbody.appendChild(tr);
+
+    ['daKiemKe','chonIn','bdQ1','bdQ2','bdQ3','bdQ4'].forEach(cls=>{
+      tr.querySelector('.'+cls).addEventListener('change', async function(){
+        allData[idx][cls]=this.checked;
+        await saveRow(allData[idx]);
+      });
+    });
+  });
+}
+
+// --- Save row ---
+// --- Save row ---
+async function saveRow(row){
+  try{
+    let url = row.id ? WORKER_URL+"/update" : WORKER_URL+"/add";
+    let payload = {...row};
+    // Convert checkbox boolean thành 1/0 nếu cần
+    ['daKiemKe','chonIn','bdQ1','bdQ2','bdQ3','bdQ4'].forEach(k=>{
+      payload[k] = payload[k]?1:0;
+    });
+    const res = await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(!data.success) { alert("Lỗi khi lưu: "+data.error); return; }
+
+    if(!row.id){
+      // Thêm mới: gán id trả về từ D1
+      row.id = data.insertedId;
+      allData.push(row);
+    } else {
+      // Sửa: cập nhật allData
+      const idx = allData.findIndex(r=>r.id==row.id);
+      if(idx>=0) allData[idx] = {...row};
+    }
+    renderTable();
+  }catch(e){console.error(e); alert("Error: Không nhận được phản hồi từ Worker");}
+}
+
+// --- Modal Save ---
+modalSave.onclick = async()=>{
+  const row = {
+    id:m_id.value||null,
+    soThe:m_soThe.value,
+    soMay:m_soMay.value,
+    loaiMay:m_loaiMay.value,
+    viTri:m_viTri.value,
+    ghiChu:m_ghiChu.value,
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    ngayMua:m_ngayMua.value,
+    noiMua:m_noiMua.value,
+    bdQ1:m_bdNgayQ1.value?true:false,
+    bdNgayQ1:m_bdNgayQ1.value,
+    bdQ2:m_bdNgayQ2.value?true:false,
+    bdNgayQ2:m_bdNgayQ2.value,
+    bdQ3:m_bdNgayQ3.value?true:false,
+    bdNgayQ3:m_bdNgayQ3.value,
+    bdQ4:m_bdNgayQ4.value?true:false,
+    bdNgayQ4:m_bdNgayQ4.value,
+    suaChua:m_suaChua.value
+  };
+  await saveRow(row);
+  modal.style.display='none';
+}
+
+// --- Modal Save ---
+modalSave.onclick = async()=>{
+  const row = {
+    id:m_id.value||null,
+    soThe:m_soThe.value,
+    soMay:m_soMay.value,
+    loaiMay:m_loaiMay.value,
+    viTri:m_viTri.value,
+    ghiChu:m_ghiChu.value,
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    ngayMua:m_ngayMua.value,
+    noiMua:m_noiMua.value,
+    bdQ1:m_bdNgayQ1.value?true:false,
+    bdNgayQ1:m_bdNgayQ1.value,
+    bdQ2:m_bdNgayQ2.value?true:false,
+    bdNgayQ2:m_bdNgayQ2.value,
+    bdQ3:m_bdNgayQ3.value?true:false,
+    bdNgayQ3:m_bdNgayQ3.value,
+    bdQ4:m_bdNgayQ4.value?true:false,
+    bdNgayQ4:m_bdNgayQ4.value,
+    suaChua:m_suaChua.value
+  };
+  await saveRow(row);
+  modal.style.display='none';
+}
+
+// --- Add new ---
+document.getElementById('btnAdd').onclick=()=>openModal(null);
+document.getElementById('btnRefresh').onclick=loadData;
+
+// --- Check all header ---
+['KK','QR','Q1','Q2','Q3','Q4'].forEach(id=>{
+  document.getElementById('checkAll'+id).addEventListener('change',function(){
+    document.querySelectorAll('.'+(id==='KK'?'daKiemKe':id==='QR'?'chonIn':'bd'+id)).forEach(cb=>cb.checked=this.checked);
+  });
+});
+
+// --- Init ---
+loadData();
+</script>
+</body>
+</html>
