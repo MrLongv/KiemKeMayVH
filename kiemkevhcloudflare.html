@@ -5,36 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kiểm kê VH</title>
 <style>
-body{font-family:Arial,sans-serif;margin:0;padding:10px;background:#f4f4f4;}
-table{border-collapse:collapse;width:100%;margin-top:10px;}
-th, td{border:1px solid #ccc;padding:6px;text-align:center;}
-th{background:#eee;}
-button{padding:4px 8px;margin:2px;}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
-.modal-content{background:#fff;padding:10px;width:400px;max-height:90%;overflow:auto;position:relative;}
-.modal-content label{display:block;margin-top:5px;}
-input[type=text],input[type=date]{width:100%;padding:3px;margin-top:2px;}
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:10px;
+  background:#f4f4f4;
+}
+table{
+  border-collapse:collapse;
+  width:100%;
+  margin-top:10px;
+}
+th, td{
+  border:1px solid #ccc;
+  padding:6px;
+  text-align:center;
+}
+th{ background:#eee; }
+button{ padding:4px 8px; margin:2px; }
+
+.modal{
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+.modal-content{
+  background:#fff;
+  padding:10px;
+  width:400px;
+  max-height:90%;
+  overflow:auto;
+  position:relative;
+  border-radius:5px;
+}
+
+/* Highlight khi nhảy tới dòng bằng QR */
+.highlight-row{
+  background:yellow !important;
+  transition: background 1s;
+}
+
+/* QR modal lớn hơn */
+#qrModal .modal-content{
+  width:320px;
+  text-align:center;
+}
 </style>
 </head>
 <body>
 
 <h2>Kiểm kê VH <button id="btnAdd">Thêm</button></h2>
-<label>Năm: <select id="yearSelect"></select></label>
+
+<label>Năm:
+  <select id="yearSelect"></select>
+</label>
+
 <table id="dataTable">
 <thead>
 <tr>
-<th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
-<th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
-<th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th>
+  <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
+  <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
+  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th><th>QR</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
 
-<!-- Modal -->
+<!-- Modal Sửa -->
 <div class="modal" id="modal">
 <div class="modal-content">
 <h3 id="modalTitle">Sửa</h3>
+
 <label>Số thẻ <input type="text" id="m_soThe"></label>
 <label>Số máy <input type="text" id="m_soMay"></label>
 <label>Loại máy <input type="text" id="m_loaiMay"></label>
@@ -43,20 +89,36 @@ input[type=text],input[type=date]{width:100%;padding:3px;margin-top:2px;}
 <label>Ngày mua <input type="date" id="m_ngayMua"></label>
 <label>Nơi mua <input type="text" id="m_noiMua"></label>
 <label>Sửa chữa <input type="text" id="m_suaChua"></label>
+
 <label><input type="checkbox" id="m_daKiemKe"> Đã KK</label>
 <label><input type="checkbox" id="m_chonIn"> In QR</label>
+
 <label><input type="checkbox" id="m_bdQ1"> Q1 ngày <input type="date" id="m_bdNgayQ1"></label>
 <label><input type="checkbox" id="m_bdQ2"> Q2 ngày <input type="date" id="m_bdNgayQ2"></label>
 <label><input type="checkbox" id="m_bdQ3"> Q3 ngày <input type="date" id="m_bdNgayQ3"></label>
 <label><input type="checkbox" id="m_bdQ4"> Q4 ngày <input type="date" id="m_bdNgayQ4"></label>
+
 <button id="modalSave">Lưu</button>
 <button id="modalClose">Đóng</button>
 </div>
 </div>
 
+<!-- Modal QR -->
+<div class="modal" id="qrModal">
+  <div class="modal-content">
+    <h3>Mã QR</h3>
+    <div id="qrBox"></div>
+    <button onclick="document.getElementById('qrModal').style.display='none'">Đóng</button>
+  </div>
+</div>
+
 <script>
-const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev"; // Thay bằng URL Worker của bạn
-let allData = [], editingId=null;
+const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
+
+let allData = [];
+let editingId = null;
+
+// Modal fields
 const m_soThe=document.getElementById('m_soThe');
 const m_soMay=document.getElementById('m_soMay');
 const m_loaiMay=document.getElementById('m_loaiMay');
@@ -71,14 +133,17 @@ const m_bdQ4=document.getElementById('m_bdQ4'), m_bdNgayQ4=document.getElementBy
 const m_ngayMua=document.getElementById('m_ngayMua');
 const m_noiMua=document.getElementById('m_noiMua');
 const m_suaChua=document.getElementById('m_suaChua');
+
 const modal=document.getElementById('modal');
 const modalTitle=document.getElementById('modalTitle');
 const yearSelect=document.getElementById('yearSelect');
 
+// Open modal
 function openModal(id=null){
   editingId=id;
   modal.style.display='flex';
   modalTitle.textContent = id?"Sửa":"Thêm";
+
   if(id){
     const row = allData.find(r=>r.id===id);
     m_soThe.value=row.soThe||"";
@@ -91,11 +156,12 @@ function openModal(id=null){
     m_suaChua.value=row.suaChua||"";
     m_daKiemKe.checked=!!row.daKiemKe;
     m_chonIn.checked=!!row.chonIn;
+
     m_bdQ1.checked=!!row.bdQ1; m_bdNgayQ1.value=row.bdNgayQ1||"";
     m_bdQ2.checked=!!row.bdQ2; m_bdNgayQ2.value=row.bdNgayQ2||"";
     m_bdQ3.checked=!!row.bdQ3; m_bdNgayQ3.value=row.bdNgayQ3||"";
     m_bdQ4.checked=!!row.bdQ4; m_bdNgayQ4.value=row.bdNgayQ4||"";
-  }else{
+  } else {
     m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value="";
     m_ngayMua.value=m_noiMua.value=m_suaChua.value="";
     m_daKiemKe.checked=m_chonIn.checked=false;
@@ -104,21 +170,37 @@ function openModal(id=null){
   }
 }
 
-document.getElementById('modalClose').onclick=()=>{modal.style.display='none';}
+document.getElementById('modalClose').onclick=()=>modal.style.display='none';
 
+// Load data
 async function loadData(){
-  const year = yearSelect.value;
   try{
+    const year = yearSelect.value;
     const res = await fetch(`${WORKER_URL}/?year=${year}`);
     const data = await res.json();
-    if(data.success){ allData=data.data; renderTable(); }
-    else alert("Lỗi khi load dữ liệu: "+data.error);
-  }catch(err){ alert("Lỗi khi load dữ liệu: "+err); }
+
+    if(data.success){
+      allData=data.data;
+      renderTable();
+      
+      // kiểm tra xem URL có ?soThe=
+      const params = new URLSearchParams(location.search);
+      const soThe = params.get("soThe");
+      if(soThe){
+        setTimeout(()=>scrollToSoThe(soThe), 500);
+      }
+    } else {
+      alert("Lỗi khi load dữ liệu: "+data.error);
+    }
+  }catch(err){
+    alert("Lỗi khi load dữ liệu: "+err);
+  }
 }
 
 function renderTable(){
   const tbody=document.querySelector("#dataTable tbody");
   tbody.innerHTML="";
+
   allData.forEach(row=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -138,11 +220,13 @@ function renderTable(){
       <td><input type="checkbox" disabled ${row.bdQ4?"checked":""}></td>
       <td>${row.suaChua||""}</td>
       <td><button onclick="openModal(${row.id})">Sửa</button></td>
+      <td><button onclick="makeQR('${row.soThe||""}')">QR</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+// Save modal
 document.getElementById('modalSave').onclick=async ()=>{
   const payload={
     id:editingId,
@@ -162,6 +246,7 @@ document.getElementById('modalSave').onclick=async ()=>{
     suaChua:m_suaChua.value,
     nam:yearSelect.value
   };
+
   try{
     const url=editingId?`${WORKER_URL}/update`:`${WORKER_URL}/add`;
     const res=await fetch(url,{
@@ -170,24 +255,62 @@ document.getElementById('modalSave').onclick=async ()=>{
       body:JSON.stringify(payload)
     });
     const data=await res.json();
-    if(data.success){ modal.style.display='none'; loadData(); }
-    else alert("Lỗi khi lưu: "+data.error);
-  }catch(err){ alert("Lỗi khi lưu: "+err); }
+    if(data.success){
+      modal.style.display='none';
+      loadData();
+    } else alert("Lỗi khi lưu: "+data.error);
+  }catch(err){
+    alert("Lỗi khi lưu: "+err);
+  }
 };
 
 document.getElementById('btnAdd').onclick=()=>openModal(null);
 
-// Fill year select
-const currentYear = new Date().getFullYear();
+// Năm
+const currentYear=new Date().getFullYear();
 for(let y=currentYear-1;y<=currentYear+2;y++){
-  const opt=document.createElement('option'); opt.value=y; opt.text=y;
+  const opt=document.createElement('option');
+  opt.value=y; opt.text=y;
   if(y===currentYear) opt.selected=true;
   yearSelect.appendChild(opt);
 }
-yearSelect.onchange=()=>loadData();
+yearSelect.onchange=loadData;
+
+// Tạo QR
+function makeQR(soThe){
+  if(!soThe){
+    alert("Dòng này không có Số thẻ!");
+    return;
+  }
+
+  const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(soThe);
+
+  const qrModal=document.getElementById('qrModal');
+  qrModal.style.display='flex';
+
+  const qrBox=document.getElementById('qrBox');
+  qrBox.innerHTML=`
+    <img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}">
+    <p><b>${soThe}</b></p>
+  `;
+}
+
+// Auto scroll to soThe
+function scrollToSoThe(soThe){
+  const rows=document.querySelectorAll("#dataTable tbody tr");
+  
+  rows.forEach(tr=>{
+    const cell = tr.children[1];
+    if(cell && cell.textContent.trim() === soThe){
+      tr.classList.add("highlight-row");
+      tr.scrollIntoView({behavior:"smooth", block:"center"});
+    }
+  });
+}
 
 // Initial load
 loadData();
+
 </script>
 </body>
 </html>
