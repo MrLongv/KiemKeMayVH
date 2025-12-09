@@ -17,8 +17,7 @@ button{ padding:4px 8px; margin:2px; cursor:pointer; }
 #qrModal .modal-content{ width:320px; text-align:center; }
 #toolbar{ margin-top:10px; display:flex; gap:10px; flex-wrap:nowrap; overflow-x:auto; align-items:center; }
 #toolbar input[type=text]{ padding:4px 6px; width:200px; flex-shrink:0; }
-.filter-btn{ padding:4px 8px; cursor:pointer; flex-shrink:0; white-space:nowrap; }
-#yearSelect{ padding:4px 6px; flex-shrink:0; }
+#filterSelect{ padding:4px 6px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -27,13 +26,15 @@ button{ padding:4px 8px; margin:2px; cursor:pointer; }
 
 <div id="toolbar">
   <input type="text" id="searchBox" placeholder="Tìm kiếm Số thẻ/Số máy/Loại/Vị trí...">
-  <button class="filter-btn" data-filter="all">Tất cả</button>
-  <button class="filter-btn" data-filter="daKiemKe">Đã kiểm kê</button>
-  <button class="filter-btn" data-filter="chuaKiemKe">Chưa kiểm kê</button>
-  <button class="filter-btn" data-filter="daInQR">Đã in QR</button>
-  <button class="filter-btn" data-filter="chuaInQR">Chưa in QR</button>
-  <button id="btnPrintSelectedQR" class="filter-btn">In QR chọn</button>
-  <button id="btnPrintSelectedRecord" class="filter-btn">In Lý lịch chọn</button>
+  <select id="filterSelect">
+    <option value="all">Tất cả</option>
+    <option value="chuaKiemKe">Chưa kiểm kê</option>
+    <option value="daKiemKe">Đã kiểm kê</option>
+    <option value="chuaInQR">Chưa in QR</option>
+    <option value="daInQR">Đã in QR</option>
+  </select>
+  <button id="btnPrintSelectedQR">In QR chọn</button>
+  <button id="btnPrintSelectedRecord">In Lý lịch chọn</button>
   <label>Năm: <select id="yearSelect"></select></label>
 </div>
 
@@ -83,7 +84,7 @@ button{ padding:4px 8px; margin:2px; cursor:pointer; }
 
 <script>
 const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
-let allData = [], editingId = null, currentFilter = 'all';
+let allData=[], editingId=null;
 
 // Modal fields
 const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
@@ -98,20 +99,17 @@ const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementByI
 
 const modal=document.getElementById('modal'), modalTitle=document.getElementById('modalTitle'),
       yearSelect=document.getElementById('yearSelect'), searchBox=document.getElementById('searchBox'),
-      selectAllBox=document.getElementById('selectAll');
+      filterSelect=document.getElementById('filterSelect'), selectAllBox=document.getElementById('selectAll');
 
+// Open modal
 function openModal(id=null){
-  editingId=id;
-  modal.style.display='flex';
-  modalTitle.textContent = id?"Sửa":"Thêm";
+  editingId=id; modal.style.display='flex'; modalTitle.textContent = id?"Sửa":"Thêm";
   if(id){
-    const row = allData.find(r=>r.id===id);
-    if(!row) return;
+    const row=allData.find(r=>r.id===id); if(!row) return;
     m_soThe.value=row.soThe||""; m_soMay.value=row.soMay||""; m_loaiMay.value=row.loaiMay||"";
     m_viTri.value=row.viTri||""; m_ghiChu.value=row.ghiChu||""; m_ngayMua.value=row.ngayMua||"";
     m_noiMua.value=row.noiMua||""; m_suaChua.value=row.suaChua||""; m_daKiemKe.checked=!!row.daKiemKe;
-    m_chonIn.checked=!!row.chonIn;
-    m_bdQ1.checked=!!row.bdQ1; m_bdNgayQ1.value=row.bdNgayQ1||"";
+    m_chonIn.checked=!!row.chonIn; m_bdQ1.checked=!!row.bdQ1; m_bdNgayQ1.value=row.bdNgayQ1||"";
     m_bdQ2.checked=!!row.bdQ2; m_bdNgayQ2.value=row.bdNgayQ2||"";
     m_bdQ3.checked=!!row.bdQ3; m_bdNgayQ3.value=row.bdNgayQ3||"";
     m_bdQ4.checked=!!row.bdQ4; m_bdNgayQ4.value=row.bdNgayQ4||"";
@@ -125,17 +123,18 @@ function openModal(id=null){
 }
 document.getElementById('modalClose').onclick=()=>modal.style.display='none';
 
+// Load data
 async function loadData(){
   try{
     const year = yearSelect.value;
     const res = await fetch(`${WORKER_URL}/?year=${year}`);
     const data = await res.json();
-    if(data.success){
-      allData=data.data; applyFilters();
-    } else alert("Lỗi khi load dữ liệu: "+data.error);
+    if(data.success){ allData=data.data; applyFilters(); } 
+    else alert("Lỗi khi load dữ liệu: "+data.error);
   }catch(err){ alert("Lỗi khi load dữ liệu: "+err); }
 }
 
+// Render table
 function renderTable(data){
   const tbody=document.querySelector("#dataTable tbody"); tbody.innerHTML="";
   data.forEach(row=>{
@@ -152,21 +151,19 @@ function renderTable(data){
       <td><input type="checkbox" disabled ${row.bdQ4?"checked":""}></td>
       <td>${row.suaChua||""}</td>
       <td><button onclick="openModal(${row.id})">Sửa</button></td>
-      <td><button onclick="makeQR('${row.soThe||""}')">QR</button>
-          <button onclick="printRecord(${row.id})">Lý lịch</button></td>
+      <td><button onclick="makeQR('${row.soThe||""}')">QR</button> <button onclick="printRecord(${row.id})">Lý lịch</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+// Save modal
 document.getElementById('modalSave').onclick=async ()=>{
-  const payload={
-    id:editingId, soThe:m_soThe.value, soMay:m_soMay.value, loaiMay:m_loaiMay.value, viTri:m_viTri.value,
-    ghiChu:m_ghiChu.value, daKiemKe:m_daKiemKe.checked, chonIn:m_chonIn.checked,
-    bdQ1:m_bdQ1.checked, bdNgayQ1:m_bdNgayQ1.value, bdQ2:m_bdQ2.checked, bdNgayQ2:m_bdNgayQ2.value,
-    bdQ3:m_bdQ3.checked, bdNgayQ3:m_bdNgayQ3.value, bdQ4:m_bdQ4.checked, bdNgayQ4:m_bdNgayQ4.value,
-    ngayMua:m_ngayMua.value, noiMua:m_noiMua.value, suaChua:m_suaChua.value, nam:yearSelect.value
-  };
+  const payload={ id:editingId, soThe:m_soThe.value, soMay:m_soMay.value, loaiMay:m_loaiMay.value, viTri:m_viTri.value,
+                  ghiChu:m_ghiChu.value, daKiemKe:m_daKiemKe.checked, chonIn:m_chonIn.checked,
+                  bdQ1:m_bdQ1.checked, bdNgayQ1:m_bdNgayQ1.value, bdQ2:m_bdQ2.checked, bdNgayQ2:m_bdNgayQ2.value,
+                  bdQ3:m_bdQ3.checked, bdNgayQ3:m_bdNgayQ3.value, bdQ4:m_bdQ4.checked, bdNgayQ4:m_bdNgayQ4.value,
+                  ngayMua:m_ngayMua.value, noiMua:m_noiMua.value, suaChua:m_suaChua.value, nam:yearSelect.value };
   try{
     const url=editingId?`${WORKER_URL}/update`:`${WORKER_URL}/add`;
     const res=await fetch(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
@@ -174,32 +171,21 @@ document.getElementById('modalSave').onclick=async ()=>{
     if(data.success){ modal.style.display='none'; loadData(); } else alert("Lỗi khi lưu: "+data.error);
   }catch(err){ alert("Lỗi khi lưu: "+err); }
 };
-
 document.getElementById('btnAdd').onclick=()=>openModal(null);
 
 // Year select
 const currentYear=new Date().getFullYear();
-for(let y=currentYear-1;y<=currentYear+2;y++){
-  const opt=document.createElement('option');
-  opt.value=y; opt.text=y;
-  if(y===currentYear) opt.selected=true;
-  yearSelect.appendChild(opt);
-}
+for(let y=currentYear-1;y<=currentYear+2;y++){ const opt=document.createElement('option'); opt.value=y; opt.text=y; if(y===currentYear) opt.selected=true; yearSelect.appendChild(opt); }
 yearSelect.onchange=loadData;
 
-// Search + Filter
+// Search & Filter
 searchBox.addEventListener('input', applyFilters);
-document.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{
-  currentFilter=btn.dataset.filter; applyFilters();
-}));
+filterSelect.addEventListener('change', applyFilters);
 
 function applyFilters(){
   const q = searchBox.value.toLowerCase();
-  let filtered = allData.filter(r => r.soThe?.toLowerCase().includes(q) ||
-                                     r.soMay?.toLowerCase().includes(q) ||
-                                     r.loaiMay?.toLowerCase().includes(q) ||
-                                     r.viTri?.toLowerCase().includes(q));
-  switch(currentFilter){
+  let filtered = allData.filter(r => r.soThe?.toLowerCase().includes(q) || r.soMay?.toLowerCase().includes(q) || r.loaiMay?.toLowerCase().includes(q) || r.viTri?.toLowerCase().includes(q));
+  switch(filterSelect.value){
     case 'daKiemKe': filtered = filtered.filter(r=>r.daKiemKe); break;
     case 'chuaKiemKe': filtered = filtered.filter(r=>!r.daKiemKe); break;
     case 'daInQR': filtered = filtered.filter(r=>r.chonIn); break;
@@ -209,77 +195,39 @@ function applyFilters(){
 }
 
 // Select all
-selectAllBox.addEventListener('change',()=>{
-  document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked=selectAllBox.checked);
-});
+selectAllBox.addEventListener('change',()=>{ document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked=selectAllBox.checked); });
 
 // Make QR
 function makeQR(soThe){
   if(!soThe){ alert("Dòng này không có Số thẻ!"); return; }
   const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(soThe);
   const qrModal=document.getElementById('qrModal'); qrModal.style.display='flex';
-  document.getElementById('qrBox').innerHTML=`
-    <img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}">
-    <p><b>${soThe}</b></p>
-  `;
+  document.getElementById('qrBox').innerHTML=`<img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}"><p><b>${soThe}</b></p>`;
 }
 
 // Print single record
 function printRecord(id){
-  const r = allData.find(x=>x.id===id);
-  if(!r){ alert("Không tìm thấy dữ liệu"); return; }
-  const w = window.open('', '_blank');
-  w.document.write('<html><head><title>Lý lịch</title></head><body>');
-  w.document.write('<h2>Lý lịch máy</h2><ul>');
-  for(const key in r) w.document.write(`<li><b>${key}:</b> ${r[key]}</li>`);
-  w.document.write('</ul></body></html>'); w.document.close(); w.print();
+  const r=allData.find(x=>x.id===id); if(!r){ alert("Không tìm thấy dữ liệu"); return; }
+  const w=window.open('','_blank'); w.document.write('<html><head><title>Lý lịch</title></head><body>');
+  w.document.write('<h2>Lý lịch máy</h2><ul>'); for(const key in r) w.document.write(`<li><b>${key}:</b> ${r[key]}</li>`); w.document.write('</ul></body></html>'); w.document.close(); w.print();
 }
 
 // Print selected QR
 document.getElementById('btnPrintSelectedQR').onclick=()=>{
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>parseInt(cb.dataset.id));
+  const ids=Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>parseInt(cb.dataset.id));
   if(ids.length===0){ alert("Chưa chọn dòng nào"); return; }
-  const w = window.open('', '_blank'); w.document.write('<html><head><title>QR</title></head><body>');
-  ids.forEach(id=>{
-    const r = allData.find(x=>x.id===id);
-    if(r){
-      const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(r.soThe);
-      w.document.write(`<div style="display:inline-block;margin:5px;text-align:center;">
-        <img src="https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(url)}">
-        <p>${r.soThe}</p>
-      </div>`);
-    }
-  });
+  const w=window.open('','_blank'); w.document.write('<html><head><title>QR</title></head><body>');
+  ids.forEach(id=>{ const r=allData.find(x=>x.id===id); if(r){ const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(r.soThe); w.document.write(`<div style="display:inline-block;margin:5px;text-align:center;"><img src="https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(url)}"><p>${r.soThe}</p></div>`); } });
   w.document.write('</body></html>'); w.document.close(); w.print();
 }
 
 // Print selected records
 document.getElementById('btnPrintSelectedRecord').onclick=()=>{
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>parseInt(cb.dataset.id));
+  const ids=Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>parseInt(cb.dataset.id));
   if(ids.length===0){ alert("Chưa chọn dòng nào"); return; }
-  const w = window.open('', '_blank'); w.document.write('<html><head><title>Lý lịch</title></head><body>');
-  ids.forEach(id=>{
-    const r = allData.find(x=>x.id===id);
-    if(r){
-      w.document.write('<div style="border:1px solid #ccc;margin:5px;padding:5px;">');
-      w.document.write('<h3>Lý lịch máy '+r.soThe+'</h3><ul>');
-      for(const key in r) w.document.write(`<li><b>${key}:</b> ${r[key]}</li>`);
-      w.document.write('</ul></div>');
-    }
-  });
+  const w=window.open('','_blank'); w.document.write('<html><head><title>Lý lịch</title></head><body>');
+  ids.forEach(id=>{ const r=allData.find(x=>x.id===id); if(r){ w.document.write('<div style="border:1px solid #ccc;margin:5px;padding:5px;"><h3>Lý lịch máy '+r.soThe+'</h3><ul>'); for(const key in r) w.document.write(`<li><b>${key}:</b> ${r[key]}</li>`); w.document.write('</ul></div>'); } });
   w.document.write('</body></html>'); w.document.close(); w.print();
-}
-
-// Auto scroll
-function scrollToSoThe(soThe){
-  const rows=document.querySelectorAll("#dataTable tbody tr");
-  rows.forEach(tr=>{
-    const cell = tr.children[2];
-    if(cell && cell.textContent.trim() === soThe){
-      tr.classList.add("highlight-row");
-      tr.scrollIntoView({behavior:"smooth", block:"center"});
-    }
-  });
 }
 
 // Initial load
