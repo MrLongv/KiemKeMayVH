@@ -1,893 +1,315 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📋 Kiểm kê máy Việt Hồng (Cloudflare)</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm kê VH</title>
 <style>
-/* --- CSS giữ nguyên giao diện phần 1 (rút gọn chút cho clarity) --- */
-body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8}
-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #0b74d1;
-  color: #fff;
-  padding: 16px 0;
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 1px;
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:10px;
+  background:#f4f4f4;
 }
-.controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e2e8f0}
-.controls input[type="text"]{padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:220px}
-.controls select{padding:6px 8px;border:1px solid #ccc;border-radius:4px;}
-.controls button{background:#0b74d1;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
-.controls button.ghost{background:#eee;color:#333}
-.note{padding:8px 12px;color:#666;font-size:13px}
-.table-wrap { display: block; width: 100%; overflow-x: auto; overflow-y: auto; box-sizing: border-box; }
-table { min-width: 1200px; border-collapse: collapse; background: #fff; width: 100%; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }
-th{background:#0b74d1;color:#fff}
-.modal {
-  display: none; /* QUAN TRỌNG: luôn ẩn ban đầu */
-  position: fixed;
-  z-index: 9999;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.55);
-  justify-content: center;
-  align-items: center;
+table{
+  border-collapse:collapse;
+  width:100%;
+  margin-top:10px;
+}
+th, td{
+  border:1px solid #ccc;
+  padding:6px;
+  text-align:center;
+}
+th{ background:#eee; }
+button{ padding:4px 8px; margin:2px; }
+
+.modal{
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+.modal-content{
+  background:#fff;
+  padding:10px;
+  width:400px;
+  max-height:90%;
+  overflow:auto;
+  position:relative;
+  border-radius:5px;
 }
 
-.modal-card {
-  width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  animation: fadeIn 0.2s ease;
+/* Highlight khi nhảy tới dòng bằng QR */
+.highlight-row{
+  background:yellow !important;
+  transition: background 1s;
 }
 
-@keyframes fadeIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+/* QR modal lớn hơn */
+#qrModal .modal-content{
+  width:320px;
+  text-align:center;
 }
-
-body.modal-open {
-  overflow: hidden;
-}
-
-.modal label{display:block;margin-top:8px;font-weight:600}
-.modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
-.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-@media(max-width:920px){ .table-wrap{overflow:auto} }
-@media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.controls input[type="text"],.controls select{width:100%}}
-.highlight-row { background: yellow !important; transition: background 0.2s; }
-.small-checkbox{transform:scale(1);margin:0}
-td .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; word-wrap: break-word; line-height: 1.2em; max-height: calc(1.2em * 2); }
-td.col-vi-tri, td.col-so-may, td.col-noi-mua, td.col-ghi-chu { white-space: normal; max-width:200px; word-break:break-word; }
-.checkbox-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-weight: 500; }
-.checkbox-row input[type="checkbox"] { transform: translateY(1px); width: 18px; height: 18px; margin: 0; }
 </style>
 </head>
 <body>
-<header>📋 Kiểm kê máy Việt Hồng</header>
 
-<div class="controls">
-  <input id="searchBox" type="text" placeholder="🔍 Tìm kiếm " />
-  <select id="filterBox">
-    <option value="all">📋 Hiện tất cả</option>
-    <option value="daKiemKe">✅ Đã kiểm kê</option>
-    <option value="chuaKiemKe">⬜ Chưa kiểm kê</option>
-    <option value="daIn">🖨️ Đã chọn in</option>
-    <option value="chuaIn">📄 Chưa chọn in</option>
-  </select>
+<h2>Kiểm kê VH <button id="btnAdd">Thêm</button></h2>
 
-  <label>Năm:
-    <select id="yearSelect"></select>
-  </label>
+<label>Năm:
+  <select id="yearSelect"></select>
+</label>
 
-  <button id="btnAdd">➕ Thêm</button>
-  <button id="btnSync">☁️ Đồng bộ lên Cloudflare</button>
-  <button id="btnRefresh" class="ghost">🔄 Tải lại từ Cloudflare</button>
-  <button id="btnPrint">🖨️ In tem QR</button>
+<table id="dataTable">
+<thead>
+<tr>
+  <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
+  <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
+  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th><th>QR</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
-  <div style="margin-bottom:1px;">
-    <label>Số thẻ: <input type="text" id="soThePrint" style="width:60px;"></label>
-    <button id="btnPrintLyLich">🖨️ In lý lịch</button>
-    <span id="printStatus" style="margin-left:8px;color:green;"></span>
-  </div>
+<!-- Modal Sửa -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3 id="modalTitle">Sửa</h3>
 
-  <div style="margin-left:auto">
-    <span id="status" style="color:#333;font-size:14px">Trạng thái: offline</span>
-  </div>
+<label>Số thẻ <input type="text" id="m_soThe"></label>
+<label>Số máy <input type="text" id="m_soMay"></label>
+<label>Loại máy <input type="text" id="m_loaiMay"></label>
+<label>Vị trí <input type="text" id="m_viTri"></label>
+<label>Ghi chú <input type="text" id="m_ghiChu"></label>
+<label>Ngày mua <input type="date" id="m_ngayMua"></label>
+<label>Nơi mua <input type="text" id="m_noiMua"></label>
+<label>Sửa chữa <input type="text" id="m_suaChua"></label>
+
+<label><input type="checkbox" id="m_daKiemKe"> Đã KK</label>
+<label><input type="checkbox" id="m_chonIn"> In QR</label>
+
+<label><input type="checkbox" id="m_bdQ1"> Q1 ngày <input type="date" id="m_bdNgayQ1"></label>
+<label><input type="checkbox" id="m_bdQ2"> Q2 ngày <input type="date" id="m_bdNgayQ2"></label>
+<label><input type="checkbox" id="m_bdQ3"> Q3 ngày <input type="date" id="m_bdNgayQ3"></label>
+<label><input type="checkbox" id="m_bdQ4"> Q4 ngày <input type="date" id="m_bdNgayQ4"></label>
+
+<button id="modalSave">Lưu</button>
+<button id="modalClose">Đóng</button>
+</div>
 </div>
 
-<div id="searchInfo" style="margin-left:20px; margin-bottom:5px; font-weight:normal; font-size:0.85em; color:#333;"></div>
-<div class="note"> Cuối năm nhớ tải file exel, lý lịch máy lưu lại trong máy tính !</div>
-
-<div class="table-wrap">
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>STT</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th><th>Hành động</th>
-        <th style="text-align:center;">Đã KK<br><input type="checkbox" id="checkAllKK"></th>
-        <th style="text-align:center;">In QR<br><input type="checkbox" id="checkAllQR"></th>
-        <th>Ngày mua</th><th>Nơi mua</th>
-        <th colspan="4">Bảo dưỡng</th>
-        <th>Sửa chữa</th>
-      </tr>
-      <tr>
-        <th colspan="11"></th>
-        <th>Q1<br><input type="checkbox" id="checkAllQ1"></th>
-        <th>Q2<br><input type="checkbox" id="checkAllQ2"></th>
-        <th>Q3<br><input type="checkbox" id="checkAllQ3"></th>
-        <th>Q4<br><input type="checkbox" id="checkAllQ4"></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<!-- Edit Modal -->
-<div id="editModal" class="modal">
-  <div class="modal-card">
-    <h2>Sửa thông tin máy</h2>
-
-    <label>Số thẻ</label>
-    <input id="m_soThe" type="text">
-
-    <label>Số máy</label>
-    <input id="m_soMay" type="text">
-
-    <label>Loại máy</label>
-    <input id="m_loaiMay" type="text">
-
-    <label>Vị trí</label>
-    <input id="m_viTri" type="text">
-
-    <label>Ghi chú</label>
-    <textarea id="m_ghiChu"></textarea>
-
-    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label>
-    <label><input type="checkbox" id="m_chonIn"> Chọn in</label>
-
-    <label>Ngày mua</label>
-    <input id="m_ngayMua" type="date">
-
-    <label>Nơi mua</label>
-    <input id="m_noiMua" type="text">
-
-    <hr>
-    <h3>Bảo dưỡng</h3>
-
-    <label><input id="m_bdQ1" type="checkbox"> Q1</label>
-    <input id="m_bdQ1_ngay" type="date">
-
-    <label><input id="m_bdQ2" type="checkbox"> Q2</label>
-    <input id="m_bdQ2_ngay" type="date">
-
-    <label><input id="m_bdQ3" type="checkbox"> Q3</label>
-    <input id="m_bdQ3_ngay" type="date">
-
-    <label><input id="m_bdQ4" type="checkbox"> Q4</label>
-    <input id="m_bdQ4_ngay" type="date">
-
-    <label>Sửa chữa</label>
-    <textarea id="m_suaChua"></textarea>
-
-    <div class="btn-row">
-      <button id="btnSaveEdit">Lưu</button>
-      <button id="btnCloseEdit">Đóng</button>
-    </div>
+<!-- Modal QR -->
+<div class="modal" id="qrModal">
+  <div class="modal-content">
+    <h3>Mã QR</h3>
+    <div id="qrBox"></div>
+    <button onclick="document.getElementById('qrModal').style.display='none'">Đóng</button>
   </div>
 </div>
 
-<!-- QR & Lý lịch modals created on-demand -->
-
-<!-- password modal created by JS for parity -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-/* ================== CONFIG ================== */
-// Cloudflare Worker base URL (thay bằng của bạn nếu cần)
 const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
 
-/* ================== UI refs ================== */
-const statusEl=document.getElementById('status'), tbody=document.querySelector('#dataTable tbody');
-const filterBox=document.getElementById('filterBox'), searchBox=document.getElementById('searchBox');
-const modal=document.getElementById('editModal');
-const m_soThe=document.getElementById('m_soThe'), m_soMay=document.getElementById('m_soMay'),
-      m_loaiMay=document.getElementById('m_loaiMay'), m_viTri=document.getElementById('m_viTri'),
-      m_ghiChu=document.getElementById('m_ghiChu'), m_daKiemKe=document.getElementById('m_daKiemKe'),
-      m_chonIn=document.getElementById('m_chonIn'), m_ngayMua=document.getElementById('m_ngayMua'),
-      m_noiMua=document.getElementById('m_noiMua'),
-      m_bdQ1=document.getElementById('m_bdQ1'), m_bdQ2=document.getElementById('m_bdQ2'),
-      m_bdQ3=document.getElementById('m_bdQ3'), m_bdQ4=document.getElementById('m_bdQ4'),
-      m_suaChua=document.getElementById('m_suaChua');
-const m_bdQ1_ngay=document.getElementById('m_bdQ1_ngay'), m_bdQ2_ngay=document.getElementById('m_bdQ2_ngay'),
-      m_bdQ3_ngay=document.getElementById('m_bdQ3_ngay'), m_bdQ4_ngay=document.getElementById('m_bdQ4_ngay');
+let allData = [];
+let editingId = null;
+
+// Modal fields
+const m_soThe=document.getElementById('m_soThe');
+const m_soMay=document.getElementById('m_soMay');
+const m_loaiMay=document.getElementById('m_loaiMay');
+const m_viTri=document.getElementById('m_viTri');
+const m_ghiChu=document.getElementById('m_ghiChu');
+const m_daKiemKe=document.getElementById('m_daKiemKe');
+const m_chonIn=document.getElementById('m_chonIn');
+const m_bdQ1=document.getElementById('m_bdQ1'), m_bdNgayQ1=document.getElementById('m_bdNgayQ1');
+const m_bdQ2=document.getElementById('m_bdQ2'), m_bdNgayQ2=document.getElementById('m_bdNgayQ2');
+const m_bdQ3=document.getElementById('m_bdQ3'), m_bdNgayQ3=document.getElementById('m_bdNgayQ3');
+const m_bdQ4=document.getElementById('m_bdQ4'), m_bdNgayQ4=document.getElementById('m_bdNgayQ4');
+const m_ngayMua=document.getElementById('m_ngayMua');
+const m_noiMua=document.getElementById('m_noiMua');
+const m_suaChua=document.getElementById('m_suaChua');
+
+const modal=document.getElementById('modal');
+const modalTitle=document.getElementById('modalTitle');
 const yearSelect=document.getElementById('yearSelect');
-const checkAllKK = document.getElementById('checkAllKK'), checkAllQR = document.getElementById('checkAllQR');
-const checkAllQ1 = document.getElementById('checkAllQ1'), checkAllQ2 = document.getElementById('checkAllQ2'),
-      checkAllQ3 = document.getElementById('checkAllQ3'), checkAllQ4 = document.getElementById('checkAllQ4');
 
-let allData = [];            // toàn bộ data năm hiện tại (kept in worker too)
-let pageData = [];           // phần data trang hiện
-let editingIndex = null;
-let worker = null;
-let currentYear = new Date().getFullYear();
-let currentPage = 1;
-const PAGE_SIZE = 100;       // chỉnh trang kích thước tại đây
+// Open modal
+function openModal(id=null){
+  editingId=id;
+  modal.style.display='flex';
+  modalTitle.textContent = id?"Sửa":"Thêm";
 
-/* ================== Helpers ================== */
-function setStatus(txt,ok=true){ statusEl.innerText='Trạng thái: '+txt; statusEl.style.color = ok ? '#0b74d1' : '#c0392b'; }
-function safeText(v){ return v==null? '' : String(v); }
-function formatDateDDMMYYYY(d){
-  if (!d && d !== 0) return "";
-  if (typeof d === 'string' && d.includes('/')) return d;
-  if (typeof d === 'string'){
-    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  }
-  const date = (d instanceof Date) ? d : new Date(d);
-  if (isNaN(date)) return String(d);
-  const day = String(date.getDate()).padStart(2,'0');
-  const month = String(date.getMonth()+1).padStart(2,'0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-}
+  if(id){
+    const row = allData.find(r=>r.id===id);
+    m_soThe.value=row.soThe||"";
+    m_soMay.value=row.soMay||"";
+    m_loaiMay.value=row.loaiMay||"";
+    m_viTri.value=row.viTri||"";
+    m_ghiChu.value=row.ghiChu||"";
+    m_ngayMua.value=row.ngayMua||"";
+    m_noiMua.value=row.noiMua||"";
+    m_suaChua.value=row.suaChua||"";
+    m_daKiemKe.checked=!!row.daKiemKe;
+    m_chonIn.checked=!!row.chonIn;
 
-/* ================== Web Worker (dynamic) ================== */
-/* Worker code: fetches YEAR data from Cloudflare WORKER_URL (/?year=...), splits into pages, responds to messages:
-   - {cmd:'load', year}
-   - {cmd:'getPage', page}
-   - {cmd:'search', q}  (local filtering inside worker if needed)
-*/
-function createWorker(){
-  const code = `
-self.WORKER_URL = ${JSON.stringify(WORKER_URL)};
-let all = [];
-let pageSize = ${PAGE_SIZE};
-
-async function fetchYear(year){
-  try {
-    const res = await fetch(self.WORKER_URL + '?year=' + encodeURIComponent(year));
-    const json = await res.json();
-    if(json && json.success && Array.isArray(json.data)) {
-      // normalize fields
-      all = json.data.map((r, idx) => ({
-        __idx: idx,
-        id: r.id || r.ID || idx+1,
-        soThe: r.soThe || r.SoThe || r['Số thẻ'] || '',
-        soMay: r.soMay || r.SoMay || r['Số máy'] || '',
-        loaiMay: r.loaiMay || r.LoaiMay || r['Loại máy'] || '',
-        viTri: r.viTri || r.ViTri || r['Vị trí'] || '',
-        ghiChu: r.ghiChu || r.GhiChu || r['Ghi chú'] || '',
-        daKiemKe: !!(r.daKiemKe || r['Đã KK'] || r['daKiemKe']=='TRUE' || r['daKiemKe']=='true'),
-        chonIn: !!(r.chonIn || r['chonIn']=='TRUE' || r['chonIn']=='true'),
-        ngayMua: r.ngayMua || r.NgayMua || r['Ngày mua'] || '',
-        noiMua: r.noiMua || r.NoiMua || r['Nơi mua'] || '',
-        bdQ1: !!(r.bdQ1 || r['Bảo dưỡng Q1'] || r['bdQ1']),
-        bdQ2: !!(r.bdQ2 || r['Bảo dưỡng Q2'] || r['bdQ2']),
-        bdQ3: !!(r.bdQ3 || r['Bảo dưỡng Q3'] || r['bdQ3']),
-        bdQ4: !!(r.bdQ4 || r['Bảo dưỡng Q4'] || r['bdQ4']),
-        bdNgayQ1: r.bdNgayQ1 || r['bdNgayQ1'] || '',
-        bdNgayQ2: r.bdNgayQ2 || r['bdNgayQ2'] || '',
-        bdNgayQ3: r.bdNgayQ3 || r['bdNgayQ3'] || '',
-        bdNgayQ4: r.bdNgayQ4 || r['bdNgayQ4'] || '',
-        suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
-      }));
-      return { success:true, total: all.length };
-    } else {
-      return { success:false, error:'Invalid response' };
-    }
-  } catch(err) {
-    return { success:false, error: String(err) };
+    m_bdQ1.checked=!!row.bdQ1; m_bdNgayQ1.value=row.bdNgayQ1||"";
+    m_bdQ2.checked=!!row.bdQ2; m_bdNgayQ2.value=row.bdNgayQ2||"";
+    m_bdQ3.checked=!!row.bdQ3; m_bdNgayQ3.value=row.bdNgayQ3||"";
+    m_bdQ4.checked=!!row.bdQ4; m_bdNgayQ4.value=row.bdNgayQ4||"";
+  } else {
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value="";
+    m_ngayMua.value=m_noiMua.value=m_suaChua.value="";
+    m_daKiemKe.checked=m_chonIn.checked=false;
+    m_bdQ1.checked=m_bdQ2.checked=m_bdQ3.checked=m_bdQ4.checked=false;
+    m_bdNgayQ1.value=m_bdNgayQ2.value=m_bdNgayQ3.value=m_bdNgayQ4.value="";
   }
 }
 
-function getPage(page, pageSizeOverride){
-  const ps = pageSizeOverride || pageSize;
-  const totalPages = Math.max(1, Math.ceil(all.length / ps));
-  const p = Math.min(Math.max(1, page), totalPages);
-  const start = (p-1)*ps;
-  const chunk = all.slice(start, start + ps);
-  return { page:p, totalPages, totalItems: all.length, data: chunk };
-}
+document.getElementById('modalClose').onclick=()=>modal.style.display='none';
 
-self.onmessage = async (ev) => {
-  const msg = ev.data;
-  if(msg.cmd === 'load'){
-    const year = msg.year;
-    const res = await fetchYear(year);
-    if(res.success){
-      const first = getPage(1);
-      self.postMessage({ type:'loaded', ok:true, details: res, page:first });
-    } else {
-      self.postMessage({ type:'loaded', ok:false, error: res.error });
-    }
-  } else if(msg.cmd === 'getPage'){
-    const pg = getPage(msg.page || 1);
-    self.postMessage({ type:'page', page: pg });
-  } else if(msg.cmd === 'search'){
-    const q = (msg.q||'').toLowerCase().trim();
-    if(!q) {
-      const pg = getPage(msg.page || 1);
-      self.postMessage({ type:'page', page: pg });
-    } else {
-      // simple filter on in-worker all: check several fields
-      const matched = all.filter(r=>{
-        return (r.soThe||'').toString().toLowerCase().includes(q)
-          || (r.soMay||'').toString().toLowerCase().includes(q)
-          || (r.loaiMay||'').toString().toLowerCase().includes(q)
-          || (r.viTri||'').toString().toLowerCase().includes(q)
-          || (r.ghiChu||'').toString().toLowerCase().includes(q)
-          || (r.noiMua||'').toString().toLowerCase().includes(q)
-          || (r.suaChua||'').toString().toLowerCase().includes(q);
-      });
-      // paginate matched
-      const ps = pageSize;
-      const totalPages = Math.max(1, Math.ceil(matched.length / ps));
-      const p = Math.min(Math.max(1, msg.page||1), totalPages);
-      const start = (p-1)*ps;
-      const chunk = matched.slice(start, start+ps);
-      self.postMessage({ type:'page', page: { page:p, totalPages, totalItems: matched.length, data: chunk } });
-    }
-  }
-};
-`;
-  const blob = new Blob([code], { type: 'application/javascript' });
-  const url = URL.createObjectURL(blob);
-  return new Worker(url);
-}
+// Load data
+async function loadData(){
+  try{
+    const year = yearSelect.value;
+    const res = await fetch(`${WORKER_URL}/?year=${year}`);
+    const data = await res.json();
 
-/* ================== Init worker and load ================ */
-function initWorkerAndLoad(year){
-  if(worker) worker.terminate();
-  worker = createWorker();
-  setStatus('Đang tải dữ liệu năm '+year+' (Cloudflare) ...');
-  worker.onmessage = (ev) => {
-    const d = ev.data;
-    if(d.type === 'loaded' && d.ok){
-      // first page included
-      pageData = d.page.data;
-      currentPage = d.page.page;
-      totalPages = d.page.totalPages;
-      setStatus('Đã tải ' + d.details.total + ' dòng');
+    if(data.success){
+      allData=data.data;
       renderTable();
-      // if ?soThe= found in query string, scroll to it after render
+      
+      // kiểm tra xem URL có ?soThe=
       const params = new URLSearchParams(location.search);
-      const soThe = params.get('soThe');
+      const soThe = params.get("soThe");
       if(soThe){
         setTimeout(()=>scrollToSoThe(soThe), 500);
       }
-    } else if(d.type === 'loaded' && !d.ok){
-      setStatus('Lỗi tải: '+d.error, false);
-      alert('Lỗi tải dữ liệu: '+d.error);
-    } else if(d.type === 'page'){
-      pageData = d.page.data;
-      currentPage = d.page.page;
-      totalPages = d.page.totalPages;
-      renderTable();
-    }
-  };
-  worker.postMessage({ cmd:'load', year });
-}
-
-/* ================== Render table from pageData ================== */
-let totalPages = 1;
-function renderTable(){
-  tbody.innerHTML = '';
-  const frag = document.createDocumentFragment();
-  let countVisible = 0;
-  pageData.forEach((r, idx)=> {
-    countVisible++;
-    const tr = document.createElement('tr');
-    tr.dataset.index = r.__idx;
-    tr.innerHTML = `
-      <td>${r.__idx + 1}</td>
-      <td class="col-so-the">${safeText(r.soThe)}</td>
-      <td class="col-so-may"><div class="clamp-2">${safeText(r.soMay)}</div></td>
-      <td class="colLoaiMay"><div class="clamp-2">${safeText(r.loaiMay)}</div></td>
-      <td class="col-vi-tri"><div class="clamp-2">${safeText(r.viTri)}</div></td>
-      <td class="col-ghi-chu"><div class="clamp-2">${safeText(r.ghiChu)}</div></td>
-      <td>
-        <button data-act="edit" data-idx="${r.__idx}">✏️</button>
-        <button data-act="qr" data-idx="${r.__idx}">🔗</button>
-      </td>
-      <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
-      <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
-      <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
-      <td class="col-noi-mua"><div class="clamp-2">${safeText(r.noiMua)}</div></td>
-      <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
-      <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
-      <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
-      <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
-      <td class="col-sua-chua"><div class="clamp-2">${safeText(r.suaChua)}</div></td>
-    `;
-    frag.appendChild(tr);
-  });
-  tbody.appendChild(frag);
-  document.getElementById('searchInfo').textContent = `Trang ${currentPage} / ${totalPages} — Hiển thị ${pageData.length} dòng (trong trang).`;
-}
-
-/* ================== Events & actions ================== */
-// debounce search
-let searchTimer = null;
-searchBox.addEventListener('input', ()=>{
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(()=>{
-    const q = searchBox.value.trim();
-    if(!q) {
-      worker.postMessage({ cmd:'getPage', page:1 });
     } else {
-      worker.postMessage({ cmd:'search', q: q, page:1 });
+      alert("Lỗi khi load dữ liệu: "+data.error);
     }
-  }, 220);
-});
-
-// filter change (simple: we can filter in worker or re-load; here re-use worker search with special query)
-filterBox.addEventListener('change', ()=>{
-  // simple approach: if filtering by daKiemKe / chuaKiemKe / daIn / chuaIn, do client-side filter on loaded all via worker search fallback
-  const f = filterBox.value;
-  if(f === 'all') { worker.postMessage({ cmd:'getPage', page:1 }); return; }
-  // implement quick in-worker filter by composing query token (worker search matches substrings in fields; for booleans, we'll request the whole dataset and filter in main thread for reliability)
-  // easier: fetch full page1 and then client-side filter across worker.all is not accessible; so we re-load year and then filter results returned (simple but fine).
-  // We'll request page 1 and then client filter on returned pageData. For full accuracy across entire year, could request worker to return all pages — omitted for performance.
-  worker.postMessage({ cmd:'getPage', page:1 });
-  setTimeout(()=> {
-    // client-side filter within pageData (note: not perfect across entire year if item on different page)
-    const filtered = pageData.filter(r => {
-      if(f === 'daKiemKe') return !!r.daKiemKe;
-      if(f === 'chuaKiemKe') return !r.daKiemKe;
-      if(f === 'daIn') return !!r.chonIn;
-      if(f === 'chuaIn') return !r.chonIn;
-      return true;
-    });
-    // show filtered subset (not paginated)
-    const frag=document.createDocumentFragment();
-    tbody.innerHTML='';
-    filtered.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.dataset.index = r.__idx;
-      tr.innerHTML = `
-        <td>${r.__idx+1}</td><td class="col-so-the">${safeText(r.soThe)}</td>
-        <td>${safeText(r.soMay)}</td><td>${safeText(r.loaiMay)}</td><td>${safeText(r.viTri)}</td>
-        <td>${safeText(r.ghiChu)}</td>
-        <td><button data-act="edit" data-idx="${r.__idx}">✏️</button></td>
-        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
-        <td>${r.ngayMua || ''}</td><td>${r.noiMua || ''}</td>
-        <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1? 'checked':''}></td>
-        <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2? 'checked':''}></td>
-        <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3? 'checked':''}></td>
-        <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4? 'checked':''}></td>
-        <td>${safeText(r.suaChua)}</td>
-      `;
-      frag.appendChild(tr);
-    });
-    tbody.appendChild(frag);
-    document.getElementById('searchInfo').textContent = `Hiển thị ${filtered.length} dòng (bộ lọc áp dụng trên trang hiện tại).`;
-  }, 150);
-});
-
-// Clicks in table (edit / qr)
-tbody.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  const act = btn.dataset.act;
-  const idx = Number(btn.dataset.idx);
-  if(act === 'edit') openEditModalByGlobalIdx(idx);
-  if(act === 'qr') {
-    const row = findRowByGlobalIdx(idx);
-    if(!row || !row.soThe) { alert('Dòng này không có Số thẻ!'); return; }
-    makeQR(row.soThe);
+  }catch(err){
+    alert("Lỗi khi load dữ liệu: "+err);
   }
-});
-
-// checkbox changes inside table (daKiemKe, chonIn, bdQ1..bdQ4)
-// since pageData are copies, we need to find global item and patch via API
-tbody.addEventListener('change', async (e) => {
-  const tr = e.target.closest('tr'); if(!tr) return;
-  const globalIdx = Number(tr.dataset.index);
-  const nameCls = e.target.classList;
-  const checked = e.target.checked;
-  // find item in pageData or worker all by global index:
-  const row = findRowByGlobalIdx(globalIdx);
-  if(!row) { setStatus('Không tìm thấy dòng để cập nhật', false); return; }
-  // update local copy in pageData for immediate UI
-  if(nameCls.contains('daKiemKe')) row.daKiemKe = checked;
-  if(nameCls.contains('chonIn')) row.chonIn = checked;
-  if(nameCls.contains('bdQ1')) row.bdQ1 = checked;
-  if(nameCls.contains('bdQ2')) row.bdQ2 = checked;
-  if(nameCls.contains('bdQ3')) row.bdQ3 = checked;
-  if(nameCls.contains('bdQ4')) row.bdQ4 = checked;
-  // send patch to Cloudflare /update
-  try {
-    await fetch(WORKER_URL + '/update', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        id: row.id,
-        soThe: row.soThe,
-        soMay: row.soMay,
-        loaiMay: row.loaiMay,
-        viTri: row.viTri,
-        ghiChu: row.ghiChu,
-        daKiemKe: !!row.daKiemKe,
-        chonIn: !!row.chonIn,
-        bdQ1: !!row.bdQ1,
-        bdQ2: !!row.bdQ2,
-        bdQ3: !!row.bdQ3,
-        bdQ4: !!row.bdQ4,
-        bdNgayQ1: row.bdNgayQ1||'',
-        bdNgayQ2: row.bdNgayQ2||'',
-        bdNgayQ3: row.bdNgayQ3||'',
-        bdNgayQ4: row.bdNgayQ4||'',
-        ngayMua: row.ngayMua||'',
-        noiMua: row.noiMua||'',
-        suaChua: row.suaChua||'',
-        nam: yearSelect.value
-      })
-    }).then(r=>r.json()).then(j=>{
-      if(j && j.success) setStatus('✅ Đã lưu dòng (auto)'); else setStatus('❌ Lỗi lưu', false);
-    });
-  } catch(err){
-    setStatus('❌ Lỗi lưu: '+err, false);
-  }
-});
-
-// find row by global __idx (stored in tr.dataset.index)
-function findRowByGlobalIdx(globalIdx){
-  // search in current pageData first
-  for(const r of pageData) if(r.__idx === globalIdx) return r;
-  // fallback: ask worker to re-get current page and search — but simpler: return null
-  return null;
 }
 
-/* ===================== Modal Edit ====================== */
-const modal = document.getElementById("editModal");
+function renderTable(){
+  const tbody=document.querySelector("#dataTable tbody");
+  tbody.innerHTML="";
 
-let lastScrollY = 0;
-let editingIndex = null;
+  allData.forEach(row=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${row.id}</td>
+      <td>${row.soThe||""}</td>
+      <td>${row.soMay||""}</td>
+      <td>${row.loaiMay||""}</td>
+      <td>${row.viTri||""}</td>
+      <td>${row.ghiChu||""}</td>
+      <td><input type="checkbox" disabled ${row.daKiemKe?"checked":""}></td>
+      <td><input type="checkbox" disabled ${row.chonIn?"checked":""}></td>
+      <td>${row.ngayMua||""}</td>
+      <td>${row.noiMua||""}</td>
+      <td><input type="checkbox" disabled ${row.bdQ1?"checked":""}></td>
+      <td><input type="checkbox" disabled ${row.bdQ2?"checked":""}></td>
+      <td><input type="checkbox" disabled ${row.bdQ3?"checked":""}></td>
+      <td><input type="checkbox" disabled ${row.bdQ4?"checked":""}></td>
+      <td>${row.suaChua||""}</td>
+      <td><button onclick="openModal(${row.id})">Sửa</button></td>
+      <td><button onclick="makeQR('${row.soThe||""}')">QR</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-function openEditModalByGlobalIdx(globalIdx) {
-  const r = findRowByGlobalIdx(globalIdx);
-  if (!r) {
-    alert("Không tìm thấy dữ liệu để sửa, vui lòng reload.");
+// Save modal
+document.getElementById('modalSave').onclick=async ()=>{
+  const payload={
+    id:editingId,
+    soThe:m_soThe.value,
+    soMay:m_soMay.value,
+    loaiMay:m_loaiMay.value,
+    viTri:m_viTri.value,
+    ghiChu:m_ghiChu.value,
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    bdQ1:m_bdQ1.checked, bdNgayQ1:m_bdNgayQ1.value,
+    bdQ2:m_bdQ2.checked, bdNgayQ2:m_bdNgayQ2.value,
+    bdQ3:m_bdQ3.checked, bdNgayQ3:m_bdNgayQ3.value,
+    bdQ4:m_bdQ4.checked, bdNgayQ4:m_bdNgayQ4.value,
+    ngayMua:m_ngayMua.value,
+    noiMua:m_noiMua.value,
+    suaChua:m_suaChua.value,
+    nam:yearSelect.value
+  };
+
+  try{
+    const url=editingId?`${WORKER_URL}/update`:`${WORKER_URL}/add`;
+    const res=await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(data.success){
+      modal.style.display='none';
+      loadData();
+    } else alert("Lỗi khi lưu: "+data.error);
+  }catch(err){
+    alert("Lỗi khi lưu: "+err);
+  }
+};
+
+document.getElementById('btnAdd').onclick=()=>openModal(null);
+
+// Năm
+const currentYear=new Date().getFullYear();
+for(let y=currentYear-1;y<=currentYear+2;y++){
+  const opt=document.createElement('option');
+  opt.value=y; opt.text=y;
+  if(y===currentYear) opt.selected=true;
+  yearSelect.appendChild(opt);
+}
+yearSelect.onchange=loadData;
+
+// Tạo QR
+function makeQR(soThe){
+  if(!soThe){
+    alert("Dòng này không có Số thẻ!");
     return;
   }
 
-  lastScrollY = window.scrollY;
-  editingIndex = globalIdx;
+  const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(soThe);
 
-  m_soThe.value = r.soThe || "";
-  m_soMay.value = r.soMay || "";
-  m_loaiMay.value = r.loaiMay || "";
-  m_viTri.value = r.viTri || "";
-  m_ghiChu.value = r.ghiChu || "";
-  m_daKiemKe.checked = !!r.daKiemKe;
-  m_chonIn.checked = !!r.chonIn;
+  const qrModal=document.getElementById('qrModal');
+  qrModal.style.display='flex';
 
-  m_ngayMua.value = r.ngayMua || "";
-  m_noiMua.value = r.noiMua || "";
-
-  m_bdQ1.checked = !!r.bdQ1;
-  m_bdQ1_ngay.value = r.bdNgayQ1 || "";
-  m_bdQ2.checked = !!r.bdQ2;
-  m_bdQ2_ngay.value = r.bdNgayQ2 || "";
-  m_bdQ3.checked = !!r.bdQ3;
-  m_bdQ3_ngay.value = r.bdNgayQ3 || "";
-  m_bdQ4.checked = !!r.bdQ4;
-  m_bdQ4_ngay.value = r.bdNgayQ4 || "";
-
-  m_suaChua.value = r.suaChua || "";
-
-  modal.style.display = "flex";
-  document.body.classList.add("modal-open");
+  const qrBox=document.getElementById('qrBox');
+  qrBox.innerHTML=`
+    <img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}">
+    <p><b>${soThe}</b></p>
+  `;
 }
 
-function closeEditModal() {
-  modal.style.display = "none";
-  document.body.classList.remove("modal-open");
-  window.scrollTo(0, lastScrollY);
-}
-
-document.getElementById("btnCloseEdit").addEventListener("click", closeEditModal);
-modal.addEventListener("click", e => {
-  if (e.target === modal) closeEditModal();
-});
-
-
-/* Add new */
-document.getElementById('btnAdd').addEventListener('click', ()=> {
-  editingIndex = null;
-  m_soThe.value = m_soMay.value = m_loaiMay.value = m_viTri.value = m_ghiChu.value = '';
-  m_daKiemKe.checked = m_chonIn.checked = false;
-  m_ngayMua.value = m_noiMua.value = m_suaChua.value = '';
-  m_bdQ1.checked = m_bdQ2.checked = m_bdQ3.checked = m_bdQ4.checked = false;
-  m_bdQ1_ngay.value = m_bdQ2_ngay.value = m_bdQ3_ngay.value = m_bdQ4_ngay.value = '';
-  modal.style.display = 'flex';
-  document.body.classList.add('modal-open');
-});
-
-document.getElementById('cancelBtn').onclick = closeModal;
-function closeModal(){
-  modal.style.display = 'none';
-  editingIndex = null;
-  document.body.classList.remove('modal-open');
-  window.scrollTo(0,lastScrollY);
-}
-
-/* Save (add or update) */
-document.getElementById('saveBtn').onclick = async ()=>{
-  const payload = {
-    id: null,
-    soThe: m_soThe.value.trim(),
-    soMay: m_soMay.value.trim(),
-    loaiMay: m_loaiMay.value.trim(),
-    viTri: m_viTri.value.trim(),
-    ghiChu: m_ghiChu.value.trim(),
-    daKiemKe: m_daKiemKe.checked,
-    chonIn: m_chonIn.checked,
-    bdQ1: m_bdQ1.checked, bdNgayQ1: m_bdQ1_ngay.value,
-    bdQ2: m_bdQ2.checked, bdNgayQ2: m_bdQ2_ngay.value,
-    bdQ3: m_bdQ3.checked, bdNgayQ3: m_bdQ3_ngay.value,
-    bdQ4: m_bdQ4.checked, bdNgayQ4: m_bdQ4_ngay.value,
-    ngayMua: m_ngayMua.value,
-    noiMua: m_noiMua.value,
-    suaChua: m_suaChua.value,
-    nam: yearSelect.value
-  };
-  try {
-    if(editingIndex === null){
-      // add
-      const res = await fetch(WORKER_URL + '/add', {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-      });
-      const j = await res.json();
-      if(j && j.success){ setStatus('✅ Thêm mới thành công'); modal.style.display='none'; loadCurrentYear(); }
-      else { setStatus('❌ Lỗi thêm: '+(j && j.error || ''), false); alert('Lỗi thêm: '+(j && j.error || '')); }
-    } else {
-      // update: need id of editingIndex (find row)
-      const r = findRowByGlobalIdx(editingIndex);
-      if(!r){ alert('Không tìm thấy hàng để cập nhật'); return; }
-      payload.id = r.id;
-      const res = await fetch(WORKER_URL + '/update', {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-      });
-      const j = await res.json();
-      if(j && j.success){ setStatus('✅ Cập nhật thành công'); modal.style.display='none'; loadCurrentYear(); }
-      else { setStatus('❌ Lỗi cập nhật: '+(j && j.error || ''), false); alert('Lỗi cập nhật: '+(j && j.error || '')); }
-    }
-  } catch(err){
-    setStatus('❌ Lỗi lưu: '+err, false);
-    alert('Lỗi lưu: '+err);
-  }
-};
-
-/* ================== Print QR / Print lý lịch ================== */
-document.getElementById('btnPrint').onclick = () => {
-  // giống logic cũ: tìm all selected (chonIn true) — but worker pages only contain chunk; we will request full year from cloud to ensure all selected printed
-  (async ()=>{
-    try {
-      setStatus('Chuẩn bị in tem QR...');
-      const year = yearSelect.value;
-      // fetch full year data directly (Cloudflare returns all data)
-      const res = await fetch(WORKER_URL + '?year=' + encodeURIComponent(year));
-      const j = await res.json();
-      if(!j || !j.success){ alert('Lỗi tải dữ liệu in: '+(j && j.error)); setStatus('Lỗi tải dữ liệu', false); return; }
-      const all = j.data;
-      const printData = all.filter(r => !!(r.chonIn || r.chonIn === true || r.chonIn == 'TRUE'));
-      if(printData.length === 0){ alert('Chọn ít nhất 1 dòng để in'); setStatus('Chưa có dòng in', false); return; }
-
-      const w = window.open('','_blank');
-      w.document.write('<html><head><title>In Tem QR</title>');
-      w.document.write('<style>@page{size:A4;margin:4.3mm}body{font-family:Arial;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:2mm} .tem{width:32mm;height:34mm;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2px;box-sizing:border-box;text-align:center} .tem .top{font-weight:bold;font-size:12px}</style>');
-      w.document.write('</head><body>');
-      for(const r of printData){
-        const code = encodeURIComponent(r.soThe||'');
-        const soThe = r.soThe || '';
-        const soMay = r.soMay || '';
-        const qrUrl = location.href.split('#')[0] + '#'+code;
-        w.document.write(`<div class="tem"><div class="top">VH-${soThe}</div><div class="qr"><img src="https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(qrUrl)}"></div><div class="bottom">SM: ${soMay}</div></div>`);
-      }
-      w.document.write('</body></html>');
-      w.document.close();
-      w.focus();
-      setTimeout(()=>w.print(),500);
-      setStatus('Đã tạo trang in');
-    } catch(err){ alert('Lỗi in: '+err); setStatus('Lỗi in', false); }
-  })();
-};
-
-// In lý lịch (theo số thẻ hoặc "all")
-document.getElementById('btnPrintLyLich').onclick = ()=>{
-  const input = document.getElementById('soThePrint').value.trim();
-  if(!input){ alert("Nhập số thẻ hoặc gõ 'all' để in toàn bộ!"); return; }
-  (async ()=>{
-    try{
-      const year = yearSelect.value;
-      const res = await fetch(WORKER_URL + '?year=' + encodeURIComponent(year));
-      const j = await res.json();
-      if(!j || !j.success) { alert('Lỗi tải dữ liệu: '+(j && j.error)); return; }
-      const all = j.data;
-      let listSoThe = [];
-      if(input.toLowerCase() === 'all'){ listSoThe = all.map(r=>r.soThe); }
-      else listSoThe = input.split(',').map(s=>s.trim()).filter(Boolean);
-      if(listSoThe.length === 0){ alert('Không có số thẻ hợp lệ'); return; }
-      // build print window:
-      const baseURL = location.href.split('#')[0];
-      const w = window.open('','_blank');
-      w.document.write('<html><head><title>In Lý Lịch</title>');
-      w.document.write('<style>body{font-family:Arial;padding:20px} table{border-collapse:collapse;width:100%;margin-bottom:12px} th,td{border:1px solid #ccc;padding:8px} .page-break{page-break-after:always}</style>');
-      w.document.write('</head><body>');
-      for(let i=0;i<listSoThe.length;i++){
-        const soThe = listSoThe[i];
-        const row = all.find(r=> (r.soThe||'').toString() === soThe.toString());
-        if(!row){
-          w.document.write(`<h3 style="color:red">⚠ Không tìm thấy số thẻ: ${soThe}</h3><div class="page-break"></div>`);
-          continue;
-        }
-        const tempDiv = document.createElement('div');
-        new QRCode(tempDiv, { text: baseURL + '#' + encodeURIComponent(soThe), width:100, height:100 });
-        const qrImg = tempDiv.querySelector('img')?.src || tempDiv.querySelector('canvas')?.toDataURL() || '';
-        w.document.write(`<div style="display:flex;justify-content:space-between;align-items:center"><div><h2>VIỆT HỒNG - LÝ LỊCH MÁY VH-${soThe}</h2></div><div><img src="${qrImg}" style="width:100px;height:100px"></div></div>`);
-        const fields = [
-          ['Số thẻ', row.soThe], ['Số máy', row.soMay], ['Loại máy', row.loaiMay], ['Vị trí', row.viTri],
-          ['Ghi chú', row.ghiChu], ['Đã kiểm kê', row.daKiemKe ? '✅' : '❌'], ['In QR', row.chonIn ? '✅' : '❌'],
-          ['Ngày mua', row.ngayMua], ['Nơi mua', row.noiMua],
-          ['Bảo dưỡng Q1', row.bdQ1 ? '✅ ' + (row.bdNgayQ1 || '') : ''], ['Bảo dưỡng Q2', row.bdQ2 ? '✅ ' + (row.bdNgayQ2 || '') : ''],
-          ['Bảo dưỡng Q3', row.bdQ3 ? '✅ ' + (row.bdNgayQ3 || '') : ''], ['Bảo dưỡng Q4', row.bdQ4 ? '✅ ' + (row.bdNgayQ4 || '') : ''],
-          ['Sửa chữa', row.suaChua]
-        ];
-        w.document.write('<table>');
-        fields.forEach(f => { w.document.write(`<tr><th>${f[0]}</th><td>${f[1] || ''}</td></tr>`); });
-        w.document.write('</table>');
-        if(i < listSoThe.length - 1) w.document.write('<div class="page-break"></div>');
-      }
-      w.document.write('</body></html>');
-      w.document.close();
-      w.focus();
-      setTimeout(()=>w.print(),400);
-    }catch(err){ alert('Lỗi in lý lịch: '+err); }
-  })();
-};
-
-/* ================== highlightFromHash / scroll ================== */
-function highlightFromHash(){
-  const code = location.hash.slice(1);
-  if(!code) return;
-  scrollToSoThe(decodeURIComponent(code));
-}
+// Auto scroll to soThe
 function scrollToSoThe(soThe){
-  const rows = document.querySelectorAll('#dataTable tbody tr');
+  const rows=document.querySelectorAll("#dataTable tbody tr");
+  
   rows.forEach(tr=>{
-    const cell = tr.querySelector('.col-so-the');
+    const cell = tr.children[1];
     if(cell && cell.textContent.trim() === soThe){
-      tr.classList.add('highlight-row');
-      tr.scrollIntoView({ behavior:'smooth', block:'center' });
+      tr.classList.add("highlight-row");
+      tr.scrollIntoView({behavior:"smooth", block:"center"});
     }
   });
 }
-window.addEventListener('hashchange', ()=>{ highlightFromHash(); });
 
-/* ================== Check all handlers ================== */
-checkAllKK.addEventListener('change', ()=>{
-  const cbs = document.querySelectorAll('.daKiemKe');
-  cbs.forEach(cb => { cb.checked = checkAllKK.checked; cb.dispatchEvent(new Event('change')); });
-});
-checkAllQR.addEventListener('change', ()=>{
-  const cbs = document.querySelectorAll('.chonIn');
-  cbs.forEach(cb => { cb.checked = checkAllQR.checked; cb.dispatchEvent(new Event('change')); });
-});
-checkAllQ1.addEventListener('change', ()=>{ document.querySelectorAll('.bdQ1').forEach(cb => { cb.checked = checkAllQ1.checked; cb.dispatchEvent(new Event('change')); }); });
-checkAllQ2.addEventListener('change', ()=>{ document.querySelectorAll('.bdQ2').forEach(cb => { cb.checked = checkAllQ2.checked; cb.dispatchEvent(new Event('change')); }); });
-checkAllQ3.addEventListener('change', ()=>{ document.querySelectorAll('.bdQ3').forEach(cb => { cb.checked = checkAllQ3.checked; cb.dispatchEvent(new Event('change')); }); });
-checkAllQ4.addEventListener('change', ()=>{ document.querySelectorAll('.bdQ4').forEach(cb => { cb.checked = checkAllQ4.checked; cb.dispatchEvent(new Event('change')); }); });
-
-/* ================== Page controls (simple previous/next) ================== */
-function goToPage(page){
-  if(!worker) return;
-  if(page < 1) page = 1;
-  worker.postMessage({ cmd:'getPage', page });
-}
-
-/* Add simple keyboard shortcuts for pagination: PageUp, PageDown */
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'PageDown'){ goToPage(currentPage + 1); }
-  if(e.key === 'PageUp'){ goToPage(currentPage - 1); }
-});
-
-/* ================== Load current year (init) ================== */
-function loadCurrentYear(){
-  currentYear = yearSelect.value;
-  initWorkerAndLoad(currentYear);
-}
-
-/* populate year select */
-(function populateYear(){
-  const cur = new Date().getFullYear();
-  for(let y = cur-2; y <= cur+2; y++){
-    const o = document.createElement('option'); o.value = y; o.text = y;
-    if(y === cur) o.selected = true;
-    yearSelect.appendChild(o);
-  }
-  yearSelect.addEventListener('change', ()=> loadCurrentYear());
-})();
-
-/* load first time */
-loadCurrentYear();
-
-/* manual refresh and sync */
-document.getElementById('btnRefresh').onclick = ()=> loadCurrentYear();
-document.getElementById('btnSync').onclick = async ()=>{
-  // POST full dataset for year (Cloudflare should support /updateAll)
-  try{
-    setStatus('Đang đồng bộ toàn bộ lên Cloudflare...');
-    // fetch full client-side dataset (request full year from Cloudflare and then push back? Usually updateAll is used to send local changes)
-    // For safety, we'll request current year data from worker then send to /updateAll if endpoint exists.
-    const res = await fetch(WORKER_URL + '?year=' + encodeURIComponent(yearSelect.value));
-    const j = await res.json();
-    if(!j || !j.success){ setStatus('Lỗi tải trước khi sync', false); alert('Lỗi tải dữ liệu trước khi sync'); return; }
-    const payload = j.data;
-    const r2 = await fetch(WORKER_URL + '/updateAll', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ data: payload, year: yearSelect.value }) });
-    const j2 = await r2.json();
-    if(j2 && j2.success) { setStatus('✅ Đồng bộ thành công'); loadCurrentYear(); }
-    else { setStatus('❌ Lỗi đồng bộ', false); alert('Lỗi đồng bộ: '+(j2 && j2.error)); }
-  } catch(err){ setStatus('❌ Lỗi đồng bộ: '+err, false); alert('Lỗi đồng bộ: '+err); }
-};
-
-/* ================== QR modal (reusable) ================== */
-function makeQR(soThe){
-  if(!soThe) { alert('Dòng này không có Số thẻ!'); return; }
-  const url = location.origin + location.pathname + '?soThe=' + encodeURIComponent(soThe);
-  const qrModal = document.createElement('div');
-  qrModal.className = 'modal';
-  qrModal.style.display = 'flex';
-  const card = document.createElement('div'); card.className = 'card'; card.style.width = '320px';
-  card.innerHTML = `<h3>Mã QR</h3><div style="text-align:center"><img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}"></div><p style="text-align:center"><b>${soThe}</b></p><div style="text-align:center"><button id="closeQrBtn">Đóng</button></div>`;
-  qrModal.appendChild(card);
-  document.body.appendChild(qrModal);
-  document.getElementById('closeQrBtn').onclick = ()=> { qrModal.remove(); };
-}
-
-/* ================== Password modal (same behavior as part2) ================== */
-(function setupPassword(){
-  const PASSWORD = '1233';
-  const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
-  mainUI.forEach(el => { if(el) el.style.display = 'none'; });
-  const pwdModal = document.createElement('div');
-  pwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999';
-  pwdModal.innerHTML = \`
-    <div style="background:#fff;padding:20px;border-radius:8px;width:320px;text-align:center">
-      <h3>🔒 Nhập mật khẩu</h3>
-      <input id="pwdInput" type="password" style="width:80%;padding:6px;margin-top:10px" />
-      <div style="margin-top:12px">
-        <button id="pwdBtn" style="padding:6px 12px;background:#0b74d1;color:#fff;border:none;border-radius:4px;cursor:pointer">Đăng nhập</button>
-      </div>
-    </div>\`;
-  document.body.appendChild(pwdModal);
-  const pwdInput = document.getElementById('pwdInput'), pwdBtn = document.getElementById('pwdBtn');
-  function initUI(){ pwdModal.style.display='none'; mainUI.forEach(el=>{ if(el) el.style.display = 'flex'; }); }
-  const loginTime = Number(localStorage.getItem('loginTime') || 0);
-  if(loginTime && Date.now() - loginTime < 3600*1000){ initUI(); }
-  else {
-    pwdInput.focus();
-    pwdInput.addEventListener('keydown', e => { if(e.key === 'Enter') pwdBtn.click(); });
-    pwdBtn.onclick = ()=> {
-      if(pwdInput.value === PASSWORD){ localStorage.setItem('loginTime', String(Date.now())); initUI(); }
-      else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
-    };
-  }
-})();
-
-/* ================== helper: highlightFromHash run once ================== */
-setTimeout(()=> highlightFromHash(), 600);
+// Initial load
+loadData();
 
 </script>
 </body>
