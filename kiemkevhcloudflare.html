@@ -29,9 +29,36 @@ header {
 table { min-width: 1200px; border-collapse: collapse; background: #fff; width: 100%; }
 th, td { border: 1px solid #ddd; padding: 8px; text-align: center; white-space: nowrap; }
 th{background:#0b74d1;color:#fff}
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-.modal .card { background: #fff; padding: 16px; border-radius: 8px; width: 360px; max-width: 95%; max-height: 80vh; overflow-y: auto; box-sizing: border-box; }
-body.modal-open { position: fixed; width: 100%; overflow: hidden; height: 100%; top: 0; }
+.modal {
+  display: none; /* QUAN TRỌNG: luôn ẩn ban đầu */
+  position: fixed;
+  z-index: 9999;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-card {
+  width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
 .modal label{display:block;margin-top:8px;font-weight:600}
 .modal input,.modal textarea{width:100%;padding:6px;margin-top:6px;border:1px solid #ccc;border-radius:4px}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
@@ -107,28 +134,54 @@ td.col-vi-tri, td.col-so-may, td.col-noi-mua, td.col-ghi-chu { white-space: norm
 
 <!-- Edit Modal -->
 <div id="editModal" class="modal">
-  <div class="card">
-    <h3 style="margin:0 0 6px 0">✏️ Chỉnh sửa </h3>
-    <label>Số thẻ</label><input id="m_soThe" />
-    <label>Số máy</label><input id="m_soMay" />
-    <label>Loại máy</label><input id="m_loaiMay" />
-    <label>Vị trí</label><input id="m_viTri" />
-    <label>Ghi chú</label><textarea id="m_ghiChu" rows="3"></textarea>
-   <label class="checkbox-row"><input type="checkbox" id="m_daKiemKe" /> Đã kiểm kê</label>
-   <label class="checkbox-row"><input type="checkbox" id="m_chonIn" /> Chọn để in</label>
-    <label>Ngày mua</label><input id="m_ngayMua" type="text" placeholder="dd/MM/yyyy" />
-    <label>Nơi mua</label><input id="m_noiMua" />
-    <label style="margin-top:10px;font-weight:700">Bảo dưỡng (đánh dấu quý đã bảo dưỡng)</label>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-      <div><label><input type="checkbox" id="m_bdQ1"> Q1</label><input id="m_bdQ1_ngay" placeholder="dd/MM/yyyy" /></div>
-      <div><label><input type="checkbox" id="m_bdQ2"> Q2</label><input id="m_bdQ2_ngay" placeholder="dd/MM/yyyy" /></div>
-      <div><label><input type="checkbox" id="m_bdQ3"> Q3</label><input id="m_bdQ3_ngay" placeholder="dd/MM/yyyy" /></div>
-      <div><label><input type="checkbox" id="m_bdQ4"> Q4</label><input id="m_bdQ4_ngay" placeholder="dd/MM/yyyy" /></div>
-    </div>
-    <label style="margin-top:10px">Sửa chữa</label><textarea id="m_suaChua" rows="3" placeholder="Ghi nội dung sửa chữa"></textarea>
-    <div class="actions">
-      <button id="cancelBtn" class="ghost">Hủy</button>
-      <button id="saveBtn">Cập nhật</button>
+  <div class="modal-card">
+    <h2>Sửa thông tin máy</h2>
+
+    <label>Số thẻ</label>
+    <input id="m_soThe" type="text">
+
+    <label>Số máy</label>
+    <input id="m_soMay" type="text">
+
+    <label>Loại máy</label>
+    <input id="m_loaiMay" type="text">
+
+    <label>Vị trí</label>
+    <input id="m_viTri" type="text">
+
+    <label>Ghi chú</label>
+    <textarea id="m_ghiChu"></textarea>
+
+    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label>
+    <label><input type="checkbox" id="m_chonIn"> Chọn in</label>
+
+    <label>Ngày mua</label>
+    <input id="m_ngayMua" type="date">
+
+    <label>Nơi mua</label>
+    <input id="m_noiMua" type="text">
+
+    <hr>
+    <h3>Bảo dưỡng</h3>
+
+    <label><input id="m_bdQ1" type="checkbox"> Q1</label>
+    <input id="m_bdQ1_ngay" type="date">
+
+    <label><input id="m_bdQ2" type="checkbox"> Q2</label>
+    <input id="m_bdQ2_ngay" type="date">
+
+    <label><input id="m_bdQ3" type="checkbox"> Q3</label>
+    <input id="m_bdQ3_ngay" type="date">
+
+    <label><input id="m_bdQ4" type="checkbox"> Q4</label>
+    <input id="m_bdQ4_ngay" type="date">
+
+    <label>Sửa chữa</label>
+    <textarea id="m_suaChua"></textarea>
+
+    <div class="btn-row">
+      <button id="btnSaveEdit">Lưu</button>
+      <button id="btnCloseEdit">Đóng</button>
     </div>
   </div>
 </div>
@@ -496,31 +549,59 @@ function findRowByGlobalIdx(globalIdx){
   return null;
 }
 
-/* ================== Modal edit (open/save) ================== */
-let lastScrollY=0;
-function openEditModalByGlobalIdx(globalIdx){
+/* ===================== Modal Edit ====================== */
+const modal = document.getElementById("editModal");
+
+let lastScrollY = 0;
+let editingIndex = null;
+
+function openEditModalByGlobalIdx(globalIdx) {
+  const r = findRowByGlobalIdx(globalIdx);
+  if (!r) {
+    alert("Không tìm thấy dữ liệu để sửa, vui lòng reload.");
+    return;
+  }
+
   lastScrollY = window.scrollY;
   editingIndex = globalIdx;
-  const r = findRowByGlobalIdx(globalIdx);
-  if(!r){ alert('Không tìm thấy dữ liệu để sửa (vui lòng reload trang)'); return; }
-  m_soThe.value = r.soThe||'';
-  m_soMay.value = r.soMay||'';
-  m_loaiMay.value = r.loaiMay||'';
-  m_viTri.value = r.viTri||'';
-  m_ghiChu.value = r.ghiChu||'';
+
+  m_soThe.value = r.soThe || "";
+  m_soMay.value = r.soMay || "";
+  m_loaiMay.value = r.loaiMay || "";
+  m_viTri.value = r.viTri || "";
+  m_ghiChu.value = r.ghiChu || "";
   m_daKiemKe.checked = !!r.daKiemKe;
   m_chonIn.checked = !!r.chonIn;
-  m_ngayMua.value = r.ngayMua || '';
-  m_noiMua.value = r.noiMua || '';
-  m_bdQ1.checked = !!r.bdQ1; m_bdQ1_ngay.value = r.bdNgayQ1||'';
-  m_bdQ2.checked = !!r.bdQ2; m_bdQ2_ngay.value = r.bdNgayQ2||'';
-  m_bdQ3.checked = !!r.bdQ3; m_bdQ3_ngay.value = r.bdNgayQ3||'';
-  m_bdQ4.checked = !!r.bdQ4; m_bdQ4_ngay.value = r.bdNgayQ4||'';
-  m_suaChua.value = r.suaChua||'';
 
-  modal.style.display = 'flex';
-  document.body.classList.add('modal-open');
+  m_ngayMua.value = r.ngayMua || "";
+  m_noiMua.value = r.noiMua || "";
+
+  m_bdQ1.checked = !!r.bdQ1;
+  m_bdQ1_ngay.value = r.bdNgayQ1 || "";
+  m_bdQ2.checked = !!r.bdQ2;
+  m_bdQ2_ngay.value = r.bdNgayQ2 || "";
+  m_bdQ3.checked = !!r.bdQ3;
+  m_bdQ3_ngay.value = r.bdNgayQ3 || "";
+  m_bdQ4.checked = !!r.bdQ4;
+  m_bdQ4_ngay.value = r.bdNgayQ4 || "";
+
+  m_suaChua.value = r.suaChua || "";
+
+  modal.style.display = "flex";
+  document.body.classList.add("modal-open");
 }
+
+function closeEditModal() {
+  modal.style.display = "none";
+  document.body.classList.remove("modal-open");
+  window.scrollTo(0, lastScrollY);
+}
+
+document.getElementById("btnCloseEdit").addEventListener("click", closeEditModal);
+modal.addEventListener("click", e => {
+  if (e.target === modal) closeEditModal();
+});
+
 
 /* Add new */
 document.getElementById('btnAdd').addEventListener('click', ()=> {
