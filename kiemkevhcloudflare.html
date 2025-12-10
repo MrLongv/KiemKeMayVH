@@ -282,31 +282,67 @@ function makeQR(t,e,r=256){
 }
 
 /* ================================
-        PRINT QR SELECTED
+        PRINT QR SELECTED (FIXED)
 ================================ */
-function printSelectedQR(){
-  let selected = [...document.querySelectorAll(".qr-check:checked")].map(e=>e.dataset.id);
-  if(selected.length===0){ alert("Chưa chọn dòng nào!"); return; }
+function printSelectedQR() {
+  // Lấy ID các dòng đã tick
+  let selected = [...document.querySelectorAll(".qr-check:checked")]
+                  .map(e => e.dataset.id);
 
+  if (selected.length === 0) {
+    alert("Chưa chọn dòng nào!");
+    return;
+  }
+
+  // Tạo trang in
   let w = window.open("", "_blank");
-  w.document.write(`<html><body><h2>QR Codes</h2>`);
 
-  selected.forEach(id=>{
+  w.document.write(`
+    <html>
+    <head>
+      <title>In QR</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: Arial; text-align: center; }
+        .qr-block {
+          page-break-inside: avoid;
+          margin-bottom: 20mm;
+        }
+        .qr-label {
+          margin-top: 8px;
+          font-size: 16px;
+          font-weight: bold;
+        }
+        img { width: 180px; height: 180px; }
+      </style>
+    </head>
+    <body>
+      <h2>Danh sách QR</h2>
+  `);
+
+  // Tạo container cho QR (canvas sẽ được fill sau khi trang load)
+  selected.forEach(id => {
     w.document.write(`
-      <div style="page-break-inside:avoid; margin:20px">
-        <div id="qr_${id}" style="width:180px;height:180px;"></div>
-        <div><b>${id}</b></div>
+      <div class="qr-block">
+        <div id="qr_${id}" style="width:180px;height:180px; margin:auto;"></div>
+        <div class="qr-label">${id}</div>
       </div>
     `);
   });
 
-  w.document.write("</body></html>");
+  w.document.write(`</body></html>`);
   w.document.close();
 
-  selected.forEach(id=>{
-    let el = w.document.getElementById("qr_"+id);
-    makeQR(el, "#"+id, 180);
-  });
+  // Chờ trang load rồi mới gọi makeQR (rất quan trọng)
+  w.onload = () => {
+    selected.forEach(id => {
+      let el = w.document.getElementById("qr_" + id);
+      makeQR(el, "#" + id, 180);
+    });
+
+    // Mở hộp thoại in sau 300ms cho an toàn
+    setTimeout(() => w.print(), 300);
+  };
 }
 
 /* ================================
