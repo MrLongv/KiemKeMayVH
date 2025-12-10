@@ -4,114 +4,143 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kiểm kê VH</title>
-
 <style>
-body { font-family: Arial; margin:0; padding:10px; background:#f4f4f4; }
-table { border-collapse:collapse; width:100%; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:6px; text-align:center; }
-th { background:#eee; }
-button { padding:4px 8px; margin:2px; cursor:pointer; }
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:10px;
+  background:#f4f4f4;
+}
+table{
+  border-collapse:collapse;
+  width:100%;
+  margin-top:10px;
+}
+th, td{
+  border:1px solid #ccc;
+  padding:6px;
+  text-align:center;
+}
+th{ background:#eee; }
+button{ padding:4px 8px; margin:2px; cursor:pointer; }
+input[type=text]{width:100%;}
+input[type=date]{width:120px;}
 
 .modal{
-  display:none; position:fixed; top:0; left:0;
-  width:100%; height:100%; background:rgba(0,0,0,0.5);
-  justify-content:center; align-items:center; z-index:1000;
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
 }
 .modal-content{
-  background:#fff; padding:15px; width:420px; max-height:90%; overflow:auto;
-  border-radius:6px;
+  background:#fff;
+  padding:10px;
+  width:400px;
+  max-height:90%;
+  overflow:auto;
+  position:relative;
+  border-radius:5px;
 }
 
+/* Highlight khi nhảy tới dòng bằng QR */
 .highlight-row{
   background:yellow !important;
-  transition:background 1.5s;
+  transition: background 1s;
 }
 
-#qrModal .modal-content { width:360px; text-align:center; }
+/* QR modal lớn hơn */
+#qrModal .modal-content{
+  width:320px;
+  text-align:center;
+}
 
-/* QR in nhiều */
-#printArea img { margin:10px; }
+/* Thanh lọc / tìm kiếm */
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:10px;
+  margin-bottom:10px;
+}
+.toolbar select, .toolbar input[type=text], .toolbar button{
+  padding:5px;
+}
 </style>
-
-<!-- QRCode.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 </head>
 <body>
 
-<h2>Kiểm kê VH  
-  <button id="btnAdd">Thêm</button>
-  <button id="btnPrintQRSelected">In QR chọn</button>
-</h2>
+<h2>Kiểm kê VH <button id="btnAdd">Thêm</button></h2>
 
-<label>Năm:
-  <select id="yearSelect"></select>
-</label>
+<div class="toolbar">
+  <label>Lọc:
+    <select id="filterSelect">
+      <option value="all">Tất cả</option>
+      <option value="notKK">Chưa kiểm kê</option>
+      <option value="KK">Đã kiểm kê</option>
+      <option value="notQR">Chưa in QR</option>
+      <option value="QR">Đã in QR</option>
+    </select>
+  </label>
 
-<label style="margin-left:20px;">Lọc:
-<select id="filterBox">
-  <option value="all">Tất cả</option>
-  <option value="checked">Đã kiểm kê</option>
-  <option value="unchecked">Chưa kiểm kê</option>
-  <option value="qr">Đã in QR</option>
-  <option value="noqr">Chưa in QR</option>
-</select>
-</label>
+  <label>Tìm kiếm: <input type="text" id="searchInput" placeholder="Số thẻ, số máy, loại máy..."></label>
 
-<input type="text" id="searchBox" placeholder="Tìm số thẻ / số máy..." style="margin-left:20px;">
+  <label>Năm:
+    <select id="yearSelect"></select>
+  </label>
+
+  <button id="btnPrintQR">In QR</button>
+  <button id="btnPrintResume">In Lý lịch</button>
+</div>
 
 <table id="dataTable">
 <thead>
 <tr>
-  <th><input type="checkbox" id="checkAll"></th>
-  <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th>
-  <th>Đã KK</th><th>In QR</th>
-  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
-  <th>HĐ</th><th>QR</th>
+  <th><input type="checkbox" id="selectAll"></th>
+  <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
+  <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
+  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
 
-<!-- Modal Thêm/Sửa -->
+<!-- Modal Sửa -->
 <div class="modal" id="modal">
-  <div class="modal-content">
-    <h3 id="modalTitle">Sửa</h3>
+<div class="modal-content">
+<h3 id="modalTitle">Sửa</h3>
 
-    <label>Số thẻ <input id="m_soThe"></label>
-    <label>Số máy <input id="m_soMay"></label>
-    <label>Loại máy <input id="m_loaiMay"></label>
-    <label>Vị trí <input id="m_viTri"></label>
+<label>Số thẻ <input type="text" id="m_soThe"></label>
+<label>Số máy <input type="text" id="m_soMay"></label>
+<label>Loại máy <input type="text" id="m_loaiMay"></label>
+<label>Vị trí <input type="text" id="m_viTri"></label>
+<label>Ghi chú <input type="text" id="m_ghiChu"></label>
+<label>Ngày mua <input type="date" id="m_ngayMua"></label>
+<label>Nơi mua <input type="text" id="m_noiMua"></label>
+<label>Sửa chữa <input type="text" id="m_suaChua"></label>
 
-    <label><input type="checkbox" id="m_daKiemKe"> Đã kiểm kê</label>
-    <label><input type="checkbox" id="m_chonIn"> In QR</label>
+<label><input type="checkbox" id="m_daKiemKe"> Đã KK</label>
+<label><input type="checkbox" id="m_chonIn"> In QR</label>
 
-    <label><input type="checkbox" id="m_bdQ1"> Q1</label>
-    <label><input type="checkbox" id="m_bdQ2"> Q2</label>
-    <label><input type="checkbox" id="m_bdQ3"> Q3</label>
-    <label><input type="checkbox" id="m_bdQ4"> Q4</label>
+<label><input type="checkbox" id="m_bdQ1"> Q1 ngày <input type="date" id="m_bdNgayQ1"></label>
+<label><input type="checkbox" id="m_bdQ2"> Q2 ngày <input type="date" id="m_bdNgayQ2"></label>
+<label><input type="checkbox" id="m_bdQ3"> Q3 ngày <input type="date" id="m_bdNgayQ3"></label>
+<label><input type="checkbox" id="m_bdQ4"> Q4 ngày <input type="date" id="m_bdNgayQ4"></label>
 
-    <button id="modalSave">Lưu</button>
-    <button onclick="modal.style.display='none'">Đóng</button>
-  </div>
+<button id="modalSave">Lưu</button>
+<button id="modalClose">Đóng</button>
+</div>
 </div>
 
-<!-- Modal hiển thị QR -->
+<!-- Modal QR -->
 <div class="modal" id="qrModal">
   <div class="modal-content">
     <h3>Mã QR</h3>
     <div id="qrBox"></div>
-    <button onclick="qrModal.style.display='none'">Đóng</button>
-  </div>
-</div>
-
-<!-- Modal in nhiều QR -->
-<div class="modal" id="printQRModal">
-  <div class="modal-content" style="width:600px;">
-    <h3>In QR nhiều</h3>
-    <div id="printArea"></div>
-    <button onclick="window.print()">In</button>
-    <button onclick="printQRModal.style.display='none'">Đóng</button>
+    <button onclick="document.getElementById('qrModal').style.display='none'">Đóng</button>
   </div>
 </div>
 
@@ -121,207 +150,239 @@ const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
 let allData = [];
 let editingId = null;
 
-const modal = document.getElementById("modal");
-const qrModal = document.getElementById("qrModal");
-const printQRModal = document.getElementById("printQRModal");
+// Modal fields
+const m_soThe=document.getElementById('m_soThe');
+const m_soMay=document.getElementById('m_soMay');
+const m_loaiMay=document.getElementById('m_loaiMay');
+const m_viTri=document.getElementById('m_viTri');
+const m_ghiChu=document.getElementById('m_ghiChu');
+const m_daKiemKe=document.getElementById('m_daKiemKe');
+const m_chonIn=document.getElementById('m_chonIn');
+const m_bdQ1=document.getElementById('m_bdQ1'), m_bdNgayQ1=document.getElementById('m_bdNgayQ1');
+const m_bdQ2=document.getElementById('m_bdQ2'), m_bdNgayQ2=document.getElementById('m_bdNgayQ2');
+const m_bdQ3=document.getElementById('m_bdQ3'), m_bdNgayQ3=document.getElementById('m_bdNgayQ3');
+const m_bdQ4=document.getElementById('m_bdQ4'), m_bdNgayQ4=document.getElementById('m_bdNgayQ4');
+const m_ngayMua=document.getElementById('m_ngayMua');
+const m_noiMua=document.getElementById('m_noiMua');
+const m_suaChua=document.getElementById('m_suaChua');
 
-// Load năm
-const yearSelect=document.getElementById("yearSelect");
-const yNow=new Date().getFullYear();
-for(let y=yNow-1;y<=yNow+2;y++){
-  let op=document.createElement("option");
-  op.value=y; op.text=y;
-  if(y===yNow) op.selected=true;
-  yearSelect.appendChild(op);
+const modal=document.getElementById('modal');
+const modalTitle=document.getElementById('modalTitle');
+const yearSelect=document.getElementById('yearSelect');
+const filterSelect=document.getElementById('filterSelect');
+const searchInput=document.getElementById('searchInput');
+const selectAll=document.getElementById('selectAll');
+
+// Open modal
+function openModal(id=null){
+  editingId=id;
+  modal.style.display='flex';
+  modalTitle.textContent = id?"Sửa":"Thêm";
+
+  if(id){
+    const row = allData.find(r=>r.id===id);
+    if(!row) return;
+    m_soThe.value=row.soThe||"";
+    m_soMay.value=row.soMay||"";
+    m_loaiMay.value=row.loaiMay||"";
+    m_viTri.value=row.viTri||"";
+    m_ghiChu.value=row.ghiChu||"";
+    m_ngayMua.value=row.ngayMua||"";
+    m_noiMua.value=row.noiMua||"";
+    m_suaChua.value=row.suaChua||"";
+    m_daKiemKe.checked=!!row.daKiemKe;
+    m_chonIn.checked=!!row.chonIn;
+    m_bdQ1.checked=!!row.bdQ1; m_bdNgayQ1.value=row.bdNgayQ1||"";
+    m_bdQ2.checked=!!row.bdQ2; m_bdNgayQ2.value=row.bdNgayQ2||"";
+    m_bdQ3.checked=!!row.bdQ3; m_bdNgayQ3.value=row.bdNgayQ3||"";
+    m_bdQ4.checked=!!row.bdQ4; m_bdNgayQ4.value=row.bdNgayQ4||"";
+  } else {
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value="";
+    m_ngayMua.value=m_noiMua.value=m_suaChua.value="";
+    m_daKiemKe.checked=m_chonIn.checked=false;
+    m_bdQ1.checked=m_bdQ2.checked=m_bdQ3.checked=m_bdQ4.checked=false;
+    m_bdNgayQ1.value=m_bdNgayQ2.value=m_bdNgayQ3.value=m_bdNgayQ4.value="";
+  }
 }
+document.getElementById('modalClose').onclick=()=>modal.style.display='none';
 
-yearSelect.onchange = loadData;
-document.getElementById("filterBox").onchange = renderTable;
-document.getElementById("searchBox").oninput = renderTable;
-
-// =========== LOAD DATA ============
+// Load data
 async function loadData(){
-  const res = await fetch(`${WORKER_URL}/?year=${yearSelect.value}`);
-  const js = await res.json();
-  allData = js.data || [];
-  renderTable();
+  try{
+    const year = yearSelect.value;
+    const res = await fetch(`${WORKER_URL}/?year=${year}`);
+    const data = await res.json();
+    if(data.success){
+      allData=data.data;
+      renderTable();
+    } else {
+      alert("Lỗi khi load dữ liệu: "+data.error);
+    }
+  }catch(err){
+    alert("Lỗi khi load dữ liệu: "+err);
+  }
 }
 
-// =========== HIỂN THỊ ============
 function renderTable(){
-  const tbody = document.querySelector("#dataTable tbody");
-  tbody.innerHTML = "";
+  const tbody=document.querySelector("#dataTable tbody");
+  tbody.innerHTML="";
+  const filter = filterSelect.value;
+  const search = searchInput.value.trim().toLowerCase();
 
-  const filter = document.getElementById("filterBox").value;
-  const search = document.getElementById("searchBox").value.toLowerCase();
+  allData.forEach(row=>{
+    // lọc
+    if(filter==="KK" && !row.daKiemKe) return;
+    if(filter==="notKK" && row.daKiemKe) return;
+    if(filter==="QR" && !row.chonIn) return;
+    if(filter==="notQR" && row.chonIn) return;
+    // tìm kiếm
+    if(search){
+      const text = `${row.soThe} ${row.soMay} ${row.loaiMay} ${row.viTri} ${row.ghiChu}`.toLowerCase();
+      if(!text.includes(search)) return;
+    }
 
-  let rows = allData.filter(r=>{
-    if(filter==="checked" && !r.daKiemKe) return false;
-    if(filter==="unchecked" && r.daKiemKe) return false;
-    if(filter==="qr" && !r.chonIn) return false;
-    if(filter==="noqr" && r.chonIn) return false;
-
-    if(search && !(
-      (r.soThe||"").toLowerCase().includes(search) ||
-      (r.soMay||"").toLowerCase().includes(search)
-    )) return false;
-
-    return true;
-  });
-
-  rows.forEach(r=>{
-    const tr=document.createElement("tr");
+    const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><input type="checkbox" class="rowCheck" data-id="${r.id}"></td>
-      <td>${r.id}</td>
-      <td>${r.soThe||""}</td>
-      <td>${r.soMay||""}</td>
-      <td>${r.loaiMay||""}</td>
-      <td>${r.viTri||""}</td>
-
-      <td><input type="checkbox" onchange="toggleField(${r.id},'daKiemKe',this.checked)" ${r.daKiemKe?'checked':''}></td>
-      <td><input type="checkbox" onchange="toggleField(${r.id},'chonIn',this.checked)" ${r.chonIn?'checked':''}></td>
-
-      <td><input type="checkbox" onchange="toggleField(${r.id},'bdQ1',this.checked)" ${r.bdQ1?'checked':''}></td>
-      <td><input type="checkbox" onchange="toggleField(${r.id},'bdQ2',this.checked)" ${r.bdQ2?'checked':''}></td>
-      <td><input type="checkbox" onchange="toggleField(${r.id},'bdQ3',this.checked)" ${r.bdQ3?'checked':''}></td>
-      <td><input type="checkbox" onchange="toggleField(${r.id},'bdQ4',this.checked)" ${r.bdQ4?'checked':''}></td>
-
-      <td><button onclick="openModal(${r.id})">Sửa</button></td>
-      <td><button onclick="showQR('${r.soThe||""}')">QR</button></td>
+      <td><input type="checkbox" class="rowSelect" data-id="${row.id}"></td>
+      <td>${row.id}</td>
+      <td>${row.soThe||""}</td>
+      <td>${row.soMay||""}</td>
+      <td>${row.loaiMay||""}</td>
+      <td>${row.viTri||""}</td>
+      <td>${row.ghiChu||""}</td>
+      <td><input type="checkbox" class="chkDaKiemKe" data-id="${row.id}" ${row.daKiemKe?"checked":""}></td>
+      <td><input type="checkbox" class="chkInQR" data-id="${row.id}" ${row.chonIn?"checked":""}></td>
+      <td>${row.ngayMua||""}</td>
+      <td>${row.noiMua||""}</td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q1" ${row.bdQ1?"checked":""}></td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q2" ${row.bdQ2?"checked":""}></td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q3" ${row.bdQ3?"checked":""}></td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q4" ${row.bdQ4?"checked":""}></td>
+      <td>${row.suaChua||""}</td>
+      <td><button onclick="openModal(${row.id})">Sửa</button></td>
     `;
     tbody.appendChild(tr);
   });
+  attachCheckboxEvents();
 }
 
-// ========== CẬP NHẬT TRỰC TIẾP ============
-async function toggleField(id, field, val){
-  const row = allData.find(x=>x.id===id);
-  if(!row) return;
-
-  row[field] = val ? 1 : 0;
-
-  await fetch(`${WORKER_URL}/update`, {
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(row)
+// Checkbox trực tiếp lưu
+function attachCheckboxEvents(){
+  document.querySelectorAll('.chkDaKiemKe').forEach(cb=>{
+    cb.onchange = ()=>updateRow(cb.dataset.id, {daKiemKe: cb.checked});
+  });
+  document.querySelectorAll('.chkInQR').forEach(cb=>{
+    cb.onchange = ()=>updateRow(cb.dataset.id, {chonIn: cb.checked});
+  });
+  document.querySelectorAll('.chkQ').forEach(cb=>{
+    cb.onchange = ()=>{
+      const q = cb.dataset.q;
+      const obj = {};
+      obj[q.toLowerCase()] = cb.checked;
+      updateRow(cb.dataset.id, obj);
+    };
   });
 }
 
-// ========== MỞ QR ============
-function showQR(soThe){
-  qrModal.style.display='flex';
-  const box = document.getElementById("qrBox");
-  box.innerHTML = "";
-
-  const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(soThe);
-
-  new QRCode(box, {
-    text: url,
-    width: 250,
-    height: 250
-  });
-
-  box.innerHTML += `<p><b>${soThe}</b></p>`;
-}
-
-// ========== IN QR CHỌN ============
-document.getElementById("btnPrintQRSelected").onclick = ()=>{
-  const ids = [...document.querySelectorAll(".rowCheck:checked")].map(x=>x.dataset.id);
-  if(ids.length===0){ alert("Chưa chọn dòng nào!"); return; }
-
-  const area = document.getElementById("printArea");
-  area.innerHTML = "";
-  printQRModal.style.display='flex';
-
-  ids.forEach(id=>{
+// Update row backend
+async function updateRow(id, fields){
+  try{
     const row = allData.find(r=>r.id==id);
     if(!row) return;
-
-    const div = document.createElement("div");
-    div.style.display="inline-block";
-    div.style.textAlign="center";
-
-    const qrDiv = document.createElement("div");
-    div.appendChild(qrDiv);
-
-    const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
-
-    new QRCode(qrDiv,{
-      text:url,
-      width:200,
-      height:200
+    Object.assign(row, fields);
+    const payload = { id: parseInt(id), ...row, nam: yearSelect.value };
+    await fetch(`${WORKER_URL}/update`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
     });
-    div.innerHTML += `<p>${row.soThe}</p>`;
-    area.appendChild(div);
-  });
-};
-
-// ========== MODAL SỬA =============
-document.getElementById("btnAdd").onclick=()=>openModal(null);
-
-function openModal(id){
-  modal.style.display='flex';
-  editingId=id;
-
-  const r = allData.find(x=>x.id===id) || {};
-
-  modalTitle.textContent = id?"Sửa":"Thêm";
-
-  m_soThe.value = r.soThe||"";
-  m_soMay.value = r.soMay||"";
-  m_loaiMay.value = r.loaiMay||"";
-  m_viTri.value = r.viTri||"";
-  m_daKiemKe.checked = !!r.daKiemKe;
-  m_chonIn.checked = !!r.chonIn;
-  m_bdQ1.checked = !!r.bdQ1;
-  m_bdQ2.checked = !!r.bdQ2;
-  m_bdQ3.checked = !!r.bdQ3;
-  m_bdQ4.checked = !!r.bdQ4;
+  }catch(err){console.log(err);}
 }
 
-document.getElementById("modalSave").onclick=async ()=>{
-  const payload = {
+// Save modal
+document.getElementById('modalSave').onclick=async ()=>{
+  const payload={
     id:editingId,
-    nam:yearSelect.value,
     soThe:m_soThe.value,
     soMay:m_soMay.value,
     loaiMay:m_loaiMay.value,
     viTri:m_viTri.value,
+    ghiChu:m_ghiChu.value,
     daKiemKe:m_daKiemKe.checked,
     chonIn:m_chonIn.checked,
-    bdQ1:m_bdQ1.checked,
-    bdQ2:m_bdQ2.checked,
-    bdQ3:m_bdQ3.checked,
-    bdQ4:m_bdQ4.checked
+    bdQ1:m_bdQ1.checked, bdNgayQ1:m_bdNgayQ1.value,
+    bdQ2:m_bdQ2.checked, bdNgayQ2:m_bdNgayQ2.value,
+    bdQ3:m_bdQ3.checked, bdNgayQ3:m_bdNgayQ3.value,
+    bdQ4:m_bdQ4.checked, bdNgayQ4:m_bdNgayQ4.value,
+    ngayMua:m_ngayMua.value,
+    noiMua:m_noiMua.value,
+    suaChua:m_suaChua.value,
+    nam:yearSelect.value
   };
-
-  const url = editingId ? "/update" : "/add";
-
-  await fetch(WORKER_URL + url,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  });
-
-  modal.style.display='none';
-  loadData();
+  try{
+    const url=editingId?`${WORKER_URL}/update`:`${WORKER_URL}/add`;
+    const res=await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(data.success){
+      modal.style.display='none';
+      loadData();
+    } else alert("Lỗi khi lưu: "+data.error);
+  }catch(err){alert("Lỗi khi lưu: "+err);}
 };
 
-// ========== SCROLL TO QR ==========
-function scrollToSoThe(soThe){
-  const rows=document.querySelectorAll("#dataTable tbody tr");
-  rows.forEach(tr=>{
-    if(tr.children[2].textContent.trim() === soThe){
-      tr.classList.add("highlight-row");
-      tr.scrollIntoView({behavior:"smooth", block:"center"});
+// Add
+document.getElementById('btnAdd').onclick=()=>openModal(null);
+
+// Năm
+const currentYear=new Date().getFullYear();
+for(let y=currentYear-1;y<=currentYear+2;y++){
+  const opt=document.createElement('option');
+  opt.value=y; opt.text=y;
+  if(y===currentYear) opt.selected=true;
+  yearSelect.appendChild(opt);
+}
+yearSelect.onchange=loadData;
+
+// Filter & search
+filterSelect.onchange = loadData;
+searchInput.oninput = loadData;
+
+// Select all
+selectAll.onchange = ()=>{
+  document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked = selectAll.checked);
+};
+
+// In QR / Lý lịch nhiều dòng
+document.getElementById('btnPrintQR').onclick = ()=>{
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
+  ids.forEach(id=>{
+    const row = allData.find(r=>r.id==id);
+    if(row && row.soThe){
+      const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
+      const w = window.open();
+      w.document.write(`<img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}"><p>${row.soThe}</p>`);
+      w.document.close();
     }
   });
-}
+};
+document.getElementById('btnPrintResume').onclick = ()=>{
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
+  ids.forEach(id=>{
+    const row = allData.find(r=>r.id==id);
+    if(row){
+      const w = window.open();
+      w.document.write(`<h3>Lý lịch: ${row.soThe||''}</h3><p>Số máy: ${row.soMay||''}</p><p>Loại: ${row.loaiMay||''}</p><p>Vị trí: ${row.viTri||''}</p><p>Ghi chú: ${row.ghiChu||''}</p>`);
+      w.document.close();
+    }
+  });
+};
 
-// Load first
+// Initial load
 loadData();
 </script>
-
 </body>
 </html>
