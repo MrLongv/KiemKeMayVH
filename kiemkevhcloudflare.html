@@ -342,10 +342,9 @@ selectAll.onchange = ()=>{
 };
 
 /*  
-============================================
-   IN QR MỚI — RÕ, NÉT, CHUẨN, DỄ QUÉT
-============================================
-*/
+/* ================================
+        PRINT QR (NEW, HD, FIXED)
+================================ */
 document.getElementById('btnPrintQR').onclick = () => {
   const ids = Array.from(document.querySelectorAll('.rowSelect:checked'))
                    .map(cb => cb.dataset.id);
@@ -356,20 +355,29 @@ document.getElementById('btnPrintQR').onclick = () => {
   }
 
   const w = window.open("", "_blank");
+
   w.document.write(`
     <html>
     <head>
-      <title>QR Codes</title>
+      <title>In QR</title>
       <style>
         body { font-family: Arial; padding: 20px; }
-        .qrItem { page-break-after: always; text-align:center; }
-        .qrLabel { font-size: 22px; margin-top: 10px; }
+        .qrItem { 
+          page-break-after: always; 
+          text-align: center; 
+          margin-bottom: 40px;
+        }
+        .qrLabel {
+          font-size: 22px; 
+          margin-top: 10px;
+        }
       </style>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     </head>
     <body>
   `);
 
+  // Tạo container cho từng QR
   ids.forEach(id => {
     const row = allData.find(r => r.id == id);
     if (!row) return;
@@ -382,46 +390,60 @@ document.getElementById('btnPrintQR').onclick = () => {
         <div class="qrLabel">${row.soThe || ""}</div>
       </div>
     `);
-
-    w.onload = () => {
-      ids.forEach(id => {
-        const r = allData.find(x => x.id == id);
-        const cid = "qr_" + r.id;
-        const qrData = location.origin + location.pathname + "?soThe=" + encodeURIComponent(r.soThe);
-
-        new w.QRCode(w.document.getElementById(cid), {
-          text: qrData,
-          width: 350,
-          height: 350,
-          correctLevel: w.QRCode.CorrectLevel.H
-        });
-      });
-    };
   });
 
   w.document.write("</body></html>");
   w.document.close();
+
+  // Tạo QR sau khi DOM load
+  w.onload = () => {
+    ids.forEach(id => {
+      const row = allData.find(r => r.id == id);
+      if (!row) return;
+
+      const cid = "qr_" + row.id;
+      const qrData = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
+
+      new w.QRCode(w.document.getElementById(cid), {
+        text: qrData,
+        width: 350,
+        height: 350,
+        correctLevel: w.QRCode.CorrectLevel.H  // QUÉT CỰC NHẠY
+      });
+    });
+  };
 };
 
-// Print resume
-document.getElementById('btnPrintResume').onclick = ()=>{
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
-  ids.forEach(id=>{
-    const row = allData.find(r=>r.id==id);
-    if(row){
-      const w = window.open();
-      w.document.write(`<h3>Lý lịch: ${row.soThe||''}</h3>
-      <p>Số máy: ${row.soMay||''}</p>
-      <p>Loại: ${row.loaiMay||''}</p>
-      <p>Vị trí: ${row.viTri||''}</p>
-      <p>Ghi chú: ${row.ghiChu||''}</p>`);
-      w.document.close();
-    }
-  });
+
+/* ================================
+        PRINT RESUME (Y NGUYÊN)
+================================ */
+document.getElementById('btnPrintResume').onclick = () => { 
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked'))
+                   .map(cb => cb.dataset.id);
+
+  ids.forEach(id => { 
+    const row = allData.find(r => r.id == id); 
+    if (row) { 
+      const w = window.open(); 
+      w.document.write(`
+        <h2>Lý lịch: ${row.soThe || ''}</h2>
+        <p><b>Số máy:</b> ${row.soMay || ''}</p>
+        <p><b>Loại:</b> ${row.loaiMay || ''}</p>
+        <p><b>Vị trí:</b> ${row.viTri || ''}</p>
+        <p><b>Ghi chú:</b> ${row.ghiChu || ''}</p>
+      `); 
+      w.document.close(); 
+    } 
+  }); 
 };
 
-// First load
+
+/* ================================
+        LOAD DATA
+================================ */
 loadData();
+
 </script>
 
 </body>
