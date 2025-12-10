@@ -355,20 +355,108 @@ searchInput.oninput = loadData;
 selectAll.onchange = ()=>{
   document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked = selectAll.checked);
 };
+/* ================================
+        QR GENERATOR (Standalone)
+================================ */
+class QR8bitByte{constructor(t){this.mode=4,this.data=t}getLength(){return this.data.length}write(t){for(let e=0;e<this.data.length;e++)t.put(this.data.charCodeAt(e),8)}}
+class QRCodeModel{
+  constructor(t,e){this.typeNumber=t,this.errorCorrectLevel=e,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}
+  addData(t){this.dataList.push(new QR8bitByte(t))}
+  isDark(t,e){return this.modules[t][e]}
+  getModuleCount(){return this.moduleCount}
+  make(){
+    this.moduleCount=21,this.modules=Array(this.moduleCount).fill().map(()=>Array(this.moduleCount).fill(!1));
+    const t=(t,e)=>{for(let r=0;r<7;r++)for(let a=0;a<7;a++)this.modules[t+r][e+a]=0===r||6===r||0===a||6===a||r>=2&&r<=4&&a>=2&&a<=4};
+    t(0,0),t(0,14),t(14,0);
+    const e=[];
+    this.dataList.forEach(t=>{for(let r=0;r<t.data.length;r++){let a=t.data.charCodeAt(r);for(let t=7;t>=0;t--)e.push(a>>t&1)}})
+    let r=this.moduleCount-1,a=this.moduleCount-1,s=-1;
+    for(let t=0;t<e.length;t++){
+      this.modules[r][a]=1===e[t],a--;
+      a<0&&(a=this.moduleCount-1,(r+=s)<0&&(r=0,s=1),r>=this.moduleCount&&(r=this.moduleCount-1,s=-1))
+    }
+  }
+}
+function makeQR(t,e,r=256){
+  const a=new QRCodeModel(1,1);
+  a.addData(e),a.make();
+  const s=a.getModuleCount(),o=r/s,i=document.createElement("canvas");
+  i.width=r,i.height=r;
+  const n=i.getContext("2d");
+  n.fillStyle="#fff",n.fillRect(0,0,r,r),n.fillStyle="#000";
+  for(let t=0;t<s;t++)for(let e=0;e<s;e++)a.isDark(t,e)&&n.fillRect(e*o,t*o,o,o);
+  t.innerHTML="";
+  const l=document.createElement("img");
+  l.src=i.toDataURL("image/png"),l.style.width="100%",t.appendChild(l)
+}
 
-// In QR / Lý lịch nhiều dòng
+// In QR chuẩn A4 sử dụng makeQR
 document.getElementById('btnPrintQR').onclick = ()=>{
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked'))
+                    .map(cb=>cb.dataset.id);
+
+  if(ids.length === 0){
+    alert("Chưa chọn dòng nào!");
+    return;
+  }
+
+  // Tạo trang A4 mới
+  let w = window.open("", "_blank");
+  w.document.write(`
+    <html>
+    <head>
+      <title>In QR</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: Arial; text-align: center; }
+        .qr-block {
+          page-break-inside: avoid;
+          margin-bottom: 20mm;
+        }
+        .qr-label {
+          margin-top: 8px;
+          font-size: 18px;
+          font-weight: bold;
+        }
+      </style>
+    </head>
+    <body>
+      <h2>DANH SÁCH QR</h2>
+  `);
+
   ids.forEach(id=>{
     const row = allData.find(r=>r.id==id);
-    if(row && row.soThe){
-      const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
-      const w = window.open();
-      w.document.write(`<img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}"><p>${row.soThe}</p>`);
-      w.document.close();
-    }
+    if(!row) return;
+
+    const textQR = row.soThe || row.id;
+
+    w.document.write(`
+      <div class="qr-block">
+        <div id="qr_${id}" style="width:200px;height:200px;margin:auto;"></div>
+        <div class="qr-label">${textQR}</div>
+      </div>
+    `);
   });
+
+  w.document.write(`</body></html>`);
+  w.document.close();
+
+  // Sau khi trang load → tạo QR
+  w.onload = ()=>{
+    ids.forEach(id=>{
+      const row = allData.find(r=>r.id==id);
+      if(!row) return;
+
+      const textQR = row.soThe || row.id;
+      let el = w.document.getElementById("qr_"+id);
+      makeQR(el, textQR, 200);
+    });
+
+    // Tự động in
+    setTimeout(()=>w.print(),300);
+  };
 };
+
 document.getElementById('btnPrintResume').onclick = ()=>{
   const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
   ids.forEach(id=>{
