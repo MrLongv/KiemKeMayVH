@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Kiểm kê VH</title>
 <style>
 body{font-family:Arial,sans-serif;margin:0;padding:10px;background:#f4f4f4}
@@ -21,9 +21,7 @@ input[type=date]{width:120px}
 .grid-print-qr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-start}
 .grid-print-qr .item{width:75mm;height:75mm;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0.5px solid #000;padding:4px;box-sizing:border-box}
 .resume-card{page-break-inside:avoid;border:1px solid #ccc;padding:8px;margin:6px}
-@media print{
-  .no-print{display:none}
-}
+@media print{ .no-print{display:none} }
 </style>
 </head>
 <body>
@@ -163,7 +161,7 @@ function renderTable(){
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="no-print"><input type="checkbox" class="rowSelect" data-id="${row.id}" data-sothe="${encodeURIComponent(row.soThe||'')}"></td>
+      <td class="no-print"><input type="checkbox" class="rowSelect" data-id="${row.id}" data-sothe="${safe(row.soThe)}"></td>
       <td>${row.id}</td>
       <td>${safe(row.soThe)}</td>
       <td>${safe(row.soMay)}</td>
@@ -179,7 +177,7 @@ function renderTable(){
       <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="bdQ3" ${row.bdQ3? 'checked' : ''}></td>
       <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="bdQ4" ${row.bdQ4? 'checked' : ''}></td>
       <td>${safe(row.suaChua)}</td>
-      <td class="no-print"><button onclick="openModal(${row.id})">Sửa</button> <button onclick="previewQR('${encodeURIComponent(row.soThe||'')}')">QR</button></td>
+      <td class="no-print"><button onclick="openModal(${row.id})">Sửa</button> <button onclick="previewQR('${encodeURIComponent(safe(row.soThe))}')">QR</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -219,7 +217,7 @@ function attachCheckboxEvents(){
       const v = cb.checked;
       const row = allData.find(r=>r.id==id);
       if(row) row[qfield] = v;
-      // send update with only these fields (preserve others)
+      // send update with only these fields
       const payload = { id: parseInt(id), nam: yearSelect.value };
       payload[qfield] = v;
       fetch(`${WORKER_URL}/update`, {
@@ -266,7 +264,7 @@ function openModal(id=null){
     m_bdQ1.checked = !!row.bdQ1; m_bdNgayQ1.value = row.bdNgayQ1||'';
     m_bdQ2.checked = !!row.bdQ2; m_bdNgayQ2.value = row.bdNgayQ2||'';
     m_bdQ3.checked = !!row.bdQ3; m_bdNgayQ3.value = row.bdNgayQ3||'';
-    m_bdQ4.checked = !!row.bdQ4; m_bdNgayQ4.value = row.bdNgayQ4||'';
+    m_bdQ4.checked = !!row.bdQ4; m_bdNgayQ4.value = row.bdQ4||'';
   } else {
     m_soThe.value = m_soMay.value = m_loaiMay.value = m_viTri.value = m_ghiChu.value = '';
     m_ngayMua.value = m_noiMua.value = m_suaChua.value = '';
@@ -290,8 +288,8 @@ document.getElementById('modalSave').onclick = async ()=>{
     chonIn: m_chonIn.checked,
     bdQ1: m_bdQ1.checked, bdNgayQ1: m_bdNgayQ1.value,
     bdQ2: m_bdQ2.checked, bdNgayQ2: m_bdNgayQ2.value,
-    bdQ3: m_bdQ3.checked, bdNgayQ3: m_bdNgayQ3.value,
-    bdQ4: m_bdQ4.checked, bdNgayQ4: m_bdNgayQ4.value,
+    bdQ3: m_bdQ3.checked, bdNgayQ3: m_bdQ3.value,
+    bdQ4: m_bdQ4.checked, bdNgayQ4: m_bdQ4.value,
     ngayMua: m_ngayMua.value,
     noiMua: m_noiMua.value,
     suaChua: m_suaChua.value,
@@ -323,11 +321,14 @@ async function loadData(){
     if(js.success){
       allData = js.data || [];
       renderTable();
+      // if URL has hash (#sothe) auto scroll to it
+      const hash = location.hash.slice(1);
+      if(hash) setTimeout(()=> scrollToSoThe(decodeURIComponent(hash)), 300);
     } else {
-      alert('Lỗi load: ' + js.error);
+      alert('Lỗi khi tải dữ liệu: ' + js.error);
     }
   }catch(err){
-    alert('Lỗi load: ' + err);
+    alert('Lỗi khi tải dữ liệu: ' + err);
   }
 }
 
@@ -336,58 +337,84 @@ selectAll.addEventListener('change', ()=>{
   document.querySelectorAll('.rowSelect').forEach(cb => cb.checked = selectAll.checked);
 });
 
-/* ==================== PREVIEW SINGLE QR ==================== */
+/* ==================== PREVIEW SINGLE QR (uses hash) ==================== */
 function previewQR(sotheEncoded){
-  // show preview modal with QR that points to URL ?soThe=<soThe>
   if(!sotheEncoded) { alert('Dòng không có Số thẻ'); return; }
   const s = decodeURIComponent(sotheEncoded);
-  const u = location.origin + location.pathname + '?soThe=' + encodeURIComponent(s);
+  const u = location.origin + location.pathname + '#' + encodeURIComponent(s);
   qrBox.innerHTML = `<img src="https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(u)}" style="width:250px;height:250px"><p><b>${s}</b></p>`;
   qrModal.style.display = 'flex';
 }
 
-/* ============== PRINT SELECTED QRs (fixed) ============== */
-document.getElementById('btnPrintQR').onclick = ()=>{
+/* ============== PRINT SELECTED QRs (hash + wait for images) ============== */
+document.getElementById('btnPrintQR').onclick = async ()=>{
   const checked = Array.from(document.querySelectorAll('.rowSelect:checked'));
   if(checked.length === 0){ alert('Chưa chọn dòng nào để in QR'); return; }
 
-  // prepare one print window with all QR images
+  // Build rows (unique sothe)
   const rows = checked.map(cb => {
     const id = cb.dataset.id;
-    const row = allData.find(r=>r.id==id);
-    return row;
+    return allData.find(r=>r.id==id);
   }).filter(Boolean);
 
-  const w = window.open('', '_blank');
+  // Build HTML
   const title = 'In QR - ' + (new Date()).toLocaleString();
-  const htmlParts = [];
-  htmlParts.push('<!doctype html><html><head><meta charset="utf-8"><title>' + title + '</title>');
-  htmlParts.push('<style>@media print{.no-print{display:none}} body{font-family:Arial} .grid{display:flex;flex-wrap:wrap;gap:6px} .item{width:75mm;height:75mm;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0.5px solid #000;padding:6px;box-sizing:border-box} .sothe{margin-top:6px;font-weight:bold}</style>');
-  htmlParts.push('</head><body>');
-  htmlParts.push('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><b>' + title + '</b></div><div class="no-print"><button onclick="window.print()">In</button></div></div>');
-  htmlParts.push('<div class="grid">');
+  const parts = [];
+  parts.push('<!doctype html><html><head><meta charset="utf-8"><title>' + title + '</title>');
+  parts.push('<style>body{font-family:Arial;margin:8px} .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.grid{display:flex;flex-wrap:wrap;gap:8px}.item{width:70mm;height:70mm;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0.5px solid #000;padding:6px;box-sizing:border-box}.sothe{margin-top:6px;font-weight:bold}</style>');
+  parts.push('</head><body>');
+  parts.push('<div class="top"><div><b>' + title + '</b></div><div><button onclick="window.print()">In</button></div></div>');
+  parts.push('<div class="grid">');
 
   rows.forEach(r=>{
     const sothe = safe(r.soThe);
-    const url = location.origin + location.pathname + '?soThe=' + encodeURIComponent(sothe);
+    const url = location.origin + location.pathname + '#' + encodeURIComponent(sothe);
     const imgSrc = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' + encodeURIComponent(url);
-    htmlParts.push(`<div class="item"><img src="${imgSrc}" width="200" height="200" alt="QR"><div class="sothe">VH-${escapeHtml(sothe)}</div></div>`);
+    parts.push(`<div class="item"><img data-src="${imgSrc}" alt="QR" style="max-width:100%;max-height:100%"><div class="sothe">VH-${escapeHtml(sothe)}</div></div>`);
   });
 
-  htmlParts.push('</div>');
-  htmlParts.push('<script>window.onload = function(){ setTimeout(()=>{ window.focus(); },250); }<\/script>');
-  htmlParts.push('</body></html>');
+  parts.push('</div>');
+  parts.push('<script>window.onload = function(){ const imgs = Array.from(document.querySelectorAll("img[data-src]")); let loaded=0; if(imgs.length===0){ return; } imgs.forEach(img=>{ img.onload=()=>{ loaded++; if(loaded===imgs.length) { /* all loaded */ } }; img.onerror=()=>{ loaded++; }; img.src = img.getAttribute("data-src"); }); }<\/script>');
+  parts.push('</body></html>');
 
+  const w = window.open('', '_blank');
   w.document.open();
-  w.document.write(htmlParts.join(''));
+  w.document.write(parts.join(''));
   w.document.close();
 
-  // wait a bit and then call print (some browsers need images to load)
-  const tryPrint = () => {
-    try{ w.focus(); w.print(); } catch(e){ console.warn('print failed', e); }
-  };
-  // give time for images to load
-  setTimeout(tryPrint, 700);
+  // Wait for images to load before calling print.
+  // We'll poll the new window for image complete status up to timeout.
+  const maxWait = 5000; // ms
+  const pollInterval = 200;
+  let waited = 0;
+
+  const tryPrintWhenReady = () => new Promise(resolve => {
+    const iv = setInterval(()=>{
+      try{
+        const imgs = w.document.querySelectorAll('img');
+        if(imgs.length===0){
+          clearInterval(iv); resolve();
+          return;
+        }
+        const allDone = Array.from(imgs).every(i => i.complete && (i.naturalWidth > 0));
+        if(allDone || waited >= maxWait){
+          clearInterval(iv); resolve();
+        } else {
+          waited += pollInterval;
+        }
+      }catch(e){
+        // cross-window access might fail briefly; ignore
+        clearInterval(iv); resolve();
+      }
+    }, pollInterval);
+  });
+
+  try {
+    await tryPrintWhenReady();
+    try{ w.focus(); w.print(); }catch(e){ console.warn('print failed', e); }
+  } catch(e){
+    console.warn('printing error', e);
+  }
 };
 
 /* ============== PRINT SELECTED RESUMES ============== */
@@ -395,12 +422,8 @@ document.getElementById('btnPrintResume').onclick = ()=>{
   const checked = Array.from(document.querySelectorAll('.rowSelect:checked'));
   if(checked.length === 0){ alert('Chưa chọn dòng nào để in lý lịch'); return; }
 
-  const rows = checked.map(cb => {
-    const id = cb.dataset.id;
-    return allData.find(r=>r.id==id);
-  }).filter(Boolean);
+  const rows = checked.map(cb => allData.find(r=>r.id==cb.dataset.id)).filter(Boolean);
 
-  const w = window.open('', '_blank');
   const title = 'In Lý lịch - ' + (new Date()).toLocaleString();
   const html = ['<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title>',
     '<style>body{font-family:Arial;padding:10px} .card{border:1px solid #ccc;padding:8px;margin-bottom:8px;page-break-inside:avoid} .card h3{margin:4px 0}</style>',
@@ -420,6 +443,7 @@ document.getElementById('btnPrintResume').onclick = ()=>{
     html.push('</div>');
   });
   html.push('</body></html>');
+  const w = window.open('', '_blank');
   w.document.open(); w.document.write(html.join('')); w.document.close();
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 500);
 };
@@ -427,9 +451,7 @@ document.getElementById('btnPrintResume').onclick = ()=>{
 /* ============== HELPERS ============== */
 function escapeHtml(s){
   if(!s) return '';
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  })[c]);
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
 
 /* ============== INIT ============== */
@@ -454,14 +476,20 @@ selectAll.addEventListener('change', ()=> {
   document.querySelectorAll('.rowSelect').forEach(cb => cb.checked = selectAll.checked);
 });
 
+/* handle hashchange -> scroll to sothe */
+window.addEventListener('hashchange', ()=> {
+  const hash = location.hash.slice(1);
+  if(hash) scrollToSoThe(decodeURIComponent(hash));
+});
+
 /* load initial data */
 loadData();
 
-/* expose some funcs for inline handlers */
+/* expose functions used inline */
 window.openModal = openModal;
 window.previewQR = previewQR;
 
-async function loadData(){ // re-declare to avoid hoisting confusion
+async function loadData(){ // defined again to ensure proper ordering
   try{
     const year = yearSelect.value || new Date().getFullYear();
     const res = await fetch(`${WORKER_URL}/?year=${year}`);
@@ -469,11 +497,9 @@ async function loadData(){ // re-declare to avoid hoisting confusion
     if(js.success){
       allData = js.data || [];
       renderTable();
-      // if ?soThe=... in URL, auto scroll highlight
-      const soTheParam = new URLSearchParams(location.search).get('soThe');
-      if(soTheParam){
-        setTimeout(()=> scrollToSoThe(soTheParam), 400);
-      }
+      // if URL has hash (#sothe) auto scroll to it
+      const hash = location.hash.slice(1);
+      if(hash) setTimeout(()=> scrollToSoThe(decodeURIComponent(hash)), 300);
     } else {
       alert('Lỗi khi tải dữ liệu: ' + js.error);
     }
@@ -482,16 +508,19 @@ async function loadData(){ // re-declare to avoid hoisting confusion
   }
 }
 
-/* scroll to soThe */
+/* scroll to soThe in table body */
 function scrollToSoThe(soThe){
   const s = String(soThe).trim();
   if(!s) return;
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach(tr=>{
-    const cell = tr.children[2];
+    const cell = tr.children[2]; // Số thẻ column
     if(cell && cell.textContent.trim() === s){
+      // add highlight
       tr.classList.add('highlight-row');
       tr.scrollIntoView({behavior:'smooth', block:'center'});
+      // remove highlight after 2s
+      setTimeout(()=> tr.classList.remove('highlight-row'), 2500);
     }
   });
 }
