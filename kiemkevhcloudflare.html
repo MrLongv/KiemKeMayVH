@@ -2,255 +2,387 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quản lý kiểm kê + In QR</title>
-
-<!-- QRCode.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm kê VH</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-    }
-    h2 {
-        margin-bottom: 10px;
-    }
-    table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 15px;
-    }
-    th, td {
-        border: 1px solid #777;
-        padding: 8px;
-        text-align: center;
-    }
-    th {
-        background: #eee;
-    }
-    .btn {
-        padding: 10px 16px;
-        background: #0077ff;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        margin-right: 10px;
-        border-radius: 6px;
-    }
-    .btn:hover { opacity: 0.8; }
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:10px;
+  background:#f4f4f4;
+}
+table{
+  border-collapse:collapse;
+  width:100%;
+  margin-top:10px;
+}
+th, td{
+  border:1px solid #ccc;
+  padding:6px;
+  text-align:center;
+}
+th{ background:#eee; }
+button{ padding:4px 8px; margin:2px; cursor:pointer; }
+input[type=text]{width:100%;}
+input[type=date]{width:120px;}
 
-    .input-text {
-        padding: 6px;
-        width: 180px;
-        margin-right: 5px;
-    }
+.modal{
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+.modal-content{
+  background:#fff;
+  padding:10px;
+  width:400px;
+  max-height:90%;
+  overflow:auto;
+  position:relative;
+  border-radius:5px;
+}
+
+/* Highlight khi nhảy tới dòng bằng QR */
+.highlight-row{
+  background:yellow !important;
+  transition: background 1s;
+}
+
+/* QR modal lớn hơn */
+#qrModal .modal-content{
+  width:320px;
+  text-align:center;
+}
+
+/* Thanh lọc / tìm kiếm */
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:10px;
+  margin-bottom:10px;
+}
+.toolbar select, .toolbar input[type=text], .toolbar button{
+  padding:5px;
+}
 </style>
 </head>
-
 <body>
 
-<h2>QUẢN LÝ KIỂM KÊ + IN QR</h2>
+<h2>Kiểm kê VH <button id="btnAdd">Thêm</button></h2>
 
-<button class="btn" id="btnAddRow">Thêm dòng</button>
-<button class="btn" id="btnSave">Lưu dữ liệu</button>
-<button class="btn" id="btnPrintQR">In QR</button>
-<button class="btn" id="btnPrintResume">In lý lịch</button>
+<div class="toolbar">
+  <label>Lọc:
+    <select id="filterSelect">
+      <option value="all">Tất cả</option>
+      <option value="notKK">Chưa kiểm kê</option>
+      <option value="KK">Đã kiểm kê</option>
+      <option value="notQR">Chưa in QR</option>
+      <option value="QR">Đã in QR</option>
+    </select>
+  </label>
+
+  <label>Tìm kiếm: <input type="text" id="searchInput" placeholder="Số thẻ, số máy, loại máy..."></label>
+
+  <label>Năm:
+    <select id="yearSelect"></select>
+  </label>
+
+  <button id="btnPrintQR">In QR</button>
+  <button id="btnPrintResume">In Lý lịch</button>
+</div>
 
 <table id="dataTable">
-    <thead>
-        <tr>
-            <th>Chọn</th>
-            <th>Số thẻ</th>
-            <th>Số máy</th>
-            <th>Loại máy</th>
-            <th>Vị trí</th>
-            <th>Ghi chú</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
+<thead>
+<tr>
+  <th><input type="checkbox" id="selectAll"></th>
+  <th>ID</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú</th>
+  <th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th>
+  <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Sửa chữa</th><th>Hành động</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
 
+<!-- Modal Sửa -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3 id="modalTitle">Sửa</h3>
+
+<label>Số thẻ <input type="text" id="m_soThe"></label>
+<label>Số máy <input type="text" id="m_soMay"></label>
+<label>Loại máy <input type="text" id="m_loaiMay"></label>
+<label>Vị trí <input type="text" id="m_viTri"></label>
+<label>Ghi chú <input type="text" id="m_ghiChu"></label>
+<label>Ngày mua <input type="date" id="m_ngayMua"></label>
+<label>Nơi mua <input type="text" id="m_noiMua"></label>
+<label>Sửa chữa <input type="text" id="m_suaChua"></label>
+
+<label><input type="checkbox" id="m_daKiemKe"> Đã KK</label>
+<label><input type="checkbox" id="m_chonIn"> In QR</label>
+
+<label><input type="checkbox" id="m_bdQ1"> Q1 ngày <input type="date" id="m_bdNgayQ1"></label>
+<label><input type="checkbox" id="m_bdQ2"> Q2 ngày <input type="date" id="m_bdNgayQ2"></label>
+<label><input type="checkbox" id="m_bdQ3"> Q3 ngày <input type="date" id="m_bdNgayQ3"></label>
+<label><input type="checkbox" id="m_bdQ4"> Q4 ngày <input type="date" id="m_bdNgayQ4"></label>
+
+<button id="modalSave">Lưu</button>
+<button id="modalClose">Đóng</button>
+</div>
+</div>
+
+<!-- Modal QR -->
+<div class="modal" id="qrModal">
+  <div class="modal-content">
+    <h3>Mã QR</h3>
+    <div id="qrBox"></div>
+    <button onclick="document.getElementById('qrModal').style.display='none'">Đóng</button>
+  </div>
+</div>
+
 <script>
-/* ========================================================
-                    MAIN DATA
-======================================================== */
+const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
+
 let allData = [];
+let editingId = null;
 
-/* ========================================================
-                    LOAD DATA
-======================================================== */
-function loadData() {
-    const saved = localStorage.getItem("inventoryData");
-    if (saved) {
-        allData = JSON.parse(saved);
+// Modal fields
+const m_soThe=document.getElementById('m_soThe');
+const m_soMay=document.getElementById('m_soMay');
+const m_loaiMay=document.getElementById('m_loaiMay');
+const m_viTri=document.getElementById('m_viTri');
+const m_ghiChu=document.getElementById('m_ghiChu');
+const m_daKiemKe=document.getElementById('m_daKiemKe');
+const m_chonIn=document.getElementById('m_chonIn');
+const m_bdQ1=document.getElementById('m_bdQ1'), m_bdNgayQ1=document.getElementById('m_bdNgayQ1');
+const m_bdQ2=document.getElementById('m_bdQ2'), m_bdNgayQ2=document.getElementById('m_bdNgayQ2');
+const m_bdQ3=document.getElementById('m_bdQ3'), m_bdNgayQ3=document.getElementById('m_bdNgayQ3');
+const m_bdQ4=document.getElementById('m_bdQ4'), m_bdNgayQ4=document.getElementById('m_bdNgayQ4');
+const m_ngayMua=document.getElementById('m_ngayMua');
+const m_noiMua=document.getElementById('m_noiMua');
+const m_suaChua=document.getElementById('m_suaChua');
+
+const modal=document.getElementById('modal');
+const modalTitle=document.getElementById('modalTitle');
+const yearSelect=document.getElementById('yearSelect');
+const filterSelect=document.getElementById('filterSelect');
+const searchInput=document.getElementById('searchInput');
+const selectAll=document.getElementById('selectAll');
+
+// Open modal
+function openModal(id=null){
+  editingId=id;
+  modal.style.display='flex';
+  modalTitle.textContent = id?"Sửa":"Thêm";
+
+  if(id){
+    const row = allData.find(r=>r.id===id);
+    if(!row) return;
+    m_soThe.value=row.soThe||"";
+    m_soMay.value=row.soMay||"";
+    m_loaiMay.value=row.loaiMay||"";
+    m_viTri.value=row.viTri||"";
+    m_ghiChu.value=row.ghiChu||"";
+    m_ngayMua.value=row.ngayMua||"";
+    m_noiMua.value=row.noiMua||"";
+    m_suaChua.value=row.suaChua||"";
+    m_daKiemKe.checked=!!row.daKiemKe;
+    m_chonIn.checked=!!row.chonIn;
+    m_bdQ1.checked=!!row.bdQ1; m_bdNgayQ1.value=row.bdNgayQ1||"";
+    m_bdQ2.checked=!!row.bdQ2; m_bdNgayQ2.value=row.bdNgayQ2||"";
+    m_bdQ3.checked=!!row.bdQ3; m_bdNgayQ3.value=row.bdNgayQ3||"";
+    m_bdQ4.checked=!!row.bdQ4; m_bdNgayQ4.value=row.bdNgayQ4||"";
+  } else {
+    m_soThe.value=m_soMay.value=m_loaiMay.value=m_viTri.value=m_ghiChu.value="";
+    m_ngayMua.value=m_noiMua.value=m_suaChua.value="";
+    m_daKiemKe.checked=m_chonIn.checked=false;
+    m_bdQ1.checked=m_bdQ2.checked=m_bdQ3.checked=m_bdQ4.checked=false;
+    m_bdNgayQ1.value=m_bdNgayQ2.value=m_bdNgayQ3.value=m_bdNgayQ4.value="";
+  }
+}
+document.getElementById('modalClose').onclick=()=>modal.style.display='none';
+
+// Load data
+async function loadData(){
+  try{
+    const year = yearSelect.value;
+    const res = await fetch(`${WORKER_URL}/?year=${year}`);
+    const data = await res.json();
+    if(data.success){
+      allData=data.data;
+      renderTable();
     } else {
-        // dữ liệu mẫu
-        allData = [
-            { id: 1, soThe: "ST001", soMay: "SM01", loaiMay: "Laptop", viTri: "Kho 1", ghiChu: "" },
-            { id: 2, soThe: "ST002", soMay: "SM02", loaiMay: "PC", viTri: "Kho 2", ghiChu: "" }
-        ];
+      alert("Lỗi khi load dữ liệu: "+data.error);
     }
-    renderTable();
-}
-
-/* ========================================================
-                    RENDER TABLE
-======================================================== */
-function renderTable() {
-    const tb = document.querySelector("#dataTable tbody");
-    tb.innerHTML = "";
-
-    allData.forEach(row => {
-        tb.innerHTML += `
-            <tr>
-                <td><input type="checkbox" class="rowSelect" data-id="${row.id}"></td>
-                <td><input class="input-text" value="${row.soThe}" onchange="updateField(${row.id}, 'soThe', this.value)" /></td>
-                <td><input class="input-text" value="${row.soMay}" onchange="updateField(${row.id}, 'soMay', this.value)" /></td>
-                <td><input class="input-text" value="${row.loaiMay}" onchange="updateField(${row.id}, 'loaiMay', this.value)" /></td>
-                <td><input class="input-text" value="${row.viTri}" onchange="updateField(${row.id}, 'viTri', this.value)" /></td>
-                <td><input class="input-text" value="${row.ghiChu}" onchange="updateField(${row.id}, 'ghiChu', this.value)" /></td>
-            </tr>
-        `;
-    });
-}
-
-/* ========================================================
-                    UPDATE FIELD
-======================================================== */
-function updateField(id, key, value) {
-    const row = allData.find(r => r.id == id);
-    if (row) {
-        row[key] = value;
-    }
-}
-
-/* ========================================================
-                    ADD NEW ROW
-======================================================== */
-document.getElementById("btnAddRow").onclick = () => {
-    const newId = Date.now();
-    allData.push({
-        id: newId,
-        soThe: "",
-        soMay: "",
-        loaiMay: "",
-        viTri: "",
-        ghiChu: ""
-    });
-    renderTable();
-};
-
-/* ========================================================
-                    SAVE DATA
-======================================================== */
-document.getElementById("btnSave").onclick = () => {
-    localStorage.setItem("inventoryData", JSON.stringify(allData));
-    alert("Đã lưu dữ liệu!");
-};
-
-/* ========================================================
-                    PRINT QR (HD, không lỗi)
-======================================================== */
-document.getElementById('btnPrintQR').onclick = () => {
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked'))
-                   .map(cb => cb.dataset.id);
-
-  if (ids.length === 0) {
-    alert("Chọn ít nhất một dòng để in QR");
-    return;
+  }catch(err){
+    alert("Lỗi khi load dữ liệu: "+err);
   }
+}
 
-  const w = window.open("", "_blank");
+function renderTable(){
+  const tbody=document.querySelector("#dataTable tbody");
+  tbody.innerHTML="";
+  const filter = filterSelect.value;
+  const search = searchInput.value.trim().toLowerCase();
 
-  w.document.write(`
-    <html>
-    <head>
-      <title>In QR</title>
-      <style>
-        body { font-family: Arial; padding: 20px; }
-        .qrItem { 
-          page-break-after: always; 
-          text-align: center; 
-          margin-bottom: 40px;
-        }
-        .qrLabel {
-          font-size: 22px; 
-          margin-top: 10px;
-        }
-      </style>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    </head>
-    <body>
-  `);
+  allData.forEach(row=>{
+    // lọc
+    if(filter==="KK" && !row.daKiemKe) return;
+    if(filter==="notKK" && row.daKiemKe) return;
+    if(filter==="QR" && !row.chonIn) return;
+    if(filter==="notQR" && row.chonIn) return;
+    // tìm kiếm
+    if(search){
+      const text = `${row.soThe} ${row.soMay} ${row.loaiMay} ${row.viTri} ${row.ghiChu}`.toLowerCase();
+      if(!text.includes(search)) return;
+    }
 
-  ids.forEach(id => {
-    const row = allData.find(r => r.id == id);
-    if (!row) return;
-
-    const cid = "qr_" + row.id;
-
-    w.document.write(`
-      <div class="qrItem">
-        <div id="${cid}"></div>
-        <div class="qrLabel">${row.soThe}</div>
-      </div>
-    `);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="checkbox" class="rowSelect" data-id="${row.id}"></td>
+      <td>${row.id}</td>
+      <td>${row.soThe||""}</td>
+      <td>${row.soMay||""}</td>
+      <td>${row.loaiMay||""}</td>
+      <td>${row.viTri||""}</td>
+      <td>${row.ghiChu||""}</td>
+      <td><input type="checkbox" class="chkDaKiemKe" data-id="${row.id}" ${row.daKiemKe?"checked":""}></td>
+      <td><input type="checkbox" class="chkInQR" data-id="${row.id}" ${row.chonIn?"checked":""}></td>
+      <td>${row.ngayMua||""}</td>
+      <td>${row.noiMua||""}</td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q1" ${row.bdQ1?"checked":""}></td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q2" ${row.bdQ2?"checked":""}></td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q3" ${row.bdQ3?"checked":""}></td>
+      <td><input type="checkbox" class="chkQ" data-id="${row.id}" data-q="Q4" ${row.bdQ4?"checked":""}></td>
+      <td>${row.suaChua||""}</td>
+      <td><button onclick="openModal(${row.id})">Sửa</button></td>
+    `;
+    tbody.appendChild(tr);
   });
+  attachCheckboxEvents();
+}
 
-  w.document.write("</body></html>");
-  w.document.close();
+// Checkbox trực tiếp lưu
+function attachCheckboxEvents(){
+  document.querySelectorAll('.chkDaKiemKe').forEach(cb=>{
+    cb.onchange = ()=>updateRow(cb.dataset.id, {daKiemKe: cb.checked});
+  });
+  document.querySelectorAll('.chkInQR').forEach(cb=>{
+    cb.onchange = ()=>updateRow(cb.dataset.id, {chonIn: cb.checked});
+  });
+  document.querySelectorAll('.chkQ').forEach(cb=>{
+    cb.onchange = ()=>{
+      const q = cb.dataset.q;
+      const obj = {};
+      obj[q.toLowerCase()] = cb.checked;
+      updateRow(cb.dataset.id, obj);
+    };
+  });
+}
 
-  w.onload = () => {
-    ids.forEach(id => {
-      const row = allData.find(r => r.id == id);
-      if (!row) return;
-
-      const cid = "qr_" + row.id;
-      const qrData = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
-
-      new w.QRCode(w.document.getElementById(cid), {
-        text: qrData,
-        width: 350,
-        height: 350,
-        correctLevel: w.QRCode.CorrectLevel.H
-      });
+// Update row backend
+async function updateRow(id, fields){
+  try{
+    const row = allData.find(r=>r.id==id);
+    if(!row) return;
+    Object.assign(row, fields);
+    const payload = { id: parseInt(id), ...row, nam: yearSelect.value };
+    await fetch(`${WORKER_URL}/update`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
     });
+  }catch(err){console.log(err);}
+}
+
+// Save modal
+document.getElementById('modalSave').onclick=async ()=>{
+  const payload={
+    id:editingId,
+    soThe:m_soThe.value,
+    soMay:m_soMay.value,
+    loaiMay:m_loaiMay.value,
+    viTri:m_viTri.value,
+    ghiChu:m_ghiChu.value,
+    daKiemKe:m_daKiemKe.checked,
+    chonIn:m_chonIn.checked,
+    bdQ1:m_bdQ1.checked, bdNgayQ1:m_bdNgayQ1.value,
+    bdQ2:m_bdQ2.checked, bdNgayQ2:m_bdNgayQ2.value,
+    bdQ3:m_bdQ3.checked, bdNgayQ3:m_bdNgayQ3.value,
+    bdQ4:m_bdQ4.checked, bdNgayQ4:m_bdNgayQ4.value,
+    ngayMua:m_ngayMua.value,
+    noiMua:m_noiMua.value,
+    suaChua:m_suaChua.value,
+    nam:yearSelect.value
   };
+  try{
+    const url=editingId?`${WORKER_URL}/update`:`${WORKER_URL}/add`;
+    const res=await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(data.success){
+      modal.style.display='none';
+      loadData();
+    } else alert("Lỗi khi lưu: "+data.error);
+  }catch(err){alert("Lỗi khi lưu: "+err);}
 };
 
-/* ========================================================
-                    PRINT RESUME
-======================================================== */
-document.getElementById('btnPrintResume').onclick = () => { 
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked'))
-                   .map(cb => cb.dataset.id);
+// Add
+document.getElementById('btnAdd').onclick=()=>openModal(null);
 
-  if (ids.length === 0) {
-    alert("Chọn dòng để in!");
-    return;
-  }
+// Năm
+const currentYear=new Date().getFullYear();
+for(let y=currentYear-1;y<=currentYear+2;y++){
+  const opt=document.createElement('option');
+  opt.value=y; opt.text=y;
+  if(y===currentYear) opt.selected=true;
+  yearSelect.appendChild(opt);
+}
+yearSelect.onchange=loadData;
 
-  ids.forEach(id => { 
-    const row = allData.find(r => r.id == id); 
-    if (!row) return;
+// Filter & search
+filterSelect.onchange = loadData;
+searchInput.oninput = loadData;
 
-    const w = window.open(); 
-    w.document.write(`
-        <h2>Lý lịch: ${row.soThe}</h2>
-        <p><b>Số máy:</b> ${row.soMay}</p>
-        <p><b>Loại:</b> ${row.loaiMay}</p>
-        <p><b>Vị trí:</b> ${row.viTri}</p>
-        <p><b>Ghi chú:</b> ${row.ghiChu}</p>
-    `); 
-    w.document.close();
+// Select all
+selectAll.onchange = ()=>{
+  document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked = selectAll.checked);
+};
+
+// In QR / Lý lịch nhiều dòng
+document.getElementById('btnPrintQR').onclick = ()=>{
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
+  ids.forEach(id=>{
+    const row = allData.find(r=>r.id==id);
+    if(row && row.soThe){
+      const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
+      const w = window.open();
+      w.document.write(`<img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}"><p>${row.soThe}</p>`);
+      w.document.close();
+    }
+  });
+};
+document.getElementById('btnPrintResume').onclick = ()=>{
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
+  ids.forEach(id=>{
+    const row = allData.find(r=>r.id==id);
+    if(row){
+      const w = window.open();
+      w.document.write(`<h3>Lý lịch: ${row.soThe||''}</h3><p>Số máy: ${row.soMay||''}</p><p>Loại: ${row.loaiMay||''}</p><p>Vị trí: ${row.viTri||''}</p><p>Ghi chú: ${row.ghiChu||''}</p>`);
+      w.document.close();
+    }
   });
 };
 
-/* ========================================================
-                    START
-======================================================== */
+// Initial load
 loadData();
 </script>
-
 </body>
 </html>
