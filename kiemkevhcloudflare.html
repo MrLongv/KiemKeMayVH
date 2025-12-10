@@ -52,13 +52,11 @@ input[type=date]{width:120px;}
   transition: background 1s;
 }
 
-/* QR modal lớn hơn */
 #qrModal .modal-content{
   width:320px;
   text-align:center;
 }
 
-/* Thanh lọc / tìm kiếm */
 .toolbar{
   display:flex;
   flex-wrap:wrap;
@@ -147,10 +145,13 @@ input[type=date]{width:120px;}
 <script>
 const WORKER_URL = "https://snowy-surf-e985.hoalangiongxoai.workers.dev";
 
+// URL gốc để QR không bị sai
+const BASE_URL = window.location.href.split('?')[0];
+
 let allData = [];
 let editingId = null;
 
-// Modal fields
+// ============ Modal Fields ============
 const m_soThe=document.getElementById('m_soThe');
 const m_soMay=document.getElementById('m_soMay');
 const m_loaiMay=document.getElementById('m_loaiMay');
@@ -173,7 +174,7 @@ const filterSelect=document.getElementById('filterSelect');
 const searchInput=document.getElementById('searchInput');
 const selectAll=document.getElementById('selectAll');
 
-// Open modal
+// ----------------- Open Modal ----------------
 function openModal(id=null){
   editingId=id;
   modal.style.display='flex';
@@ -206,7 +207,7 @@ function openModal(id=null){
 }
 document.getElementById('modalClose').onclick=()=>modal.style.display='none';
 
-// Load data
+// ----------------- Load Data -----------------
 async function loadData(){
   try{
     const year = yearSelect.value;
@@ -223,6 +224,7 @@ async function loadData(){
   }
 }
 
+// ----------------- Render Table -----------------
 function renderTable(){
   const tbody=document.querySelector("#dataTable tbody");
   tbody.innerHTML="";
@@ -235,6 +237,7 @@ function renderTable(){
     if(filter==="notKK" && row.daKiemKe) return;
     if(filter==="QR" && !row.chonIn) return;
     if(filter==="notQR" && row.chonIn) return;
+
     // tìm kiếm
     if(search){
       const text = `${row.soThe} ${row.soMay} ${row.loaiMay} ${row.viTri} ${row.ghiChu}`.toLowerCase();
@@ -263,10 +266,11 @@ function renderTable(){
     `;
     tbody.appendChild(tr);
   });
+
   attachCheckboxEvents();
 }
 
-// Checkbox trực tiếp lưu
+// ----------------- Checkbox direct save -----------------
 function attachCheckboxEvents(){
   document.querySelectorAll('.chkDaKiemKe').forEach(cb=>{
     cb.onchange = ()=>updateRow(cb.dataset.id, {daKiemKe: cb.checked});
@@ -277,14 +281,12 @@ function attachCheckboxEvents(){
   document.querySelectorAll('.chkQ').forEach(cb=>{
     cb.onchange = ()=>{
       const q = cb.dataset.q;
-      const obj = {};
-      obj[q.toLowerCase()] = cb.checked;
-      updateRow(cb.dataset.id, obj);
+      updateRow(cb.dataset.id, { [("bd" + q)]: cb.checked });
     };
   });
 }
 
-// Update row backend
+// ----------------- Update row backend -----------------
 async function updateRow(id, fields){
   try{
     const row = allData.find(r=>r.id==id);
@@ -299,7 +301,7 @@ async function updateRow(id, fields){
   }catch(err){console.log(err);}
 }
 
-// Save modal
+// ----------------- Save modal -----------------
 document.getElementById('modalSave').onclick=async ()=>{
   const payload={
     id:editingId,
@@ -337,7 +339,7 @@ document.getElementById('modalSave').onclick=async ()=>{
 // Add
 document.getElementById('btnAdd').onclick=()=>openModal(null);
 
-// Năm
+// Năm select
 const currentYear=new Date().getFullYear();
 for(let y=currentYear-1;y<=currentYear+2;y++){
   const opt=document.createElement('option');
@@ -351,37 +353,53 @@ yearSelect.onchange=loadData;
 filterSelect.onchange = loadData;
 searchInput.oninput = loadData;
 
-// Select all
+// Select all checkbox
 selectAll.onchange = ()=>{
   document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked = selectAll.checked);
 };
 
-// In QR / Lý lịch nhiều dòng
+// ----------------- FIXED QR PRINT -----------------
 document.getElementById('btnPrintQR').onclick = ()=>{
-  const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
+  const ids = Array.from(document.querySelectorAll('.rowSelect:checked'))
+                   .map(cb=>cb.dataset.id);
+
   ids.forEach(id=>{
     const row = allData.find(r=>r.id==id);
     if(row && row.soThe){
-      const url = location.origin + location.pathname + "?soThe=" + encodeURIComponent(row.soThe);
+
+      // URL chính xác để máy quét nhảy đúng tới dòng
+      const finalURL = `${BASE_URL}?soThe=${encodeURIComponent(row.soThe)}`;
+
       const w = window.open();
-      w.document.write(`<img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(url)}"><p>${row.soThe}</p>`);
+      w.document.write(`
+        <img src="https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(finalURL)}">
+        <p>${row.soThe}</p>
+      `);
       w.document.close();
     }
   });
 };
+
+// ----------------- Resume Print -----------------
 document.getElementById('btnPrintResume').onclick = ()=>{
   const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>cb.dataset.id);
   ids.forEach(id=>{
     const row = allData.find(r=>r.id==id);
     if(row){
       const w = window.open();
-      w.document.write(`<h3>Lý lịch: ${row.soThe||''}</h3><p>Số máy: ${row.soMay||''}</p><p>Loại: ${row.loaiMay||''}</p><p>Vị trí: ${row.viTri||''}</p><p>Ghi chú: ${row.ghiChu||''}</p>`);
+      w.document.write(`
+        <h3>Lý lịch: ${row.soThe||''}</h3>
+        <p>Số máy: ${row.soMay||''}</p>
+        <p>Loại: ${row.loaiMay||''}</p>
+        <p>Vị trí: ${row.viTri||''}</p>
+        <p>Ghi chú: ${row.ghiChu||''}</p>
+      `);
       w.document.close();
     }
   });
 };
 
-// Initial load
+// ----------------- Initial load -----------------
 loadData();
 </script>
 </body>
