@@ -240,6 +240,14 @@ button[data-act="qr"] {
   height: 18px;
   margin: 0;
 }
+/* ==== TỐI ƯU CHECKBOX CHO MOBILE ==== */
+input[type="checkbox"] {
+  touch-action: manipulation;
+}
+
+td input[type="checkbox"] {
+  will-change: transform;
+}
 
 </style>
 </head>
@@ -618,19 +626,35 @@ let autoSyncTimer = null;
 
 function scheduleAutoSync(idx) {
   autoSyncQueue.add(idx);
-  if (autoSyncTimer) clearTimeout(autoSyncTimer);
+
+  if (autoSyncTimer) return;
+
+  const delay = /Mobi|Android/i.test(navigator.userAgent) ? 800 : 200;
+
   autoSyncTimer = setTimeout(() => {
-    autoSyncQueue.forEach(i => autoSyncRow(i)); // sync tất cả thay đổi trong queue
-    autoSyncQueue.clear();
-  }, 300); // gộp trong 0.3s
+    const run = () => {
+      autoSyncQueue.forEach(i => autoSyncRow(i));
+      autoSyncQueue.clear();
+      autoSyncTimer = null;
+    };
+
+    // ưu tiên lúc browser rảnh
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(run, { timeout: 1500 });
+    } else {
+      run();
+    }
+  }, delay);
 }
 
 // Listener cho tất cả checkbox trong tbody
-tbody.addEventListener('change', e => {
-  const tr = e.target.closest('tr');
+tbody.addEventListener('click', e => {
+  const cb = e.target;
+  if (!cb.matches('input[type="checkbox"]')) return;
+
+  const tr = cb.closest('tr');
   if (!tr) return;
   const idx = Number(tr.dataset.index);
-  const cb = e.target;
 
   if (cb.classList.contains('daKiemKe')) allData[idx].daKiemKe = cb.checked;
   if (cb.classList.contains('chonIn')) allData[idx].chonIn = cb.checked;
@@ -639,12 +663,9 @@ tbody.addEventListener('change', e => {
   if (cb.classList.contains('bdQ3')) allData[idx].bdQ3 = cb.checked;
   if (cb.classList.contains('bdQ4')) allData[idx].bdQ4 = cb.checked;
 
-  // chỉ update DOM row nếu cần (ví dụ highlight)
-  // tr.classList.toggle('highlight-row', cb.checked && cb.classList.contains('chonIn'));
-
-  // tự động sync, nhưng debounce để nhanh
   scheduleAutoSync(idx);
 });
+
 
 let lastScrollY = 0;
 function openEditModal(idx) {
