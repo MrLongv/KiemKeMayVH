@@ -240,10 +240,6 @@ button[data-act="qr"] {
   height: 18px;
   margin: 0;
 }
-/* ==== TỐI ƯU CHECKBOX CHO MOBILE ==== */
-input[type="checkbox"] {
-  touch-action: manipulation;
-}
 
 </style>
 </head>
@@ -538,7 +534,12 @@ function loadData(){
             suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
           };
         });
-
+        // 🔥 QUAN TRỌNG: BỎ DẤU ' DO GOOGLE SHEET TRẢ VỀ
+        allData.forEach(r => {
+          if (typeof r.soThe === 'string' && r.soThe.startsWith("'")) {
+            r.soThe = r.soThe.slice(1);
+          }
+        });
         // normalize ngay mua format
         allData.forEach(r => {
   if (r && r.ngayMua) r.ngayMua = formatDateDDMMYYYY(r.ngayMua);
@@ -558,7 +559,7 @@ function loadData(){
   script.onerror=()=>{setStatus('Lỗi tải dữ liệu',false); delete window[cb]; script.remove();};
   document.head.appendChild(script);
 }
-
+  
 // ==== AUTO SYNC ROW ====
 function autoSyncRow(i){
   if(i == null || !allData[i]) return;
@@ -566,7 +567,7 @@ function autoSyncRow(i){
 
   // gửi dữ liệu lên Sheet, map đúng các cột Q1-Q4, ngày BD và sửa chữa
   const payload = {
-    soThe: rowData.soThe || "",
+    soThe: rowData.soThe ? "'" + rowData.soThe : "",
     soMay: rowData.soMay || "",
     loaiMay: rowData.loaiMay || "",
     viTri: rowData.viTri || "",
@@ -622,35 +623,19 @@ let autoSyncTimer = null;
 
 function scheduleAutoSync(idx) {
   autoSyncQueue.add(idx);
-
-  if (autoSyncTimer) return;
-
-  const delay = /Mobi|Android/i.test(navigator.userAgent) ? 800 : 200;
-
+  if (autoSyncTimer) clearTimeout(autoSyncTimer);
   autoSyncTimer = setTimeout(() => {
-    const run = () => {
-      autoSyncQueue.forEach(i => autoSyncRow(i));
-      autoSyncQueue.clear();
-      autoSyncTimer = null;
-    };
-
-    // ưu tiên lúc browser rảnh
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(run, { timeout: 1500 });
-    } else {
-      run();
-    }
-  }, delay);
+    autoSyncQueue.forEach(i => autoSyncRow(i)); // sync tất cả thay đổi trong queue
+    autoSyncQueue.clear();
+  }, 300); // gộp trong 0.3s
 }
 
 // Listener cho tất cả checkbox trong tbody
-tbody.addEventListener('click', e => {
-  const cb = e.target;
-  if (!cb.matches('input[type="checkbox"]')) return;
-
-  const tr = cb.closest('tr');
+tbody.addEventListener('change', e => {
+  const tr = e.target.closest('tr');
   if (!tr) return;
   const idx = Number(tr.dataset.index);
+  const cb = e.target;
 
   if (cb.classList.contains('daKiemKe')) allData[idx].daKiemKe = cb.checked;
   if (cb.classList.contains('chonIn')) allData[idx].chonIn = cb.checked;
@@ -659,9 +644,12 @@ tbody.addEventListener('click', e => {
   if (cb.classList.contains('bdQ3')) allData[idx].bdQ3 = cb.checked;
   if (cb.classList.contains('bdQ4')) allData[idx].bdQ4 = cb.checked;
 
+  // chỉ update DOM row nếu cần (ví dụ highlight)
+  // tr.classList.toggle('highlight-row', cb.checked && cb.classList.contains('chonIn'));
+
+  // tự động sync, nhưng debounce để nhanh
   scheduleAutoSync(idx);
 });
-
 
 let lastScrollY = 0;
 function openEditModal(idx) {
@@ -802,15 +790,31 @@ modalInputs.forEach(input=>{
 });
 
 // ==== SYNC THỦ CÔNG ====
-document.getElementById('btnSync').onclick=()=>{
-  const payload=allData, encoded=encodeURIComponent(JSON.stringify(payload));
-  const cb='__sync_cb_'+Date.now();
-  window[cb]=function(res){try{if(res&&res.success)setStatus('✅ Đồng bộ thành công'); else setStatus('❌ Lỗi đồng bộ',false);}finally{delete window[cb]; script.remove();}};
-  const script=document.createElement('script');
-  script.src=GAS_URL+'?updateAll=1&data='+encoded+'&callback='+cb+'&_='+Date.now();
+document.getElementById('btnSync').onclick = () => {
+  const payload = allData.map(r => ({
+    ...r,
+    soThe: r.soThe ? "'" + r.soThe : ""
+  }));
+
+  const encoded = encodeURIComponent(JSON.stringify(payload));
+
+  const cb = '__sync_cb_' + Date.now();
+  window[cb] = function(res){
+    try {
+      if (res && res.success) setStatus('✅ Đồng bộ thành công');
+      else setStatus('❌ Lỗi đồng bộ', false);
+    } finally {
+      delete window[cb];
+      script.remove();
+    }
+  };
+
+  const script = document.createElement('script');
+  script.src = GAS_URL + '?updateAll=1&data=' + encoded + '&callback=' + cb + '&_=' + Date.now();
   document.head.appendChild(script);
 };
-document.getElementById('btnRefresh').onclick=loadData;
+
+document.getElementById('btnRefresh').onclick = loadData;
 
 // highlight from hash (QR)
 let hashScrollDone = false;
@@ -1100,7 +1104,6 @@ document.getElementById("checkAllQ4").addEventListener("change", function() {
   });
   renderTable();
 });
-
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
 </script>
