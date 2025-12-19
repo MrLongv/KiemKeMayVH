@@ -382,7 +382,7 @@ const m_bdQ1_ngay = document.getElementById('m_bdQ1_ngay');
 const m_bdQ2_ngay = document.getElementById('m_bdQ2_ngay');
 const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
 const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
-
+let userRole = null; // 'edit' | 'view'
 let allData=[], editingIndex=null;
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
@@ -409,7 +409,9 @@ function formatDateDDMMYYYY(d){
 }
 
 // ==== PHẦN MẬT KHẨU ====
-const PASSWORD = '1233';
+const PASSWORD_EDIT = '123';
+const PASSWORD_VIEW = '456';
+
 const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
 mainUI.forEach(el => el.style.display = 'none');
 
@@ -432,11 +434,37 @@ else {
   pwdInput.focus();
   pwdInput.addEventListener("keydown", e => { if (e.key === "Enter") pwdBtn.click(); });
   pwdBtn.onclick = () => {
-    if (pwdInput.value === PASSWORD) { localStorage.setItem('loginTime', Date.now()); initUI(); }
-    else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
-  };
+  const pwd = pwdInput.value;
+
+  if (pwd === PASSWORD_EDIT) {
+    userRole = 'edit';
+    localStorage.setItem('loginTime', Date.now());
+    initUI();
+    return;
+  }
+
+  if (pwd === PASSWORD_VIEW) {
+    userRole = 'view';
+    pwdModal.style.display = 'none';
+    hideMainUI();   // 👈 thêm ở CHỖ 4
+    loadData();     // để còn có dữ liệu
+    return;
+  }
+
+  alert('Mật khẩu sai!');
+  pwdInput.value='';
+  pwdInput.focus();
+};
+
 }
 modal.style.display = 'none';
+
+  function hideMainUI(){
+  document.querySelector('header')?.style.setProperty('display','none');
+  document.querySelector('.controls')?.style.setProperty('display','none');
+  document.querySelector('.note')?.style.setProperty('display','none');
+  document.querySelector('.table-wrap')?.style.setProperty('display','none');
+}
 
 // ==== RENDER BẢNG ====
 function renderTable() {
@@ -708,6 +736,41 @@ function openEditModal(idx) {
   m_soThe.focus();
 }
 
+  function openViewOnlyModal(row){
+  // đổ dữ liệu giống edit
+  openEditModal(null);
+
+  m_soThe.value = row.soThe || '';
+  m_soMay.value = row.soMay || '';
+  m_loaiMay.value = row.loaiMay || '';
+  m_viTri.value = row.viTri || '';
+  m_ghiChu.value = row.ghiChu || '';
+  m_ngayMua.value = row.ngayMua || '';
+  m_noiMua.value = row.noiMua || '';
+  m_bdQ1.checked = !!row.bdQ1;
+  m_bdQ2.checked = !!row.bdQ2;
+  m_bdQ3.checked = !!row.bdQ3;
+  m_bdQ4.checked = !!row.bdQ4;
+  m_bdQ1_ngay.value = row.bdNgayQ1 || '';
+  m_bdQ2_ngay.value = row.bdNgayQ2 || '';
+  m_bdQ3_ngay.value = row.bdNgayQ3 || '';
+  m_bdQ4_ngay.value = row.bdNgayQ4 || '';
+  m_suaChua.value = row.suaChua || '';
+
+  // 🔒 khoá input
+  modal.querySelectorAll('input, textarea').forEach(el=>{
+    el.disabled = true;
+  });
+
+  // ẩn nút lưu
+  document.getElementById('saveBtn').style.display = 'none';
+
+  // đổi tiêu đề
+  modal.querySelector('h3').innerText = '🔍 Thông tin máy';
+
+  modal.style.display = 'flex';
+}
+
 function closeModal(){
   modal.style.display='none';
   editingIndex=null;
@@ -828,6 +891,13 @@ function highlightFromHash(retry = 40) {
     if (!soTheCell) return;
     if (soTheCell.textContent.trim() === code) {
       row.classList.add("highlight-row");
+       // ⬇⬇⬇ THÊM ĐOẠN NÀY ⬇⬇⬇
+  if (userRole === 'view') {
+    const idx = Number(row.dataset.index);
+    openViewOnlyModal(allData[idx]);
+    return; // dừng luôn, không cần scroll bảng
+  }
+  // ⬆⬆⬆ KẾT THÚC CHỖ THÊM ⬆⬆⬆
       if (!hashScrollDone) { row.scrollIntoView({ behavior: "smooth", block: "center" }); hashScrollDone = true; }
       found = true;
     }
