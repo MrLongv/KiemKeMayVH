@@ -382,11 +382,9 @@ const m_bdQ1_ngay = document.getElementById('m_bdQ1_ngay');
 const m_bdQ2_ngay = document.getElementById('m_bdQ2_ngay');
 const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
 const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
-let userRole = null; // 'edit' | 'view'
-let skipRenderTable = false;
-let pendingHashCode = null;
 
 let allData=[], editingIndex=null;
+let currentRole = 'admin'; // 'admin' | 'viewer'
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
@@ -412,9 +410,7 @@ function formatDateDDMMYYYY(d){
 }
 
 // ==== PHẦN MẬT KHẨU ====
-const PASSWORD_EDIT = '123';
-const PASSWORD_VIEW = '456';
-
+const PASSWORD = '1233';
 const mainUI = [document.querySelector('header'), document.querySelector('.controls'), document.querySelector('.note'), document.querySelector('.table-wrap')];
 mainUI.forEach(el => el.style.display = 'none');
 
@@ -424,52 +420,40 @@ pwdModal.innerHTML = `
   <div style="background:#fff;padding:20px;border-radius:8px;width:300px;text-align:center">
     <h3>🔒 Nhập mật khẩu</h3>
     <input id="pwdInput" type="password" style="width:80%;padding:6px;margin-top:10px" />
-    <div style="margin-top:12px">
-      <button id="pwdBtn" style="padding:6px 12px;background:#0b74d1;color:#fff;border:none;border-radius:4px;cursor:pointer">Đăng nhập</button>
+
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+      <button id="pwdBtn"
+        style="padding:6px 12px;background:#0b74d1;color:#fff;border:none;border-radius:4px;cursor:pointer">
+        Đăng nhập
+      </button>
+
+      <button id="viewBtn"
+        style="padding:6px 12px;background:#777;color:#fff;border:none;border-radius:4px;cursor:pointer">
+        👁️ Chỉ xem
+      </button>
     </div>
   </div>`;
+
 document.body.appendChild(pwdModal);
 const pwdInput = document.getElementById('pwdInput'), pwdBtn = document.getElementById('pwdBtn');
+const viewBtn = document.getElementById('viewBtn');
 function initUI() { pwdModal.style.display = 'none'; mainUI.forEach(el => el.style.display = 'flex'); loadData(); }
 const loginTime = localStorage.getItem('loginTime');
-if (loginTime && Date.now() - loginTime < 6 * 10) initUI();
+if (loginTime && Date.now() - loginTime < 3600 * 1000) initUI();
 else {
   pwdInput.focus();
   pwdInput.addEventListener("keydown", e => { if (e.key === "Enter") pwdBtn.click(); });
   pwdBtn.onclick = () => {
-  const pwd = pwdInput.value;
-
-  if (pwd === PASSWORD_EDIT) {
-    userRole = 'edit';
-    localStorage.setItem('loginTime', Date.now());
-    initUI();
-    return;
-  }
-
-  if (pwd === PASSWORD_VIEW) {
-  userRole = 'view';
-  skipRenderTable = true;   // 🔥 không render bảng
-  pwdModal.style.display = 'none';
-  hideMainUI();
-  loadData();               // chỉ load data
-  return;
-}
-
-
-  alert('Mật khẩu sai!');
-  pwdInput.value='';
-  pwdInput.focus();
+    if (pwdInput.value === PASSWORD) { localStorage.setItem('loginTime', Date.now()); initUI(); }
+    else { alert('Mật khẩu sai!'); pwdInput.value=''; pwdInput.focus(); }
+  };
+  viewBtn.onclick = () => {
+  currentRole = 'viewer';
+  initUI();
 };
 
 }
 modal.style.display = 'none';
-
-  function hideMainUI(){
-  document.querySelector('header')?.style.setProperty('display','none');
-  document.querySelector('.controls')?.style.setProperty('display','none');
-  document.querySelector('.note')?.style.setProperty('display','none');
-  document.querySelector('.table-wrap')?.style.setProperty('display','none');
-}
 
 // ==== RENDER BẢNG ====
 function renderTable() {
@@ -502,40 +486,92 @@ function renderTable() {
       const tr = document.createElement('tr');
       tr.dataset.index = idx;
 
+      const isViewer = currentRole === 'viewer';
+
       tr.innerHTML = `
         <td>${idx + 1}</td>
+
         <td class="col-so-the">${safeText(r.soThe)}</td>
+
         <td class="col-so-may">
-        <div class="clamp-2">${safeText(r.soMay)}</div>
+          <div class="clamp-2">${safeText(r.soMay)}</div>
         </td>
-        <td class="colLoaiMay"><div class="clamp-2">${safeText(r.loaiMay)}</div></td>
-        <td class="col-vi-tri"><div class="clamp-2">${r.viTri ? safeText(r.viTri) : ''}</div></td>
-        <td class="col-ghi-chu"><div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div></td>
+
+        <td class="colLoaiMay">
+          <div class="clamp-2">${safeText(r.loaiMay)}</div>
+        </td>
+
+        <td class="col-vi-tri">
+          <div class="clamp-2">${r.viTri ? safeText(r.viTri) : ''}</div>
+        </td>
+
+        <td class="col-ghi-chu">
+          <div class="clamp-2">${r.ghiChu ? safeText(r.ghiChu) : ''}</div>
+        </td>
+
         <td>
-          <button data-act="edit" data-i="${idx}">✏️</button>
+          <button data-act="edit" data-i="${idx}" ${isViewer ? 'disabled' : ''}>✏️</button>
           <button data-act="qr" data-i="${idx}">🔗</button>
         </td>
-        <td><input type="checkbox" class="daKiemKe" ${r.daKiemKe ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="chonIn" ${r.chonIn ? 'checked' : ''}></td>
-        <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
-        <td class="col-noi-mua">
-        <div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div>
+
+        <td>
+          <input type="checkbox" class="daKiemKe"
+            ${r.daKiemKe ? 'checked' : ''}
+            ${isViewer ? 'disabled' : ''}>
         </td>
-        <td><input type="checkbox" class="bdQ bdQ1" ${r.bdQ1 ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="bdQ bdQ2" ${r.bdQ2 ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="bdQ bdQ3" ${r.bdQ3 ? 'checked' : ''}></td>
-        <td><input type="checkbox" class="bdQ bdQ4" ${r.bdQ4 ? 'checked' : ''}></td>
-        <td class="col-sua-chua"><div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div></td>
+
+        <td>
+          <input type="checkbox" class="chonIn"
+            ${r.chonIn ? 'checked' : ''}
+            ${isViewer ? 'disabled' : ''}>
+        </td>
+
+        <td>${r.ngayMua ? formatDateDDMMYYYY(r.ngayMua) : ''}</td>
+
+        <td class="col-noi-mua">
+          <div class="clamp-2">${r.noiMua ? safeText(r.noiMua) : ''}</div>
+        </td>
+
+        <td>
+          <input type="checkbox" class="bdQ bdQ1"
+            ${r.bdQ1 ? 'checked' : ''}
+            ${isViewer ? 'disabled' : ''}>
+        </td>
+
+        <td>
+          <input type="checkbox" class="bdQ bdQ2"
+            ${r.bdQ2 ? 'checked' : ''}
+            ${isViewer ? 'disabled' : ''}>
+        </td>
+
+        <td>
+          <input type="checkbox" class="bdQ bdQ3"
+            ${r.bdQ3 ? 'checked' : ''}
+            ${isViewer ? 'disabled' : ''}>
+        </td>
+
+        <td>
+          <input type="checkbox" class="bdQ bdQ4"
+            ${r.bdQ4 ? 'checked' : ''}
+            ${isViewer ? 'disabled' : ''}>
+        </td>
+
+        <td class="col-sua-chua">
+          <div class="clamp-2">${r.suaChua ? safeText(r.suaChua) : ''}</div>
+        </td>
       `;
+
       tbody.appendChild(tr);
     }
   });
+
   // Hiển thị thông tin số dòng tìm được
   const searchInfo = document.getElementById('searchInfo');
   if (searchInfo) {
     searchInfo.textContent = `Tìm thấy ${countVisible} dòng`;
   }
 }
+
 // ==== LOAD DATA JSONP ====
 function loadData(){
   setStatus('Đang tải dữ liệu...');
@@ -567,7 +603,6 @@ function loadData(){
             suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
           };
         });
-        
         // 🔥 BỎ DẤU ' DO GOOGLE SHEET TRẢ VỀ (SỐ MÁY)
         allData.forEach(r => {
           if (typeof r.soMay === 'string' && r.soMay.startsWith("'")) {
@@ -583,18 +618,9 @@ function loadData(){
   if (r && r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
   if (r && r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
 });
-        if (!skipRenderTable) {
-  renderTable();
-}
-
-setStatus('Đã tải '+allData.length+' dòng');
-
-// 🔥 VIEW MODE: mở modal ngay
-if (userRole === 'view') {
-  highlightFromHash();
-  return; // ⛔ BẮT BUỘC PHẢI CÓ
-}
-
+        renderTable();
+        setStatus('Đã tải '+allData.length+' dòng');
+        highlightFromHash();
       } else setStatus('Lỗi tải dữ liệu',false);
     } finally{ delete window[cb]; script.remove(); }
   };
@@ -751,41 +777,6 @@ function openEditModal(idx) {
   m_soThe.focus();
 }
 
-  function openViewOnlyModal(row){
-  // đổ dữ liệu giống edit
-  openEditModal(null);
-
-  m_soThe.value = row.soThe || '';
-  m_soMay.value = row.soMay || '';
-  m_loaiMay.value = row.loaiMay || '';
-  m_viTri.value = row.viTri || '';
-  m_ghiChu.value = row.ghiChu || '';
-  m_ngayMua.value = row.ngayMua || '';
-  m_noiMua.value = row.noiMua || '';
-  m_bdQ1.checked = !!row.bdQ1;
-  m_bdQ2.checked = !!row.bdQ2;
-  m_bdQ3.checked = !!row.bdQ3;
-  m_bdQ4.checked = !!row.bdQ4;
-  m_bdQ1_ngay.value = row.bdNgayQ1 || '';
-  m_bdQ2_ngay.value = row.bdNgayQ2 || '';
-  m_bdQ3_ngay.value = row.bdNgayQ3 || '';
-  m_bdQ4_ngay.value = row.bdNgayQ4 || '';
-  m_suaChua.value = row.suaChua || '';
-
-  // 🔒 khoá input
-  modal.querySelectorAll('input, textarea').forEach(el=>{
-    el.disabled = true;
-  });
-
-  // ẩn nút lưu
-  document.getElementById('saveBtn').style.display = 'none';
-
-  // đổi tiêu đề
-  modal.querySelector('h3').innerText = '🔍 Thông tin máy';
-
-  modal.style.display = 'flex';
-}
-
 function closeModal(){
   modal.style.display='none';
   editingIndex=null;
@@ -896,37 +887,23 @@ document.getElementById('btnRefresh').onclick = loadData;
 
 // highlight from hash (QR)
 let hashScrollDone = false;
-
-function highlightFromHash() {
-  const code = decodeURIComponent(location.hash.slice(1));
-  if (!code || !Array.isArray(allData) || allData.length === 0) return;
-
-  // ===== VIEW MODE: KHÔNG DÙNG BẢNG =====
-  if (userRole === 'view') {
-    const row = allData.find(r => (r.soThe || '').trim() === code);
-    if (row) {
-      openViewOnlyModal(row);
-    } else {
-      alert('❌ Không tìm thấy mã máy');
-    }
-    return;
-  }
-
-  // ===== EDIT MODE: DÙNG BẢNG =====
+function highlightFromHash(retry = 40) {
+  const code = location.hash.slice(1);
+  if (!code) return;
   const rows = document.querySelectorAll("#dataTable tbody tr");
+  let found = false;
   rows.forEach(row => {
-    const cell = row.querySelector(".col-so-the");
-    if (cell && cell.textContent.trim() === code) {
+    const soTheCell = row.querySelector(".col-so-the");
+    if (!soTheCell) return;
+    if (soTheCell.textContent.trim() === code) {
       row.classList.add("highlight-row");
-      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (!hashScrollDone) { row.scrollIntoView({ behavior: "smooth", block: "center" }); hashScrollDone = true; }
+      found = true;
     }
   });
+  if (!found && retry > 0) setTimeout(() => highlightFromHash(retry - 1), 150);
 }
-
-window.addEventListener("hashchange", () => {
-  hashScrollDone = false;
-  setTimeout(() => highlightFromHash(), 100);
-});
+window.addEventListener("hashchange", () => { hashScrollDone = false; setTimeout(() => highlightFromHash(), 100); });
 
 // Print QR (unchanged)
 document.getElementById('btnPrint').onclick = () => {
