@@ -385,7 +385,10 @@ const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 
 let allData=[], editingIndex=null;
 let currentRole = 'admin'; // 'admin' | 'viewer'
-
+// ===== HÀM REFRESH LOGIN =====
+function refreshLoginTime() {
+  localStorage.setItem('loginTime', Date.now());
+}
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
 function formatDateDDMMYYYY(d){
