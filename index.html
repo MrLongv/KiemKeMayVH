@@ -636,9 +636,15 @@ function loadData(){
   if (r && r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
   if (r && r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
 });
-        renderTable();
         setStatus('Đã tải '+allData.length+' dòng');
-        highlightFromHash();
+
+if (currentRole === 'viewer') {
+  openViewerFromHash();   // ✅ chỉ mở modal
+} else {
+  renderTable();          // ✅ admin mới render bảng
+  highlightFromHash();
+}
+
       } else setStatus('Lỗi tải dữ liệu',false);
     } finally{ delete window[cb]; script.remove(); }
   };
@@ -901,7 +907,14 @@ document.getElementById('btnSync').onclick = () => {
   document.head.appendChild(script);
 };
 
-document.getElementById('btnRefresh').onclick = loadData;
+document.getElementById('btnRefresh').onclick = () => {
+  if (currentRole === 'viewer') {
+    openViewerFromHash(); // chỉ reload modal
+  } else {
+    loadData();
+  }
+};
+
 
 // highlight from hash (QR)
 let hashScrollDone = false;
@@ -923,19 +936,22 @@ function highlightFromHash(retry = 40) {
 }
 window.addEventListener("hashchange", () => { hashScrollDone = false; setTimeout(() => highlightFromHash(), 100); });
 // ===== VIEWER: MỞ MODAL TỪ QR =====
-function openViewerFromHash(retry = 30) {
+function openViewerFromHash() {
+  if (currentRole !== 'viewer') return;
+
   const code = decodeURIComponent(location.hash.slice(1));
-  if (!code) return;
+  if (!code || !Array.isArray(allData) || !allData.length) return;
 
   const idx = allData.findIndex(r => String(r.soThe).trim() === code);
   if (idx === -1) {
-    if (retry > 0) setTimeout(() => openViewerFromHash(retry - 1), 200);
+    alert('Không tìm thấy máy: ' + code);
     return;
   }
 
-  openEditModal(idx);     // mở modal đúng máy
-  setViewerReadonly();    // khoá modal
+  openEditModal(idx);
+  setViewerReadonly();
 }
+
 // ===== VIEWER: KHÓA MODAL CHỈ XEM =====
 function setViewerReadonly() {
   if (currentRole !== 'viewer') return;
