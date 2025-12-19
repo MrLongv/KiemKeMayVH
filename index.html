@@ -437,7 +437,25 @@ pwdModal.innerHTML = `
 document.body.appendChild(pwdModal);
 const pwdInput = document.getElementById('pwdInput'), pwdBtn = document.getElementById('pwdBtn');
 const viewBtn = document.getElementById('viewBtn');
-function initUI() { pwdModal.style.display = 'none'; mainUI.forEach(el => el.style.display = 'flex'); loadData(); }
+function initUI() {
+  pwdModal.style.display = 'none';
+
+  if (currentRole === 'viewer') {
+    // ❌ Ẩn toàn bộ UI chính
+    mainUI.forEach(el => el.style.display = 'none');
+
+    // đợi load xong dữ liệu
+    loadData();
+
+    // sau khi load + render xong → mở modal theo hash
+    setTimeout(openViewerFromHash, 500);
+  } else {
+    // admin như cũ
+    mainUI.forEach(el => el.style.display = 'flex');
+    loadData();
+  }
+}
+
 const loginTime = localStorage.getItem('loginTime');
 if (loginTime && Date.now() - loginTime < 3600 * 1000) initUI();
 else {
@@ -904,6 +922,37 @@ function highlightFromHash(retry = 40) {
   if (!found && retry > 0) setTimeout(() => highlightFromHash(retry - 1), 150);
 }
 window.addEventListener("hashchange", () => { hashScrollDone = false; setTimeout(() => highlightFromHash(), 100); });
+// ===== VIEWER: MỞ MODAL TỪ QR =====
+function openViewerFromHash(retry = 30) {
+  const code = decodeURIComponent(location.hash.slice(1));
+  if (!code) return;
+
+  const idx = allData.findIndex(r => String(r.soThe).trim() === code);
+  if (idx === -1) {
+    if (retry > 0) setTimeout(() => openViewerFromHash(retry - 1), 200);
+    return;
+  }
+
+  openEditModal(idx);     // mở modal đúng máy
+  setViewerReadonly();    // khoá modal
+}
+// ===== VIEWER: KHÓA MODAL CHỈ XEM =====
+function setViewerReadonly() {
+  if (currentRole !== 'viewer') return;
+
+  // disable toàn bộ input / textarea / checkbox
+  modal.querySelectorAll('input, textarea, select').forEach(el => {
+    el.disabled = true;
+  });
+
+  // ẩn nút lưu
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn) saveBtn.style.display = 'none';
+
+  // đổi tiêu đề modal (nếu có)
+  const title = modal.querySelector('h3');
+  if (title) title.textContent = '🔍 Thông tin máy (Chỉ xem)';
+}
 
 // Print QR (unchanged)
 document.getElementById('btnPrint').onclick = () => {
@@ -1186,6 +1235,20 @@ document.getElementById("checkAllQ4").addEventListener("change", function() {
 
 // ADD NEW ROW
 document.getElementById('btnAdd').onclick=()=>openEditModal(null);
+  // ===== VIEWER: KHÓA ĐÓNG MODAL =====
+if (currentRole === 'viewer') {
+  // chặn click ra ngoài modal
+  modal.addEventListener('click', e => e.stopPropagation());
+
+  // chặn phím ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
+}
+
 </script>
 </body>
 </html>
