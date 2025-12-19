@@ -1265,6 +1265,25 @@ if (currentRole === 'viewer') {
     }
   });
 }
+// ===== VIEWER: đổi QR → mở lại modal =====
+window.addEventListener('hashchange', () => {
+  if (currentRole !== 'viewer') return;
+
+  // đóng modal cũ nếu đang mở
+  if (modal.style.display === 'flex') {
+    modal.style.display = 'none';
+  }
+
+  // reset scroll trạng thái
+  document.body.classList.remove('modal-open');
+  document.body.style.top = '';
+  document.body.style.overflow = '';
+
+  // mở modal theo QR mới
+  setTimeout(() => {
+    openViewerFromHash();
+  }, 50);
+});
 
 </script>
 </body>
