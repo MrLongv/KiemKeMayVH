@@ -383,8 +383,10 @@ const m_bdQ2_ngay = document.getElementById('m_bdQ2_ngay');
 const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
 const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 let userRole = null; // 'edit' | 'view'
-let allData=[], editingIndex=null;
 let skipRenderTable = false;
+let pendingHashCode = null;
+
+let allData=[], editingIndex=null;
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
@@ -565,6 +567,7 @@ function loadData(){
             suaChua: r.suaChua || r.SuaChua || r['Sửa chữa'] || ''
           };
         });
+        
         // 🔥 BỎ DẤU ' DO GOOGLE SHEET TRẢ VỀ (SỐ MÁY)
         allData.forEach(r => {
           if (typeof r.soMay === 'string' && r.soMay.startsWith("'")) {
@@ -589,6 +592,7 @@ setStatus('Đã tải '+allData.length+' dòng');
 // 🔥 VIEW MODE: mở modal ngay
 if (userRole === 'view') {
   highlightFromHash();
+  return; // ⛔ BẮT BUỘC PHẢI CÓ
 }
 
       } else setStatus('Lỗi tải dữ liệu',false);
@@ -895,16 +899,20 @@ let hashScrollDone = false;
 
 function highlightFromHash() {
   const code = decodeURIComponent(location.hash.slice(1));
-  if (!code) return;
+  if (!code || !Array.isArray(allData) || allData.length === 0) return;
 
-  // ===== VIEW MODE =====
+  // ===== VIEW MODE: KHÔNG DÙNG BẢNG =====
   if (userRole === 'view') {
     const row = allData.find(r => (r.soThe || '').trim() === code);
-    if (row) openViewOnlyModal(row);
+    if (row) {
+      openViewOnlyModal(row);
+    } else {
+      alert('❌ Không tìm thấy mã máy');
+    }
     return;
   }
 
-  // ===== EDIT MODE =====
+  // ===== EDIT MODE: DÙNG BẢNG =====
   const rows = document.querySelectorAll("#dataTable tbody tr");
   rows.forEach(row => {
     const cell = row.querySelector(".col-so-the");
