@@ -475,6 +475,7 @@ modal.style.display = 'none';
 
 // ==== RENDER BẢNG ====
 function renderTable() {
+  if (currentRole === 'viewer') return; // 🚫 viewer không render bảng
   tbody.innerHTML = '';
   const filter = filterBox.value;
   const search = (searchBox.value || '').toLowerCase();
