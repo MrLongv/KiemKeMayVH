@@ -384,6 +384,7 @@ const m_bdQ3_ngay = document.getElementById('m_bdQ3_ngay');
 const m_bdQ4_ngay = document.getElementById('m_bdQ4_ngay');
 let userRole = null; // 'edit' | 'view'
 let allData=[], editingIndex=null;
+let skipRenderTable = false;
 
 function setStatus(txt,ok=true){statusEl.innerText='Trạng thái: '+txt;statusEl.style.color=ok?'#0b74d1':'#c0392b';}
 function safeText(v){return v==null?'':String(v);}
@@ -445,15 +446,10 @@ else {
 
   if (pwd === PASSWORD_VIEW) {
   userRole = 'view';
+  skipRenderTable = true;   // 🔥 không render bảng
   pwdModal.style.display = 'none';
   hideMainUI();
-  loadData();
-
-  // 🔥 BẮT BUỘC: kích lại hash
-  setTimeout(() => {
-    highlightFromHash();
-  }, 300);
-
+  loadData();               // chỉ load data
   return;
 }
 
@@ -584,9 +580,17 @@ function loadData(){
   if (r && r.bdNgayQ3) r.bdNgayQ3 = formatDateDDMMYYYY(r.bdNgayQ3);
   if (r && r.bdNgayQ4) r.bdNgayQ4 = formatDateDDMMYYYY(r.bdNgayQ4);
 });
-        renderTable();
-        setStatus('Đã tải '+allData.length+' dòng');
-        highlightFromHash();
+        if (!skipRenderTable) {
+  renderTable();
+}
+
+setStatus('Đã tải '+allData.length+' dòng');
+
+// 🔥 VIEW MODE: mở modal ngay
+if (userRole === 'view') {
+  highlightFromHash();
+}
+
       } else setStatus('Lỗi tải dữ liệu',false);
     } finally{ delete window[cb]; script.remove(); }
   };
@@ -889,41 +893,26 @@ document.getElementById('btnRefresh').onclick = loadData;
 // highlight from hash (QR)
 let hashScrollDone = false;
 
-function highlightFromHash(retry = 40) {
+function highlightFromHash() {
   const code = decodeURIComponent(location.hash.slice(1));
   if (!code) return;
 
-  // ===== VIEW MODE: KHÔNG PHỤ THUỘC BẢNG =====
+  // ===== VIEW MODE =====
   if (userRole === 'view') {
     const row = allData.find(r => (r.soThe || '').trim() === code);
-    if (row) {
-      openViewOnlyModal(row);
-    }
+    if (row) openViewOnlyModal(row);
     return;
   }
 
-  // ===== EDIT MODE: GIỮ LOGIC CŨ =====
+  // ===== EDIT MODE =====
   const rows = document.querySelectorAll("#dataTable tbody tr");
-  let found = false;
-
   rows.forEach(row => {
-    const soTheCell = row.querySelector(".col-so-the");
-    if (!soTheCell) return;
-
-    if (soTheCell.textContent.trim() === code) {
+    const cell = row.querySelector(".col-so-the");
+    if (cell && cell.textContent.trim() === code) {
       row.classList.add("highlight-row");
-
-      if (!hashScrollDone) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        hashScrollDone = true;
-      }
-      found = true;
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   });
-
-  if (!found && retry > 0) {
-    setTimeout(() => highlightFromHash(retry - 1), 150);
-  }
 }
 
 window.addEventListener("hashchange", () => {
