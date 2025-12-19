@@ -444,12 +444,19 @@ else {
   }
 
   if (pwd === PASSWORD_VIEW) {
-    userRole = 'view';
-    pwdModal.style.display = 'none';
-    hideMainUI();   // 👈 thêm ở CHỖ 4
-    loadData();     // để còn có dữ liệu
-    return;
-  }
+  userRole = 'view';
+  pwdModal.style.display = 'none';
+  hideMainUI();
+  loadData();
+
+  // 🔥 BẮT BUỘC: kích lại hash
+  setTimeout(() => {
+    highlightFromHash();
+  }, 300);
+
+  return;
+}
+
 
   alert('Mật khẩu sai!');
   pwdInput.value='';
