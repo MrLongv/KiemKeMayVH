@@ -881,30 +881,48 @@ document.getElementById('btnRefresh').onclick = loadData;
 
 // highlight from hash (QR)
 let hashScrollDone = false;
+
 function highlightFromHash(retry = 40) {
-  const code = location.hash.slice(1);
+  const code = decodeURIComponent(location.hash.slice(1));
   if (!code) return;
+
+  // ===== VIEW MODE: KHÔNG PHỤ THUỘC BẢNG =====
+  if (userRole === 'view') {
+    const row = allData.find(r => (r.soThe || '').trim() === code);
+    if (row) {
+      openViewOnlyModal(row);
+    }
+    return;
+  }
+
+  // ===== EDIT MODE: GIỮ LOGIC CŨ =====
   const rows = document.querySelectorAll("#dataTable tbody tr");
   let found = false;
+
   rows.forEach(row => {
     const soTheCell = row.querySelector(".col-so-the");
     if (!soTheCell) return;
+
     if (soTheCell.textContent.trim() === code) {
       row.classList.add("highlight-row");
-       // ⬇⬇⬇ THÊM ĐOẠN NÀY ⬇⬇⬇
-  if (userRole === 'view') {
-    const idx = Number(row.dataset.index);
-    openViewOnlyModal(allData[idx]);
-    return; // dừng luôn, không cần scroll bảng
-  }
-  // ⬆⬆⬆ KẾT THÚC CHỖ THÊM ⬆⬆⬆
-      if (!hashScrollDone) { row.scrollIntoView({ behavior: "smooth", block: "center" }); hashScrollDone = true; }
+
+      if (!hashScrollDone) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        hashScrollDone = true;
+      }
       found = true;
     }
   });
-  if (!found && retry > 0) setTimeout(() => highlightFromHash(retry - 1), 150);
+
+  if (!found && retry > 0) {
+    setTimeout(() => highlightFromHash(retry - 1), 150);
+  }
 }
-window.addEventListener("hashchange", () => { hashScrollDone = false; setTimeout(() => highlightFromHash(), 100); });
+
+window.addEventListener("hashchange", () => {
+  hashScrollDone = false;
+  setTimeout(() => highlightFromHash(), 100);
+});
 
 // Print QR (unchanged)
 document.getElementById('btnPrint').onclick = () => {
