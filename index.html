@@ -437,24 +437,26 @@ pwdModal.innerHTML = `
 document.body.appendChild(pwdModal);
 const pwdInput = document.getElementById('pwdInput'), pwdBtn = document.getElementById('pwdBtn');
 const viewBtn = document.getElementById('viewBtn');
-function initUI() {
+
+  function initUI() {
   pwdModal.style.display = 'none';
 
   if (currentRole === 'viewer') {
-    // ❌ Ẩn toàn bộ UI chính
+    // Viewer: không hiện UI
     mainUI.forEach(el => el.style.display = 'none');
 
-    // đợi load xong dữ liệu
+    // load data, modal sẽ mở bên trong loadData (đã xử lý)
     loadData();
 
-    // sau khi load + render xong → mở modal theo hash
-    setTimeout(openViewerFromHash, 500);
   } else {
-    // admin như cũ
+    // Admin: HIỆN UI NGAY
     mainUI.forEach(el => el.style.display = 'flex');
-    loadData();
+
+    setStatus('Đang tải dữ liệu...');
+    requestAnimationFrame(loadData); // ⏱ mượt hơn
   }
 }
+
 
 const loginTime = localStorage.getItem('loginTime');
 if (loginTime && Date.now() - loginTime < 3600 * 1000) initUI();
