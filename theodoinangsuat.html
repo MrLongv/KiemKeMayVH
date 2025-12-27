@@ -6,128 +6,24 @@
 <title>📊 Theo dõi năng suất chuyền may</title>
 
 <style>
+/* ===== STYLE GIỮ NGUYÊN + BỔ SUNG ===== */
 :root{
-  --blue:#2563eb;
-  --green:#16a34a;
-  --red:#dc2626;
-  --yellow:#f59e0b;
-  --bg:#f3f4f6;
+  --blue:#2563eb;--green:#16a34a;--red:#dc2626;--yellow:#f59e0b;--bg:#f3f4f6;
 }
-
 *{box-sizing:border-box;font-family:Segoe UI,Arial}
 body{margin:0;background:var(--bg)}
-
-header{
-  background:var(--blue);
-  color:#fff;
-  padding:12px;
-  text-align:center;
-  font-weight:600;
-}
-
-.box{
-  background:#fff;
-  margin:12px;
-  padding:15px;
-  border-radius:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-}
-
-h3{margin-top:10px}
-
-input,button{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  font-size:16px;
-}
-
-button{
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-
+header{background:var(--blue);color:#fff;padding:12px;text-align:center;font-weight:600}
+.box{background:#fff;margin:12px;padding:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.hidden{display:none}
+input,select,button{width:100%;padding:10px;margin:6px 0;font-size:16px}
+button{border:none;border-radius:8px;cursor:pointer}
 .btn-blue{background:var(--blue);color:#fff}
 .btn-green{background:var(--green);color:#fff}
 .btn-red{background:var(--red);color:#fff}
-
-.hidden{display:none}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-}
-th,td{
-  border-bottom:1px solid #ddd;
-  padding:6px;
-  text-align:center;
-}
-th{background:#f1f5f9}
-
-.bad{color:var(--red);font-weight:600}
 .ok{color:var(--green);font-weight:600}
-
-/* ===== D: BOTTLENECK ===== */
-.bar{
-  margin:6px 0;
-  padding:8px;
-  border-radius:6px;
-  color:#fff;
-  font-weight:600;
-}
-.green{background:var(--green)}
-.yellow{background:var(--yellow)}
-.red{background:var(--red)}
-
-/* ===== F: WEAK LINE ===== */
-.card{
-  background:#fef2f2;
-  border-left:5px solid var(--red);
-  padding:8px;
-  margin:6px 0;
-  border-radius:6px;
-  font-size:14px;
-}
-/* ===== G: ALERT (<80%) ===== */
-.alert{
-  background:#fee2e2;
-  border:2px solid #dc2626;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-.alert h3{
-  color:#dc2626;
-  margin:0 0 5px 0;
-}
-
-.error-bar{
-  padding:8px;
-  margin:6px 0;
-  border-radius:6px;
-  background:#e0f2fe;
-  border-left:5px solid #2563eb;
-  font-weight:600;
-}
-
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#666;
-  margin:15px 0;
-  
-}
-.factory{
-  padding:10px;
-  border-radius:8px;
-  margin:6px 0;
-  color:#fff;
-  font-weight:600;
-}
-
+.bad{color:var(--red);font-weight:600}
+.alert{background:#fee2e2;border:2px solid #dc2626;padding:10px;border-radius:10px;margin-bottom:10px}
+.alert h3{color:#dc2626;margin:0 0 5px 0}
 </style>
 </head>
 
@@ -135,7 +31,7 @@ footer{
 
 <header>HỆ THỐNG THEO DÕI NĂNG SUẤT CHUYỀN MAY</header>
 
-<!-- ===== LOGIN ===== -->
+<!-- LOGIN -->
 <div id="loginBox" class="box">
   <h3>🔐 Đăng nhập</h3>
   <input id="lgUser" placeholder="Tài khoản">
@@ -144,368 +40,169 @@ footer{
   <div id="lgMsg" style="color:red"></div>
 </div>
 
-<!-- ===== INPUT – TỔ TRƯỞNG ===== -->
+<!-- INPUT TỔ TRƯỞNG -->
 <div id="inputBox" class="box hidden">
   <h3>🧵 Nhập năng suất chuyền</h3>
 
   <div><b>Xưởng:</b> <span id="iXuong"></span></div>
   <div><b>Tổ:</b> <span id="iTo"></span></div>
 
-  <input id="kh" type="number" placeholder="Kế hoạch (sp)">
-  <input id="tt" type="number" placeholder="Thực tế (sp)">
-  <input id="hs" type="number" step="0.01" placeholder="Hiệu suất (%)">
-  <select id="reason">
-  <option value="">-- Bình thường / Không lỗi --</option>
-  <option>Máy may hư</option>
-  <option>Thiếu phụ liệu</option>
-  <option>Phụ liệu lỗi (tái chế)</option>
-  <option>Thiếu người</option>
-  <option>Chờ kỹ thuật</option>
-  <option>Lỗi chất lượng</option>
-  <option>Chờ rập / mẫu</option>
-  <option>Khác</option>
-</select>
+  <!-- MÃ HÀNG -->
+  <select id="maHang">
+    <option value="">-- Chọn mã hàng --</option>
+    <option value="MH001" data-kh="800">MH001</option>
+    <option value="MH002" data-kh="900">MH002</option>
+    <option value="MH003" data-kh="1000">MH003</option>
+  </select>
 
+  <!-- KẾ HOẠCH -->
+  <div class="box" style="background:#f1f5f9">
+    <div><b>Mã hàng:</b> <span id="showMaHang">-</span></div>
+    <div><b>Kế hoạch / ngày:</b> <span id="khNgay">0</span> sp</div>
+    <div><b>Kế hoạch / giờ:</b> <span id="khGio">0</span> sp</div>
+  </div>
+
+  <!-- KHUNG GIỜ -->
+  <select id="timeSlot"></select>
+
+  <!-- THỰC TẾ -->
+  <input id="tt" type="number" placeholder="Thực tế giờ này (sp)">
+
+  <!-- LỖI -->
+  <select id="reason">
+    <option value="">-- Bình thường / Không lỗi --</option>
+    <option>Máy may hư</option>
+    <option>Thiếu phụ liệu</option>
+    <option>Phụ liệu lỗi (tái chế)</option>
+    <option>Thiếu người</option>
+    <option>Chờ kỹ thuật</option>
+    <option>Lỗi chất lượng</option>
+    <option>Khác</option>
+  </select>
 
   <button class="btn-green" onclick="saveData()">💾 Lưu dữ liệu</button>
   <button class="btn-red" onclick="logout()">Đăng xuất</button>
-
   <div id="saveMsg"></div>
 </div>
 
-<!-- ===== DASHBOARD – GIÁM ĐỐC XƯỞNG ===== -->
+<!-- DASHBOARD -->
 <div id="dashBox" class="box hidden">
   <h3>📊 Dashboard xưởng</h3>
-  <div id="dashInfo"></div>
-
-	<div id="alertBox" class="hidden"></div>
-
-
-  <!-- D: BOTTLENECK -->
-  <h3>🚦 Biểu đồ cổ chai</h3>
-  <div id="bottleneck"></div>
-
-  <!-- F: WEAK LINES -->
-  <h3>⚠️ Top tổ hiệu suất thấp</h3>
-  <div id="weakLines"></div>
-
-<h3>🛠️ Thống kê lỗi ảnh hưởng năng suất</h3>
-<div id="topErrors"></div>
-
-  <h3>📋 Dữ liệu chi tiết</h3>
-  <table id="dashTable">
-  
-    <thead>
-      <tr>
-        <th>Ngày</th>
-        <th>Tổ</th>
-        <th>KH</th>
-        <th>TT</th>
-        <th>HS %</th>
-        <th>Nguyên nhân</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-<h3>🏭 So sánh hiệu suất các xưởng</h3>
-<div id="factoryCompare"></div>
-
-  <button class="btn-blue" onclick="exportFile('pdf')">📄 Xuất PDF tuần</button>
-  <button class="btn-blue" onclick="exportFile('xlsx')">📊 Xuất Excel</button>
-  <button class="btn-red" onclick="logout()">Đăng xuất</button>
+  <div id="alertBox" class="hidden"></div>
 </div>
-
-<footer>© Hệ thống nội bộ – Audit ready</footer>
 
 <script>
 /* ===== CONFIG ===== */
-const API_URL = "https://script.google.com/macros/s/AKfycbzBp504J32Fc1YnsY8zqNW4HscaT_fnvO0dKtl8QfYrnatFFAPfSQ92h5dJuzSbzQQm/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbzBp504J32Fc1YnsY8zqNW4HscaT_fnvO0dKtl8QfYrnatFFAPfSQ92h5dJuzSbzQQm/exec";
+const ALLOW_MINUTES=10;
+const WORK_START=7, WORK_END=17;
 
-/* ===== INIT ===== */
-document.addEventListener("DOMContentLoaded",init);
-
-function init(){
-  const u = getUser();
-  if(u) initByRole(u);
-}
+const LUNCH_BY_FACTORY={
+  1:{start:12,end:13},
+  2:{start:11.5,end:12.5},
+  3:{start:12,end:13}
+};
 
 /* ===== AUTH ===== */
 function login(){
-  fetch(API_URL,{
-    method:"POST",
-    body:new URLSearchParams({
-      action:"login",
-      user:lgUser.value,
-      pass:lgPass.value
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    if(res.success !== true){
-      lgMsg.innerText="Sai tài khoản hoặc mật khẩu";
-      return;
-    }
+  fetch(API_URL,{method:"POST",body:new URLSearchParams({
+    action:"login",user:lgUser.value,pass:lgPass.value
+  })})
+  .then(r=>r.json()).then(res=>{
+    if(res.success!==true){lgMsg.innerText="Sai tài khoản hoặc mật khẩu";return;}
     localStorage.setItem("USER",JSON.stringify(res));
     initByRole(res);
   });
 }
-
-function logout(){
-  localStorage.removeItem("USER");
-  location.reload();
-}
-
-function getUser(){
-  return JSON.parse(localStorage.getItem("USER"));
-}
+function logout(){localStorage.clear();location.reload();}
+function getUser(){return JSON.parse(localStorage.getItem("USER"));}
 
 /* ===== ROLE ===== */
 function initByRole(u){
   loginBox.classList.add("hidden");
-  inputBox.classList.add("hidden");
-  dashBox.classList.add("hidden");
-
   if(u.role==="to"){
     iXuong.innerText=u.xuong;
     iTo.innerText=u.to;
+    buildTimeSlots(u.xuong);
+    autoSelectCurrentSlot();
     inputBox.classList.remove("hidden");
   }
+}
 
-  if(u.role==="gdx"){
-    dashInfo.innerHTML=`<b>Xưởng:</b> ${u.xuong}`;
-    dashBox.classList.remove("hidden");
-    loadDashboard();
+/* ===== TIME SLOT ===== */
+function buildTimeSlots(xuong){
+  timeSlot.innerHTML='<option value="">-- Chọn khung giờ --</option>';
+  const lunch=LUNCH_BY_FACTORY[xuong];
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+
+  for(let h=WORK_START;h<WORK_END;h++){
+    if(h>=lunch.start && h<lunch.end) continue;
+    if(now.getDay()==6 && h>=16) continue;
+
+    const start=h*60;
+    const expired=nowMin>(start+ALLOW_MINUTES);
+
+    timeSlot.innerHTML+=`
+      <option value="${h}-${h+1}" ${expired?'disabled':''}>
+        ${h}:00 - ${h+1}:00 ${expired?'(đã khóa)':''}
+      </option>`;
   }
+}
+
+function autoSelectCurrentSlot(){
+  const h=new Date().getHours();
+  const v=`${h}-${h+1}`;
+  [...timeSlot.options].forEach(o=>{
+    if(o.value===v && !o.disabled) timeSlot.value=v;
+  });
+}
+
+/* ===== MA HÀNG ===== */
+maHang.addEventListener("change",()=>{
+  const opt=maHang.options[maHang.selectedIndex];
+  const khNgayVal=Number(opt.dataset.kh||0);
+  showMaHang.innerText=opt.value||"-";
+  khNgay.innerText=khNgayVal;
+  const gioLam=[...timeSlot.options].length-1;
+  khGio.innerText=gioLam?Math.round(khNgayVal/gioLam):0;
+});
+
+/* ===== TIME CHECK ===== */
+function isInAllowedTime(slot){
+  if(!slot) return false;
+  const [f,t]=slot.split("-").map(Number);
+  const now=new Date();
+  const m=now.getHours()*60+now.getMinutes();
+  return m>=(f*60-ALLOW_MINUTES)&&m<=(t*60+ALLOW_MINUTES);
 }
 
 /* ===== SAVE ===== */
 function saveData(){
-  const u=getUser();
-  fetch(API_URL,{
-    method:"POST",
-    body:new URLSearchParams({
-      action:"save",
-      user:u.user,
-      role:u.role,
-      xuong:u.xuong,
-      to:u.to,
-      kh:kh.value,
-      tt:tt.value,
-      hs:hs.value,
-      reason:reason.value
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    saveMsg.innerHTML=res.success
-      ? "<span class='ok'>✔ Đã lưu</span>"
-      : "<span class='bad'>❌ "+res.msg+"</span>";
-  });
-}
-
-/* ===== DASHBOARD ===== */
-function loadDashboard(){
-  const u=getUser();
-  fetch(API_URL,{
-    method:"POST",
-    body:new URLSearchParams({
-      action:"getData",
-      user:u.user
-    })
-  })
-  .then(r=>r.json())
-  .then(data=>{
-    const rows=data.slice(1);
-    renderAlert(rows);
-	renderBottleneck(rows);
-	renderWeakLines(rows);
-	renderTopErrors(rows);
-	renderFactoryCompare(rows);
-	renderTable(rows);
-  });
-}
-
-function renderTable(rows){
-  const tb=document.querySelector("#dashTable tbody");
-  tb.innerHTML="";
-  rows.reverse().forEach(r=>{
-    const hs=r[7];
-    tb.innerHTML+=`
-      <tr>
-        <td>${r[1]}</td>
-        <td>${r[4]}</td>
-        <td>${r[5]}</td>
-        <td>${r[6]}</td>
-        <td class="${hs<85?'bad':'ok'}">${hs}</td>
-        <td>${r[8]||""}</td>
-      </tr>`;
-  });
-}
-
-/* ===== D: BOTTLENECK ===== */
-function renderBottleneck(rows){
-  const map={};
-  rows.forEach(r=>{
-    const to=r[4], hs=Number(r[7])||0;
-    if(!map[to]) map[to]={sum:0,c:0};
-    map[to].sum+=hs; map[to].c++;
-  });
-
-  bottleneck.innerHTML="";
-  Object.keys(map).sort((a,b)=>a-b).forEach(to=>{
-    const avg=Math.round(map[to].sum/map[to].c);
-    let cls="green";
-    if(avg<85) cls="red";
-    else if(avg<95) cls="yellow";
-
-    bottleneck.innerHTML+=`
-      <div class="bar ${cls}">
-        Tổ ${to} – Hiệu suất TB: ${avg}%
-      </div>`;
-  });
-}
-
-/* ===== F: WEAK LINES ===== */
-function renderWeakLines(rows){
-  const map={};
-  rows.forEach(r=>{
-    const to=r[4], hs=Number(r[7])||0;
-    if(!map[to]) map[to]=[];
-    map[to].push({hs,reason:r[8]});
-  });
-
-  weakLines.innerHTML="";
-  const list=[];
-  Object.keys(map).forEach(to=>{
-    const avg=map[to].reduce((a,b)=>a+b.hs,0)/map[to].length;
-    if(avg<85){
-      const reasons={};
-      map[to].forEach(x=>{
-        if(x.reason) reasons[x.reason]=(reasons[x.reason]||0)+1;
-      });
-      const topReason=Object.keys(reasons)
-        .sort((a,b)=>reasons[b]-reasons[a])[0]||"Chưa ghi nhận";
-      list.push({to,avg:Math.round(avg),reason:topReason});
-    }
-  });
-
-  if(list.length===0){
-    weakLines.innerHTML="<i>Không có tổ yếu</i>";
+  if(!isInAllowedTime(timeSlot.value)){
+    alert("⏰ Chỉ cho nhập trong ±10 phút của khung giờ!");
     return;
   }
 
-  list.sort((a,b)=>a.avg-b.avg).forEach(r=>{
-    weakLines.innerHTML+=`
-      <div class="card">
-        <b>Tổ ${r.to}</b><br>
-        Hiệu suất TB: ${r.avg}%<br>
-        Nguyên nhân chính: ${r.reason}
-      </div>`;
-  });
-}
+  const hs=Math.round((Number(tt.value)/Number(khGio.innerText))*100);
 
-function renderTopErrors(rows){
-  const map={};
-
-  rows.forEach(r=>{
-    const hs=Number(r[7])||0;
-    const reason=r[8];
-    if(hs<95 && reason){
-      map[reason]=(map[reason]||0)+1;
-    }
-  });
-
-  const div=document.getElementById("topErrors");
-  div.innerHTML="";
-
-  if(Object.keys(map).length===0){
-    div.innerHTML="<i>Không ghi nhận lỗi đáng kể</i>";
-    return;
-  }
-
-  Object.entries(map)
-    .sort((a,b)=>b[1]-a[1])
-    .forEach(([reason,count])=>{
-      div.innerHTML+=`
-        <div class="error-bar">
-          ${reason}: ${count} giờ bị ảnh hưởng
-        </div>`;
-    });
-}
-
-function renderAlert(rows){
-  const danger=[];
-
-  const map={};
-  rows.forEach(r=>{
-    const to=r[4], hs=Number(r[7])||0;
-    if(!map[to]) map[to]={sum:0,c:0};
-    map[to].sum+=hs; map[to].c++;
-  });
-
-  Object.keys(map).forEach(to=>{
-    const avg=map[to].sum/map[to].c;
-    if(avg<80){
-      danger.push({to,avg:Math.round(avg)});
-    }
-  });
-
-  const box=document.getElementById("alertBox");
-  if(danger.length===0){
-    box.classList.add("hidden");
-    return;
-  }
-
-  box.classList.remove("hidden");
-  box.innerHTML=`
-    <div class="alert">
-      <h3>🚨 CẢNH BÁO TỔ NGUY HIỂM</h3>
-      ${danger.map(d=>`Tổ ${d.to}: ${d.avg}%`).join("<br>")}
-    </div>`;
-}
-
-/* ===== EXPORT ===== */
-function exportFile(type){
   const u=getUser();
-  fetch(API_URL,{
-    method:"POST",
-    body:new URLSearchParams({
-      action:"exportWeek",
-      user:u.user,
-      type:type
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    if(res.success) window.open(res.url,"_blank");
+  fetch(API_URL,{method:"POST",body:new URLSearchParams({
+    action:"save",
+    user:u.user,
+    xuong:u.xuong,
+    to:u.to,
+    maHang:maHang.value,
+    kh:khNgay.innerText,
+    tt:tt.value,
+    hs:hs,
+    timeSlot:timeSlot.value,
+    reason:reason.value
+  })})
+  .then(r=>r.json()).then(res=>{
+    saveMsg.innerHTML=res.success?"<span class='ok'>✔ Đã lưu</span>":"<span class='bad'>❌ "+res.msg+"</span>";
   });
 }
-function renderFactoryCompare(rows){
-  const map={};
-
-  rows.forEach(r=>{
-    const xuong=r[3];
-    const hs=Number(r[7])||0;
-    if(!map[xuong]) map[xuong]={sum:0,c:0};
-    map[xuong].sum+=hs; map[xuong].c++;
-  });
-
-  const div=document.getElementById("factoryCompare");
-  div.innerHTML="";
-
-  Object.keys(map).sort((a,b)=>a-b).forEach(x=>{
-    const avg=Math.round(map[x].sum/map[x].c);
-    let cls="green";
-    if(avg<85) cls="red";
-    else if(avg<95) cls="yellow";
-
-    div.innerHTML+=`
-      <div class="factory ${cls}">
-        Xưởng ${x} – Hiệu suất TB: ${avg}%
-      </div>`;
-  });
-}
-
 </script>
 
 </body>
