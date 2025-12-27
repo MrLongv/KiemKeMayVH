@@ -219,7 +219,7 @@ footer{
 
 <script>
 /* ===== CONFIG ===== */
-const API_URL = "https://script.google.com/macros/s/AKfycbxIfLvcSrEL1XMb0Cw1urUa9tDqyAVQ1zTStC2D--pJ_foIJhlofFAX2L4wYEOPcDhf/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzBp504J32Fc1YnsY8zqNW4HscaT_fnvO0dKtl8QfYrnatFFAPfSQ92h5dJuzSbzQQm/exec";
 
 /* ===== INIT ===== */
 document.addEventListener("DOMContentLoaded",init);
@@ -241,7 +241,7 @@ function login(){
   })
   .then(r=>r.json())
   .then(res=>{
-    if(!res.success){
+    if(res.success !== true){
       lgMsg.innerText="Sai tài khoản hoặc mật khẩu";
       return;
     }
