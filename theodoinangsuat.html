@@ -127,6 +127,19 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
 </div>
 
 <script>
+const loginBox     = document.getElementById("loginBox");
+const inputBox     = document.getElementById("inputBox");
+const heatmapBox   = document.getElementById("heatmapBox");
+const dashboardBox = document.getElementById("dashboardBox");
+const adminBox     = document.getElementById("adminBox");
+
+const lgUser = document.getElementById("lgUser");
+const lgPass = document.getElementById("lgPass");
+const lgMsg  = document.getElementById("lgMsg");
+
+const iXuong = document.getElementById("iXuong");
+const iTo    = document.getElementById("iTo");
+
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
 const HOURS = [
@@ -138,14 +151,19 @@ document.addEventListener("DOMContentLoaded",init);
 
 function init(){
   const u = getUser();
-  if(!u) return;
 
-  // Ẩn tất cả
+  // Ẩn tất cả trước
   loginBox.classList.add("hidden");
   inputBox.classList.add("hidden");
   heatmapBox.classList.add("hidden");
   dashboardBox.classList.add("hidden");
   adminBox.classList.add("hidden");
+
+  // ❗ CHƯA LOGIN → HIỆN LOGIN
+  if(!u){
+    loginBox.classList.remove("hidden");
+    return;
+  }
 
   /* ===== TỔ TRƯỞNG / TỔ PHÓ ===== */
   if(u.role === "to_truong" || u.role === "to_pho"){
@@ -165,11 +183,11 @@ function init(){
   }
 
   /* ===== GIÁM ĐỐC CÔNG TY ===== */
- if(u.role === "gdc"){
-  dashboardBox.classList.remove("hidden");
-  loadDashboard();
-  return;
-}
+  if(u.role === "gdc"){
+    dashboardBox.classList.remove("hidden");
+    loadDashboard();
+    return;
+  }
 
   /* ===== ADMIN ===== */
   if(u.role === "admin"){
@@ -178,6 +196,7 @@ function init(){
     return;
   }
 }
+
 
 function login(){
   fetch(API_URL,{
