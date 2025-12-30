@@ -78,7 +78,7 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
 <div id="dashboardBox" class="box hidden">
   <h3>📊 DASHBOARD ĐIỀU HÀNH</h3>
 
-  <div id="alertBox" class="hidden"></div>
+ <div id="dashAlertBox" class="hidden"></div>
 
   <h3>📋 Tổng hợp theo tổ</h3>
   <table id="dashTable">
@@ -120,8 +120,6 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
     <tbody id="adminUsers"></tbody>
   </table>
 </div>
-
-<div class="box hidden" id="alertBox"></div>
 
 <div class="box hidden" id="heatmapBox">
   <h3>🔥 Heatmap năng suất</h3>
@@ -167,11 +165,11 @@ function init(){
   }
 
   /* ===== GIÁM ĐỐC CÔNG TY ===== */
-  if(u.role === "gdc"){
-    dashboardBox.classList.remove("hidden");
-    loadDashboard("ALL");
-    return;
-  }
+ if(u.role === "gdc"){
+  dashboardBox.classList.remove("hidden");
+  loadDashboard();
+  return;
+}
 
   /* ===== ADMIN ===== */
   if(u.role === "admin"){
@@ -350,7 +348,7 @@ function renderDashAlert(rows){
     }
   });
 
-  const box=document.getElementById("alertBox");
+  const box = document.getElementById("dashAlertBox");
   if(warns.length===0){
     box.classList.add("hidden");
     return;
@@ -486,6 +484,10 @@ function saveUser(username){
       active:document.getElementById("a_"+username).checked?1:0
     })
   }).then(()=>alert("Đã lưu"));
+}
+function logout(){
+  localStorage.removeItem("USER");
+  location.reload();
 }
 
 </script>
