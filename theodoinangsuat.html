@@ -74,6 +74,35 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
   <button onclick="save()">💾 Lưu</button>
   <div id="saveMsg"></div>
 </div>
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboardBox" class="box hidden">
+  <h3>📊 DASHBOARD ĐIỀU HÀNH</h3>
+
+  <div id="alertBox" class="hidden"></div>
+
+  <h3>📋 Tổng hợp theo tổ</h3>
+  <table id="dashTable">
+    <thead>
+      <tr>
+        <th>Ngày</th>
+        <th>Xưởng</th>
+        <th>Tổ</th>
+        <th>Giờ</th>
+        <th>HS%</th>
+        <th>Lỗi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>🔥 Heatmap năng suất</h3>
+  <div id="dashHeatmap"></div>
+
+  <h3>🛠️ Top lỗi ảnh hưởng năng suất</h3>
+  <div id="topErrors"></div>
+
+  <button class="btn-red" onclick="logout()">Đăng xuất</button>
+</div>
 
 <div class="box hidden" id="alertBox"></div>
 
@@ -93,16 +122,24 @@ const HOURS = [
 document.addEventListener("DOMContentLoaded",init);
 
 function init(){
-  const u = getUser();
-  if(u){
-    loginBox.classList.add("hidden");
+  const u=getUser();
+  if(!u) return;
+
+  loginBox.classList.add("hidden");
+
+  if(u.role==="to_truong" || u.role==="to_pho"){
     inputBox.classList.remove("hidden");
     heatmapBox.classList.remove("hidden");
     iXuong.innerText=u.xuong;
     iTo.innerText=u.to;
     loadToday();
+  } 
+  else {
+    dashboardBox.classList.remove("hidden");
+    loadDashboard();
   }
 }
+
 
 function login(){
   fetch(API_URL,{
@@ -211,7 +248,13 @@ function buildHeatmap(data){
     const col=document.createElement("div");
     col.innerHTML=`<b>${h}</b>`;
     days.forEach(d=>{
-      const r=data.find(x=>x.khung_gio===h && x.ngay===d);
+      const u = getUser();
+const r = data.find(x =>
+  x.khung_gio === h &&
+  x.ngay === d &&
+  x.to_nhom == u.to
+);
+
       const cell=document.createElement("div");
       cell.className="cell";
       if(!r){cell.classList.add("gray");cell.innerText="-";}
@@ -225,6 +268,132 @@ function buildHeatmap(data){
 
   div.appendChild(grid);
 }
+  /* ================= DASHBOARD ================= */
+
+/* LOAD DASHBOARD */
+function loadDashboard(){
+  const u=getUser();
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"getData",
+      role:u.role,
+      xuong:u.xuong
+    })
+  }).then(r=>r.json()).then(res=>{
+    if(!res.success) return;
+    renderDashTable(res.data);
+    renderDashAlert(res.data);
+    renderDashHeatmap(res.data);
+    renderTopErrors(res.data);
+  });
+}
+
+/* 🚨 ALERT 2 GIỜ <80% */
+function renderDashAlert(rows){
+  const map={};
+
+  rows.forEach(r=>{
+    const key = r.xuong+"-"+r.to_nhom+"-"+r.ngay;
+    if(!map[key]) map[key]=[];
+    map[key].push(r);
+  });
+
+  const warns=[];
+  Object.values(map).forEach(list=>{
+    list.sort((a,b)=>HOURS.indexOf(a.khung_gio)-HOURS.indexOf(b.khung_gio));
+    for(let i=1;i<list.length;i++){
+      if(list[i].hieu_suat<80 && list[i-1].hieu_suat<80){
+        warns.push(`Xưởng ${list[i].xuong} – Tổ ${list[i].to_nhom}`);
+        break;
+      }
+    }
+  });
+
+  const box=document.getElementById("alertBox");
+  if(warns.length===0){
+    box.classList.add("hidden");
+    return;
+  }
+
+  box.classList.remove("hidden");
+  box.innerHTML=`
+    <div class="alert">
+      <h3>🚨 CẢNH BÁO TỔ NGUY HIỂM</h3>
+      ${warns.join("<br>")}
+    </div>`;
+}
+
+/* 📋 BẢNG DASHBOARD */
+function renderDashTable(rows){
+  const tb=document.querySelector("#dashTable tbody");
+  tb.innerHTML="";
+  rows.slice(0,100).forEach(r=>{
+    tb.innerHTML+=`
+      <tr>
+        <td>${r.ngay}</td>
+        <td>${r.xuong}</td>
+        <td>${r.to_nhom}</td>
+        <td>${r.khung_gio}</td>
+        <td class="${r.hieu_suat<80?'bad':'ok'}">${r.hieu_suat}</td>
+        <td>${r.nguyen_nhan||""}</td>
+      </tr>`;
+  });
+}
+
+/* 🔥 HEATMAP DASHBOARD */
+function renderDashHeatmap(data){
+  const div=document.getElementById("dashHeatmap");
+  div.innerHTML="";
+  const days=[...new Set(data.map(r=>r.ngay))].slice(0,7);
+
+  const grid=document.createElement("div");
+  grid.className="heatmap";
+
+  HOURS.forEach(h=>{
+    const col=document.createElement("div");
+    col.innerHTML=`<b>${h}</b>`;
+    days.forEach(d=>{
+      const list=data.filter(x=>x.khung_gio===h && x.ngay===d);
+      const avg=list.length
+        ? Math.round(list.reduce((a,b)=>a+b.hieu_suat,0)/list.length)
+        : null;
+
+      const cell=document.createElement("div");
+      cell.className="cell";
+      if(avg===null){cell.classList.add("gray");cell.innerText="-";}
+      else if(avg<80){cell.classList.add("red");cell.innerText=avg;}
+      else if(avg<95){cell.classList.add("yellow");cell.innerText=avg;}
+      else{cell.classList.add("green");cell.innerText=avg;}
+      col.appendChild(cell);
+    });
+    grid.appendChild(col);
+  });
+
+  div.appendChild(grid);
+}
+
+/* 🛠️ TOP LỖI */
+function renderTopErrors(rows){
+  const map={};
+  rows.forEach(r=>{
+    if(r.hieu_suat<95 && r.nguyen_nhan){
+      map[r.nguyen_nhan]=(map[r.nguyen_nhan]||0)+1;
+    }
+  });
+
+  const div=document.getElementById("topErrors");
+  div.innerHTML="";
+
+  Object.entries(map)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,5)
+    .forEach(([k,v])=>{
+      div.innerHTML+=`
+        <div class="error-bar">${k}: ${v} lần</div>`;
+    });
+}
+
 </script>
 
 </body>
