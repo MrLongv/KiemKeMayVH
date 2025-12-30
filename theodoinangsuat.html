@@ -1,207 +1,229 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>📊 Theo dõi năng suất chuyền may</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Năng suất chuyền may</title>
 
 <style>
-/* ===== STYLE GIỮ NGUYÊN + BỔ SUNG ===== */
-:root{
-  --blue:#2563eb;--green:#16a34a;--red:#dc2626;--yellow:#f59e0b;--bg:#f3f4f6;
-}
-*{box-sizing:border-box;font-family:Segoe UI,Arial}
-body{margin:0;background:var(--bg)}
-header{background:var(--blue);color:#fff;padding:12px;text-align:center;font-weight:600}
-.box{background:#fff;margin:12px;padding:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+body{font-family:Segoe UI;background:#f3f4f6;margin:0}
+.box{background:#fff;margin:12px;padding:15px;border-radius:10px}
+button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
 .hidden{display:none}
-input,select,button{width:100%;padding:10px;margin:6px 0;font-size:16px}
-button{border:none;border-radius:8px;cursor:pointer}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-green{background:var(--green);color:#fff}
-.btn-red{background:var(--red);color:#fff}
-.ok{color:var(--green);font-weight:600}
-.bad{color:var(--red);font-weight:600}
-.alert{background:#fee2e2;border:2px solid #dc2626;padding:10px;border-radius:10px;margin-bottom:10px}
-.alert h3{color:#dc2626;margin:0 0 5px 0}
+
+.ok{color:#16a34a;font-weight:600}
+.bad{color:#dc2626;font-weight:600}
+
+.warn{
+  background:#fee2e2;
+  border:2px solid #dc2626;
+  padding:10px;
+  border-radius:8px;
+  margin:10px 0;
+}
+
+.heatmap{
+  display:grid;
+  grid-auto-flow:column;
+  gap:4px;
+  overflow-x:auto;
+}
+.cell{
+  min-width:60px;
+  text-align:center;
+  padding:6px;
+  border-radius:6px;
+  font-weight:600;
+}
+.red{background:#fecaca}
+.yellow{background:#fde68a}
+.green{background:#bbf7d0}
+.gray{background:#e5e7eb}
 </style>
 </head>
 
 <body>
 
-<header>HỆ THỐNG THEO DÕI NĂNG SUẤT CHUYỀN MAY</header>
-
-<!-- LOGIN -->
-<div id="loginBox" class="box">
+<div class="box" id="loginBox">
   <h3>🔐 Đăng nhập</h3>
   <input id="lgUser" placeholder="Tài khoản">
   <input id="lgPass" type="password" placeholder="Mật khẩu">
-  <button class="btn-blue" onclick="login()">Đăng nhập</button>
-  <div id="lgMsg" style="color:red"></div>
+  <button onclick="login()">Đăng nhập</button>
+  <div id="lgMsg" class="bad"></div>
 </div>
 
-<!-- INPUT TỔ TRƯỞNG -->
-<div id="inputBox" class="box hidden">
-  <h3>🧵 Nhập năng suất chuyền</h3>
+<div class="box hidden" id="inputBox">
+  <h3>🧵 Nhập năng suất</h3>
 
   <div><b>Xưởng:</b> <span id="iXuong"></span></div>
   <div><b>Tổ:</b> <span id="iTo"></span></div>
 
-  <!-- MÃ HÀNG -->
-  <select id="maHang">
-    <option value="">-- Chọn mã hàng --</option>
-    <option value="MH001" data-kh="800">MH001</option>
-    <option value="MH002" data-kh="900">MH002</option>
-    <option value="MH003" data-kh="1000">MH003</option>
-  </select>
+  <input id="maHang" placeholder="Mã hàng">
+  <select id="khungGio"></select>
 
-  <!-- KẾ HOẠCH -->
-  <div class="box" style="background:#f1f5f9">
-    <div><b>Mã hàng:</b> <span id="showMaHang">-</span></div>
-    <div><b>Kế hoạch / ngày:</b> <span id="khNgay">0</span> sp</div>
-    <div><b>Kế hoạch / giờ:</b> <span id="khGio">0</span> sp</div>
-  </div>
-
-  <!-- KHUNG GIỜ -->
-  <select id="timeSlot"></select>
-
-  <!-- THỰC TẾ -->
-  <input id="tt" type="number" placeholder="Thực tế giờ này (sp)">
-
-  <!-- LỖI -->
-  <select id="reason">
-    <option value="">-- Bình thường / Không lỗi --</option>
-    <option>Máy may hư</option>
-    <option>Thiếu phụ liệu</option>
-    <option>Phụ liệu lỗi (tái chế)</option>
+  <input id="keHoach" type="number" placeholder="Kế hoạch (sp/giờ)">
+  <input id="thucTe" type="number" placeholder="Thực tế (sp)">
+  <select id="nguyenNhan">
+    <option value="">-- Không lỗi --</option>
     <option>Thiếu người</option>
-    <option>Chờ kỹ thuật</option>
+    <option>Máy hư</option>
+    <option>Thiếu phụ liệu</option>
     <option>Lỗi chất lượng</option>
-    <option>Khác</option>
   </select>
 
-  <button class="btn-green" onclick="saveData()">💾 Lưu dữ liệu</button>
-  <button class="btn-red" onclick="logout()">Đăng xuất</button>
+  <button onclick="save()">💾 Lưu</button>
   <div id="saveMsg"></div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashBox" class="box hidden">
-  <h3>📊 Dashboard xưởng</h3>
-  <div id="alertBox" class="hidden"></div>
+<div class="box hidden" id="alertBox"></div>
+
+<div class="box hidden" id="heatmapBox">
+  <h3>🔥 Heatmap năng suất</h3>
+  <div id="heatmap"></div>
 </div>
 
 <script>
-/* ===== CONFIG ===== */
-const API_URL="https://script.google.com/macros/s/AKfycbzBp504J32Fc1YnsY8zqNW4HscaT_fnvO0dKtl8QfYrnatFFAPfSQ92h5dJuzSbzQQm/exec";
-const ALLOW_MINUTES=10;
-const WORK_START=7, WORK_END=17;
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
-const LUNCH_BY_FACTORY={
-  1:{start:12,end:13},
-  2:{start:11.5,end:12.5},
-  3:{start:12,end:13}
-};
+const HOURS = [
+  "07-08","08-09","09-10","10-11","11-12",
+  "12-13","13-14","14-15","15-16","16-17"
+];
 
-/* ===== AUTH ===== */
-function login(){
-  fetch(API_URL,{method:"POST",body:new URLSearchParams({
-    action:"login",user:lgUser.value,pass:lgPass.value
-  })})
-  .then(r=>r.json()).then(res=>{
-    if(res.success!==true){lgMsg.innerText="Sai tài khoản hoặc mật khẩu";return;}
-    localStorage.setItem("USER",JSON.stringify(res));
-    initByRole(res);
-  });
-}
-function logout(){localStorage.clear();location.reload();}
-function getUser(){return JSON.parse(localStorage.getItem("USER"));}
+document.addEventListener("DOMContentLoaded",init);
 
-/* ===== ROLE ===== */
-function initByRole(u){
-  loginBox.classList.add("hidden");
-  if(u.role==="to"){
+function init(){
+  const u = getUser();
+  if(u){
+    loginBox.classList.add("hidden");
+    inputBox.classList.remove("hidden");
+    heatmapBox.classList.remove("hidden");
     iXuong.innerText=u.xuong;
     iTo.innerText=u.to;
-    buildTimeSlots(u.xuong);
-    autoSelectCurrentSlot();
-    inputBox.classList.remove("hidden");
+    loadToday();
   }
 }
 
-/* ===== TIME SLOT ===== */
-function buildTimeSlots(xuong){
-  timeSlot.innerHTML='<option value="">-- Chọn khung giờ --</option>';
-  const lunch=LUNCH_BY_FACTORY[xuong];
-  const now=new Date();
-  const nowMin=now.getHours()*60+now.getMinutes();
-
-  for(let h=WORK_START;h<WORK_END;h++){
-    if(h>=lunch.start && h<lunch.end) continue;
-    if(now.getDay()==6 && h>=16) continue;
-
-    const start=h*60;
-    const expired=nowMin>(start+ALLOW_MINUTES);
-
-    timeSlot.innerHTML+=`
-      <option value="${h}-${h+1}" ${expired?'disabled':''}>
-        ${h}:00 - ${h+1}:00 ${expired?'(đã khóa)':''}
-      </option>`;
-  }
-}
-
-function autoSelectCurrentSlot(){
-  const h=new Date().getHours();
-  const v=`${h}-${h+1}`;
-  [...timeSlot.options].forEach(o=>{
-    if(o.value===v && !o.disabled) timeSlot.value=v;
+function login(){
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"login",
+      user:lgUser.value,
+      pass:lgPass.value
+    })
+  }).then(r=>r.json()).then(res=>{
+    if(!res.success){
+      lgMsg.innerText="Sai tài khoản";
+      return;
+    }
+    localStorage.setItem("USER",JSON.stringify(res));
+    location.reload();
   });
 }
 
-/* ===== MA HÀNG ===== */
-maHang.addEventListener("change",()=>{
-  const opt=maHang.options[maHang.selectedIndex];
-  const khNgayVal=Number(opt.dataset.kh||0);
-  showMaHang.innerText=opt.value||"-";
-  khNgay.innerText=khNgayVal;
-  const gioLam=[...timeSlot.options].length-1;
-  khGio.innerText=gioLam?Math.round(khNgayVal/gioLam):0;
-});
+function getUser(){
+  return JSON.parse(localStorage.getItem("USER"));
+}
 
-/* ===== TIME CHECK ===== */
-function isInAllowedTime(slot){
-  if(!slot) return false;
-  const [f,t]=slot.split("-").map(Number);
-  const now=new Date();
-  const m=now.getHours()*60+now.getMinutes();
-  return m>=(f*60-ALLOW_MINUTES)&&m<=(t*60+ALLOW_MINUTES);
+/* ===== LOAD TODAY & HIDE USED HOURS ===== */
+function loadToday(){
+  const u=getUser();
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"getData",
+      xuong:u.xuong
+    })
+  }).then(r=>r.json()).then(res=>{
+    const today = new Date().toISOString().slice(0,10);
+    const used = res.data.filter(r=>r.ngay===today && r.to_nhom==u.to);
+    buildHourSelect(used);
+    checkWarning(used);
+    buildHeatmap(res.data);
+  });
+}
+
+function buildHourSelect(rows){
+  khungGio.innerHTML="";
+  HOURS.forEach(h=>{
+    const exist = rows.find(r=>r.khung_gio===h);
+    const opt=document.createElement("option");
+    opt.value=h;
+    opt.textContent= exist ? `${h} (Đã nhập)` : h;
+    opt.disabled=!!exist;
+    khungGio.appendChild(opt);
+  });
 }
 
 /* ===== SAVE ===== */
-function saveData(){
-  if(!isInAllowedTime(timeSlot.value)){
-    alert("⏰ Chỉ cho nhập trong ±10 phút của khung giờ!");
-    return;
-  }
-
-  const hs=Math.round((Number(tt.value)/Number(khGio.innerText))*100);
-
+function save(){
   const u=getUser();
-  fetch(API_URL,{method:"POST",body:new URLSearchParams({
-    action:"save",
-    user:u.user,
-    xuong:u.xuong,
-    to:u.to,
-    maHang:maHang.value,
-    kh:khNgay.innerText,
-    tt:tt.value,
-    hs:hs,
-    timeSlot:timeSlot.value,
-    reason:reason.value
-  })})
-  .then(r=>r.json()).then(res=>{
-    saveMsg.innerHTML=res.success?"<span class='ok'>✔ Đã lưu</span>":"<span class='bad'>❌ "+res.msg+"</span>";
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"save",
+      user:u.user,
+      xuong:u.xuong,
+      to:u.to,
+      ngay:new Date().toISOString().slice(0,10),
+      khung_gio:khungGio.value,
+      ma_hang:maHang.value,
+      ke_hoach:keHoach.value,
+      thuc_te:thucTe.value,
+      nguyen_nhan:nguyenNhan.value
+    })
+  }).then(r=>r.json()).then(res=>{
+    saveMsg.innerHTML = res.success
+      ? `<span class="ok">✔ Đã lưu (${res.hieu_suat}%)</span>`
+      : `<span class="bad">${res.msg}</span>`;
+    loadToday();
   });
+}
+
+/* ===== WARNING 2 HOURS <80% ===== */
+function checkWarning(rows){
+  rows.sort((a,b)=>HOURS.indexOf(a.khung_gio)-HOURS.indexOf(b.khung_gio));
+  for(let i=1;i<rows.length;i++){
+    if(rows[i].hieu_suat<80 && rows[i-1].hieu_suat<80){
+      alertBox.classList.remove("hidden");
+      alertBox.innerHTML=`
+        <div class="warn">
+          🚨 CẢNH BÁO: ${rows[i-1].khung_gio} & ${rows[i].khung_gio}
+          đều dưới 80%
+        </div>`;
+      return;
+    }
+  }
+  alertBox.classList.add("hidden");
+}
+
+/* ===== HEATMAP ===== */
+function buildHeatmap(data){
+  const div=document.getElementById("heatmap");
+  div.innerHTML="";
+  const days=[...new Set(data.map(r=>r.ngay))].slice(0,7);
+
+  const grid=document.createElement("div");
+  grid.className="heatmap";
+
+  HOURS.forEach(h=>{
+    const col=document.createElement("div");
+    col.innerHTML=`<b>${h}</b>`;
+    days.forEach(d=>{
+      const r=data.find(x=>x.khung_gio===h && x.ngay===d);
+      const cell=document.createElement("div");
+      cell.className="cell";
+      if(!r){cell.classList.add("gray");cell.innerText="-";}
+      else if(r.hieu_suat<80){cell.classList.add("red");cell.innerText=r.hieu_suat;}
+      else if(r.hieu_suat<95){cell.classList.add("yellow");cell.innerText=r.hieu_suat;}
+      else{cell.classList.add("green");cell.innerText=r.hieu_suat;}
+      col.appendChild(cell);
+    });
+    grid.appendChild(col);
+  });
+
+  div.appendChild(grid);
 }
 </script>
 
