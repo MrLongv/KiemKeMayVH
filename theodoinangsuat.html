@@ -77,6 +77,45 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
 <!-- ===== DASHBOARD ===== -->
 <div id="dashboardBox" class="box hidden">
   <h3>📊 DASHBOARD ĐIỀU HÀNH</h3>
+  <div id="auditBox" class="box hidden">
+  <h3>📝 Audit Log</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Action</th>
+        <th>Target</th>
+        <th>Detail</th>
+        <th>Thời gian</th>
+      </tr>
+    </thead>
+    <tbody id="auditTable"></tbody>
+  </table>
+</div>
+
+<h3>📊 DASHBOARD GDC CÔNG TY</h3>
+
+<div id="gdcSummary" class="box"></div>
+
+<h3>📈 Biểu đồ xu hướng sản lượng</h3>
+<canvas id="gdcTrendChart" height="150"></canvas>
+
+<h3>🏆 Ranking xưởng / tổ</h3>
+<div id="gdcRanking" class="box"></div>
+
+<h3>🔥 Heatmap toàn công ty</h3>
+<div id="gdcHeatmap"></div>
+
+  <h3>📊 DASHBOARD GDX XƯỞNG</h3>
+
+<div id="gdxSummary" class="box"></div>
+
+<h3>🔥 Heatmap năng suất xưởng</h3>
+<div id="gdxHeatmap"></div>
+
+<h3>🚨 Tổ tụt <80%</h3>
+<div id="gdxWarnings" class="warn hidden"></div>
 
  <div id="dashAlertBox" class="hidden"></div>
 
@@ -103,28 +142,45 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
 
   <button class="btn-red" onclick="logout()">Đăng xuất</button>
 </div>
-<div id="adminBox" class="box hidden">
-  <h3>👑 Quản lý người dùng</h3>
+<h3>👑 Quản lý người dùng</h3>
+<button onclick="showAddUser()">➕ Thêm user mới</button>
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Role</th>
+      <th>Xưởng</th>
+      <th>Tổ</th>
+      <th>Active</th>
+      <th>Lưu</th>
+    </tr>
+  </thead>
+  <tbody id="adminUsers"></tbody>
+</table>
 
-  <table>
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Role</th>
-        <th>Xưởng</th>
-        <th>Tổ</th>
-        <th>Active</th>
-        <th>Lưu</th>
-      </tr>
-    </thead>
-    <tbody id="adminUsers"></tbody>
-  </table>
+<div id="addUserBox" class="box hidden">
+  <h4>Thêm user mới</h4>
+  <input id="newUserName" placeholder="Username">
+  <input id="newUserPass" type="password" placeholder="Password">
+  <select id="newUserRole">
+    <option>to_truong</option>
+    <option>to_pho</option>
+    <option>gdx_xuong</option>
+    <option>gdc</option>
+    <option>admin</option>
+  </select>
+  <input id="newUserXuong" placeholder="Xưởng">
+  <input id="newUserTo" placeholder="Tổ">
+  <input type="checkbox" id="newUserActive" checked> Active
+  <button onclick="addUser()">💾 Thêm</button>
 </div>
+
 
 <div class="box hidden" id="heatmapBox">
   <h3>🔥 Heatmap năng suất</h3>
   <div id="heatmap"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 const loginBox     = document.getElementById("loginBox");
@@ -177,25 +233,27 @@ function init(){
 
   /* ===== GIÁM ĐỐC XƯỞNG ===== */
   if(u.role === "gdx_xuong"){
-    dashboardBox.classList.remove("hidden");
-    loadDashboard();
-    return;
-  }
+  dashboardBox.classList.remove("hidden");
+  loadDashboardGDX(); // dùng dashboard GDX
+  return;
+}
 
   /* ===== GIÁM ĐỐC CÔNG TY ===== */
   if(u.role === "gdc"){
-    dashboardBox.classList.remove("hidden");
-    loadDashboard();
-    return;
-  }
+  dashboardBox.classList.remove("hidden");
+  loadDashboardGDC(); // dùng dashboard GDC
+  return;
+}
+
 
   /* ===== ADMIN ===== */
-  if(u.role === "admin"){
-    adminBox.classList.remove("hidden");
-    loadAdmin();
-    return;
-  }
+  if(u.role==="admin"){
+  adminBox.classList.remove("hidden");
+  loadAdmin();
+  document.getElementById("auditBox").classList.remove("hidden");
+  loadAuditLog();
 }
+
 
 
 function login(){
@@ -514,6 +572,219 @@ function saveUser(username){
 function logout(){
   localStorage.removeItem("USER");
   location.reload();
+}
+function loadDashboardGDX() {
+  const u = getUser();
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "getDashboardGDX",
+      xuong: u.xuong
+    })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (!res.success) return;
+
+    // 1️⃣ Tổng sản lượng + % HS trung bình
+    const summaryDiv = document.getElementById("gdxSummary");
+    let html = "<h4>Tổng sản lượng & HS% trung bình</h4><ul>";
+    Object.keys(res.totalPerDay).forEach(ngay => {
+      html += `<li>${ngay}: ${res.totalPerDay[ngay]} sp, HS trung bình: ${res.avgHSPerDay[ngay]}%</li>`;
+    });
+    html += "</ul>";
+    summaryDiv.innerHTML = html;
+
+    // 2️⃣ Cảnh báo tổ tụt <80%
+    const warnDiv = document.getElementById("gdxWarnings");
+    const warnKeys = Object.keys(res.warningTos);
+    if (warnKeys.length === 0) {
+      warnDiv.classList.add("hidden");
+      warnDiv.innerHTML = "";
+    } else {
+      warnDiv.classList.remove("hidden");
+      let wHtml = "";
+      warnKeys.forEach(to => {
+        wHtml += `Tổ ${to}: khung giờ ${res.warningTos[to].join(", ")}<br>`;
+      });
+      warnDiv.innerHTML = wHtml;
+    }
+
+    // 3️⃣ Heatmap
+    buildGdxHeatmap(res.data);
+  });
+}
+function buildGdxHeatmap(data){
+  const div = document.getElementById("gdxHeatmap");
+  div.innerHTML = "";
+
+  const days = [...new Set(data.map(r=>r.ngay))].slice(0,7);
+
+  const grid = document.createElement("div");
+  grid.className = "heatmap";
+
+  const HOURS = [
+    "07-08","08-09","09-10","10-11","11-12",
+    "12-13","13-14","14-15","15-16","16-17"
+  ];
+
+  HOURS.forEach(h=>{
+    const col = document.createElement("div");
+    col.innerHTML = `<b>${h}</b>`;
+    days.forEach(d=>{
+      const rows = data.filter(r => r.ngay===d && r.khung_gio===h);
+      const avg = rows.length ? Math.round(rows.reduce((a,b)=>a+b.hieu_suat,0)/rows.length) : null;
+
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      if(avg===null){cell.classList.add("gray"); cell.innerText="-";}
+      else if(avg<80){cell.classList.add("red"); cell.innerText=avg;}
+      else if(avg<95){cell.classList.add("yellow"); cell.innerText=avg;}
+      else{cell.classList.add("green"); cell.innerText=avg;}
+      col.appendChild(cell);
+    });
+    grid.appendChild(col);
+  });
+
+  div.appendChild(grid);
+}
+function loadDashboardGDC() {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "getDashboardGDC"
+    })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if(!res.success) return;
+
+    // 1️⃣ Tổng sản lượng + HS% trung bình theo xưởng
+    const sumDiv = document.getElementById("gdcSummary");
+    let html = "<h4>Tổng sản lượng & HS trung bình theo xưởng</h4><ul>";
+    Object.keys(res.xuongStats).forEach(x=>{
+      const s = res.xuongStats[x];
+      html += `<li>Xưởng ${x}: ${s.total} sp, HS trung bình: ${s.avgHS}%</li>`;
+    });
+    html += "</ul>";
+    sumDiv.innerHTML = html;
+
+    // 2️⃣ Biểu đồ xu hướng
+    buildTrendChart(res.trend);
+
+    // 3️⃣ Ranking xưởng / tổ
+    buildRanking(res.xuongStats, res.toStats);
+
+    // 4️⃣ Heatmap
+    buildGdxHeatmap(res.data); // dùng lại hàm heatmap, filter dữ liệu không cần
+  });
+}
+function buildTrendChart(trend) {
+  const ctx = document.getElementById("gdcTrendChart").getContext("2d");
+  const labels = Object.keys(trend);
+  const data = Object.values(trend);
+
+  if(window.trendChart) window.trendChart.destroy(); // tránh tạo chart mới nhiều lần
+
+  window.trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Tổng sản lượng',
+        data,
+        borderColor: 'blue',
+        backgroundColor: 'rgba(0,0,255,0.1)',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+function buildRanking(xuongStats, toStats) {
+  const div = document.getElementById("gdcRanking");
+  let html = "<h4>Ranking xưởng theo HS%</h4><ol>";
+  Object.entries(xuongStats)
+    .sort((a,b)=>b[1].avgHS - a[1].avgHS)
+    .forEach(([x,s])=>{
+      html += `<li>Xưởng ${x}: HS ${s.avgHS}%</li>`;
+    });
+  html += "</ol>";
+
+  html += "<h4>Ranking tổ theo HS%</h4><ol>";
+  Object.entries(toStats)
+    .sort((a,b)=>b[1].avgHS - a[1].avgHS)
+    .forEach(([k,s])=>{
+      html += `<li>${k}: HS ${s.avgHS}%</li>`;
+    });
+  html += "</ol>";
+
+  div.innerHTML = html;
+}
+function loadAuditLog(){
+  fetch(API_URL, {
+    method:"POST",
+    body:JSON.stringify({
+      action:"getAuditLog",
+      role: getUser().role
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    const tbody = document.getElementById("auditTable");
+    tbody.innerHTML="";
+    if(!res.success) return;
+
+    res.data.forEach(r=>{
+      tbody.innerHTML += `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.username}</td>
+          <td>${r.action}</td>
+          <td>${r.target||""}</td>
+          <td>${r.detail||""}</td>
+          <td>${r.created_at}</td>
+        </tr>`;
+    });
+  });
+}
+function showAddUser(){
+  document.getElementById("addUserBox").classList.remove("hidden");
+}
+
+function addUser(){
+  const username = document.getElementById("newUserName").value.trim();
+  const password = document.getElementById("newUserPass").value.trim();
+  const role = document.getElementById("newUserRole").value;
+  const xuong = document.getElementById("newUserXuong").value;
+  const to_nhom = document.getElementById("newUserTo").value;
+  const active = document.getElementById("newUserActive").checked ? 1 : 0;
+
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"admin_save_user",
+      admin:getUser().user,
+      role:"admin",
+      username,
+      role_new:role,
+      xuong,
+      to_nhom,
+      active
+    })
+  }).then(r=>r.json())
+    .then(res=>{
+      if(res.success){
+        alert("Đã thêm user");
+        loadAdmin();
+        document.getElementById("addUserBox").classList.add("hidden");
+      } else alert("Lỗi thêm user");
+    });
 }
 
 </script>
