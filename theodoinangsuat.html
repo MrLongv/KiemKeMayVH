@@ -238,7 +238,7 @@ function loadToday(){
     })
   }).then(r=>r.json()).then(res=>{
     const today = new Date().toISOString().slice(0,10);
-    const used = res.data.filter(r=>r.ngay===today && r.to_nhom==u.to);
+    const used = res.data.filter(r=>r.ngay===today && r.to_nhom==u.to && r.xuong == u.xuong);
     buildHourSelect(used);
     checkWarning(used);
     buildHeatmap(res.data);
@@ -259,22 +259,39 @@ function buildHourSelect(rows){
 
 /* ===== SAVE ===== */
 function save(){
-  const u=getUser();
-  fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"save",
-      user:u.user,
-      xuong:u.xuong,
-      to:u.to,
-      ngay:new Date().toISOString().slice(0,10),
-      khung_gio:khungGio.value,
-      ma_hang:maHang.value,
-      ke_hoach:keHoach.value,
-      thuc_te:thucTe.value,
-      nguyen_nhan:nguyenNhan.value
+  const u = getUser();
+
+  // 1️⃣ Validate input trước khi gửi
+  const kg = khungGio.value.trim();
+  const mh = maHang.value.trim();
+  const kh = keHoach.value.trim();
+  const tt = thucTe.value.trim();
+
+  if (!kg) {
+    saveMsg.innerHTML = `<span class="bad">❌ Chưa chọn khung giờ</span>`;
+    return;
+  }
+  if (!kh || !tt) {
+    saveMsg.innerHTML = `<span class="bad">❌ Thiếu kế hoạch hoặc thực tế</span>`;
+    return;
+  }
+
+  // 2️⃣ Gửi request
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "save",
+      user: u.user,
+      xuong: u.xuong,
+      to: u.to,
+      ngay: new Date().toISOString().slice(0,10),
+      khung_gio: kg,
+      ma_hang: mh,
+      ke_hoach: kh,
+      thuc_te: tt,
+      nguyen_nhan: nguyenNhan.value.trim()
     })
-  }).then(r=>r.json()).then(res=>{
+  }).then(r => r.json()).then(res => {
     saveMsg.innerHTML = res.success
       ? `<span class="ok">✔ Đã lưu (${res.hieu_suat}%)</span>`
       : `<span class="bad">${res.msg}</span>`;
