@@ -201,20 +201,27 @@ function init(){
 function login(){
   fetch(API_URL,{
     method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
     body:JSON.stringify({
       action:"login",
-      user:lgUser.value,
-      pass:lgPass.value
+      user:lgUser.value.trim(),
+      pass:lgPass.value.trim()
     })
-  }).then(r=>r.json()).then(res=>{
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    console.log("LOGIN RES:",res); // 👈 rất quan trọng
     if(!res.success){
-      lgMsg.innerText="Sai tài khoản";
+      lgMsg.innerText=res.msg || "Sai tài khoản";
       return;
     }
     localStorage.setItem("USER",JSON.stringify(res));
     location.reload();
   });
 }
+
 
 function getUser(){
   return JSON.parse(localStorage.getItem("USER"));
