@@ -103,6 +103,23 @@ button,input,select{width:100%;padding:10px;margin:6px 0;font-size:16px}
 
   <button class="btn-red" onclick="logout()">Đăng xuất</button>
 </div>
+<div id="adminBox" class="box hidden">
+  <h3>👑 Quản lý người dùng</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Role</th>
+        <th>Xưởng</th>
+        <th>Tổ</th>
+        <th>Active</th>
+        <th>Lưu</th>
+      </tr>
+    </thead>
+    <tbody id="adminUsers"></tbody>
+  </table>
+</div>
 
 <div class="box hidden" id="alertBox"></div>
 
@@ -122,24 +139,47 @@ const HOURS = [
 document.addEventListener("DOMContentLoaded",init);
 
 function init(){
-  const u=getUser();
+  const u = getUser();
   if(!u) return;
 
+  // Ẩn tất cả
   loginBox.classList.add("hidden");
+  inputBox.classList.add("hidden");
+  heatmapBox.classList.add("hidden");
+  dashboardBox.classList.add("hidden");
+  adminBox.classList.add("hidden");
 
-  if(u.role==="to_truong" || u.role==="to_pho"){
+  /* ===== TỔ TRƯỞNG / TỔ PHÓ ===== */
+  if(u.role === "to_truong" || u.role === "to_pho"){
     inputBox.classList.remove("hidden");
     heatmapBox.classList.remove("hidden");
-    iXuong.innerText=u.xuong;
-    iTo.innerText=u.to;
+    iXuong.innerText = u.xuong;
+    iTo.innerText = u.to;
     loadToday();
-  } 
-  else {
+    return;
+  }
+
+  /* ===== GIÁM ĐỐC XƯỞNG ===== */
+  if(u.role === "gdx_xuong"){
     dashboardBox.classList.remove("hidden");
     loadDashboard();
+    return;
+  }
+
+  /* ===== GIÁM ĐỐC CÔNG TY ===== */
+  if(u.role === "gdc"){
+    dashboardBox.classList.remove("hidden");
+    loadDashboard("ALL");
+    return;
+  }
+
+  /* ===== ADMIN ===== */
+  if(u.role === "admin"){
+    adminBox.classList.remove("hidden");
+    loadAdmin();
+    return;
   }
 }
-
 
 function login(){
   fetch(API_URL,{
@@ -392,6 +432,60 @@ function renderTopErrors(rows){
       div.innerHTML+=`
         <div class="error-bar">${k}: ${v} lần</div>`;
     });
+}
+function loadAdmin(){
+  const u=getUser();
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"admin_users",
+      role:u.role
+    })
+  }).then(r=>r.json()).then(res=>{
+    if(!res.success) return;
+    const tb=document.getElementById("adminUsers");
+    tb.innerHTML="";
+    res.data.forEach(x=>{
+      tb.innerHTML+=`
+        <tr>
+          <td>${x.username}</td>
+          <td>
+            <select id="r_${x.username}">
+              <option ${x.role==="to_truong"?"selected":""}>to_truong</option>
+              <option ${x.role==="to_pho"?"selected":""}>to_pho</option>
+              <option ${x.role==="gdx_xuong"?"selected":""}>gdx_xuong</option>
+              <option ${x.role==="gdc"?"selected":""}>gdc</option>
+              <option ${x.role==="admin"?"selected":""}>admin</option>
+            </select>
+          </td>
+          <td><input id="x_${x.username}" value="${x.xuong||""}"></td>
+          <td><input id="t_${x.username}" value="${x.to_nhom||""}"></td>
+          <td>
+            <input type="checkbox" id="a_${x.username}" ${x.active? "checked":""}>
+          </td>
+          <td>
+            <button onclick="saveUser('${x.username}')">💾</button>
+          </td>
+        </tr>`;
+    });
+  });
+}
+
+function saveUser(username){
+  const u=getUser();
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"admin_save_user",
+      admin:u.user,
+      role:u.role,
+      username,
+      role_new:document.getElementById("r_"+username).value,
+      xuong:document.getElementById("x_"+username).value,
+      to_nhom:document.getElementById("t_"+username).value,
+      active:document.getElementById("a_"+username).checked?1:0
+    })
+  }).then(()=>alert("Đã lưu"));
 }
 
 </script>
