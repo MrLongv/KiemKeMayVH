@@ -40,6 +40,8 @@ tfoot td{font-weight:bold;background:#e5e7eb}
 </tr>
 </tfoot>
 </table>
+<button onclick="saveGrid()">💾 LƯU DỮ LIỆU</button>
+<div id="saveMsg"></div>
 
 <script>
 const HOURS = [
@@ -91,6 +93,51 @@ function calc(){
   document.getElementById("sumTT").innerText=sumTT;
   document.getElementById("avgHS").innerText=c?Math.round(sumHS/c)+"%":"0%";
 }
+ const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+
+function saveGrid(){
+  const user = JSON.parse(localStorage.getItem("USER")) || {
+    xuong: 1,
+    to: 1,
+    user: "test"
+  };
+
+  const ngay = document.getElementById("ngay").value;
+  const ma_hang = document.getElementById("maHang").value;
+
+  const rows = document.querySelectorAll("tbody tr");
+  let count = 0;
+
+  rows.forEach(tr => {
+    const khung_gio = tr.dataset.hour;
+    const keHoach = Number(tr.querySelector(".keHoach").value);
+    const thucTe = Number(tr.querySelector(".thucTe").value);
+    const lyDo = tr.querySelector(".lyDo").value;
+
+    if (!keHoach && !thucTe) return;
+
+    fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({
+        action:"saveHour",
+        ngay,
+        xuong:user.xuong,
+        to_nhom:user.to,
+        khung_gio,
+        ma_hang,
+        ke_hoach_gio: keHoach,
+        thuc_te: thucTe,
+        nguyen_nhan: lyDo,
+        user: user.user
+      })
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.success) count++;
+      saveMsg.innerText = "✔ Đã lưu "+count+" dòng";
+    });
+  });
+} 
 </script>
 
 </body>
