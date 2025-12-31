@@ -85,7 +85,7 @@ const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
 /* ===== AUTH CHECK ===== */
 const u = JSON.parse(localStorage.getItem("USER"));
-if(!u || u.role !== "gdx_xuong" || u.xuong != 1){
+if(!u || u.role !== "gdx_xuong" || Number(u.xuong) !== 1){
   location.href = "../login.html";
 }
 
@@ -96,19 +96,22 @@ document.getElementById("ngay").value = today;
 /* ===== LOAD DATA ===== */
 function loadData(){
   const ngay = document.getElementById("ngay").value;
+
   fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      action:"getDayByXuong",
-      xuong: 1,
-      ngay
+      action:"getDay",
+      xuong: 1
     })
   })
   .then(r=>r.json())
   .then(res=>{
     if(!res.success) return;
-    render(res.data);
+
+    // 🔎 lọc theo ngày ở frontend
+    const rows = res.data.filter(r => r.ngay === ngay);
+    render(rows);
   });
 }
 
@@ -117,8 +120,8 @@ function render(rows){
   const tb = document.getElementById("tbody");
   tb.innerHTML="";
 
-  if(rows.length===0){
-    tb.innerHTML="<tr><td colspan='5'>Chưa có dữ liệu</td></tr>";
+  if(rows.length === 0){
+    tb.innerHTML = "<tr><td colspan='5'>Chưa có dữ liệu</td></tr>";
     return;
   }
 
@@ -127,7 +130,7 @@ function render(rows){
     if(r.hieu_suat_ngay < 80) cls="bad";
     else if(r.hieu_suat_ngay < 95) cls="mid";
 
-    tb.innerHTML += `
+    tb.insertAdjacentHTML("beforeend",`
       <tr class="${cls}">
         <td>Tổ ${r.to_nhom}</td>
         <td>${r.tong_sp}</td>
@@ -135,7 +138,7 @@ function render(rows){
         <td>${r.hieu_suat_ngay}%</td>
         <td>${r.so_gio_lam}</td>
       </tr>
-    `;
+    `);
   });
 }
 
