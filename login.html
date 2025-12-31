@@ -60,54 +60,56 @@ button{
   <div id="msg" class="error"></div>
 </div>
 
+/* ===== LOGIN ===== */
 <script>
-/* ===== CONFIG ===== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
-/* ===== LOGIN ===== */
 function login(){
-  msg.innerText="";
-
   fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
       action:"login",
-      user:user.value.trim(),
-      pass:pass.value.trim()
+      user: lgUser.value,
+      pass: lgPass.value
     })
   })
   .then(r=>r.json())
   .then(res=>{
     if(!res.success){
-      msg.innerText = res.msg || "Sai tài khoản hoặc mật khẩu";
+      lgMsg.innerText = res.msg || "Sai tài khoản";
       return;
     }
 
-    // Lưu session
+    // ✅ LƯU USER
     localStorage.setItem("USER", JSON.stringify(res));
 
-    // Redirect theo role
+    // ✅ REDIRECT THEO ROLE
     if(res.role === "to_truong" || res.role === "to_pho"){
-      location.href = "./to/index.html";
+      location.href = "/to/index.html";
+      return;
     }
-    else if(res.role === "gdx_xuong"){
-      location.href = "./gdx/index.html";
+
+    if(res.role === "gdx_xuong"){
+      location.href = "/gdx/xn" + res.xuong + ".html";
+      return;
     }
-    else if(res.role === "gdc"){
-      location.href = "./gdc/index.html";
+
+    if(res.role === "gdc"){
+      location.href = "/gdc/index.html";
+      return;
     }
-    else if(res.role === "admin"){
-      location.href = "./admin/index.html";
+
+    if(res.role === "admin"){
+      location.href = "/admin/index.html";
+      return;
     }
-    else{
-      msg.innerText = "Role không hợp lệ";
-    }
-  })
-  .catch(e=>{
-    msg.innerText="Không kết nối được server";
+
+    // fallback
+    alert("Role không hợp lệ");
   });
 }
+
 </script>
 
 </body>
