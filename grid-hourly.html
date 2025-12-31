@@ -12,74 +12,104 @@ input,select{width:100%;border:none;text-align:center}
 .low{background:#fee2e2}
 .mid{background:#fef9c3}
 .high{background:#dcfce7}
+.locked{color:#16a34a;font-weight:600}
 tfoot td{font-weight:bold;background:#e5e7eb}
 </style>
 </head>
 <body>
 
-<h2>📊 Nhập năng suất theo giờ – XN1</h2>
+<h2>📊 Nhập năng suất theo giờ</h2>
+
+<div style="margin-bottom:10px">
+  Ngày: <input type="date" id="ngay">
+  Mã hàng: <input id="maHang" style="width:120px">
+</div>
 
 <table id="grid">
 <thead>
 <tr>
   <th>Giờ</th>
-  <th>Mã hàng</th>
   <th>Kế hoạch</th>
   <th>Thực tế</th>
   <th>% HS</th>
   <th>Nguyên nhân</th>
+  <th>Trạng thái</th>
 </tr>
 </thead>
 <tbody></tbody>
 <tfoot>
 <tr>
-  <td colspan="3">TỔNG NGÀY</td>
+  <td colspan="2">TỔNG NGÀY</td>
   <td id="sumTT">0</td>
   <td id="avgHS">0%</td>
-  <td></td>
+  <td colspan="2"></td>
 </tr>
 </tfoot>
 </table>
-<button onclick="saveGrid()">💾 LƯU DỮ LIỆU</button>
-<div id="saveMsg"></div>
+
+<div style="margin-top:10px" id="saveMsg"></div>
 
 <script>
+/* ================= CONFIG ================= */
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const HOURS = [
   "07-08","08-09","09-10","10-11","12-13",
   "13-14","14-15","15-16","16-17"
 ];
 
 const tbody = document.querySelector("#grid tbody");
+let hourlyMap = {};
 
-HOURS.forEach(h=>{
-  const tr=document.createElement("tr");
-  tr.innerHTML=`
-    <td>${h}</td>
-    <td><input></td>
-    <td><input type="number" class="kh"></td>
-    <td><input type="number" class="tt"></td>
-    <td class="hs">0%</td>
-    <td>
-      <select>
-        <option value="">-</option>
-        <option>Máy hư</option>
-        <option>Thiếu phụ liệu</option>
-        <option>Thiếu người</option>
-        <option>Lỗi chất lượng</option>
-      </select>
-    </td>
-  `;
-  tbody.appendChild(tr);
-});
+/* ================= INIT ================= */
+document.getElementById("ngay").value =
+  new Date().toISOString().slice(0,10);
 
+renderGrid();
+loadToday();
+
+/* ================= RENDER GRID ================= */
+function renderGrid(){
+  tbody.innerHTML="";
+  HOURS.forEach(h=>{
+    const r = hourlyMap[h] || null;
+
+    const tr=document.createElement("tr");
+    tr.dataset.hour = h;
+
+    tr.innerHTML=`
+      <td>${h}</td>
+      <td><input type="number" class="kh" ${r?'disabled':''} value="${r?.ke_hoach_gio||''}"></td>
+      <td><input type="number" class="tt" ${r?'disabled':''} value="${r?.thuc_te||''}"></td>
+      <td class="hs">${r? r.hieu_suat+"%":"0%"}</td>
+      <td>
+        <select class="lyDo" ${r?'disabled':''}>
+          <option value="">-</option>
+          <option ${r?.nguyen_nhan==="Máy hư"?"selected":""}>Máy hư</option>
+          <option ${r?.nguyen_nhan==="Thiếu phụ liệu"?"selected":""}>Thiếu phụ liệu</option>
+          <option ${r?.nguyen_nhan==="Thiếu người"?"selected":""}>Thiếu người</option>
+          <option ${r?.nguyen_nhan==="Lỗi chất lượng"?"selected":""}>Lỗi chất lượng</option>
+        </select>
+      </td>
+      <td>
+        ${r
+          ? `<span class="locked">✔ Đã nhập</span>`
+          : `<button onclick="saveRow('${h}',this)">💾 Lưu</button>`
+        }
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ================= CALC ================= */
 tbody.addEventListener("input",calc);
 
 function calc(){
   let sumTT=0,sumHS=0,c=0;
 
   document.querySelectorAll("tbody tr").forEach(tr=>{
-    const kh=+tr.querySelector(".kh").value;
-    const tt=+tr.querySelector(".tt").value;
+    const kh=+tr.querySelector(".kh")?.value;
+    const tt=+tr.querySelector(".tt")?.value;
     const hsCell=tr.querySelector(".hs");
 
     if(kh>0 && tt>=0){
@@ -90,54 +120,76 @@ function calc(){
     }
   });
 
-  document.getElementById("sumTT").innerText=sumTT;
+  sumTT && (sumTT=document.getElementById("sumTT").innerText=sumTT);
   document.getElementById("avgHS").innerText=c?Math.round(sumHS/c)+"%":"0%";
 }
- const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
-function saveGrid(){
-  const user = JSON.parse(localStorage.getItem("USER")) || {
-    xuong: 1,
-    to: 1,
-    user: "test"
-  };
+/* ================= LOAD DATA ================= */
+function loadToday(){
+  const u = JSON.parse(localStorage.getItem("USER"));
+  if(!u) return;
 
   const ngay = document.getElementById("ngay").value;
-  const ma_hang = document.getElementById("maHang").value;
 
-  const rows = document.querySelectorAll("tbody tr");
-  let count = 0;
-
-  rows.forEach(tr => {
-    const khung_gio = tr.dataset.hour;
-    const keHoach = Number(tr.querySelector(".keHoach").value);
-    const thucTe = Number(tr.querySelector(".thucTe").value);
-    const lyDo = tr.querySelector(".lyDo").value;
-
-    if (!keHoach && !thucTe) return;
-
-    fetch(API_URL,{
-      method:"POST",
-      body:JSON.stringify({
-        action:"saveHour",
-        ngay,
-        xuong:user.xuong,
-        to_nhom:user.to,
-        khung_gio,
-        ma_hang,
-        ke_hoach_gio: keHoach,
-        thuc_te: thucTe,
-        nguyen_nhan: lyDo,
-        user: user.user
-      })
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"getData",
+      xuong:u.xuong
     })
-    .then(r=>r.json())
-    .then(res=>{
-      if(res.success) count++;
-      saveMsg.innerText = "✔ Đã lưu "+count+" dòng";
-    });
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    hourlyMap={};
+    res.data
+      .filter(r=>r.ngay===ngay && r.to_nhom==u.to)
+      .forEach(r=>{
+        hourlyMap[r.khung_gio]=r;
+      });
+
+    renderGrid();
   });
-} 
+}
+
+/* ================= SAVE 1 ROW ================= */
+function saveRow(khungGio,btn){
+  const tr=btn.closest("tr");
+  const kh=tr.querySelector(".kh").value;
+  const tt=tr.querySelector(".tt").value;
+  const lyDo=tr.querySelector(".lyDo").value;
+
+  if(!kh || !tt){
+    alert("Nhập đủ kế hoạch & thực tế");
+    return;
+  }
+
+  const u = JSON.parse(localStorage.getItem("USER"));
+
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"save",
+      user:u.user,
+      xuong:u.xuong,
+      to:u.to,
+      ngay:document.getElementById("ngay").value,
+      khung_gio:khungGio,
+      ma_hang:document.getElementById("maHang").value||"",
+      ke_hoach:kh,
+      thuc_te:tt,
+      nguyen_nhan:lyDo
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success){
+      alert(res.msg);
+      return;
+    }
+    saveMsg.innerText="✔ Đã lưu khung "+khungGio;
+    loadToday();
+  });
+}
 </script>
 
 </body>
