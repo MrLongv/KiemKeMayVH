@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🔐 Đăng nhập hệ thống năng suất</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:#f3f4f6;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box{
+  background:#fff;
+  padding:25px;
+  width:320px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+h2{
+  text-align:center;
+  margin-top:0;
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  font-size:15px;
+}
+button{
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.error{
+  color:#dc2626;
+  text-align:center;
+  margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🔐 Đăng nhập</h2>
+
+  <input id="user" placeholder="Tài khoản">
+  <input id="pass" type="password" placeholder="Mật khẩu">
+
+  <button onclick="login()">Đăng nhập</button>
+
+  <div id="msg" class="error"></div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+
+/* ===== LOGIN ===== */
+function login(){
+  msg.innerText="";
+
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"login",
+      user:user.value.trim(),
+      pass:pass.value.trim()
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success){
+      msg.innerText = res.msg || "Sai tài khoản hoặc mật khẩu";
+      return;
+    }
+
+    // Lưu session
+    localStorage.setItem("USER", JSON.stringify(res));
+
+    // Redirect theo role
+    if(res.role === "to_truong" || res.role === "to_pho"){
+      location.href = "./to/index.html";
+    }
+    else if(res.role === "gdx_xuong"){
+      location.href = "./gdx/index.html";
+    }
+    else if(res.role === "gdc"){
+      location.href = "./gdc/index.html";
+    }
+    else if(res.role === "admin"){
+      location.href = "./admin/index.html";
+    }
+    else{
+      msg.innerText = "Role không hợp lệ";
+    }
+  })
+  .catch(e=>{
+    msg.innerText="Không kết nối được server";
+  });
+}
+</script>
+
+</body>
+</html>
