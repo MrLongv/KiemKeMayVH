@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Nhập năng suất theo giờ</title>
+<style>
+body{font-family:Segoe UI;background:#f3f4f6;padding:20px}
+table{border-collapse:collapse;width:100%;background:#fff}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+th{background:#2563eb;color:#fff}
+input,select{width:100%;border:none;text-align:center}
+.low{background:#fee2e2}
+.mid{background:#fef9c3}
+.high{background:#dcfce7}
+tfoot td{font-weight:bold;background:#e5e7eb}
+</style>
+</head>
+<body>
+
+<h2>📊 Nhập năng suất theo giờ – XN1</h2>
+
+<table id="grid">
+<thead>
+<tr>
+  <th>Giờ</th>
+  <th>Mã hàng</th>
+  <th>Kế hoạch</th>
+  <th>Thực tế</th>
+  <th>% HS</th>
+  <th>Nguyên nhân</th>
+</tr>
+</thead>
+<tbody></tbody>
+<tfoot>
+<tr>
+  <td colspan="3">TỔNG NGÀY</td>
+  <td id="sumTT">0</td>
+  <td id="avgHS">0%</td>
+  <td></td>
+</tr>
+</tfoot>
+</table>
+
+<script>
+const HOURS = [
+  "07-08","08-09","09-10","10-11","11-12",
+  "13-14","14-15","15-16","16-17"
+];
+
+const tbody = document.querySelector("#grid tbody");
+
+HOURS.forEach(h=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td>${h}</td>
+    <td><input></td>
+    <td><input type="number" class="kh"></td>
+    <td><input type="number" class="tt"></td>
+    <td class="hs">0%</td>
+    <td>
+      <select>
+        <option value="">-</option>
+        <option>Máy hư</option>
+        <option>Thiếu phụ liệu</option>
+        <option>Thiếu người</option>
+        <option>Lỗi chất lượng</option>
+      </select>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
+
+tbody.addEventListener("input",calc);
+
+function calc(){
+  let sumTT=0,sumHS=0,c=0;
+
+  document.querySelectorAll("tbody tr").forEach(tr=>{
+    const kh=+tr.querySelector(".kh").value;
+    const tt=+tr.querySelector(".tt").value;
+    const hsCell=tr.querySelector(".hs");
+
+    if(kh>0 && tt>=0){
+      const hs=Math.round(tt/kh*100);
+      hsCell.innerText=hs+"%";
+      hsCell.className="hs "+(hs<80?"low":hs<95?"mid":"high");
+      sumTT+=tt; sumHS+=hs; c++;
+    }
+  });
+
+  document.getElementById("sumTT").innerText=sumTT;
+  document.getElementById("avgHS").innerText=c?Math.round(sumHS/c)+"%":"0%";
+}
+</script>
+
+</body>
+</html>
