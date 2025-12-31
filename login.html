@@ -63,61 +63,63 @@ button{
 <script>
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
-const userEl = document.getElementById("user");
-const passEl = document.getElementById("pass");
-const msgEl  = document.getElementById("msg");
+/* 🔴 QUAN TRỌNG: BASE PATH CỦA GITHUB REPO */
+const BASE_PATH = "/KiemKeMayVH/";
 
 function login(){
-  msgEl.innerText = "";
+  const lgUser = document.getElementById("user");
+  const lgPass = document.getElementById("pass");
+  const lgMsg  = document.getElementById("msg");
+
+  lgMsg.innerText = "";
 
   fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
       action:"login",
-      user: userEl.value.trim(),
-      pass: passEl.value.trim()
+      user: lgUser.value.trim(),
+      pass: lgPass.value.trim()
     })
   })
   .then(r=>r.json())
   .then(res=>{
     if(!res.success){
-      msgEl.innerText = res.msg || "Sai tài khoản hoặc mật khẩu";
+      lgMsg.innerText = res.msg || "Sai tài khoản hoặc mật khẩu";
       return;
     }
 
     // ✅ LƯU USER
     localStorage.setItem("USER", JSON.stringify(res));
 
-  
-   // ✅ REDIRECT THEO ROLE (GITHUB PAGES SAFE)
-if(res.role === "to_truong" || res.role === "to_pho"){
-      location.href = "to/index.html";
+    // ✅ ĐIỀU HƯỚNG ĐÚNG CHO GITHUB PAGES
+    if(res.role === "to_truong" || res.role === "to_pho"){
+      location.href = BASE_PATH + "to/index.html";
       return;
     }
 
     if(res.role === "gdx_xuong"){
-      location.href = "gdx/xn" + res.xuong + ".html";
+      location.href = BASE_PATH + "gdx/xn" + res.xuong + ".html";
       return;
     }
 
     if(res.role === "gdc"){
-      location.href = "gdc/index.html";
+      location.href = BASE_PATH + "gdc/index.html";
       return;
     }
 
     if(res.role === "admin"){
-      location.href = "admin/index.html";
+      location.href = BASE_PATH + "admin/index.html";
       return;
     }
-    msgEl.innerText = "Role không hợp lệ";
+
+    lgMsg.innerText = "Role không hợp lệ";
   })
-  .catch(e=>{
-    msgEl.innerText = "Không kết nối được server";
+  .catch(()=>{
+    lgMsg.innerText = "Lỗi kết nối server";
   });
 }
 </script>
-
 
 </body>
 </html>
