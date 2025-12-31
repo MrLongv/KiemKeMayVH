@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>📊 Dashboard GĐ Xưởng 1</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:#f3f4f6;
+}
+header{
+  background:#1e40af;
+  color:#fff;
+  padding:14px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+}
+.box{
+  background:#fff;
+  margin:12px;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+}
+th{
+  background:#e0e7ff;
+}
+.bad{background:#fee2e2;color:#b91c1c;font-weight:600}
+.mid{background:#fef9c3;color:#92400e;font-weight:600}
+.good{background:#dcfce7;color:#166534;font-weight:600}
+.footer{
+  text-align:center;
+  color:#666;
+  font-size:12px;
+  margin:15px 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>📊 DASHBOARD GIÁM ĐỐC XƯỞNG 1</header>
+
+<div class="box">
+  <div style="margin-bottom:10px">
+    <b>Ngày:</b>
+    <input type="date" id="ngay" />
+    <button onclick="loadData()">🔄 Xem</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tổ</th>
+        <th>Tổng SP</th>
+        <th>Định mức</th>
+        <th>% Hiệu suất</th>
+        <th>Số giờ làm</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="footer">
+  © Hệ thống theo dõi năng suất – GĐ xưởng
+</div>
+
+<script>
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+
+/* ===== AUTH CHECK ===== */
+const u = JSON.parse(localStorage.getItem("USER"));
+if(!u || u.role !== "gdx_xuong" || u.xuong != 1){
+  location.href = "../login.html";
+}
+
+/* ===== DEFAULT DATE ===== */
+const today = new Date().toISOString().slice(0,10);
+document.getElementById("ngay").value = today;
+
+/* ===== LOAD DATA ===== */
+function loadData(){
+  const ngay = document.getElementById("ngay").value;
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"getDayByXuong",
+      xuong: 1,
+      ngay
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success) return;
+    render(res.data);
+  });
+}
+
+/* ===== RENDER ===== */
+function render(rows){
+  const tb = document.getElementById("tbody");
+  tb.innerHTML="";
+
+  if(rows.length===0){
+    tb.innerHTML="<tr><td colspan='5'>Chưa có dữ liệu</td></tr>";
+    return;
+  }
+
+  rows.forEach(r=>{
+    let cls="good";
+    if(r.hieu_suat_ngay < 80) cls="bad";
+    else if(r.hieu_suat_ngay < 95) cls="mid";
+
+    tb.innerHTML += `
+      <tr class="${cls}">
+        <td>Tổ ${r.to_nhom}</td>
+        <td>${r.tong_sp}</td>
+        <td>${r.dinh_muc_ngay}</td>
+        <td>${r.hieu_suat_ngay}%</td>
+        <td>${r.so_gio_lam}</td>
+      </tr>
+    `;
+  });
+}
+
+/* ===== INIT ===== */
+loadData();
+</script>
+
+</body>
+</html>
