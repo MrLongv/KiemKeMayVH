@@ -89,26 +89,28 @@ function login(){
     // ✅ LƯU USER
     localStorage.setItem("USER", JSON.stringify(res));
 
-    // ✅ REDIRECT THEO ROLE
-    if(res.role === "to_truong" || res.role === "to_pho"){
-      location.href = "/to/index.html";
-      return;
-    }
+  
+   // ✅ REDIRECT THEO ROLE (GITHUB PAGES SAFE)
+if(res.role === "to_truong" || res.role === "to_pho"){
+  location.href = "to/index.html";
+  return;
+}
 
-    if(res.role === "gdx_xuong"){
-      location.href = "/gdx/xn" + res.xuong + ".html";
-      return;
-    }
+if(res.role === "gdx_xuong"){
+  location.href = "gdx/xn" + res.xuong + ".html";
+  return;
+}
 
-    if(res.role === "gdc"){
-      location.href = "/gdc/index.html";
-      return;
-    }
+if(res.role === "gdc"){
+  location.href = "gdc/index.html";
+  return;
+}
 
-    if(res.role === "admin"){
-      location.href = "/admin/index.html";
-      return;
-    }
+if(res.role === "admin"){
+  location.href = "admin/index.html";
+  return;
+}
+
 
     msgEl.innerText = "Role không hợp lệ";
   })
