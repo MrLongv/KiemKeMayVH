@@ -190,19 +190,17 @@ function checkAlert(){
 
 /* ===== SAVE ===== */
 function saveAll(){
-  const today = ngay.innerText;
-
   rows.forEach(r=>{
+    if(r.locked) return;
     if(r.kh>0 && r.tt>0){
       fetch(API_URL,{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({
           action:"save",
-          user:u.user,
           xuong:u.xuong,
           to:u.to,
-          ngay:today,
+          ngay:ngay.innerText,
           khung_gio:r.gio,
           ke_hoach:r.kh,
           thuc_te:r.tt,
@@ -211,9 +209,51 @@ function saveAll(){
       });
     }
   });
-
-  alert("✔ Đã gửi dữ liệu");
+  alert("✔ Đã lưu xong");
 }
+
+  loadToday();
+
+function loadToday(){
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"getData",
+      ngay: ngay.innerText,
+      xuong: u.xuong,
+      to: u.to
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success) return;
+
+    res.data.forEach(d=>{
+      const r = rows.find(x=>x.gio===d.khung_gio);
+      if(!r) return;
+
+      r.kh = d.ke_hoach_gio;
+      r.tt = d.thuc_te;
+      r.hs = d.hieu_suat;
+      r.reason = d.nguyen_nhan;
+      r.locked = true;
+
+      // khóa UI
+      const cells = document.querySelectorAll(".grid input, .grid select");
+      cells.forEach(el=>{
+        if(el.parentElement.previousSibling?.innerText === r.gio){
+          el.disabled = true;
+          el.classList.add("lock");
+        }
+      });
+
+      r.hsCell.innerText = r.hs;
+      r.hsCell.className = r.hs<80?"bad":"ok";
+    });
+  });
+}
+
 </script>
 
 </body>
