@@ -101,17 +101,18 @@ function loadData(){
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      action:"getDay",
-      xuong: 1
+      action:"getDayByXuong",   // ✅ ĐÚNG API
+      xuong: 1,
+      ngay
     })
   })
   .then(r=>r.json())
   .then(res=>{
-    if(!res.success) return;
-
-    // 🔎 lọc theo ngày ở frontend
-    const rows = res.data.filter(r => r.ngay === ngay);
-    render(rows);
+    if(!res.success){
+      console.error("API error", res);
+      return;
+    }
+    render(res.data);
   });
 }
 
@@ -145,6 +146,7 @@ function render(rows){
 /* ===== INIT ===== */
 loadData();
 </script>
+
 
 </body>
 </html>
