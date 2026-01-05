@@ -114,24 +114,48 @@ function checkAlert(){
 
 function saveAll(){
   rows.forEach(r=>{
-    if(r.locked||r.kh<=0) return;
+    if(r.locked || r.kh <= 0) return;
+
     fetch(API_URL,{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({
         action:"saveHour",
-        xuong:u.xuong,
-        to_nhom:u.to,
-        ngay:ngay.innerText,
-        khung_gio:r.gio,
-        ke_hoach_gio:r.kh,
-        thuc_te:r.tt,
-        nguyen_nhan:r.reason
+        xuong: u.xuong,
+        to_nhom: u.to,
+        ngay: ngay.innerText,
+        khung_gio: r.gio,
+        ke_hoach_gio: r.kh,
+        thuc_te: r.tt,
+        nguyen_nhan: r.reason
       })
+    })
+    .then(res => res.json())
+    .then(rs=>{
+      if(!rs.success){
+        alert(rs.msg || "Lỗi lưu dữ liệu");
+        return;
+      }
+
+      // 🔒 KHÓA DÒNG NGAY SAU KHI LƯU
+      r.locked = true;
+
+      r.khInput.disabled = true;
+      r.ttInput.disabled = true;
+      r.reasonSelect.disabled = true;
+
+      r.khInput.classList.add("lock");
+      r.ttInput.classList.add("lock");
+
+      r.hs = rs.hieu_suat ?? r.hs;
+      r.hsCell.innerText = r.hs;
+      r.hsCell.className = r.hs < 80 ? "bad" : "ok";
     });
   });
-  alert("✔ Đã lưu");
+
+  alert("✔ Đã lưu & khóa giờ đã nhập");
 }
+
 
 loadToday();
 
