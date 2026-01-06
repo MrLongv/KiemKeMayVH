@@ -2,119 +2,203 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>📊 GDX – Bảng năng suất theo giờ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏭 GĐX – Dashboard xưởng</title>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#f3f4f6}
-header{background:#1e40af;color:#fff;padding:14px;text-align:center;font-size:18px;font-weight:600}
-.box{background:#fff;margin:12px;padding:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{border:1px solid #ddd;padding:6px;text-align:center}
-th{background:#e0e7ff}
-.low{background:#fee2e2;color:#991b1b;font-weight:600}
-.mid{background:#fef9c3;color:#92400e;font-weight:600}
-.high{background:#dcfce7;color:#166534;font-weight:600}
-tfoot td{font-weight:bold;background:#f1f5f9}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:#f3f4f6;
+}
+header{
+  background:#7c2d12;
+  color:#fff;
+  padding:12px 20px;
+  font-size:18px;
+}
+.container{
+  padding:20px;
+}
+.top{
+  margin-bottom:12px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  margin-bottom:20px;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
+  font-size:14px;
+}
+th{
+  background:#e5e7eb;
+}
+.bad{ background:#fee2e2 }
+.warn{ background:#fef9c3 }
+.good{ background:#dcfce7 }
+button{
+  padding:4px 8px;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+  background:#2563eb;
+  color:#fff;
+}
+.detail{
+  display:none;
+}
 </style>
 </head>
 
 <body>
 
-<header>📊 DASHBOARD GDX – XƯỞNG 1 (THEO GIỜ)</header>
+<header>🏭 DASHBOARD GIÁM ĐỐC XƯỞNG</header>
 
-<div class="box">
-  <b>Ngày:</b>
-  <input type="date" id="ngay">
-  <button onclick="loadData()">🔄 Xem</button>
-</div>
+<div class="container">
 
-<div class="box" style="overflow:auto">
-  <table id="tbl"></table>
+  <div class="top">
+    📅 Ngày:
+    <input type="date" id="ngay">
+    <button onclick="loadData()">🔄 Tải dữ liệu</button>
+  </div>
+
+  <!-- TỔNG HỢP NGÀY -->
+  <table>
+    <thead>
+      <tr>
+        <th>Tổ</th>
+        <th>Thực tế</th>
+        <th>ĐM ngày</th>
+        <th>Giờ làm</th>
+        <th>Hiệu suất</th>
+        <th>Chi tiết</th>
+      </tr>
+    </thead>
+    <tbody id="dayBody"></tbody>
+  </table>
+
+  <!-- CHI TIẾT GIỜ -->
+  <div id="detailBox"></div>
+
 </div>
 
 <script>
-const API_URL="https://nang-suat-may.hoalangiongxoai.workers.dev";
-const HOURS=["07-08","08-09","09-10","10-11","11-12","12-13","13-14","14-15","15-16","16-17"];
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const user = JSON.parse(localStorage.getItem("USER")||"{}");
 
-/* ===== AUTH ===== */
-const u=JSON.parse(localStorage.getItem("USER"));
-if(!u||u.role!=="gdx_xuong"||Number(u.xuong)!==1){
+if(user.role !== "gdx"){
+  alert("Không có quyền truy cập");
   location.href="../login.html";
 }
 
-/* ===== DATE ===== */
-const today=new Date().toISOString().slice(0,10);
-ngay.value=today;
+const xuong = user.xuong;
+document.getElementById("ngay").value =
+  new Date().toISOString().slice(0,10);
 
-/* ===== LOAD ===== */
+/* ===== LOAD DASHBOARD ===== */
 function loadData(){
+  const ngay=document.getElementById("ngay").value;
+
   fetch(API_URL,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      action:"getHourRange",
-      xuong:1,
-      from:ngay.value,
-      to:ngay.value
+      action:"getDayByXuong",
+      ngay,
+      xuong
     })
   })
   .then(r=>r.json())
   .then(res=>{
-    if(!res.success) return;
-    render(res.data);
+    const tbody=document.getElementById("dayBody");
+    tbody.innerHTML="";
+
+    if(!res.success || res.data.length===0){
+      tbody.innerHTML="<tr><td colspan=6>Chưa có dữ liệu</td></tr>";
+      return;
+    }
+
+    res.data.forEach(r=>{
+      const hs=r.hieu_suat_ngay||0;
+      let cls="good";
+      if(hs<80) cls="bad";
+      else if(hs<95) cls="warn";
+
+      const tr=document.createElement("tr");
+      tr.className=cls;
+      tr.innerHTML=`
+        <td>${r.to_nhom}</td>
+        <td>${r.tong_sp}</td>
+        <td>${r.dinh_muc_ngay}</td>
+        <td>${r.so_gio_lam}</td>
+        <td><b>${hs}%</b></td>
+        <td>
+          <button onclick="loadDetail('${r.to_nhom}')">Xem</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
   });
 }
 
-/* ===== RENDER ===== */
-function render(data){
-  const tbl=document.getElementById("tbl");
-  tbl.innerHTML="";
+/* ===== LOAD CHI TIẾT GIỜ ===== */
+function loadDetail(to_nhom){
+  const ngay=document.getElementById("ngay").value;
 
-  if(data.length===0){
-    tbl.innerHTML="<tr><td>Chưa có dữ liệu</td></tr>";
-    return;
-  }
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"getHour",
+      ngay,
+      xuong,
+      to_nhom
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    const box=document.getElementById("detailBox");
+    if(!res.success){
+      box.innerHTML="";
+      return;
+    }
 
-  // pivot
-  const map={};
-  data.forEach(d=>{
-    const t=d.to_nhom;
-    if(!map[t]) map[t]={};
-    map[t][d.khung_gio]=d;
-  });
+    let html=`
+      <h3>⏱ Chi tiết tổ ${to_nhom}</h3>
+      <table>
+        <tr>
+          <th>Giờ</th>
+          <th>ĐM</th>
+          <th>Thực tế</th>
+          <th>HS%</th>
+          <th>Nguyên nhân</th>
+        </tr>
+    `;
 
-  // header
-  let html="<tr><th>Tổ</th>";
-  HOURS.forEach(h=>html+=`<th>${h}</th>`);
-  html+="<th>Tổng</th><th>HS%</th></tr>";
-
-  // rows
-  Object.keys(map).sort((a,b)=>a-b).forEach(to=>{
-    let sumTT=0,sumKH=0;
-    html+=`<tr><td><b>Tổ ${to}</b></td>`;
-
-    HOURS.forEach(h=>{
-      const d=map[to][h];
-      if(!d){
-        html+="<td></td>";
-        return;
-      }
-      sumTT+=d.thuc_te;
-      sumKH+=d.ke_hoach_gio;
-      let cls=d.hieu_suat<80?"low":d.hieu_suat<95?"mid":"high";
-      html+=`<td class="${cls}">${d.thuc_te}</td>`;
+    res.data.forEach(h=>{
+      html+=`
+        <tr>
+          <td>${h.khung_gio}</td>
+          <td>${h.ke_hoach_gio}</td>
+          <td>${h.thuc_te}</td>
+          <td>${h.hieu_suat}%</td>
+          <td>${h.nguyen_nhan||""}</td>
+        </tr>
+      `;
     });
 
-    const hs=sumKH?Math.round(sumTT/sumKH*100):0;
-    let cls=hs<80?"low":hs<95?"mid":"high";
-    html+=`<td>${sumTT}</td><td class="${cls}">${hs}%</td></tr>`;
+    html+="</table>";
+    box.innerHTML=html;
   });
-
-  tbl.innerHTML=html;
 }
 
 loadData();
 </script>
+
 </body>
 </html>
