@@ -2,229 +2,169 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>📊 Thống kê xưởng</title>
+<title>TK Xưởng 1 - Theo dõi năng suất</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
+  font-family: "Segoe UI", sans-serif;
+  background:#f4f6f8;
   margin:0;
-  font-family:Segoe UI,Arial;
-  background:#f3f4f6;
 }
 header{
-  background:#1e40af;
+  background:#003366;
   color:#fff;
   padding:12px 16px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
 }
-main{
+header b{font-size:18px}
+.container{
   padding:16px;
 }
-.card{
-  background:#fff;
-  padding:16px;
-  border-radius:12px;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-  margin-bottom:16px;
-}
-h3{ margin-top:0; }
-
-input,select,button{
-  padding:8px;
+select, input, button{
+  padding:6px;
   margin:4px 0;
+}
+table{
   width:100%;
-  font-size:14px;
+  border-collapse:collapse;
+  background:#fff;
 }
-button{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
+th,td{
+  border:1px solid #ccc;
+  padding:6px;
+  text-align:center;
 }
-.row{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:12px;
+th{
+  background:#e9eef3;
 }
 .msg{
   margin-top:8px;
-  font-weight:600;
+  font-weight:bold;
 }
-.success{ color:#16a34a; }
-.error{ color:#dc2626; }
+.logout{
+  float:right;
+  background:#c0392b;
+  color:#fff;
+  border:none;
+  padding:6px 10px;
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div>
-    📊 <b>THỐNG KÊ XƯỞNG</b>
-    <span id="xnLabel"></span>
-  </div>
-  <button onclick="logout()">Đăng xuất</button>
+  <b>📊 TK – XƯỞNG 1</b>
+  <button class="logout" onclick="logout()">Đăng xuất</button>
 </header>
 
-<main>
+<div class="container">
 
-<div class="card">
-  <h3>📅 Nhập kế hoạch đầu ngày</h3>
+  <h3>📅 Thống kê theo ngày</h3>
 
-  <div class="row">
-    <div>
-      <label>Ngày</label>
-      <input type="date" id="ngay">
-    </div>
+  Ngày:
+  <input type="date" id="ngay">
 
-    <div>
-      <label>Tổ</label>
-      <select id="to_nhom"></select>
-    </div>
+  <button onclick="loadData()">Xem dữ liệu</button>
 
-    <div>
-      <label>Mã hàng</label>
-      <input id="ma_hang">
-    </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Tổ</th>
+        <th>Khung giờ</th>
+        <th>Kế hoạch</th>
+        <th>Thực tế</th>
+        <th>%</th>
+        <th>Nguyên nhân</th>
+      </tr>
+    </thead>
+    <tbody id="tb"></tbody>
+  </table>
 
-    <div>
-      <label>Số lượng</label>
-      <input type="number" id="so_luong">
-    </div>
+  <div class="msg" id="msg"></div>
 
-    <div>
-      <label>Định mức ngày</label>
-      <input type="number" id="dinh_muc_ngay">
-    </div>
-
-    <div>
-      <label>Định mức giờ</label>
-      <input type="number" id="dinh_muc_gio">
-    </div>
-
-    <div>
-      <label>USD</label>
-      <input type="number" id="usd">
-    </div>
-
-    <div>
-      <label>LĐ thực tế</label>
-      <input type="number" id="lao_dong_thuc_te">
-    </div>
-
-    <div>
-      <label>LĐ sơ đồ</label>
-      <input type="number" id="lao_dong_so_do">
-    </div>
-
-    <div>
-      <label>Đơn giá</label>
-      <input type="number" id="don_gia">
-    </div>
-
-    <div>
-      <label>Thời gian (giây)</label>
-      <input type="number" id="thoi_gian_giay">
-    </div>
-
-    <div>
-      <label>USD đạt/ngày</label>
-      <input type="number" id="usd_dat_ngay">
-    </div>
-
-    <div>
-      <label>Chuyển đổi ngày</label>
-      <input id="chuyen_doi_ngay">
-    </div>
-  </div>
-
-  <button onclick="savePlan()">💾 Lưu kế hoạch</button>
-  <div id="msg" class="msg"></div>
 </div>
 
-</main>
-
 <script>
+/* ===== CONFIG ===== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-const BASE_PATH = "/KiemKeMayVH/";
 
-/* ===== AUTH CHECK ===== */
+/* ===== CHECK LOGIN ===== */
 const USER = JSON.parse(localStorage.getItem("USER"));
-if(!USER || USER.role !== "tk"){
-  location.href = BASE_PATH + "login.html";
+
+if(!USER){
+  location.replace("../login.html");
 }
 
-const XUONG = USER.xuong;
-document.getElementById("xnLabel").innerText = "(Xưởng " + XUONG + ")";
+if(USER.role !== "tk" || USER.xuong !== 1){
+  location.replace("../login.html");
+}
 
-/* ===== INIT ===== */
+/* ===== DEFAULT DATE ===== */
 document.getElementById("ngay").value =
   new Date().toISOString().slice(0,10);
 
-/* ===== DANH SÁCH TỔ THEO XƯỞNG ===== */
-const TO_BY_XUONG = {
-  1:[1,3,5,7,9],
-  2:[11,13,15,17],
-  3:[19,21,23,25,27]
-};
-
-const selTo = document.getElementById("to_nhom");
-TO_BY_XUONG[XUONG].forEach(t=>{
-  const o = document.createElement("option");
-  o.value = t;
-  o.textContent = "Tổ " + t;
-  selTo.appendChild(o);
-});
-
-/* ===== SAVE PLAN ===== */
-function savePlan(){
-  const d = {
-    action:"savePlan",
-    ngay: ngay.value,
-    xuong: XUONG,
-    to_nhom: to_nhom.value,
-    ma_hang: ma_hang.value,
-    so_luong: so_luong.value,
-    dinh_muc_ngay: dinh_muc_ngay.value,
-    dinh_muc_gio: dinh_muc_gio.value,
-    usd: usd.value,
-    lao_dong_thuc_te: lao_dong_thuc_te.value,
-    lao_dong_so_do: lao_dong_so_do.value,
-    don_gia: don_gia.value,
-    thoi_gian_giay: thoi_gian_giay.value,
-    usd_dat_ngay: usd_dat_ngay.value,
-    chuyen_doi_ngay: chuyen_doi_ngay.value
-  };
+/* ===== LOAD DATA ===== */
+function loadData(){
+  const ngay = document.getElementById("ngay").value;
+  const tb = document.getElementById("tb");
+  tb.innerHTML = "";
+  document.getElementById("msg").innerText = "Đang tải...";
 
   fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(d)
+    body:JSON.stringify({
+      action:"tkView",
+      xuong:1,
+      ngay
+    })
   })
   .then(r=>r.json())
   .then(res=>{
-    const m = document.getElementById("msg");
-    if(res.success){
-      m.innerText = "✅ Đã lưu kế hoạch";
-      m.className = "msg success";
-    }else{
-      m.innerText = res.msg || "❌ Lỗi lưu";
-      m.className = "msg error";
+    if(!res.success){
+      document.getElementById("msg").innerText = res.msg;
+      return;
     }
+
+    if(res.data.length===0){
+      document.getElementById("msg").innerText = "Không có dữ liệu";
+      return;
+    }
+
+    res.data.forEach(r=>{
+      const pct = r.ke_hoach_gio
+        ? Math.round(r.thuc_te*100/r.ke_hoach_gio)
+        : 0;
+
+      tb.insertAdjacentHTML("beforeend",`
+        <tr>
+          <td>${r.to_nhom}</td>
+          <td>${r.khung_gio}</td>
+          <td>${r.ke_hoach_gio}</td>
+          <td>${r.thuc_te}</td>
+          <td>${pct}%</td>
+          <td>${r.nguyen_nhan||""}</td>
+        </tr>
+      `);
+    });
+
+    document.getElementById("msg").innerText = "✅ Hoàn tất";
   })
   .catch(()=>{
-    const m = document.getElementById("msg");
-    m.innerText = "❌ Lỗi kết nối server";
-    m.className = "msg error";
+    document.getElementById("msg").innerText = "❌ Lỗi kết nối server";
   });
 }
 
+/* ===== LOGOUT ===== */
 function logout(){
   localStorage.removeItem("USER");
-  location.href = BASE_PATH + "login.html";
+  location.replace("../login.html");
 }
+
+/* AUTO LOAD */
+loadData();
 </script>
 
 </body>
