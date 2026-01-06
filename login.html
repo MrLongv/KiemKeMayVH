@@ -62,8 +62,6 @@ button{
 
 <script>
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-
-/* 🔴 QUAN TRỌNG: BASE PATH CỦA GITHUB REPO */
 const BASE_PATH = "/KiemKeMayVH/";
 
 function login(){
@@ -92,24 +90,29 @@ function login(){
     // ✅ LƯU USER
     localStorage.setItem("USER", JSON.stringify(res));
 
-    // ✅ ĐIỀU HƯỚNG ĐÚNG CHO GITHUB PAGES
-    if(res.role === "to_truong" || res.role === "to_pho"){
+    /* ===== PHÂN QUYỀN ===== */
+
+    // 👷 TỔ TRƯỞNG
+    if(res.role === "to"){
       location.href = BASE_PATH + "to/index.html";
       return;
     }
 
-    if(res.role === "gdx_xuong"){
+    // 📊 THỐNG KÊ XƯỞNG
+    if(res.role === "tk"){
+      location.href = BASE_PATH + "tk/xn" + res.xuong + ".html";
+      return;
+    }
+
+    // 🏭 GIÁM ĐỐC XƯỞNG
+    if(res.role === "gdx"){
       location.href = BASE_PATH + "gdx/xn" + res.xuong + ".html";
       return;
     }
 
+    // 🏢 GIÁM ĐỐC CÔNG TY
     if(res.role === "gdc"){
       location.href = BASE_PATH + "gdc/index.html";
-      return;
-    }
-
-    if(res.role === "admin"){
-      location.href = BASE_PATH + "admin/index.html";
       return;
     }
 
