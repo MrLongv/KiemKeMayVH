@@ -3,210 +3,207 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>👷 Tổ trưởng – Nhập sản lượng giờ</title>
+<title>👷 Tổ trưởng – Nhập năng suất</title>
 
 <style>
 body{
   margin:0;
-  font-family:Segoe UI,Arial;
+  font-family:Segoe UI, Arial;
   background:#f3f4f6;
 }
 header{
-  background:#065f46;
+  background:#2563eb;
   color:#fff;
-  padding:12px 20px;
-  font-size:18px;
+  padding:12px 16px;
 }
+header b{font-size:18px}
 .container{
-  padding:20px;
+  padding:16px;
 }
-.info{
+.card{
   background:#fff;
-  padding:12px;
   border-radius:10px;
-  margin-bottom:15px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
 }
-.info b{ color:#065f46 }
+h3{margin-top:0}
+label{
+  display:block;
+  margin-top:10px;
+  font-weight:600;
+}
+input,select,textarea,button{
+  width:100%;
+  padding:8px;
+  margin-top:4px;
+  font-size:14px;
+}
+button{
+  margin-top:12px;
+  background:#16a34a;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
 table{
   width:100%;
   border-collapse:collapse;
-  background:#fff;
 }
 th,td{
   border:1px solid #ddd;
   padding:6px;
   text-align:center;
+}
+th{background:#e5e7eb}
+.logout{
+  float:right;
+  cursor:pointer;
   font-size:14px;
 }
-th{
-  background:#e5e7eb;
-}
-input,select{
-  width:100%;
-  border:none;
-  outline:none;
-  text-align:center;
-}
-button{
-  padding:8px 14px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#2563eb;
-  color:#fff;
-}
-.msg{
-  margin-top:10px;
-  font-weight:bold;
-}
-.ok{ color:#16a34a }
-.err{ color:#dc2626 }
 </style>
 </head>
 
 <body>
 
-<header>👷 MÀN HÌNH TỔ TRƯỞNG</header>
+<header>
+  <b>👷 TỔ TRƯỞNG</b>
+  <span class="logout" onclick="logout()">⏻ Thoát</span><br>
+  <span id="info"></span>
+</header>
 
 <div class="container">
 
-  <!-- THÔNG TIN KẾ HOẠCH -->
-  <div class="info" id="planInfo">
-    ⏳ Đang tải kế hoạch...
+  <!-- ===== NHẬP GIỜ ===== -->
+  <div class="card">
+    <h3>🕒 Nhập sản lượng theo giờ</h3>
+
+    <label>Ngày</label>
+    <input type="date" id="ngay">
+
+    <label>Khung giờ</label>
+    <select id="khung_gio">
+      <option value="07-08">07-08</option>
+      <option value="08-09">08-09</option>
+      <option value="09-10">09-10</option>
+      <option value="10-11">10-11</option>
+      <option value="13-14">13-14</option>
+      <option value="14-15">14-15</option>
+      <option value="15-16">15-16</option>
+      <option value="16-17">16-17</option>
+    </select>
+
+    <label>Kế hoạch giờ</label>
+    <input type="number" id="ke_hoach_gio">
+
+    <label>Thực tế</label>
+    <input type="number" id="thuc_te">
+
+    <label>Nguyên nhân (nếu có)</label>
+    <textarea id="nguyen_nhan"></textarea>
+
+    <button onclick="saveHour()">💾 Lưu giờ</button>
+
+    <div id="msg" style="margin-top:8px;color:#dc2626"></div>
   </div>
 
-  <!-- NHẬP GIỜ -->
-  <table>
-    <thead>
-      <tr>
-        <th>Khung giờ</th>
-        <th>ĐM giờ</th>
-        <th>Thực tế</th>
-        <th>Hiệu suất %</th>
-        <th>Nguyên nhân</th>
-        <th>Lưu</th>
-      </tr>
-    </thead>
-    <tbody id="tbody">
-    </tbody>
-  </table>
-
-  <div id="msg" class="msg"></div>
+  <!-- ===== BẢNG GIỜ ===== -->
+  <div class="card">
+    <h3>📊 Giờ đã nhập trong ngày</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Giờ</th>
+          <th>Kế hoạch</th>
+          <th>Thực tế</th>
+          <th>HS (%)</th>
+          <th>Nguyên nhân</th>
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
 
 </div>
 
 <script>
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-const user = JSON.parse(localStorage.getItem("USER")||"{}");
+const USER = JSON.parse(localStorage.getItem("USER"));
 
-if(user.role !== "to"){
-  alert("Không có quyền truy cập");
-  location.href="../login.html";
+/* ===== CHECK QUYỀN ===== */
+if(!USER || USER.role !== "to_truong"){
+  location.href = "../login.html";
 }
 
-const ngay = new Date().toISOString().slice(0,10);
-const xuong = user.xuong;
-const to_nhom = user.to;
+/* ===== INIT ===== */
+document.getElementById("info").innerText =
+  `Xưởng ${USER.xuong} | Tổ ${USER.to_nhom}`;
 
-/* ===== LOAD KẾ HOẠCH ===== */
-fetch(API_URL,{
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body:JSON.stringify({
-    action:"getPlan",
-    ngay,
-    xuong,
-    to_nhom
-  })
-})
-.then(r=>r.json())
-.then(res=>{
-  if(!res.success || !res.data){
-    document.getElementById("planInfo").innerHTML =
-      "❌ Chưa có kế hoạch đầu ngày";
-    return;
-  }
+const today = new Date().toISOString().slice(0,10);
+document.getElementById("ngay").value = today;
 
-  const p = res.data;
+loadHour();
 
-  document.getElementById("planInfo").innerHTML = `
-    <b>Tổ:</b> ${p.to_nhom} |
-    <b>Mã hàng:</b> ${p.ma_hang} |
-    <b>ĐM ngày:</b> ${p.dinh_muc_ngay} |
-    <b>ĐM giờ:</b> ${p.dinh_muc_gio}
-  `;
-
-  buildRows(p.dinh_muc_gio);
-});
-
-/* ===== TẠO CÁC KHUNG GIỜ ===== */
-function buildRows(dm_gio){
-  const hours = [
-    "07:30-08:30","08:30-09:30","09:30-10:30",
-    "10:30-11:30","13:00-14:00","14:00-15:00",
-    "15:00-16:00","16:00-17:00"
-  ];
-
-  const tbody = document.getElementById("tbody");
-  tbody.innerHTML="";
-
-  hours.forEach(h=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${h}</td>
-      <td>${dm_gio}</td>
-      <td><input type="number" min="0"></td>
-      <td class="hs">0%</td>
-      <td><input></td>
-      <td><button onclick="saveHour(this,'${h}',${dm_gio})">Lưu</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-/* ===== TÍNH HS REALTIME ===== */
-document.addEventListener("input",e=>{
-  if(e.target.type==="number"){
-    const tr=e.target.closest("tr");
-    const dm=Number(tr.children[1].innerText||0);
-    const tt=Number(e.target.value||0);
-    const hs=dm>0?Math.round(tt/dm*100):0;
-    tr.querySelector(".hs").innerText=hs+"%";
-  }
-});
-
-/* ===== LƯU GIỜ ===== */
-function saveHour(btn,khung_gio,dm){
-  const tr=btn.closest("tr");
-  const thuc_te=Number(tr.querySelector("input[type=number]").value||0);
-  const nguyen_nhan=tr.querySelectorAll("input")[1].value;
+/* ===== SAVE HOUR ===== */
+function saveHour(){
+  const d = {
+    action:"saveHour",
+    ngay: document.getElementById("ngay").value,
+    khung_gio: document.getElementById("khung_gio").value,
+    ke_hoach_gio: document.getElementById("ke_hoach_gio").value,
+    thuc_te: document.getElementById("thuc_te").value,
+    nguyen_nhan: document.getElementById("nguyen_nhan").value,
+    xuong: USER.xuong,
+    to_nhom: USER.to_nhom
+  };
 
   fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(d)
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    document.getElementById("msg").innerText =
+      res.success ? "✅ Đã lưu" : res.msg;
+    if(res.success) loadHour();
+  });
+}
+
+/* ===== LOAD HOUR ===== */
+function loadHour(){
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      action:"saveHour",
-      ngay,
-      xuong,
-      to_nhom,
-      khung_gio,
-      ke_hoach_gio: dm,
-      thuc_te,
-      nguyen_nhan
+      action:"getHour",
+      ngay: document.getElementById("ngay").value,
+      xuong: USER.xuong,
+      to_nhom: USER.to_nhom
     })
   })
   .then(r=>r.json())
   .then(res=>{
-    const msg=document.getElementById("msg");
-    if(res.success){
-      msg.className="msg ok";
-      msg.innerText="✅ Đã lưu "+khung_gio;
-      btn.disabled=true;
-    }else{
-      msg.className="msg err";
-      msg.innerText=res.msg||"Lỗi lưu";
-    }
+    const tb = document.getElementById("tb");
+    tb.innerHTML = "";
+    (res.data || []).forEach(r=>{
+      tb.innerHTML += `
+        <tr>
+          <td>${r.khung_gio}</td>
+          <td>${r.ke_hoach_gio}</td>
+          <td>${r.thuc_te}</td>
+          <td>${r.hieu_suat}</td>
+          <td>${r.nguyen_nhan || ""}</td>
+        </tr>`;
+    });
   });
+}
+
+/* ===== LOGOUT ===== */
+function logout(){
+  localStorage.clear();
+  location.href = "../login.html";
 }
 </script>
 
