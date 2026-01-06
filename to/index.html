@@ -2,200 +2,213 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>🧵 Nhập năng suất tổ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👷 Tổ trưởng – Nhập sản lượng giờ</title>
+
 <style>
-body{margin:0;font-family:Segoe UI;background:#f3f4f6}
-header{background:#2563eb;color:#fff;padding:12px;text-align:center;font-weight:600}
-.box{background:#fff;margin:12px;padding:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-.info{font-size:14px;margin-bottom:10px}
-.grid{display:grid;grid-template-columns:100px 1fr 1fr 1fr 2fr;border:1px solid #ddd}
-.grid div{border-bottom:1px solid #ddd;border-right:1px solid #ddd;padding:6px;text-align:center}
-.head{background:#f1f5f9;font-weight:600}
-input,select{width:95%}
-.lock{background:#e5e7eb;color:#666}
-.bad{color:#dc2626;font-weight:600}
-.ok{color:#16a34a;font-weight:600}
-.alert{background:#fee2e2;border:2px solid #dc2626;padding:10px;border-radius:10px;margin-top:10px}
-button{padding:10px;border:none;border-radius:8px;background:#16a34a;color:#fff;width:100%;cursor:pointer}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:#f3f4f6;
+}
+header{
+  background:#065f46;
+  color:#fff;
+  padding:12px 20px;
+  font-size:18px;
+}
+.container{
+  padding:20px;
+}
+.info{
+  background:#fff;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:15px;
+}
+.info b{ color:#065f46 }
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
+  font-size:14px;
+}
+th{
+  background:#e5e7eb;
+}
+input,select{
+  width:100%;
+  border:none;
+  outline:none;
+  text-align:center;
+}
+button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#2563eb;
+  color:#fff;
+}
+.msg{
+  margin-top:10px;
+  font-weight:bold;
+}
+.ok{ color:#16a34a }
+.err{ color:#dc2626 }
 </style>
 </head>
 
 <body>
-<header>🧵 NHẬP NĂNG SUẤT THEO GIỜ</header>
 
-<div class="box">
-  <div class="info">
-    <b>Xưởng:</b> <span id="xuong"></span> |
-    <b>Tổ:</b> <span id="to"></span> |
-    <b>Ngày:</b> <span id="ngay"></span>
+<header>👷 MÀN HÌNH TỔ TRƯỞNG</header>
+
+<div class="container">
+
+  <!-- THÔNG TIN KẾ HOẠCH -->
+  <div class="info" id="planInfo">
+    ⏳ Đang tải kế hoạch...
   </div>
 
-  <div class="grid" id="grid">
-    <div class="head">Giờ</div>
-    <div class="head">Kế hoạch</div>
-    <div class="head">Thực tế</div>
-    <div class="head">HS %</div>
-    <div class="head">Nguyên nhân</div>
-  </div>
+  <!-- NHẬP GIỜ -->
+  <table>
+    <thead>
+      <tr>
+        <th>Khung giờ</th>
+        <th>ĐM giờ</th>
+        <th>Thực tế</th>
+        <th>Hiệu suất %</th>
+        <th>Nguyên nhân</th>
+        <th>Lưu</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+    </tbody>
+  </table>
 
-  <div id="alertBox" class="alert" style="display:none"></div>
-  <button onclick="saveAll()">💾 LƯU DỮ LIỆU</button>
+  <div id="msg" class="msg"></div>
+
 </div>
 
 <script>
-const API_URL="https://nang-suat-may.hoalangiongxoai.workers.dev";
-const HOURS=["07-08","08-09","09-10","10-11","11-12","12-13","13-14","14-15","15-16","16-17"];
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const user = JSON.parse(localStorage.getItem("USER")||"{}");
 
-const u=JSON.parse(localStorage.getItem("USER"));
-if(!u||!["to_truong","to_pho"].includes(u.role))location.href="../login.html";
+if(user.role !== "to"){
+  alert("Không có quyền truy cập");
+  location.href="../login.html";
+}
 
-xuong.innerText=u.xuong;
-to.innerText=u.to;
-ngay.innerText=new Date().toISOString().slice(0,10);
+const ngay = new Date().toISOString().slice(0,10);
+const xuong = user.xuong;
+const to_nhom = user.to;
 
-const rows=[];
-const grid=document.getElementById("grid");
+/* ===== LOAD KẾ HOẠCH ===== */
+fetch(API_URL,{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({
+    action:"getPlan",
+    ngay,
+    xuong,
+    to_nhom
+  })
+})
+.then(r=>r.json())
+.then(res=>{
+  if(!res.success || !res.data){
+    document.getElementById("planInfo").innerHTML =
+      "❌ Chưa có kế hoạch đầu ngày";
+    return;
+  }
 
-HOURS.forEach(gio=>{
-  const r={gio,kh:0,tt:0,hs:0,reason:"",locked:false};
+  const p = res.data;
 
-  grid.insertAdjacentHTML("beforeend",`
-    <div>${gio}</div>
-    <div><input type="number"></div>
-    <div><input type="number"></div>
-    <div class="hs">0</div>
-    <div>
-      <select>
-        <option value=""></option>
-        <option>Máy hư</option>
-        <option>Thiếu phụ liệu</option>
-        <option>Thiếu người</option>
-        <option>Chờ kỹ thuật</option>
-        <option>Khác</option>
-      </select>
-    </div>
-  `);
+  document.getElementById("planInfo").innerHTML = `
+    <b>Tổ:</b> ${p.to_nhom} |
+    <b>Mã hàng:</b> ${p.ma_hang} |
+    <b>ĐM ngày:</b> ${p.dinh_muc_ngay} |
+    <b>ĐM giờ:</b> ${p.dinh_muc_gio}
+  `;
 
-  const cells=grid.querySelectorAll("div");
-  r.khInput=cells[cells.length-4].querySelector("input");
-  r.ttInput=cells[cells.length-3].querySelector("input");
-  r.hsCell=cells[cells.length-2];
-  r.reasonSelect=cells[cells.length-1].querySelector("select");
-
-  r.khInput.oninput=()=>calc(r);
-  r.ttInput.oninput=()=>calc(r);
-  r.reasonSelect.onchange=()=>r.reason=r.reasonSelect.value;
-
-  rows.push(r);
+  buildRows(p.dinh_muc_gio);
 });
 
-function calc(r){
-  r.kh=+r.khInput.value;
-  r.tt=+r.ttInput.value;
-  if(r.kh>0){
-    r.hs=Math.round(r.tt/r.kh*100);
-    r.hsCell.innerText=r.hs;
-    r.hsCell.className=r.hs<80?"bad":"ok";
-  }
-  checkAlert();
-}
+/* ===== TẠO CÁC KHUNG GIỜ ===== */
+function buildRows(dm_gio){
+  const hours = [
+    "07:30-08:30","08:30-09:30","09:30-10:30",
+    "10:30-11:30","13:00-14:00","14:00-15:00",
+    "15:00-16:00","16:00-17:00"
+  ];
 
-function checkAlert(){
-  for(let i=1;i<rows.length;i++){
-    if(rows[i].hs<80&&rows[i-1].hs<80&&rows[i].hs>0){
-      alertBox.style.display="block";
-      alertBox.innerHTML=`🚨 ${rows[i-1].gio} & ${rows[i].gio} < 80%`;
-      return;
-    }
-  }
-  alertBox.style.display="none";
-}
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML="";
 
-function saveAll(){
-  rows.forEach(r=>{
-    if(r.locked || r.kh <= 0) return;
-
-    fetch(API_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        action:"saveHour",
-        xuong: u.xuong,
-        to_nhom: u.to,
-        ngay: ngay.innerText,
-        khung_gio: r.gio,
-        ke_hoach_gio: r.kh,
-        thuc_te: r.tt,
-        nguyen_nhan: r.reason
-      })
-    })
-    .then(res => res.json())
-    .then(rs=>{
-      if(!rs.success){
-        alert(rs.msg || "Lỗi lưu dữ liệu");
-        return;
-      }
-
-      // 🔒 KHÓA DÒNG NGAY SAU KHI LƯU
-      r.locked = true;
-
-      r.khInput.disabled = true;
-      r.ttInput.disabled = true;
-      r.reasonSelect.disabled = true;
-
-      r.khInput.classList.add("lock");
-      r.ttInput.classList.add("lock");
-
-      r.hs = rs.hieu_suat ?? r.hs;
-      r.hsCell.innerText = r.hs;
-      r.hsCell.className = r.hs < 80 ? "bad" : "ok";
-    });
+  hours.forEach(h=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${h}</td>
+      <td>${dm_gio}</td>
+      <td><input type="number" min="0"></td>
+      <td class="hs">0%</td>
+      <td><input></td>
+      <td><button onclick="saveHour(this,'${h}',${dm_gio})">Lưu</button></td>
+    `;
+    tbody.appendChild(tr);
   });
-
-  alert("✔ Đã lưu & khóa giờ đã nhập");
 }
 
+/* ===== TÍNH HS REALTIME ===== */
+document.addEventListener("input",e=>{
+  if(e.target.type==="number"){
+    const tr=e.target.closest("tr");
+    const dm=Number(tr.children[1].innerText||0);
+    const tt=Number(e.target.value||0);
+    const hs=dm>0?Math.round(tt/dm*100):0;
+    tr.querySelector(".hs").innerText=hs+"%";
+  }
+});
 
-loadToday();
+/* ===== LƯU GIỜ ===== */
+function saveHour(btn,khung_gio,dm){
+  const tr=btn.closest("tr");
+  const thuc_te=Number(tr.querySelector("input[type=number]").value||0);
+  const nguyen_nhan=tr.querySelectorAll("input")[1].value;
 
-function loadToday(){
   fetch(API_URL,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      action:"getHour",
-      xuong:u.xuong,
-      to_nhom:u.to,
-      ngay:ngay.innerText
+      action:"saveHour",
+      ngay,
+      xuong,
+      to_nhom,
+      khung_gio,
+      ke_hoach_gio: dm,
+      thuc_te,
+      nguyen_nhan
     })
   })
   .then(r=>r.json())
   .then(res=>{
-    if(!res.success) return;
-    res.data.forEach(d=>{
-      const r=rows.find(x=>x.gio===d.khung_gio);
-      if(!r) return;
-      r.kh=d.ke_hoach_gio;
-      r.tt=d.thuc_te;
-      r.hs=d.hieu_suat;
-      r.reason=d.nguyen_nhan;
-      r.locked=true;
-
-      r.khInput.value=r.kh;
-      r.ttInput.value=r.tt;
-      r.reasonSelect.value=r.reason;
-      r.hsCell.innerText=r.hs;
-      r.hsCell.className=r.hs<80?"bad":"ok";
-
-      r.khInput.disabled=true;
-      r.ttInput.disabled=true;
-      r.reasonSelect.disabled=true;
-      r.khInput.classList.add("lock");
-      r.ttInput.classList.add("lock");
-    });
+    const msg=document.getElementById("msg");
+    if(res.success){
+      msg.className="msg ok";
+      msg.innerText="✅ Đã lưu "+khung_gio;
+      btn.disabled=true;
+    }else{
+      msg.className="msg err";
+      msg.innerText=res.msg||"Lỗi lưu";
+    }
   });
 }
 </script>
+
 </body>
 </html>
