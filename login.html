@@ -17,7 +17,7 @@ body{
 }
 .box{
   background:#fff;
-  padding:25px;
+  padding:26px;
   width:320px;
   border-radius:12px;
   box-shadow:0 4px 12px rgba(0,0,0,.15);
@@ -39,6 +39,7 @@ button{
   border-radius:8px;
   cursor:pointer;
 }
+button:hover{opacity:.9}
 .error{
   color:#dc2626;
   text-align:center;
@@ -62,6 +63,7 @@ button{
 
 <script>
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+/* ⚠️ nếu deploy GitHub Pages trong subfolder thì chỉnh lại */
 const BASE_PATH = "/KiemKeMayVH/";
 
 function login(){
@@ -70,6 +72,11 @@ function login(){
   const lgMsg  = document.getElementById("msg");
 
   lgMsg.innerText = "";
+
+  if(!lgUser.value || !lgPass.value){
+    lgMsg.innerText = "Vui lòng nhập tài khoản và mật khẩu";
+    return;
+  }
 
   fetch(API_URL,{
     method:"POST",
@@ -82,25 +89,27 @@ function login(){
   })
   .then(r=>r.json())
   .then(res=>{
+    console.log("LOGIN RES:", res);
+
     if(!res.success){
       lgMsg.innerText = res.msg || "Sai tài khoản hoặc mật khẩu";
       return;
     }
 
-    // ✅ LƯU USER
+    /* ✅ LƯU USER */
     localStorage.setItem("USER", JSON.stringify(res));
 
-    /* ===== PHÂN QUYỀN ===== */
+    /* ===== PHÂN QUYỀN CHUẨN ===== */
 
     // 👷 TỔ TRƯỞNG
-    if(res.role === "to"){
+    if(res.role === "to_truong"){
       location.href = BASE_PATH + "to/index.html";
       return;
     }
 
-    // 📊 THỐNG KÊ XƯỞNG
+    // 📊 THỐNG KÊ
     if(res.role === "tk"){
-      location.href = BASE_PATH + "tk/xn" + res.xuong + ".html";
+      location.href = BASE_PATH + "tk/index.html";
       return;
     }
 
@@ -116,9 +125,10 @@ function login(){
       return;
     }
 
-    lgMsg.innerText = "Role không hợp lệ";
+    lgMsg.innerText = "Role không hợp lệ: " + res.role;
   })
-  .catch(()=>{
+  .catch(err=>{
+    console.error(err);
     lgMsg.innerText = "Lỗi kết nối server";
   });
 }
