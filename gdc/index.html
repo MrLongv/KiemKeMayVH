@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏢 GĐC – Dashboard Công ty</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:#f3f4f6;
+}
+header{
+  background:#020617;
+  color:#fff;
+  padding:14px 20px;
+  font-size:20px;
+}
+.container{
+  padding:20px;
+}
+.top{
+  margin-bottom:15px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  margin-bottom:20px;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+  font-size:15px;
+}
+th{
+  background:#e5e7eb;
+}
+.bad{ background:#fee2e2 }
+.warn{ background:#fef9c3 }
+.good{ background:#dcfce7 }
+.total{
+  background:#e0e7ff;
+  font-weight:bold;
+}
+button{
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#2563eb;
+  color:#fff;
+}
+h3{
+  margin-top:0;
+}
+</style>
+</head>
+
+<body>
+
+<header>🏢 DASHBOARD GIÁM ĐỐC CÔNG TY</header>
+
+<div class="container">
+
+  <div class="top">
+    📅 Ngày:
+    <input type="date" id="ngay">
+    <button onclick="loadAll()">🔄 Tải dữ liệu</button>
+  </div>
+
+  <!-- TỔNG HỢP THEO XƯỞNG -->
+  <table>
+    <thead>
+      <tr>
+        <th>Xưởng</th>
+        <th>Tổng SP</th>
+        <th>ĐM ngày</th>
+        <th>Số giờ</th>
+        <th>Hiệu suất</th>
+        <th>Chi tiết</th>
+      </tr>
+    </thead>
+    <tbody id="xnBody"></tbody>
+  </table>
+
+  <!-- CHI TIẾT XƯỞNG -->
+  <div id="detailBox"></div>
+
+</div>
+
+<script>
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const user = JSON.parse(localStorage.getItem("USER")||"{}");
+
+if(user.role !== "gdc"){
+  alert("Không có quyền truy cập");
+  location.href="../login.html";
+}
+
+document.getElementById("ngay").value =
+  new Date().toISOString().slice(0,10);
+
+/* ===== LOAD TOÀN CÔNG TY ===== */
+async function loadAll(){
+  const ngay=document.getElementById("ngay").value;
+  const tbody=document.getElementById("xnBody");
+  tbody.innerHTML="";
+
+  let tong_sp=0, tong_dm=0, tong_gio=0;
+
+  for(let xn=1; xn<=3; xn++){
+    const res=await fetch(API_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        action:"getDayByXuong",
+        ngay,
+        xuong:xn
+      })
+    }).then(r=>r.json());
+
+    if(!res.success) continue;
+
+    let sp=0, dm=0, gio=0;
+
+    res.data.forEach(r=>{
+      sp+=r.tong_sp||0;
+      dm+=r.dinh_muc_ngay||0;
+      gio+=r.so_gio_lam||0;
+    });
+
+    const hs=dm>0?Math.round(sp/dm*100):0;
+
+    tong_sp+=sp;
+    tong_dm+=dm;
+    tong_gio+=gio;
+
+    let cls="good";
+    if(hs<80) cls="bad";
+    else if(hs<95) cls="warn";
+
+    const tr=document.createElement("tr");
+    tr.className=cls;
+    tr.innerHTML=`
+      <td><b>Xưởng ${xn}</b></td>
+      <td>${sp}</td>
+      <td>${dm}</td>
+      <td>${gio}</td>
+      <td><b>${hs}%</b></td>
+      <td>
+        <button onclick="loadXuong(${xn})">Xem</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  const hsAll=tong_dm>0?Math.round(tong_sp/tong_dm*100):0;
+
+  const tr=document.createElement("tr");
+  tr.className="total";
+  tr.innerHTML=`
+    <td>🏢 TOÀN CÔNG TY</td>
+    <td>${tong_sp}</td>
+    <td>${tong_dm}</td>
+    <td>${tong_gio}</td>
+    <td>${hsAll}%</td>
+    <td></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+/* ===== XEM CHI TIẾT XƯỞNG ===== */
+function loadXuong(xuong){
+  const ngay=document.getElementById("ngay").value;
+
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"getDayByXuong",
+      ngay,
+      xuong
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success) return;
+
+    let html=`
+      <h3>📊 Chi tiết Xưởng ${xuong}</h3>
+      <table>
+        <tr>
+          <th>Tổ</th>
+          <th>SP</th>
+          <th>ĐM</th>
+          <th>Giờ</th>
+          <th>HS%</th>
+        </tr>
+    `;
+
+    res.data.forEach(r=>{
+      html+=`
+        <tr>
+          <td>${r.to_nhom}</td>
+          <td>${r.tong_sp}</td>
+          <td>${r.dinh_muc_ngay}</td>
+          <td>${r.so_gio_lam}</td>
+          <td>${r.hieu_suat_ngay}%</td>
+        </tr>
+      `;
+    });
+
+    html+="</table>";
+    document.getElementById("detailBox").innerHTML=html;
+  });
+}
+
+loadAll();
+</script>
+
+</body>
+</html>
