@@ -148,26 +148,32 @@ loadHour();
 /* ===== SAVE HOUR ===== */
 function saveHour(){
   const d = {
-    action:"saveHour",
+    action: "saveHour",
     ngay: document.getElementById("ngay").value,
     khung_gio: document.getElementById("khung_gio").value,
-    ke_hoach_gio: document.getElementById("ke_hoach_gio").value,
-    thuc_te: document.getElementById("thuc_te").value,
-    nguyen_nhan: document.getElementById("nguyen_nhan").value,
-    xuong: USER.xuong,
-    to_nhom: USER.to_nhom
+    ke_hoach_gio: Number(document.getElementById("ke_hoach_gio").value || 0),
+    thuc_te: Number(document.getElementById("thuc_te").value || 0),
+    nguyen_nhan: document.getElementById("nguyen_nhan").value.trim(),
+
+    // 🔴 FIX QUAN TRỌNG: ÉP KIỂU
+    xuong: Number(USER.xuong),
+    to_nhom: Number(USER.to_nhom)
   };
 
-  fetch(API_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(d)
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(d)
   })
-  .then(r=>r.json())
-  .then(res=>{
+  .then(r => r.json())
+  .then(res => {
     document.getElementById("msg").innerText =
-      res.success ? "✅ Đã lưu" : res.msg;
-    if(res.success) loadHour();
+      res.success ? "✅ Đã lưu" : (res.msg || "❌ Lưu thất bại");
+
+    if (res.success) loadHour();
+  })
+  .catch(() => {
+    document.getElementById("msg").innerText = "❌ Lỗi kết nối server";
   });
 }
 
