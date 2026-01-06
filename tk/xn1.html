@@ -1,1 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Thống kê xưởng 1 – Kế hoạch ngày</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:#f3f4f6;
+}
+header{
+  background:#1e40af;
+  color:#fff;
+  padding:12px 20px;
+  font-size:18px;
+}
+.container{
+  padding:20px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  text-align:center;
+  font-size:14px;
+}
+th{
+  background:#e5e7eb;
+}
+input{
+  width:100%;
+  border:none;
+  outline:none;
+  text-align:center;
+}
+input[type="number"]{
+  appearance:textfield;
+}
+button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.btn-add{
+  background:#16a34a;
+  color:#fff;
+}
+.btn-save{
+  background:#2563eb;
+  color:#fff;
+}
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>📊 THỐNG KÊ XƯỞNG 1 – NHẬP KẾ HOẠCH ĐẦU NGÀY</header>
+
+<div class="container">
+
+  <div class="top-bar">
+    <div>
+      📅 Ngày:
+      <input type="date" id="ngay">
+    </div>
+    <button class="btn-add" onclick="addRow()">➕ Thêm tổ</button>
+    <button class="btn-save" onclick="savePlan()">💾 Lưu kế hoạch</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tổ</th>
+        <th>Mã hàng</th>
+        <th>Số lượng</th>
+        <th>ĐM ngày</th>
+        <th>ĐM giờ</th>
+        <th>USD</th>
+        <th>LĐ TT</th>
+        <th>LĐ sơ đồ</th>
+        <th>Đơn giá</th>
+        <th>Giây / SP</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const user = JSON.parse(localStorage.getItem("USER") || "{}");
+
+if(user.role !== "tk"){
+  alert("Không có quyền truy cập");
+  location.href = "../login.html";
+}
+
+const xuong = user.xuong || 1;
+document.getElementById("ngay").value =
+  new Date().toISOString().slice(0,10);
+
+function addRow(){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input></td>
+    <td><input></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+  `;
+  document.getElementById("tbody").appendChild(tr);
+}
+
+addRow(); // mặc định 1 dòng
+
+function savePlan(){
+  const ngay = document.getElementById("ngay").value;
+  const rows = document.querySelectorAll("#tbody tr");
+
+  const data = [];
+
+  rows.forEach(r=>{
+    const c = r.querySelectorAll("input");
+    if(!c[0].value) return;
+
+    data.push({
+      to_nhom: c[0].value,
+      ma_hang: c[1].value,
+      so_luong: Number(c[2].value||0),
+      dinh_muc_ngay: Number(c[3].value||0),
+      dinh_muc_gio: Number(c[4].value||0),
+      usd: Number(c[5].value||0),
+      ld_thuc_te: Number(c[6].value||0),
+      ld_so_do: Number(c[7].value||0),
+      don_gia: Number(c[8].value||0),
+      giay_sp: Number(c[9].value||0)
+    });
+  });
+
+  if(data.length===0){
+    alert("Chưa có dữ liệu");
+    return;
+  }
+
+  fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"savePlan",
+      ngay,
+      xuong,
+      data
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.success){
+      alert("✅ Đã lưu kế hoạch");
+    }else{
+      alert(res.msg || "Lỗi lưu");
+    }
+  })
+  .catch(()=>alert("Lỗi kết nối server"));
+}
+</script>
+
+</body>
+</html>
 
