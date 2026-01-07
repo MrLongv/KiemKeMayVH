@@ -5,19 +5,9 @@
 <title>THỐNG KÊ XN1</title>
 
 <style>
-body{
-  font-family:Arial, Helvetica, sans-serif;
-  margin:0;
-  background:#f2f4f7;
-}
-h2{ margin:10px }
-
-/* ===== TABLE ===== */
-table{
-  border-collapse:collapse;
-  width:100%;
-  background:#fff;
-}
+body{font-family:Arial;margin:0;background:#f2f4f7}
+h2{margin:10px}
+table{border-collapse:collapse;width:100%;background:#fff}
 th,td{
   border:1px solid #bfc4c9;
   padding:4px;
@@ -25,40 +15,13 @@ th,td{
   text-align:center;
   white-space:nowrap;
 }
-th{
-  background:#e9ecef;
-  font-weight:bold;
-}
-
-/* ===== INPUT ===== */
-input{
-  width:100%;
-  border:none;
-  outline:none;
-  text-align:center;
-  background:transparent;
-}
-
-/* ===== STICKY COLUMNS ===== */
-.stt{ position:sticky; left:0; background:#fff; z-index:4 }
-.to{ position:sticky; left:40px; background:#fff; z-index:4 }
-.ma{ position:sticky; left:90px; background:#fff; z-index:4 }
-.sl{ position:sticky; left:180px; background:#fff; z-index:4 }
-.dmngay{ position:sticky; left:240px; background:#fff; z-index:4 }
-.dmgio{ position:sticky; left:320px; background:#fff; z-index:4 }
-.usdqt{ position:sticky; left:400px; background:#fff; z-index:4 }
-
-/* ===== HEADER STICKY ===== */
-thead th{
-  position:sticky;
-  top:0;
-  z-index:6;
-}
-
-/* ===== STATUS ===== */
-.readonly{ background:#f1f3f5; font-weight:bold }
-.good{ background:#c8f7c5 }
-.bad{ background:#f7c5c5 }
+th{background:#e9ecef;font-weight:bold}
+input{width:100%;border:none;outline:none;text-align:center;background:transparent}
+thead th{position:sticky;top:0;z-index:5}
+.readonly{background:#f1f3f5;font-weight:bold}
+.total-row{background:#dee2e6;font-weight:bold}
+.good{background:#c8f7c5}
+.bad{background:#f7c5c5}
 </style>
 </head>
 
@@ -66,134 +29,109 @@ thead th{
 
 <h2>📊 THỐNG KÊ SẢN XUẤT – XN1</h2>
 
-<table>
+<table id="tbl">
 <thead>
 <tr>
-  <th class="stt">STT</th>
-  <th class="to">TỔ</th>
-  <th class="ma">MÃ HÀNG</th>
-  <th class="sl">SL</th>
-  <th class="dmngay">ĐM NGÀY</th>
-  <th class="dmgio">ĐM GIỜ</th>
-  <th class="usdqt">USD/QT</th>
-
-  <th>7-8</th>
-  <th>8-9</th>
-  <th>9-10</th>
-  <th>10-11</th>
-  <th>12-13</th>
-  <th>13-14</th>
-  <th>14-15</th>
-  <th>15-16</th>
-  <th>16-17</th>
-
-  <th>CỘNG SP</th>
-  <th>USD/TH</th>
-  <th>HIỆU SUẤT %</th>
-  <th>LĐ TT</th>
-  <th>LĐ SĐC</th>
-  <th>ĐĐG</th>
-  <th>TG/QT</th>
-  <th>USD/NGÀY 100%</th>
-  <th>CHUYỂN ĐỔI / NGÀY</th>
+  <th>TỔ</th><th>MÃ HÀNG</th><th>SL</th>
+  <th>ĐM NGÀY</th><th>ĐM GIỜ</th><th>USD/QT</th>
+  <th>7-8</th><th>8-9</th><th>9-10</th><th>10-11</th>
+  <th>12-13</th><th>13-14</th><th>14-15</th><th>15-16</th><th>16-17</th>
+  <th>CỘNG SP</th><th>USD/TH</th><th>HS%</th>
+  <th>LĐ TT</th><th>LĐ SĐC</th>
+  <th>USD NGÀY 100%</th><th>ƯỚC TÍNH USD NGÀY</th>
 </tr>
 </thead>
 
-<tbody id="tbody"></tbody>
+<tbody id="body"></tbody>
+
+<tfoot>
+<tr class="total-row">
+  <td colspan="6">TỔNG SẢN LƯỢNG GIỜ</td>
+  <td id="t78">0</td><td id="t89">0</td><td id="t910">0</td><td id="t1011">0</td>
+  <td id="t1213">0</td><td id="t1314">0</td><td id="t1415">0</td><td id="t1516">0</td><td id="t1617">0</td>
+  <td id="tsp">0</td><td id="tusd">0</td><td></td><td colspan="3"></td>
+</tr>
+
+<tr class="total-row">
+  <td colspan="21">TỔNG USD / THỰC TẾ</td>
+  <td id="tusdngay">0</td>
+</tr>
+</tfoot>
 </table>
 
 <script>
-/* ================= CẤU HÌNH ================= */
-const API_URL = "URL_WORKER_CUA_BAN";
-const XUONG = 1;
-const NGAY = new Date().toISOString().slice(0,10);
-const GIO = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
-const SO_TO = 10;
+const API_URL="URL_WORKER";
+const NGAY=new Date().toISOString().slice(0,10);
+const GIO=["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
+const body=document.getElementById("body");
 
-/* ================= TẠO DÒNG CỐ ĐỊNH THEO TỔ ================= */
-const tbody = document.getElementById("tbody");
-
-for(let to=1; to<=SO_TO; to++){
-  const tr = document.createElement("tr");
-  tr.dataset.to = to;
-
-  tr.innerHTML = `
-    <td class="stt">${to}</td>
-    <td class="to">Tổ ${to}</td>
-    <td class="ma"><input></td>
-    <td class="sl"><input></td>
-    <td class="dmngay"><input></td>
-    <td class="dmgio"><input class="dm_gio"></td>
-    <td class="usdqt"><input class="usd_qt"></td>
-
+/* ==== TẠO 10 TỔ ==== */
+for(let i=1;i<=10;i++){
+  const tr=document.createElement("tr");
+  tr.dataset.to=i;
+  tr.innerHTML=`
+    <td>Tổ ${i}</td>
+    <td><input></td><td><input></td>
+    <td><input></td><td><input class="dm"></td><td><input class="usdqt"></td>
     ${GIO.map(()=>`<td class="gio">0</td>`).join("")}
-
     <td class="tong readonly">0</td>
-    <td class="usdth readonly">0</td>
+    <td class="usd readonly">0</td>
     <td class="hs readonly"></td>
-    <td><input></td>
-    <td><input></td>
-    <td><input></td>
-    <td><input></td>
+    <td><input></td><td><input></td>
     <td class="usd100 readonly">0</td>
-    <td class="cdngay readonly">0</td>
+    <td class="uoc readonly">0</td>
   `;
-  tbody.appendChild(tr);
+  body.appendChild(tr);
 }
 
-/* ================= LOAD GIỜ TỪ WORKER ================= */
+/* ==== LOAD GIỜ ==== */
 fetch(API_URL,{
   method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body:JSON.stringify({
-    action:"getHourByXuong",
-    ngay: NGAY,
-    xuong: XUONG
-  })
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({action:"getHourByXuong",ngay:NGAY,xuong:1})
 })
 .then(r=>r.json())
 .then(res=>{
-  if(!res.success) return;
-
   res.data.forEach(d=>{
-    const row = document.querySelector(`tr[data-to="${d.to_nhom}"]`);
-    if(!row) return;
-
-    const idx = GIO.indexOf(d.khung_gio);
-    if(idx>=0){
-      row.querySelectorAll(".gio")[idx].innerText = d.thuc_te;
-    }
-
+    const row=document.querySelector(`tr[data-to="${d.to_nhom}"]`);
+    if(!row)return;
+    const idx=GIO.indexOf(d.khung_gio);
+    if(idx>=0)row.querySelectorAll(".gio")[idx].innerText=d.thuc_te;
     tinhDong(row);
   });
+  tinhTong();
 });
 
-/* ================= TÍNH TOÁN ================= */
-function tinhDong(row){
-  let tong = 0;
-  row.querySelectorAll(".gio").forEach(td=>{
-    tong += Number(td.innerText||0);
-  });
-  row.querySelector(".tong").innerText = tong;
+function tinhDong(r){
+  let tong=0;
+  r.querySelectorAll(".gio").forEach(td=>tong+=Number(td.innerText));
+  r.querySelector(".tong").innerText=tong;
 
-  const dmgio = Number(row.querySelector(".dm_gio").value||0);
-  const usdqt = Number(row.querySelector(".usd_qt").value||0);
+  const dm=Number(r.querySelector(".dm").value||0);
+  const usdqt=Number(r.querySelector(".usdqt").value||0);
 
-  if(dmgio>0){
-    const hs = Math.round(tong / dmgio * 100);
-    const hsCell = row.querySelector(".hs");
-    hsCell.innerText = hs;
-    hsCell.className = "hs readonly " + (hs>=100?"good":"bad");
-
-    row.querySelector(".usdth").innerText =
-      Math.round(tong * usdqt);
-
-    row.querySelector(".usd100").innerText =
-      Math.round(dmgio * usdqt);
-
-    row.querySelector(".cdngay").innerText =
-      Math.round(tong / dmgio * 100);
+  if(dm){
+    const hs=Math.round(tong/dm*100);
+    r.querySelector(".hs").innerText=hs;
+    r.querySelector(".usd").innerText=Math.round(tong*usdqt);
+    r.querySelector(".usd100").innerText=Math.round(dm*usdqt);
+    r.querySelector(".uoc").innerText=Math.round(tong*usdqt);
   }
+}
+
+function tinhTong(){
+  let tongSP=0,tongUSD=0;
+  GIO.forEach((_,i)=>{
+    let s=0;
+    document.querySelectorAll(`.gio:nth-child(${i+7})`).forEach(td=>s+=Number(td.innerText));
+    document.getElementById("t"+GIO[i].replace("-","")).innerText=s;
+  });
+
+  document.querySelectorAll(".tong").forEach(td=>tongSP+=Number(td.innerText));
+  document.querySelectorAll(".usd").forEach(td=>tongUSD+=Number(td.innerText));
+  document.getElementById("tsp").innerText=tongSP;
+  document.getElementById("tusd").innerText=tongUSD;
+  document.getElementById("tusdngay").innerText=tongUSD;
 }
 </script>
 
