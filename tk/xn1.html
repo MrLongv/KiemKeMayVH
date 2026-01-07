@@ -6,13 +6,11 @@
 
 <style>
 body{
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:Arial, Helvetica, sans-serif;
   margin:0;
   background:#f2f4f7;
 }
-h2{
-  margin:10px;
-}
+h2{ margin:10px }
 
 /* ===== TABLE ===== */
 table{
@@ -20,7 +18,7 @@ table{
   width:100%;
   background:#fff;
 }
-th, td{
+th,td{
   border:1px solid #bfc4c9;
   padding:4px;
   font-size:13px;
@@ -41,28 +39,26 @@ input{
   background:transparent;
 }
 
-/* ===== STICKY (CỐ ĐỊNH NHƯ EXCEL) ===== */
-.stt   { position:sticky; left:0;   background:#fff; z-index:3 }
-.to    { position:sticky; left:40px;background:#fff; z-index:3 }
-.ma    { position:sticky; left:90px;background:#fff; z-index:3 }
-.ten   { position:sticky; left:170px;background:#fff; z-index:3 }
-.dm    { position:sticky; left:340px;background:#fff; z-index:3 }
-.kh    { position:sticky; left:420px;background:#fff; z-index:3 }
+/* ===== STICKY COLUMNS ===== */
+.stt{ position:sticky; left:0; background:#fff; z-index:4 }
+.to{ position:sticky; left:40px; background:#fff; z-index:4 }
+.ma{ position:sticky; left:90px; background:#fff; z-index:4 }
+.sl{ position:sticky; left:180px; background:#fff; z-index:4 }
+.dmngay{ position:sticky; left:240px; background:#fff; z-index:4 }
+.dmgio{ position:sticky; left:320px; background:#fff; z-index:4 }
+.usdqt{ position:sticky; left:400px; background:#fff; z-index:4 }
 
-/* ===== MÀU ===== */
-.good{ background:#c8f7c5 }
-.bad{ background:#f7c5c5 }
-.readonly{
-  background:#f1f3f5;
-  font-weight:bold;
-}
-
-/* ===== HEADER CỐ ĐỊNH ===== */
+/* ===== HEADER STICKY ===== */
 thead th{
   position:sticky;
   top:0;
-  z-index:5;
+  z-index:6;
 }
+
+/* ===== STATUS ===== */
+.readonly{ background:#f1f3f5; font-weight:bold }
+.good{ background:#c8f7c5 }
+.bad{ background:#f7c5c5 }
 </style>
 </head>
 
@@ -70,44 +66,52 @@ thead th{
 
 <h2>📊 THỐNG KÊ SẢN XUẤT – XN1</h2>
 
-<table id="tbl">
+<table>
 <thead>
 <tr>
   <th class="stt">STT</th>
   <th class="to">TỔ</th>
   <th class="ma">MÃ HÀNG</th>
-  <th class="ten">TÊN HÀNG</th>
-  <th class="dm">ĐM / GIỜ</th>
-  <th class="kh">KH NGÀY</th>
+  <th class="sl">SL</th>
+  <th class="dmngay">ĐM NGÀY</th>
+  <th class="dmgio">ĐM GIỜ</th>
+  <th class="usdqt">USD/QT</th>
 
-  <th>07-08</th>
-  <th>08-09</th>
-  <th>09-10</th>
+  <th>7-8</th>
+  <th>8-9</th>
+  <th>9-10</th>
   <th>10-11</th>
+  <th>12-13</th>
   <th>13-14</th>
   <th>14-15</th>
   <th>15-16</th>
   <th>16-17</th>
 
-  <th>TỔNG</th>
-  <th>HS %</th>
-  <th>GHI CHÚ</th>
+  <th>CỘNG SP</th>
+  <th>USD/TH</th>
+  <th>HIỆU SUẤT %</th>
+  <th>LĐ TT</th>
+  <th>LĐ SĐC</th>
+  <th>ĐĐG</th>
+  <th>TG/QT</th>
+  <th>USD/NGÀY 100%</th>
+  <th>CHUYỂN ĐỔI / NGÀY</th>
 </tr>
 </thead>
 
-<tbody id="body"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
 <script>
 /* ================= CẤU HÌNH ================= */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const API_URL = "URL_WORKER_CUA_BAN";
 const XUONG = 1;
 const NGAY = new Date().toISOString().slice(0,10);
-const GIO = ["07-08","08-09","09-10","10-11","13-14","14-15","15-16","16-17"];
+const GIO = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const SO_TO = 10;
 
-/* ================= TẠO KHUNG BẢNG ================= */
-const body = document.getElementById("body");
+/* ================= TẠO DÒNG CỐ ĐỊNH THEO TỔ ================= */
+const tbody = document.getElementById("tbody");
 
 for(let to=1; to<=SO_TO; to++){
   const tr = document.createElement("tr");
@@ -117,20 +121,27 @@ for(let to=1; to<=SO_TO; to++){
     <td class="stt">${to}</td>
     <td class="to">Tổ ${to}</td>
     <td class="ma"><input></td>
-    <td class="ten"><input></td>
-    <td class="dm"><input class="dm_gio"></td>
-    <td class="kh"><input></td>
+    <td class="sl"><input></td>
+    <td class="dmngay"><input></td>
+    <td class="dmgio"><input class="dm_gio"></td>
+    <td class="usdqt"><input class="usd_qt"></td>
 
     ${GIO.map(()=>`<td class="gio">0</td>`).join("")}
 
     <td class="tong readonly">0</td>
+    <td class="usdth readonly">0</td>
     <td class="hs readonly"></td>
     <td><input></td>
+    <td><input></td>
+    <td><input></td>
+    <td><input></td>
+    <td class="usd100 readonly">0</td>
+    <td class="cdngay readonly">0</td>
   `;
-  body.appendChild(tr);
+  tbody.appendChild(tr);
 }
 
-/* ================= LOAD SẢN LƯỢNG THEO GIỜ ================= */
+/* ================= LOAD GIỜ TỪ WORKER ================= */
 fetch(API_URL,{
   method:"POST",
   headers:{ "Content-Type":"application/json" },
@@ -149,7 +160,7 @@ fetch(API_URL,{
     if(!row) return;
 
     const idx = GIO.indexOf(d.khung_gio);
-    if(idx >= 0){
+    if(idx>=0){
       row.querySelectorAll(".gio")[idx].innerText = d.thuc_te;
     }
 
@@ -157,24 +168,31 @@ fetch(API_URL,{
   });
 });
 
-/* ================= TÍNH TỔNG & HIỆU SUẤT ================= */
+/* ================= TÍNH TOÁN ================= */
 function tinhDong(row){
   let tong = 0;
   row.querySelectorAll(".gio").forEach(td=>{
-    tong += Number(td.innerText || 0);
+    tong += Number(td.innerText||0);
   });
   row.querySelector(".tong").innerText = tong;
 
-  const dm = Number(row.querySelector(".dm_gio").value || 0);
-  const hsCell = row.querySelector(".hs");
+  const dmgio = Number(row.querySelector(".dm_gio").value||0);
+  const usdqt = Number(row.querySelector(".usd_qt").value||0);
 
-  if(dm > 0){
-    const hs = Math.round(tong / dm * 100);
+  if(dmgio>0){
+    const hs = Math.round(tong / dmgio * 100);
+    const hsCell = row.querySelector(".hs");
     hsCell.innerText = hs;
-    hsCell.className = "hs readonly " + (hs >= 100 ? "good" : "bad");
-  }else{
-    hsCell.innerText = "";
-    hsCell.className = "hs readonly";
+    hsCell.className = "hs readonly " + (hs>=100?"good":"bad");
+
+    row.querySelector(".usdth").innerText =
+      Math.round(tong * usdqt);
+
+    row.querySelector(".usd100").innerText =
+      Math.round(dmgio * usdqt);
+
+    row.querySelector(".cdngay").innerText =
+      Math.round(tong / dmgio * 100);
   }
 }
 </script>
