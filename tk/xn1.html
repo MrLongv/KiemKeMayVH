@@ -2,221 +2,181 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📊 Theo dõi năng suất giờ – XN1</title>
+<title>THỐNG KÊ XN1</title>
 
 <style>
 body{
+  font-family: Arial, Helvetica, sans-serif;
   margin:0;
-  font-family:Segoe UI,Arial;
-  background:#f3f4f6;
+  background:#f2f4f7;
 }
-header{
-  background:#1e40af;
-  color:#fff;
-  padding:12px 20px;
-  font-size:18px;
-  font-weight:600;
-}
-.container{ padding:16px; }
-
-.top-bar{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:10px;
+h2{
+  margin:10px;
 }
 
-button{
-  padding:6px 12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:600;
-}
-.btn-save{ background:#2563eb;color:#fff; }
-
+/* ===== TABLE ===== */
 table{
-  width:100%;
   border-collapse:collapse;
+  width:100%;
   background:#fff;
 }
-th,td{
-  border:1px solid #ccc;
+th, td{
+  border:1px solid #bfc4c9;
   padding:4px;
-  text-align:center;
   font-size:13px;
+  text-align:center;
+  white-space:nowrap;
 }
-th{ background:#e5e7eb; }
+th{
+  background:#e9ecef;
+  font-weight:bold;
+}
+
+/* ===== INPUT ===== */
 input{
   width:100%;
   border:none;
   outline:none;
   text-align:center;
-  font-size:13px;
+  background:transparent;
 }
-.readonly{ background:#f9fafb; }
-.good{ background:#dcfce7; font-weight:600; }
-.bad{ background:#fee2e2; color:#b91c1c; font-weight:600; }
+
+/* ===== STICKY (CỐ ĐỊNH NHƯ EXCEL) ===== */
+.stt   { position:sticky; left:0;   background:#fff; z-index:3 }
+.to    { position:sticky; left:40px;background:#fff; z-index:3 }
+.ma    { position:sticky; left:90px;background:#fff; z-index:3 }
+.ten   { position:sticky; left:170px;background:#fff; z-index:3 }
+.dm    { position:sticky; left:340px;background:#fff; z-index:3 }
+.kh    { position:sticky; left:420px;background:#fff; z-index:3 }
+
+/* ===== MÀU ===== */
+.good{ background:#c8f7c5 }
+.bad{ background:#f7c5c5 }
+.readonly{
+  background:#f1f3f5;
+  font-weight:bold;
+}
+
+/* ===== HEADER CỐ ĐỊNH ===== */
+thead th{
+  position:sticky;
+  top:0;
+  z-index:5;
+}
 </style>
 </head>
 
 <body>
 
-<header>📊 THEO DÕI NĂNG SUẤT GIỜ – XÍ NGHIỆP 1</header>
+<h2>📊 THỐNG KÊ SẢN XUẤT – XN1</h2>
 
-<div class="container">
-
-<div class="top-bar">
-  📅 Ngày:
-  <input type="date" id="ngay">
-  <button class="btn-save" onclick="savePlan()">💾 Lưu kế hoạch</button>
-</div>
-
-<table>
+<table id="tbl">
 <thead>
 <tr>
-  <th rowspan="2">TỔ</th>
-  <th rowspan="2">MÃ HÀNG</th>
-  <th rowspan="2">SL</th>
-  <th rowspan="2">ĐM NGÀY</th>
-  <th rowspan="2">ĐM GIỜ</th>
-  <th colspan="8">NĂNG SUẤT THEO GIỜ</th>
-  <th rowspan="2">CỘNG SP</th>
-  <th rowspan="2">HS (%)</th>
-</tr>
-<tr>
-  <th>7-8</th><th>8-9</th><th>9-10</th><th>10-11</th>
-  <th>13-14</th><th>14-15</th><th>15-16</th><th>16-17</th>
+  <th class="stt">STT</th>
+  <th class="to">TỔ</th>
+  <th class="ma">MÃ HÀNG</th>
+  <th class="ten">TÊN HÀNG</th>
+  <th class="dm">ĐM / GIỜ</th>
+  <th class="kh">KH NGÀY</th>
+
+  <th>07-08</th>
+  <th>08-09</th>
+  <th>09-10</th>
+  <th>10-11</th>
+  <th>13-14</th>
+  <th>14-15</th>
+  <th>15-16</th>
+  <th>16-17</th>
+
+  <th>TỔNG</th>
+  <th>HS %</th>
+  <th>GHI CHÚ</th>
 </tr>
 </thead>
 
-<tbody id="tbody"></tbody>
+<tbody id="body"></tbody>
 </table>
 
-</div>
-
 <script>
-/* ================== CONFIG ================== */
+/* ================= CẤU HÌNH ================= */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-const TO_LIST = [1,3,5,7,9];
+const XUONG = 1;
+const NGAY = new Date().toISOString().slice(0,10);
 const GIO = ["07-08","08-09","09-10","10-11","13-14","14-15","15-16","16-17"];
+const SO_TO = 10;
 
-const user = JSON.parse(localStorage.getItem("USER") || "{}");
-if(user.role !== "tk"){
-  alert("Không có quyền truy cập");
-  location.href = "../login.html";
-}
-const xuong = user.xuong || 1;
+/* ================= TẠO KHUNG BẢNG ================= */
+const body = document.getElementById("body");
 
-/* ================== INIT ================== */
-document.getElementById("ngay").value =
-  new Date().toISOString().slice(0,10);
+for(let to=1; to<=SO_TO; to++){
+  const tr = document.createElement("tr");
+  tr.dataset.to = to;
 
-renderTable();
+  tr.innerHTML = `
+    <td class="stt">${to}</td>
+    <td class="to">Tổ ${to}</td>
+    <td class="ma"><input></td>
+    <td class="ten"><input></td>
+    <td class="dm"><input class="dm_gio"></td>
+    <td class="kh"><input></td>
 
-/* ================== RENDER ================== */
-function renderTable(){
-  const tb = document.getElementById("tbody");
-  tb.innerHTML = "";
+    ${GIO.map(()=>`<td class="gio">0</td>`).join("")}
 
-  TO_LIST.forEach(to=>{
-    let tr = document.createElement("tr");
-    tr.dataset.to = to;
-
-    tr.innerHTML = `
-      <td>${to}</td>
-      <td><input class="ma_hang"></td>
-      <td><input type="number" class="sl"></td>
-      <td><input type="number" class="dm_ngay"></td>
-      <td><input type="number" class="dm_gio"></td>
-    `;
-
-    GIO.forEach(()=> {
-      const td = document.createElement("td");
-      td.className = "readonly";
-      tr.appendChild(td);
-    });
-
-    tr.innerHTML += `
-      <td class="readonly tong"></td>
-      <td class="readonly hs"></td>
-    `;
-
-    tb.appendChild(tr);
-  });
+    <td class="tong readonly">0</td>
+    <td class="hs readonly"></td>
+    <td><input></td>
+  `;
+  body.appendChild(tr);
 }
 
-/* ================== SAVE PLAN ================== */
-function savePlan(){
-  const ngay = document.getElementById("ngay").value;
-  const rows = document.querySelectorAll("#tbody tr");
-  const data = [];
-
-  rows.forEach(r=>{
-    data.push({
-      to_nhom: r.dataset.to,
-      ma_hang: r.querySelector(".ma_hang").value,
-      so_luong: Number(r.querySelector(".sl").value||0),
-      dinh_muc_ngay: Number(r.querySelector(".dm_ngay").value||0),
-      dinh_muc_gio: Number(r.querySelector(".dm_gio").value||0)
-    });
-  });
-
-  fetch(API_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      action:"savePlan",
-      ngay,
-      xuong,
-      data
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    alert(res.success ? "✅ Đã lưu kế hoạch" : "❌ Lỗi lưu");
-  })
-  .catch(()=>alert("Lỗi kết nối server"));
-}
-  
+/* ================= LOAD SẢN LƯỢNG THEO GIỜ ================= */
 fetch(API_URL,{
   method:"POST",
   headers:{ "Content-Type":"application/json" },
   body:JSON.stringify({
     action:"getHourByXuong",
-    ngay: document.getElementById("ngay").value,
-    xuong
+    ngay: NGAY,
+    xuong: XUONG
   })
 })
 .then(r=>r.json())
 .then(res=>{
-  (res.data||[]).forEach(h=>{
-    const row = document.querySelector(`tr[data-to="${h.to_nhom}"]`);
+  if(!res.success) return;
+
+  res.data.forEach(d=>{
+    const row = document.querySelector(`tr[data-to="${d.to_nhom}"]`);
     if(!row) return;
 
-    const idx = GIO.indexOf(h.khung_gio);
-    if(idx>=0){
-      row.children[5+idx].innerText = h.thuc_te;
+    const idx = GIO.indexOf(d.khung_gio);
+    if(idx >= 0){
+      row.querySelectorAll(".gio")[idx].innerText = d.thuc_te;
     }
 
-    // TÍNH TỔNG & HS
-    let tong = 0;
-    GIO.forEach((_,i)=>{
-      tong += Number(row.children[5+i].innerText||0);
-    });
-
-    const dm = Number(row.querySelector(".dm_gio").value||0);
-    row.querySelector(".tong").innerText = tong;
-
-    if(dm>0){
-      const hs = Math.round(tong/dm*100);
-      const cell = row.querySelector(".hs");
-      cell.innerText = hs;
-      cell.className = "readonly " + (hs>=100?"good":"bad");
-    }
+    tinhDong(row);
   });
 });
+
+/* ================= TÍNH TỔNG & HIỆU SUẤT ================= */
+function tinhDong(row){
+  let tong = 0;
+  row.querySelectorAll(".gio").forEach(td=>{
+    tong += Number(td.innerText || 0);
+  });
+  row.querySelector(".tong").innerText = tong;
+
+  const dm = Number(row.querySelector(".dm_gio").value || 0);
+  const hsCell = row.querySelector(".hs");
+
+  if(dm > 0){
+    const hs = Math.round(tong / dm * 100);
+    hsCell.innerText = hs;
+    hsCell.className = "hs readonly " + (hs >= 100 ? "good" : "bad");
+  }else{
+    hsCell.innerText = "";
+    hsCell.className = "hs readonly";
+  }
+}
 </script>
 
 </body>
