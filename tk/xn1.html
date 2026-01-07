@@ -94,7 +94,10 @@ tfoot td{
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
-<td><input class="dm-gio"></td>
+<td>
+  <input class="dm-gio" readonly style="background:#f3f4f6">
+</td>
+
 <td><input class="usd-qt"></td>
 
 <td><input class="gio"></td>
@@ -124,7 +127,10 @@ tfoot td{
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
-<td><input class="dm-gio"></td>
+<td>
+  <input class="dm-gio" readonly style="background:#f3f4f6">
+</td>
+
 <td><input class="usd-qt"></td>
 
 <td><input class="gio"></td>
@@ -154,7 +160,10 @@ tfoot td{
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
-<td><input class="dm-gio"></td>
+<td>
+  <input class="dm-gio" readonly style="background:#f3f4f6">
+</td>
+
 <td><input class="usd-qt"></td>
 
 <td><input class="gio"></td>
@@ -184,7 +193,10 @@ tfoot td{
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
-<td><input class="dm-gio"></td>
+<td>
+  <input class="dm-gio" readonly style="background:#f3f4f6">
+</td>
+
 <td><input class="usd-qt"></td>
 
 <td><input class="gio"></td>
@@ -214,7 +226,10 @@ tfoot td{
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
-<td><input class="dm-gio"></td>
+<td>
+  <input class="dm-gio" readonly style="background:#f3f4f6">
+</td>
+
 <td><input class="usd-qt"></td>
 
 <td><input class="gio"></td>
@@ -286,6 +301,11 @@ function calc(){
     const gio = [...r.querySelectorAll(".gio")].map(i=>+i.value||0);
     const usdqt = +r.querySelector(".usd-qt").value||0;
     const dmngay = +r.querySelector(".dm-ngay").value||0;
+const dmGio = dmngay ? (dmngay / 9) : 0;
+
+// gán lại vào ô ĐM GIỜ
+r.querySelector(".dm-gio").value = dmGio.toFixed(2);
+
 
     const tongSP = gio.reduce((a,b)=>a+b,0);
     const usdth = tongSP * usdqt;
