@@ -5,9 +5,20 @@
 <title>THEO DÕI NĂNG SUẤT GIỜ XN1</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f3f4f6}
-h2{text-align:center;margin:10px}
-table{border-collapse:collapse;width:100%;background:#fff}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f3f4f6;
+}
+h2{
+  text-align:center;
+  margin:12px 0;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
 th,td{
   border:1px solid #9ca3af;
   padding:4px;
@@ -15,7 +26,9 @@ th,td{
   text-align:center;
   white-space:nowrap;
 }
-th{background:#e5e7eb}
+th{
+  background:#e5e7eb;
+}
 input{
   width:100%;
   border:none;
@@ -23,16 +36,23 @@ input{
   background:transparent;
   text-align:center;
 }
-tfoot td{background:#d1d5db;font-weight:bold}
-.total-strong{background:#9ca3af;font-size:14px}
+tfoot td{
+  background:#d1d5db;
+  font-weight:bold;
+}
+.total-strong{
+  background:#9ca3af !important;
+  font-size:14px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>THEO DÕI NĂNG SUẤT GIỜ XN1</h2>
+<h2>📊 THEO DÕI NĂNG SUẤT GIỜ – XN1</h2>
 
 <table id="tbl">
+
 <thead>
 <tr>
   <th rowspan="2">TỔ</th>
@@ -40,36 +60,43 @@ tfoot td{background:#d1d5db;font-weight:bold}
   <th rowspan="2">SL</th>
   <th rowspan="2">ĐM<br>NGÀY</th>
   <th rowspan="2">ĐM<br>GIỜ</th>
-  <th rowspan="2">USD/QT</th>
+  <th rowspan="2">USD / QT</th>
   <th colspan="9">NĂNG SUẤT THEO GIỜ</th>
   <th rowspan="2">CỘNG SP</th>
-  <th rowspan="2">USD/TH</th>
+  <th rowspan="2">USD / TH</th>
   <th rowspan="2">HIỆU SUẤT</th>
   <th colspan="2">LAO ĐỘNG</th>
-  <th rowspan="2">ĐG</th>
-  <th rowspan="2">TG/QT</th>
-  <th rowspan="2">USD/NGÀY 100%</th>
+  <th rowspan="2">ĐĐG</th>
+  <th rowspan="2">TG / QT</th>
+  <th rowspan="2">USD / NGÀY 100%</th>
   <th rowspan="2">CHUYỂN ĐỔI</th>
 </tr>
 <tr>
-  <th>7-8</th><th>8-9</th><th>9-10</th><th>10-11</th>
-  <th>12-13</th><th>13-14</th><th>14-15</th><th>15-16</th><th>16-17</th>
-  <th>TT</th><th>SĐC</th>
+  <th>7-8</th>
+  <th>8-9</th>
+  <th>9-10</th>
+  <th>10-11</th>
+  <th>12-13</th>
+  <th>13-14</th>
+  <th>14-15</th>
+  <th>15-16</th>
+  <th>16-17</th>
+  <th>TT</th>
+  <th>SĐC</th>
 </tr>
 </thead>
 
 <tbody>
-<script>
-const TO = [1,3,5,7,9];
-TO.forEach(t=>{
-document.write(`
+
+<!-- ===== TỔ 1 ===== -->
 <tr>
-<td>${t}</td>
+<td>1</td>
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
 <td><input class="dm-gio"></td>
 <td><input class="usd-qt"></td>
+
 <td><input class="gio"></td>
 <td><input class="gio"></td>
 <td><input class="gio"></td>
@@ -90,51 +117,197 @@ document.write(`
 <td class="usd100">0</td>
 <td></td>
 </tr>
-`);
-});
-</script>
+
+<!-- ===== TỔ 3 ===== -->
+<tr>
+<td>3</td>
+<td><input></td>
+<td><input></td>
+<td><input class="dm-ngay"></td>
+<td><input class="dm-gio"></td>
+<td><input class="usd-qt"></td>
+
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+
+<td class="tong-sp">0</td>
+<td class="usd-th">0</td>
+<td class="hs">0%</td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td class="usd100">0</td>
+<td></td>
+</tr>
+
+<!-- ===== TỔ 5 ===== -->
+<tr>
+<td>5</td>
+<td><input></td>
+<td><input></td>
+<td><input class="dm-ngay"></td>
+<td><input class="dm-gio"></td>
+<td><input class="usd-qt"></td>
+
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+
+<td class="tong-sp">0</td>
+<td class="usd-th">0</td>
+<td class="hs">0%</td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td class="usd100">0</td>
+<td></td>
+</tr>
+
+<!-- ===== TỔ 7 ===== -->
+<tr>
+<td>7</td>
+<td><input></td>
+<td><input></td>
+<td><input class="dm-ngay"></td>
+<td><input class="dm-gio"></td>
+<td><input class="usd-qt"></td>
+
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+
+<td class="tong-sp">0</td>
+<td class="usd-th">0</td>
+<td class="hs">0%</td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td class="usd100">0</td>
+<td></td>
+</tr>
+
+<!-- ===== TỔ 9 ===== -->
+<tr>
+<td>9</td>
+<td><input></td>
+<td><input></td>
+<td><input class="dm-ngay"></td>
+<td><input class="dm-gio"></td>
+<td><input class="usd-qt"></td>
+
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+<td><input class="gio"></td>
+
+<td class="tong-sp">0</td>
+<td class="usd-th">0</td>
+<td class="hs">0%</td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td class="usd100">0</td>
+<td></td>
+</tr>
+
 </tbody>
 
 <tfoot>
 <tr>
-  <td colspan="6">CỘNG USD</td>
-  ${'<td class="tong-usd-gio">0</td>'.repeat(9)}
-  <td colspan="9"></td>
+<td colspan="6">TỔNG USD / QT THEO GIỜ</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td class="tong-usd-gio">0</td>
+<td colspan="9"></td>
 </tr>
 
 <tr>
-  <td colspan="6">ƯỚC TÍNH USD TRONG NGÀY</td>
-  ${'<td class="uoc-usd-gio">0</td>'.repeat(9)}
-  <td colspan="9"></td>
+<td colspan="6">ƯỚC TÍNH USD TRONG NGÀY</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td class="uoc-usd-gio">0</td>
+<td colspan="9"></td>
 </tr>
 
 <tr class="total-strong">
-  <td colspan="23">TỔNG USD CUỐI NGÀY</td>
-  <td id="tong-usd-ngay">0</td>
+<td colspan="23">TỔNG USD CUỐI NGÀY</td>
+<td id="tong-usd-ngay">0</td>
 </tr>
 </tfoot>
+
 </table>
 
 <script>
 function calc(){
-  let tongNgay=0;
+  let tongNgay = 0;
+  const tongUsdGio = Array(9).fill(0);
+
   document.querySelectorAll("tbody tr").forEach(r=>{
-    const gio=[...r.querySelectorAll(".gio")].map(i=>+i.value||0);
-    const usdqt=+r.querySelector(".usd-qt").value||0;
-    const dmngay=+r.querySelector(".dm-ngay").value||0;
+    const gio = [...r.querySelectorAll(".gio")].map(i=>+i.value||0);
+    const usdqt = +r.querySelector(".usd-qt").value||0;
+    const dmngay = +r.querySelector(".dm-ngay").value||0;
 
-    const tongSP=gio.reduce((a,b)=>a+b,0);
-    const usdth=tongSP*usdqt;
-    const hs=dmngay? (tongSP/dmngay*100):0;
+    const tongSP = gio.reduce((a,b)=>a+b,0);
+    const usdth = tongSP * usdqt;
+    const hs = dmngay ? (tongSP/dmngay*100) : 0;
 
-    r.querySelector(".tong-sp").innerText=tongSP;
-    r.querySelector(".usd-th").innerText=usdth.toFixed(2);
-    r.querySelector(".hs").innerText=hs.toFixed(1)+"%";
-    r.querySelector(".usd100").innerText=(dmngay*usdqt).toFixed(2);
+    r.querySelector(".tong-sp").innerText = tongSP;
+    r.querySelector(".usd-th").innerText = usdth.toFixed(2);
+    r.querySelector(".hs").innerText = hs.toFixed(1)+"%";
+    r.querySelector(".usd100").innerText = (dmngay*usdqt).toFixed(2);
 
-    tongNgay+=usdth;
+    gio.forEach((v,i)=>{
+      tongUsdGio[i] += v * usdqt;
+    });
+
+    tongNgay += usdth;
   });
-  document.getElementById("tong-usd-ngay").innerText=tongNgay.toFixed(2);
+
+  document.querySelectorAll(".tong-usd-gio").forEach((c,i)=>{
+    c.innerText = tongUsdGio[i].toFixed(2);
+  });
+
+  document.getElementById("tong-usd-ngay").innerText = tongNgay.toFixed(2);
 }
 document.addEventListener("input",calc);
 </script>
