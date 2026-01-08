@@ -293,59 +293,53 @@ tfoot td{
 
 <script>
 function calc(){
-  let tongNgay = 0;
+  let tongUsdNgay = 0;
   const tongUsdGio = Array(9).fill(0);
 
   document.querySelectorAll("tbody tr").forEach(r=>{
-    // sản lượng từng giờ
     const gio = [...r.querySelectorAll(".gio")].map(i => +i.value || 0);
 
-    // định mức ngày
-    const dmngay = +r.querySelector(".dm-ngay").value || 0;
+    const donGia  = +r.querySelector(".don-gia").value || 0;
+    const dmNgay  = +r.querySelector(".dm-ngay").value || 0;
 
-    // đơn giá (ĐG / ĐĐG)
-    const donGia = +r.querySelector(".don-gia").value || 0;
+    /* ===== ĐỊNH MỨC GIỜ ===== */
+    const dmGio = dmNgay ? dmNgay / 9 : 0;
+    r.querySelector(".dm-gio").value = dmGio.toFixed(2);
 
-    /* ===== ĐM GIỜ = ĐM NGÀY / 9 ===== */
-    const dmGio = dmngay ? (dmngay / 9) : 0;
-    const dmGioInput = r.querySelector(".dm-gio");
-    if (dmGioInput) dmGioInput.value = dmGio.toFixed(2);
-
-    /* ===== CỘNG SP ===== */
+    /* ===== TỔNG SẢN LƯỢNG ===== */
     const tongSP = gio.reduce((a,b)=>a+b,0);
+    r.querySelector(".tong-sp").innerText = tongSP;
 
-    /* ===== USD / TH ===== */
-    const usdth = tongSP * donGia;
+    /* ===== USD / QT (KHÔNG NHẬP) ===== */
+    const usdQt = dmNgay * donGia;
+    r.querySelector(".usd-qt").innerText = usdQt.toFixed(2);
+
+    /* ===== USD THỰC TẾ ===== */
+    const usdTh = tongSP * donGia;
+    r.querySelector(".usd-th").innerText = usdTh.toFixed(2);
 
     /* ===== HIỆU SUẤT ===== */
-    const hs = dmngay ? (tongSP / dmngay * 100) : 0;
+    const hieuSuat = dmNgay ? (tongSP / dmNgay * 100) : 0;
+    r.querySelector(".hs").innerText = hieuSuat.toFixed(1) + "%";
 
-    /* ===== USD NGÀY ĐẠT 100% ===== */
-    const usd100 = dmngay * donGia;
+    /* ===== USD 100% ===== */
+    r.querySelector(".usd100").innerText = usdQt.toFixed(2);
 
-    /* ===== GÁN RA GIAO DIỆN ===== */
-    r.querySelector(".tong-sp").innerText = tongSP;
-    r.querySelector(".usd-th").innerText = usdth.toFixed(2);
-    r.querySelector(".hs").innerText = hs.toFixed(1) + "%";
-    r.querySelector(".usd100").innerText = usd100.toFixed(2);
-
-    /* ===== TỔNG USD THEO GIỜ (FOOTER) ===== */
+    /* ===== TỔNG USD THEO GIỜ ===== */
     gio.forEach((v,i)=>{
       tongUsdGio[i] += v * donGia;
     });
 
-    /* ===== TỔNG USD NGÀY ===== */
-    tongNgay += usdth;
+    tongUsdNgay += usdTh;
   });
 
-  /* ===== HIỂN THỊ TỔNG USD TỪNG GIỜ ===== */
+  /* ===== HIỂN THỊ TỔNG USD THEO GIỜ ===== */
   document.querySelectorAll(".tong-usd-gio").forEach((c,i)=>{
     c.innerText = tongUsdGio[i].toFixed(2);
   });
 
-  /* ===== TỔNG USD TOÀN NGÀY ===== */
-  const tongNgayEl = document.getElementById("tong-usd-ngay");
-  if (tongNgayEl) tongNgayEl.innerText = tongNgay.toFixed(2);
+  /* ===== TỔNG USD NGÀY ===== */
+  document.getElementById("tong-usd-ngay").innerText = tongUsdNgay.toFixed(2);
 }
 
 document.addEventListener("input",calc);
