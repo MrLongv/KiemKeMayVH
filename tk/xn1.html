@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>THEO DÕI NĂNG SUẤT GIỜ XN1</title>
+
 <style>
 body{
   margin:0;
@@ -25,9 +26,7 @@ th,td{
   text-align:center;
   white-space:nowrap;
 }
-th{
-  background:#e5e7eb;
-}
+th{ background:#e5e7eb; }
 input{
   width:100%;
   border:none;
@@ -43,6 +42,9 @@ tfoot td{
   background:#9ca3af !important;
   font-size:14px;
 }
+.readonly{
+  background:#f3f4f6;
+}
 </style>
 </head>
 
@@ -51,63 +53,45 @@ tfoot td{
 <h2>📊 THEO DÕI NĂNG SUẤT GIỜ – XN1</h2>
 
 <table id="tbl">
-
 <thead>
 <tr>
   <th rowspan="2">TỔ</th>
   <th rowspan="2">MÃ HÀNG</th>
   <th rowspan="2">SL</th>
-  <th rowspan="2">ĐỊNH MỨC<br>NGÀY</th>
-  <th rowspan="2">ĐỊNH MỨC<br>GIỜ</th>
-  <th rowspan="2">USD / QT</th>
-  <th colspan="9">NĂNG SUẤT THEO GIỜ</th>
-  <th rowspan="2">CỘNG SP</th>
-  <th rowspan="2">USD / TH</th>
+  <th rowspan="2">ĐM NGÀY</th>
+  <th rowspan="2">ĐM GIỜ</th>
+  <th rowspan="2">ĐƠN GIÁ</th>
+  <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+  <th rowspan="2">TỔNG SP</th>
+  <th rowspan="2">USD TH</th>
   <th rowspan="2">HIỆU SUẤT</th>
   <th colspan="2">LAO ĐỘNG</th>
   <th rowspan="2">ĐG</th>
-  <th rowspan="2">TG / QT</th>
-  <th rowspan="2">USD / NGÀY 100%</th>
-  <th rowspan="2">CHUYỂN ĐỔI</th>
+  <th rowspan="2">TG/QT</th>
+  <th rowspan="2">USD 100%</th>
+  <th rowspan="2">GHI CHÚ</th>
 </tr>
 <tr>
-  <th>7-8</th>
-  <th>8-9</th>
-  <th>9-10</th>
-  <th>10-11</th>
-  <th>12-13</th>
-  <th>13-14</th>
-  <th>14-15</th>
-  <th>15-16</th>
-  <th>16-17</th>
-  <th>TT</th>
-  <th>SĐC</th>
+  <th>7-8</th><th>8-9</th><th>9-10</th><th>10-11</th>
+  <th>12-13</th><th>13-14</th><th>14-15</th><th>15-16</th><th>16-17</th>
+  <th>TT</th><th>SĐC</th>
 </tr>
 </thead>
 
 <tbody>
-
-<!-- ===== TỔ 1 ===== -->
+<script>
+const toList = [1,3,5,7,9];
+document.write(
+  toList.map(t=>`
 <tr>
-<td>1</td>
+<td>${t}</td>
 <td><input></td>
 <td><input></td>
 <td><input class="dm-ngay"></td>
-<td>
-  <input class="dm-gio" readonly style="background:#f3f4f6">
-</td>
-
+<td><input class="dm-gio readonly" readonly></td>
 <td><input class="don-gia"></td>
 
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
+${'<td><input class="gio"></td>'.repeat(9)}
 
 <td class="tong-sp">0</td>
 <td class="usd-th">0</td>
@@ -119,167 +103,37 @@ tfoot td{
 <td class="usd100">0</td>
 <td></td>
 </tr>
-
-<!-- ===== TỔ 3 ===== -->
-<tr>
-<td>3</td>
-<td><input></td>
-<td><input></td>
-<td><input class="dm-ngay"></td>
-<td>
-  <input class="dm-gio" readonly style="background:#f3f4f6">
-</td>
-
-<td><input class="don-gia"></td>
-  
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-
-<td class="tong-sp">0</td>
-<td class="usd-th">0</td>
-<td class="hs">0%</td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td class="usd100">0</td>
-<td></td>
-</tr>
-
-<!-- ===== TỔ 5 ===== -->
-<tr>
-<td>5</td>
-<td><input></td>
-<td><input></td>
-<td><input class="dm-ngay"></td>
-<td>
-  <input class="dm-gio" readonly style="background:#f3f4f6">
-</td>
-
-<td><input class="don-gia"></td>
-
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-
-<td class="tong-sp">0</td>
-<td class="usd-th">0</td>
-<td class="hs">0%</td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td class="usd100">0</td>
-<td></td>
-</tr>
-
-<!-- ===== TỔ 7 ===== -->
-<tr>
-<td>7</td>
-<td><input></td>
-<td><input></td>
-<td><input class="dm-ngay"></td>
-<td>
-  <input class="dm-gio" readonly style="background:#f3f4f6">
-</td>
-
-<td><input class="don-gia"></td>
-
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-
-<td class="tong-sp">0</td>
-<td class="usd-th">0</td>
-<td class="hs">0%</td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td class="usd100">0</td>
-<td></td>
-</tr>
-
-<!-- ===== TỔ 9 ===== -->
-<tr>
-<td>9</td>
-<td><input></td>
-<td><input></td>
-<td><input class="dm-ngay"></td>
-<td>
-  <input class="dm-gio" readonly style="background:#f3f4f6">
-</td>
-
-<td><input class="don-gia"></td>
-
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-<td><input class="gio"></td>
-
-<td class="tong-sp">0</td>
-<td class="usd-th">0</td>
-<td class="hs">0%</td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td class="usd100">0</td>
-<td></td>
-</tr>
-
+`).join('')
+);
+</script>
 </tbody>
 
 <tfoot>
 <tr>
-<td colspan="6">TỔNG USD / QT THEO GIỜ</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
-<td class="tong-usd-gio">0</td>
+<td colspan="6">TỔNG USD / GIỜ</td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
+<td class="tong-usd-gio"></td>
 <td colspan="9"></td>
 </tr>
 
 <tr>
-<td colspan="6">ƯỚC TÍNH USD TRONG NGÀY</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
-<td class="uoc-usd-gio">0</td>
+<td colspan="6">ƯỚC TÍNH USD NGÀY</td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
+<td class="uoc-usd"></td>
 <td colspan="9"></td>
 </tr>
 
@@ -288,44 +142,35 @@ tfoot td{
 <td id="tong-usd-ngay">0</td>
 </tr>
 </tfoot>
-
 </table>
 
 <script>
+const GIO_LAM = 9;
+
 function calc(){
   let tongUsdNgay = 0;
-  const tongUsdGio = Array(9).fill(0);
+  const tongUsdGio = Array(GIO_LAM).fill(0);
 
-  document.querySelectorAll("tbody tr").forEach(r=>{
-    const gio = [...r.querySelectorAll(".gio")].map(i => +i.value || 0);
+  document.querySelectorAll("tbody tr").forEach(row=>{
+    const gio = [...row.querySelectorAll(".gio")].map(i=>+i.value||0);
+    const dmNgay = +row.querySelector(".dm-ngay").value||0;
+    const donGia = +row.querySelector(".don-gia").value||0;
 
-    const donGia  = +r.querySelector(".don-gia").value || 0;
-    const dmNgay  = +r.querySelector(".dm-ngay").value || 0;
+    const dmGio = dmNgay ? dmNgay/GIO_LAM : 0;
+    row.querySelector(".dm-gio").value = dmGio.toFixed(2);
 
-    /* ===== ĐỊNH MỨC GIỜ ===== */
-    const dmGio = dmNgay ? dmNgay / 9 : 0;
-    r.querySelector(".dm-gio").value = dmGio.toFixed(2);
-
-    /* ===== TỔNG SẢN LƯỢNG ===== */
     const tongSP = gio.reduce((a,b)=>a+b,0);
-    r.querySelector(".tong-sp").innerText = tongSP;
+    row.querySelector(".tong-sp").innerText = tongSP;
 
-    /* ===== USD / QT (KHÔNG NHẬP) ===== */
-    const usdQt = dmNgay * donGia;
-    r.querySelector(".usd-qt").innerText = usdQt.toFixed(2);
-
-    /* ===== USD THỰC TẾ ===== */
     const usdTh = tongSP * donGia;
-    r.querySelector(".usd-th").innerText = usdTh.toFixed(2);
+    row.querySelector(".usd-th").innerText = usdTh.toFixed(2);
 
-    /* ===== HIỆU SUẤT ===== */
-    const hieuSuat = dmNgay ? (tongSP / dmNgay * 100) : 0;
-    r.querySelector(".hs").innerText = hieuSuat.toFixed(1) + "%";
+    const hieuSuat = dmNgay ? tongSP/dmNgay*100 : 0;
+    row.querySelector(".hs").innerText = hieuSuat.toFixed(1)+"%";
 
-    /* ===== USD 100% ===== */
-    r.querySelector(".usd100").innerText = usdQt.toFixed(2);
+    const usd100 = dmNgay * donGia;
+    row.querySelector(".usd100").innerText = usd100.toFixed(2);
 
-    /* ===== TỔNG USD THEO GIỜ ===== */
     gio.forEach((v,i)=>{
       tongUsdGio[i] += v * donGia;
     });
@@ -333,16 +178,18 @@ function calc(){
     tongUsdNgay += usdTh;
   });
 
-  /* ===== HIỂN THỊ TỔNG USD THEO GIỜ ===== */
   document.querySelectorAll(".tong-usd-gio").forEach((c,i)=>{
     c.innerText = tongUsdGio[i].toFixed(2);
   });
 
-  /* ===== TỔNG USD NGÀY ===== */
+  document.querySelectorAll(".uoc-usd").forEach((c,i)=>{
+    c.innerText = tongUsdGio[i].toFixed(2);
+  });
+
   document.getElementById("tong-usd-ngay").innerText = tongUsdNgay.toFixed(2);
 }
 
-document.addEventListener("input",calc);
+document.addEventListener("input", calc);
 </script>
 
 </body>
