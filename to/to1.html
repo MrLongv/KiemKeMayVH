@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TO1 – Nhập năng suất giờ (XN1)</title>
+<style>
+  :root{
+    --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
+    --primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--bad:#dc2626;
+    --shadow:0 10px 24px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+  .topbar{
+    position:sticky;top:0;z-index:10;
+    background:linear-gradient(180deg,#0b1b3a,#0e2552);
+    color:#fff;padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.18)
+  }
+  .toprow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  .brand b{display:block}
+  .brand span{font-size:12px;opacity:.85}
+  .status{
+    font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);
+    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px
+  }
+  .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
+  .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .wrap{padding:14px;max-width:1100px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
+  .card h3{margin:0 0 10px;font-size:14px}
+  label{font-size:12px;color:var(--muted)}
+  input,select,textarea{
+    width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;outline:none;
+    font-size:14px;background:#fff
+  }
+  input:focus,select:focus,textarea:focus{border-color:rgba(37,99,235,.55);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+  textarea{min-height:92px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+  .kpi .val{font-size:18px;font-weight:900;margin-top:2px}
+  .kpi .lab{font-size:12px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  th,td{border:1px solid var(--line);padding:8px;text-align:center;white-space:nowrap}
+  th{background:#eef2f7;font-weight:900}
+  tbody tr:nth-child(even) td{background:#fafafa}
+  .pct{font-weight:900}
+  .pct.ok{color:var(--ok)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
+  .left{text-align:left}
+  .hint{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+  .dangerBox{
+    border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.06);
+    border-radius:14px;padding:10px;color:#7f1d1d;font-size:13px
+  }
+  @media(max-width:920px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="toprow">
+    <div class="brand">
+      <b>🧵 TO1 – NHẬP NĂNG SUẤT GIỜ (XN1)</b>
+      <span id="who">—</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn ghost" onclick="logout()">Đăng xuất</button>
+      <button class="btn" onclick="reload()">Tải lại</button>
+      <div class="status" id="status">Chưa tải</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="kpi">
+    <div class="card">
+      <div class="lab">Số giờ đã nhập</div>
+      <div class="val" id="kpiCount">0</div>
+    </div>
+    <div class="card">
+      <div class="lab">Tổng SP (thực tế)</div>
+      <div class="val" id="kpiSum">0</div>
+    </div>
+    <div class="card">
+      <div class="lab">Hiệu suất TB</div>
+      <div class="val" id="kpiHs">0%</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- FORM -->
+    <div class="card">
+      <h3>Nhập giờ</h3>
+
+      <div class="row3">
+        <div>
+          <label>Ngày</label>
+          <input type="date" id="ngay" />
+        </div>
+        <div>
+          <label>Khung giờ</label>
+          <select id="khung">
+            <!-- inject -->
+          </select>
+        </div>
+        <div>
+          <label>Thực tế (SP)</label>
+          <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Nguyên nhân / ghi chú (nếu có)</label>
+        <textarea id="nguyen_nhan" placeholder="vd: Thiếu hàng, máy hư, đổi mã, thiếu người..."></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap">
+        <button class="btn" id="btnSave" onclick="save()">Lưu giờ</button>
+        <button class="btn ghost" onclick="clearForm()">Xóa nhập</button>
+        <div class="hint">
+          • Tài khoản tổ trưởng chỉ nhập <b>đúng tổ của mình</b> (tự khóa).<br/>
+          • Nếu đã nhập giờ đó, hệ thống sẽ báo “⛔ Giờ này đã nhập”.
+        </div>
+      </div>
+
+      <div id="warnBox" style="margin-top:12px;display:none" class="dangerBox"></div>
+    </div>
+
+    <!-- LIST -->
+    <div class="card">
+      <h3>Dữ liệu đã nhập trong ngày</h3>
+      <div class="hint" id="meta">—</div>
+      <div style="margin-top:10px;overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Khung</th>
+              <th>KH/giờ</th>
+              <th>Thực tế</th>
+              <th>HS</th>
+            </tr>
+          </thead>
+          <tbody id="mini"></tbody>
+        </table>
+      </div>
+
+      <div class="hint" style="margin-top:10px">
+        Chạm vào 1 dòng bên dưới bảng chi tiết để xem nguyên nhân.
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL TABLE -->
+  <div class="card" style="margin-top:12px">
+    <h3>Chi tiết giờ (kèm nguyên nhân)</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Khung giờ</th>
+            <th>Kế hoạch giờ</th>
+            <th>Thực tế</th>
+            <th>Hiệu suất</th>
+            <th class="left">Nguyên nhân</th>
+            <th>Thời gian nhập</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================== CONFIG ================== */
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
+const XUONG = 1; // to1.html là cho xưởng 1
+const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
+
+/* ================== SESSION ================== */
+const KEY="NS_SESSION";
+function getSess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
+function mustLogin(){
+  const s=getSess();
+  if(!s || !s.token){ location.href="../login.html"; return null; }
+  return s;
+}
+function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
+
+/* ================== UTIL ================== */
+function setStatus(t){ document.getElementById("status").innerText=t; }
+function todayISO(){
+  const d=new Date();
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+function nInt(v){
+  const n=Number(String(v??"").replaceAll(",","").trim());
+  if(!Number.isFinite(n)) return 0;
+  return Math.round(n);
+}
+function fmt0(n){ return String(Math.round(Number(n)||0)); }
+function fmt1(n){ return (Number(n)||0).toFixed(1); }
+function pctClass(hs){
+  hs = Number(hs)||0;
+  if(hs>=95) return "ok";
+  if(hs>=80) return "warn";
+  return "bad";
+}
+async function apiPost(payload){
+  const r=await fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  return await r.json();
+}
+
+/* ================== STATE ================== */
+let S = mustLogin();
+let TO = null;
+
+/* ================== INIT ================== */
+document.getElementById("ngay").value = todayISO();
+document.getElementById("khung").innerHTML = HOURS.map(h=>`<option value="${h}">${h}</option>`).join("");
+
+if(S){
+  // Chỉ cho role=to + xuong=1
+  const roleOk = (S.role === "to");
+  const xuongOk = (Number(S.xuong) === XUONG);
+  TO = Number(S.to_nhom || 0);
+
+  if(!roleOk || !xuongOk || !TO){
+    document.getElementById("who").innerText = `⛔ Không đúng quyền: role=${S.role} xuong=${S.xuong} to=${S.to_nhom}`;
+    document.getElementById("btnSave").disabled = true;
+    setStatus("Không đúng quyền / thiếu tổ");
+  }else{
+    document.getElementById("who").innerText = `Tài khoản: ${S.username} • Xưởng: XN${S.xuong} • Tổ: ${TO}`;
+    reload();
+  }
+}
+
+/* ================== LOAD ================== */
+async function reload(){
+  S = mustLogin(); if(!S) return;
+  const ngay = document.getElementById("ngay").value;
+
+  setStatus("Đang tải dữ liệu ngày...");
+  document.getElementById("warnBox").style.display="none";
+
+  const res = await apiPost({
+    action:"getHourByTo",
+    token:S.token,
+    ngay,
+    xuong:XUONG,
+    to_nhom: TO
+  });
+
+  if(!res.success){
+    setStatus("Lỗi tải: " + (res.msg||""));
+    render([], ngay);
+    return;
+  }
+
+  const data = res.data || [];
+  setStatus(`Đã tải • ${ngay} • ${data.length} giờ`);
+  render(data, ngay);
+}
+
+function render(data, ngay){
+  document.getElementById("meta").innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
+
+  // KPI
+  const count = data.length;
+  let sumTT=0, sumKH=0;
+  data.forEach(r=>{ sumTT += nInt(r.thuc_te); sumKH += nInt(r.ke_hoach_gio); });
+  const hsTB = sumKH>0 ? (sumTT/sumKH*100) : 0;
+
+  document.getElementById("kpiCount").innerText = fmt0(count);
+  document.getElementById("kpiSum").innerText = fmt0(sumTT);
+  document.getElementById("kpiHs").innerText = fmt1(hsTB) + "%";
+
+  // mini table
+  const mini = document.getElementById("mini");
+  mini.innerHTML = (data.length?data:[]).map(r=>{
+    const hs = nInt(r.hieu_suat);
+    return `
+      <tr onclick="alertReason('${escapeStr(r.khung_gio)}','${escapeStr(r.nguyen_nhan)}')">
+        <td><b>${escapeStr(r.khung_gio)}</b></td>
+        <td>${fmt0(r.ke_hoach_gio)}</td>
+        <td>${fmt0(r.thuc_te)}</td>
+        <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
+      </tr>
+    `;
+  }).join("") || `<tr><td colspan="4" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập giờ nào.</td></tr>`;
+
+  // detail table
+  const tb = document.getElementById("tbody");
+  tb.innerHTML = (data.length?data:[]).map(r=>{
+    const hs = nInt(r.hieu_suat);
+    return `
+      <tr>
+        <td><b>${escapeStr(r.khung_gio)}</b></td>
+        <td>${fmt0(r.ke_hoach_gio)}</td>
+        <td>${fmt0(r.thuc_te)}</td>
+        <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
+        <td class="left" style="white-space:normal;min-width:280px">${escapeStr(r.nguyen_nhan||"")}</td>
+        <td>${escapeStr((r.created_at||"").replace("T"," ").slice(0,19))}</td>
+      </tr>
+    `;
+  }).join("") || `<tr><td colspan="6" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
+
+  // disable giờ đã nhập trong dropdown
+  const used = new Set(data.map(x=>String(x.khung_gio)));
+  const sel = document.getElementById("khung");
+  [...sel.options].forEach(op=>{
+    op.disabled = used.has(op.value);
+  });
+
+  // auto chọn khung giờ chưa nhập đầu tiên
+  const firstAvail = [...sel.options].find(op=>!op.disabled);
+  if(firstAvail) sel.value = firstAvail.value;
+}
+
+/* ================== SAVE ================== */
+async function save(){
+  S = mustLogin(); if(!S) return;
+  if(S.role !== "to" || Number(S.xuong)!==XUONG){ return; }
+
+  const ngay = document.getElementById("ngay").value;
+  const khung = document.getElementById("khung").value;
+  const thuc_te = nInt(document.getElementById("thuc_te").value);
+  const nguyen_nhan = document.getElementById("nguyen_nhan").value.trim();
+
+  if(!ngay){ return showWarn("Vui lòng chọn ngày."); }
+  if(!khung){ return showWarn("Vui lòng chọn khung giờ."); }
+  if(thuc_te <= 0){ return showWarn("Thực tế phải > 0."); }
+
+  const btn = document.getElementById("btnSave");
+  btn.disabled = true;
+  btn.innerText = "Đang lưu...";
+
+  try{
+    const res = await apiPost({
+      action:"saveHour",
+      token:S.token,
+      ngay,
+      khung_gio: khung,
+      thuc_te,
+      nguyen_nhan
+    });
+
+    if(!res.success){
+      showWarn(res.msg || "Lưu thất bại");
+      setStatus("Lưu lỗi");
+      return;
+    }
+
+    setStatus(`✅ Đã lưu ${khung}`);
+    clearForm(true);
+    await reload();
+  }catch(e){
+    showWarn("Lỗi kết nối: " + (e.message || e));
+  }finally{
+    btn.disabled = false;
+    btn.innerText = "Lưu giờ";
+  }
+}
+
+function clearForm(keepReason=false){
+  document.getElementById("thuc_te").value = "";
+  if(!keepReason) document.getElementById("nguyen_nhan").value = "";
+  document.getElementById("warnBox").style.display="none";
+  document.getElementById("thuc_te").focus();
+}
+
+function showWarn(t){
+  const b=document.getElementById("warnBox");
+  b.style.display="block";
+  b.innerText = "⛔ " + t;
+}
+
+function alertReason(khung, reason){
+  reason = reason || "(Không có ghi chú)";
+  alert(`Khung giờ ${khung}\n\nNguyên nhân:\n${reason}`);
+}
+
+function escapeStr(s){
+  return String(s??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* reload when date changes */
+document.getElementById("ngay").addEventListener("change", reload);
+
+/* Enter để lưu nhanh */
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){
+    save();
+  }
+});
+</script>
+
+</body>
+</html>
