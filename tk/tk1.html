@@ -365,9 +365,8 @@ function renderDayRows(rows){
         <td class="sticky2"><input class="cell ${ro} ma_hang" ${canEditPlan?"":"readonly"} value="${escapeHtml(r.ma_hang||"")}" /></td>
         <td><input class="cell ${ro} so_luong_ke_hoach" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(r.so_luong_ke_hoach||0)}" /></td>
         <td><input class="cell ${ro} dinh_muc_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(dmNgay)}" /></td>
-        <td><input class="cell ${ro} dinh_muc_gio" ${canEditPlan?"":"readonly"} inputmode="decimal" value="${fmt2(dmGio)}" /></td>
-        <td><input class="cell ${ro} usd_quy_trinh" ${canEditPlan?"":"readonly"} inputmode="decimal" value="${fmt2(r.usd_quy_trinh||0)}" /></td>
-
+        <td><input class="cell ro dinh_muc_gio" readonly inputmode="decimal" value="${fmt2(dmGio)}" /></td>
+        <td><input class="cell ro usd_quy_trinh" readonly inputmode="decimal" value="${fmt2(dmNgay*dg)}" /></td>
         ${hours.map(v=>`<td>${fmt0(v||0)}</td>`).join("")}
 
         <td class="calc">${fmt0(tongSP)}</td>
@@ -433,28 +432,28 @@ async function savePlanRow(to_nhom){
   const tr = document.querySelector(`tr[data-to="${to_nhom}"]`);
   if(!tr){ setStatus("Không tìm thấy dòng tổ " + to_nhom); return; }
 
-  const payload = {
-    action:"savePlan",
-    token:S.token,
-    ngay, xuong:XUONG, to_nhom:Number(to_nhom),
+const payload = {
+  action:"savePlan",
+  token:S.token,
+  ngay, xuong:XUONG, to_nhom:Number(to_nhom),
 
-    ma_hang: tr.querySelector(".ma_hang").value.trim(),
-    so_luong_ke_hoach: toNum(tr.querySelector(".so_luong_ke_hoach").value),
+  ma_hang: tr.querySelector(".ma_hang").value.trim(),
+  so_luong_ke_hoach: toNum(tr.querySelector(".so_luong_ke_hoach").value),
 
-    dinh_muc_ngay: toNum(tr.querySelector(".dinh_muc_ngay").value),
-    dinh_muc_gio: toNum(tr.querySelector(".dinh_muc_gio").value),
+  dinh_muc_ngay: toNum(tr.querySelector(".dinh_muc_ngay").value),
 
-    usd_quy_trinh: toNum(tr.querySelector(".usd_quy_trinh").value),
+  // ⛔ KHÔNG gửi dinh_muc_gio, usd_quy_trinh (worker tự tính)
 
-    lao_dong_thuc_te: toNum(tr.querySelector(".lao_dong_thuc_te").value),
-    lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen").value),
+  lao_dong_thuc_te: toNum(tr.querySelector(".lao_dong_thuc_te").value),
+  lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen").value),
 
-    don_gia: toNum(tr.querySelector(".don_gia").value),
-    thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay").value),
+  don_gia: toNum(tr.querySelector(".don_gia").value),
+  thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay").value),
 
-    chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay").value),
-    ghi_chu: tr.querySelector(".ghi_chu").value.trim()
-  };
+  chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay").value),
+  ghi_chu: tr.querySelector(".ghi_chu").value.trim()
+};
+
 
   setStatus(`Đang lưu kế hoạch tổ ${to_nhom}...`);
   const res = await apiPost(payload);
@@ -530,6 +529,27 @@ async function loadRangeSummary(from, to){
 
   setStatus(`Đã tải tổng hợp • ${from} → ${to} • XN${XUONG}`);
 }
+  // Auto-calc: ĐM giờ = ĐM ngày / 9, USD/QT = ĐM ngày * ĐG
+document.addEventListener("input", (e)=>{
+  if(!canEditPlan) return;
+  const el = e.target;
+  if(!el.classList.contains("dinh_muc_ngay") && !el.classList.contains("don_gia")) return;
+
+  const tr = el.closest("tr");
+  if(!tr) return;
+
+  const dmNgay = toNum(tr.querySelector(".dinh_muc_ngay")?.value);
+  const dg = toNum(tr.querySelector(".don_gia")?.value);
+
+  const dmGio = dmNgay ? (dmNgay/9) : 0;
+  const usdQT = dmNgay * dg;
+
+  const dmGioEl = tr.querySelector(".dinh_muc_gio");
+  const usdEl = tr.querySelector(".usd_quy_trinh");
+  if(dmGioEl) dmGioEl.value = fmt2(dmGio);
+  if(usdEl) usdEl.value = fmt2(usdQT);
+});
+
 </script>
 </body>
 </html>
