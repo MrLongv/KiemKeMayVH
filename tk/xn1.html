@@ -187,8 +187,8 @@ const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem("NS_SESSION")||"null")}catch{return null} }
-function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../index.html"; return null;} return s; }
-function logout(){ localStorage.removeItem("NS_SESSION"); location.href="../index.html"; }
+function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
+function logout(){ localStorage.removeItem("NS_SESSION"); location.href="../login.html"; }
 
 /* ================== UTIL ================== */
 async function apiPost(payload){
