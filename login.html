@@ -1,137 +1,210 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>🔐 Đăng nhập hệ thống năng suất</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>login – Năng suất</title>
 <style>
-body{
-  margin:0;
-  font-family:Segoe UI,Arial;
-  background:#f3f4f6;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.box{
-  background:#fff;
-  padding:26px;
-  width:320px;
-  border-radius:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,.15);
-}
-h2{
-  text-align:center;
-  margin-top:0;
-}
-input,button{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  font-size:15px;
-}
-button{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-button:hover{opacity:.9}
-.error{
-  color:#dc2626;
-  text-align:center;
-  margin-top:8px;
-}
+  :root{
+    --bg1:#0b1b3a;--bg2:#0f2f67;--card:#fff;--muted:#6b7280;--text:#111827;
+    --primary:#2563eb;--line:#e5e7eb;--danger:#b91c1c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;
+  }
+  .wrap{width:min(980px,100%);display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+  .hero{
+    color:#fff;padding:22px;border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;background:rgba(255,255,255,.08);backdrop-filter: blur(10px);
+  }
+  .hero h1{margin:0 0 8px;font-size:20px}
+  .hero p{margin:0;color:rgba(255,255,255,.86);line-height:1.6}
+  .hero .pill{
+    display:inline-flex;gap:8px;align-items:center;margin-top:10px;
+    padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.10);font-size:12px
+  }
+
+  .card{
+    background:var(--card);border:1px solid rgba(255,255,255,.14);
+    border-radius:18px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.25);
+  }
+  .card h2{margin:0 0 12px;color:var(--text);font-size:16px}
+  label{font-size:12px;color:var(--muted)}
+  input{
+    width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:12px;outline:none;margin:6px 0 10px;font-size:14px
+  }
+  input:focus{border-color:rgba(37,99,235,.5);box-shadow:0 0 0 4px rgba(37,99,235,.15)}
+  button{
+    width:100%;border:none;background:var(--primary);color:#fff;
+    padding:10px 12px;border-radius:12px;font-weight:800;cursor:pointer
+  }
+  .row{display:flex;gap:8px;margin-top:10px}
+  .ghost{background:#fff;color:#111827;border:1px solid var(--line)}
+  .msg{margin-top:10px;font-size:13px;color:var(--danger);min-height:18px}
+  .info{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5}
+  .small{font-size:12px;color:rgba(255,255,255,.8);margin-top:12px}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
 
-<div class="box">
-  <h2>🔐 Đăng nhập</h2>
+<div class="wrap">
+  <div class="hero">
+    <h1>📊 Hệ thống Năng suất</h1>
+    <p>
+      • <b>TK</b>: nhập kế hoạch/ngày theo tổ<br>
+      • <b>Tổ trưởng</b>: nhập thực tế theo giờ + nguyên nhân<br>
+      • <b>GĐX</b>: chỉ xem theo xưởng<br>
+      • <b>GĐC</b>: theo dõi chung tất cả
+    </p>
 
-  <input id="user" placeholder="Tài khoản">
-  <input id="pass" type="password" placeholder="Mật khẩu">
+    <div class="pill">
+      <span>📁 Cấu trúc:</span>
+      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> · <span>gdc/gdc</span>
+    </div>
 
-  <button onclick="login()">Đăng nhập</button>
+    <div class="small">
+      Lưu ý: sửa <b>API_URL</b> đúng Worker Cloudflare.
+    </div>
+  </div>
 
-  <div id="msg" class="error"></div>
+  <div class="card">
+    <h2>Đăng nhập</h2>
+
+    <label>Tài khoản</label>
+    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc ..." />
+
+    <label>Mật khẩu</label>
+    <input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+
+    <button id="btnLogin" onclick="login()">Đăng nhập</button>
+
+    <div class="row">
+      <button class="ghost" onclick="clearSession()">Xóa phiên</button>
+      <button class="ghost" onclick="goIfLogged()">Vào hệ thống</button>
+    </div>
+
+    <div class="msg" id="msg"></div>
+    <div class="info" id="info"></div>
+  </div>
 </div>
 
 <script>
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-/* ⚠️ nếu deploy GitHub Pages trong subfolder thì chỉnh lại */
-const BASE_PATH = "/KiemKeMayVH/";
+/* ========= CONFIG ========= */
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
 
-function login(){
-  const lgUser = document.getElementById("user");
-  const lgPass = document.getElementById("pass");
-  const lgMsg  = document.getElementById("msg");
+/* ========= SESSION ========= */
+const KEY = "NS_SESSION";
+function getSession(){ try{ return JSON.parse(localStorage.getItem(KEY) || "null"); }catch{ return null; } }
+function setSession(s){ localStorage.setItem(KEY, JSON.stringify(s)); }
+function clearSession(){
+  localStorage.removeItem(KEY);
+  document.getElementById("msg").innerText = "Đã xóa phiên đăng nhập.";
+  renderInfo();
+}
 
-  lgMsg.innerText = "";
+/* ========= ROUTE ========= */
+function routeByRole(sess){
+  // sess: { token, username, role, xuong, to_nhom }
+  if(!sess || !sess.role) return;
 
-  if(!lgUser.value || !lgPass.value){
-    lgMsg.innerText = "Vui lòng nhập tài khoản và mật khẩu";
+  const x = Number(sess.xuong || 0);
+
+  if(sess.role === "tk"){
+    location.href = `./tk/tk${x}.html`;
+    return;
+  }
+  if(sess.role === "to"){
+    location.href = `./to/to${x}.html`;
+    return;
+  }
+  if(sess.role === "gdx"){
+    location.href = `./gdx/gdx${x}.html`;
+    return;
+  }
+  if(sess.role === "gdc"){
+    location.href = `./gdc/gdc.html`;
     return;
   }
 
-  fetch(API_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      action:"login",
-      user: lgUser.value.trim(),
-      pass: lgPass.value.trim()
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    console.log("LOGIN RES:", res);
-
-    if(!res.success){
-      lgMsg.innerText = res.msg || "Sai tài khoản hoặc mật khẩu";
-      return;
-    }
-
-    /* ✅ LƯU USER */
-    localStorage.setItem("USER", JSON.stringify(res));
-
-    /* ===== PHÂN QUYỀN CHUẨN ===== */
-
-    // 👷 TỔ TRƯỞNG
-    if(res.role === "to_truong"){
-      location.href = BASE_PATH + "to/index.html";
-      return;
-    }
-
-    // 📊 THỐNG KÊ
-    if(res.role === "tk"){
-      location.href = BASE_PATH + "tk/index.html";
-      return;
-    }
-
-    // 🏭 GIÁM ĐỐC XƯỞNG
-    if(res.role === "gdx"){
-      location.href = BASE_PATH + "gdx/xn" + res.xuong + ".html";
-      return;
-    }
-
-    // 🏢 GIÁM ĐỐC CÔNG TY
-    if(res.role === "gdc"){
-      location.href = BASE_PATH + "gdc/index.html";
-      return;
-    }
-
-    lgMsg.innerText = "Role không hợp lệ: " + res.role;
-  })
-  .catch(err=>{
-    console.error(err);
-    lgMsg.innerText = "Lỗi kết nối server";
-  });
+  document.getElementById("msg").innerText = "Role không hợp lệ: " + sess.role;
 }
+
+/* ========= API ========= */
+async function apiPost(payload){
+  const r = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  return await r.json();
+}
+
+/* ========= UI ========= */
+function renderInfo(){
+  const s = getSession();
+  const info = document.getElementById("info");
+  if(!s){
+    info.innerText = "Chưa có phiên đăng nhập.";
+    return;
+  }
+  info.innerText =
+    `Đang lưu phiên: ${s.username} • role=${s.role} • xuong=${s.xuong ?? ""} • to=${s.to_nhom ?? ""}`;
+}
+
+async function login(){
+  const msg = document.getElementById("msg");
+  msg.innerText = "";
+
+  const user = document.getElementById("lgUser").value.trim();
+  const pass = document.getElementById("lgPass").value.trim();
+  if(!user || !pass){
+    msg.innerText = "Vui lòng nhập tài khoản và mật khẩu.";
+    return;
+  }
+
+  document.getElementById("btnLogin").disabled = true;
+  document.getElementById("btnLogin").innerText = "Đang đăng nhập...";
+
+  try{
+    const res = await apiPost({ action:"login", user, pass });
+    if(!res.success){
+      msg.innerText = res.msg || "Sai tài khoản";
+      return;
+    }
+    // res includes token + username + role + xuong + to_nhom
+    setSession(res);
+    renderInfo();
+    routeByRole(res);
+  }catch(e){
+    msg.innerText = "Lỗi kết nối: " + (e.message || e);
+  }finally{
+    document.getElementById("btnLogin").disabled = false;
+    document.getElementById("btnLogin").innerText = "Đăng nhập";
+  }
+}
+
+function goIfLogged(){
+  const s = getSession();
+  if(!s){
+    document.getElementById("msg").innerText = "Chưa đăng nhập.";
+    return;
+  }
+  routeByRole(s);
+}
+
+/* Enter để login */
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") login();
+});
+
+/* Auto show info */
+renderInfo();
 </script>
 
 </body>
