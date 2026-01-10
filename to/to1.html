@@ -22,12 +22,13 @@
   .brand span{font-size:12px;opacity:.85}
   .status{
     font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);
-    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px
+    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px
   }
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.55;cursor:not-allowed}
-  .wrap{padding:14px;max-width:1100px;margin:0 auto}
+  .wrap{padding:14px;max-width:1180px;margin:0 auto}
+
   .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
   .card h3{margin:0 0 10px;font-size:14px}
@@ -55,7 +56,23 @@
     border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.06);
     border-radius:14px;padding:10px;color:#7f1d1d;font-size:13px
   }
-  @media(max-width:920px){ .grid{grid-template-columns:1fr} }
+  .infoBox{
+    border:1px solid rgba(37,99,235,.20);background:rgba(37,99,235,.06);
+    border-radius:16px;padding:12px
+  }
+  .infoGrid{
+    display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));
+    gap:10px
+  }
+  .infoItem{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px}
+  .infoItem .k{font-size:12px;color:var(--muted)}
+  .infoItem .v{font-size:16px;font-weight:900;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:900}
+  .tag.ok{background:rgba(22,163,74,.12);color:var(--ok)}
+  .tag.warn{background:rgba(245,158,11,.12);color:var(--warn)}
+  .tag.bad{background:rgba(220,38,38,.12);color:var(--bad)}
+  @media(max-width:1100px){ .infoGrid{grid-template-columns:repeat(3,minmax(120px,1fr));} }
+  @media(max-width:920px){ .grid{grid-template-columns:1fr} .infoGrid{grid-template-columns:repeat(2,minmax(120px,1fr));} }
 </style>
 </head>
 <body>
@@ -75,7 +92,52 @@
 </div>
 
 <div class="wrap">
-  <div class="kpi">
+
+  <!-- ===== PLAN SUMMARY (NEW) ===== -->
+  <div class="card infoBox">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div>
+        <b>📌 Kế hoạch đầu ngày (TK nhập) – Tổ <span id="p_to">—</span></b>
+        <div class="hint" id="p_note">—</div>
+      </div>
+      <div id="p_tag" class="tag warn">Chưa có KH</div>
+    </div>
+
+    <div class="infoGrid" style="margin-top:10px">
+      <div class="infoItem">
+        <div class="k">Mã hàng</div>
+        <div class="v" id="p_ma">—</div>
+      </div>
+      <div class="infoItem">
+        <div class="k">SL kế hoạch</div>
+        <div class="v" id="p_sl">0</div>
+      </div>
+      <div class="infoItem">
+        <div class="k">ĐM ngày</div>
+        <div class="v" id="p_dmngay">0</div>
+      </div>
+      <div class="infoItem">
+        <div class="k">ĐM giờ</div>
+        <div class="v" id="p_dmgio">0</div>
+      </div>
+      <div class="infoItem">
+        <div class="k">Đơn giá</div>
+        <div class="v" id="p_dg">0.00</div>
+      </div>
+      <div class="infoItem">
+        <div class="k">USD/QT (ước tính)</div>
+        <div class="v" id="p_usdqt">0.00</div>
+      </div>
+    </div>
+
+    <div class="hint" style="margin-top:10px">
+      • Các thông tin trên <b>chỉ xem</b>. Nếu “Chưa có KH”, báo TK nhập kế hoạch trước khi nhập giờ.<br/>
+      • KH/giờ trong nhập liệu sẽ tự lấy theo ĐM giờ (nếu TK nhập) hoặc ĐM ngày/9.
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi" style="margin-top:12px">
     <div class="card">
       <div class="lab">Số giờ đã nhập</div>
       <div class="val" id="kpiCount">0</div>
@@ -102,13 +164,22 @@
         </div>
         <div>
           <label>Khung giờ</label>
-          <select id="khung">
-            <!-- inject -->
-          </select>
+          <select id="khung"></select>
         </div>
         <div>
           <label>Thực tế (SP)</label>
           <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>KH/giờ (tự lấy)</label>
+          <input id="ke_gio" readonly />
+        </div>
+        <div>
+          <label>Hiệu suất giờ (tự tính)</label>
+          <input id="hs_gio" readonly />
         </div>
       </div>
 
@@ -177,9 +248,10 @@
 
 <script>
 /* ================== CONFIG ================== */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
-const XUONG = 1; // to1.html là cho xưởng 1
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const XUONG = 1;
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
+const HOURS_COUNT = 9;
 
 /* ================== SESSION ================== */
 const KEY="NS_SESSION";
@@ -204,8 +276,14 @@ function nInt(v){
   if(!Number.isFinite(n)) return 0;
   return Math.round(n);
 }
+function nNum(v){
+  const n=Number(String(v??"").replaceAll(",","").trim());
+  if(!Number.isFinite(n)) return 0;
+  return n;
+}
 function fmt0(n){ return String(Math.round(Number(n)||0)); }
 function fmt1(n){ return (Number(n)||0).toFixed(1); }
+function fmt2(n){ return (Number(n)||0).toFixed(2); }
 function pctClass(hs){
   hs = Number(hs)||0;
   if(hs>=95) return "ok";
@@ -220,17 +298,27 @@ async function apiPost(payload){
   });
   return await r.json();
 }
+function escapeStr(s){
+  return String(s??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
 /* ================== STATE ================== */
 let S = mustLogin();
 let TO = null;
+
+let plan = null;      // plan row of this TO
+let keGioAuto = 0;    // ke_hoach_gio auto (from plan)
 
 /* ================== INIT ================== */
 document.getElementById("ngay").value = todayISO();
 document.getElementById("khung").innerHTML = HOURS.map(h=>`<option value="${h}">${h}</option>`).join("");
 
 if(S){
-  // Chỉ cho role=to + xuong=1
   const roleOk = (S.role === "to");
   const xuongOk = (Number(S.xuong) === XUONG);
   TO = Number(S.to_nhom || 0);
@@ -248,11 +336,28 @@ if(S){
 /* ================== LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
-  const ngay = document.getElementById("ngay").value;
 
+  const ngay = document.getElementById("ngay").value;
   setStatus("Đang tải dữ liệu ngày...");
   document.getElementById("warnBox").style.display="none";
 
+  // 1) Load PLAN via getTkXuongDay then filter TO
+  const planRes = await apiPost({
+    action:"getTkXuongDay",
+    token:S.token,
+    ngay,
+    xuong:XUONG
+  });
+
+  if(planRes.success){
+    plan = (planRes.rows || []).find(r => Number(r.to_nhom) === Number(TO)) || null;
+  } else {
+    plan = null;
+  }
+
+  renderPlan(ngay);
+
+  // 2) Load HOURS history
   const res = await apiPost({
     action:"getHourByTo",
     token:S.token,
@@ -263,16 +368,69 @@ async function reload(){
 
   if(!res.success){
     setStatus("Lỗi tải: " + (res.msg||""));
-    render([], ngay);
+    renderHours([], ngay);
     return;
   }
 
   const data = res.data || [];
   setStatus(`Đã tải • ${ngay} • ${data.length} giờ`);
-  render(data, ngay);
+  renderHours(data, ngay);
+
+  // recompute ke_gio display & hs display
+  updateAutoFields();
 }
 
-function render(data, ngay){
+/* ================== PLAN UI (NEW) ================== */
+function renderPlan(ngay){
+  document.getElementById("p_to").innerText = TO;
+
+  if(!plan){
+    document.getElementById("p_tag").className = "tag bad";
+    document.getElementById("p_tag").innerText = "Chưa có KH";
+    document.getElementById("p_note").innerText = `Ngày ${ngay}: Chưa thấy TK nhập kế hoạch cho tổ này.`;
+
+    setPlanFields({ ma_hang:"—", so_luong_ke_hoach:0, dinh_muc_ngay:0, dinh_muc_gio:0, don_gia:0, usd_quy_trinh:0 });
+    keGioAuto = 0;
+    return;
+  }
+
+  const ma = String(plan.ma_hang || "").trim();
+  const sl = nInt(plan.so_luong_ke_hoach);
+  const dmNgay = nInt(plan.dinh_muc_ngay);
+  const dg = nNum(plan.don_gia);
+
+  // dm_gio: ưu tiên plan.dinh_muc_gio, nếu null thì dmNgay/9
+  const dmGio = nNum(plan.dinh_muc_gio) > 0 ? nNum(plan.dinh_muc_gio) : (dmNgay>0 ? (dmNgay/HOURS_COUNT) : 0);
+  const usdQt = nNum(plan.usd_quy_trinh) > 0 ? nNum(plan.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay*dg : 0);
+
+  setPlanFields({
+    ma_hang: ma || "—",
+    so_luong_ke_hoach: sl,
+    dinh_muc_ngay: dmNgay,
+    dinh_muc_gio: dmGio,
+    don_gia: dg,
+    usd_quy_trinh: usdQt
+  });
+
+  // ke_gio auto cho nhập giờ: theo nghiệp vụ = dinh_muc_gio (làm tròn)
+  keGioAuto = dmGio > 0 ? Math.round(dmGio) : 0;
+
+  document.getElementById("p_tag").className = "tag ok";
+  document.getElementById("p_tag").innerText = "Đã có KH";
+  document.getElementById("p_note").innerText = `Ngày ${ngay}: TK đã nhập kế hoạch. Bạn nhập giờ theo khung bên dưới.`;
+}
+
+function setPlanFields(x){
+  document.getElementById("p_ma").innerText = x.ma_hang;
+  document.getElementById("p_sl").innerText = fmt0(x.so_luong_ke_hoach);
+  document.getElementById("p_dmngay").innerText = fmt0(x.dinh_muc_ngay);
+  document.getElementById("p_dmgio").innerText = fmt2(x.dinh_muc_gio);
+  document.getElementById("p_dg").innerText = fmt2(x.don_gia);
+  document.getElementById("p_usdqt").innerText = fmt2(x.usd_quy_trinh);
+}
+
+/* ================== HOURS UI ================== */
+function renderHours(data, ngay){
   document.getElementById("meta").innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
 
   // KPI
@@ -285,7 +443,7 @@ function render(data, ngay){
   document.getElementById("kpiSum").innerText = fmt0(sumTT);
   document.getElementById("kpiHs").innerText = fmt1(hsTB) + "%";
 
-  // mini table
+  // mini
   const mini = document.getElementById("mini");
   mini.innerHTML = (data.length?data:[]).map(r=>{
     const hs = nInt(r.hieu_suat);
@@ -299,7 +457,7 @@ function render(data, ngay){
     `;
   }).join("") || `<tr><td colspan="4" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập giờ nào.</td></tr>`;
 
-  // detail table
+  // detail
   const tb = document.getElementById("tbody");
   tb.innerHTML = (data.length?data:[]).map(r=>{
     const hs = nInt(r.hieu_suat);
@@ -315,17 +473,33 @@ function render(data, ngay){
     `;
   }).join("") || `<tr><td colspan="6" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
 
-  // disable giờ đã nhập trong dropdown
+  // disable giờ đã nhập
   const used = new Set(data.map(x=>String(x.khung_gio)));
   const sel = document.getElementById("khung");
-  [...sel.options].forEach(op=>{
-    op.disabled = used.has(op.value);
-  });
+  [...sel.options].forEach(op=>{ op.disabled = used.has(op.value); });
 
-  // auto chọn khung giờ chưa nhập đầu tiên
+  // auto chọn khung chưa nhập đầu tiên
   const firstAvail = [...sel.options].find(op=>!op.disabled);
   if(firstAvail) sel.value = firstAvail.value;
 }
+
+/* ================== AUTO FIELDS (NEW) ================== */
+function updateAutoFields(){
+  // show ke_gio (auto)
+  const ke = keGioAuto || 0;
+  document.getElementById("ke_gio").value = ke ? fmt0(ke) : "0";
+
+  // compute hs_gio from input thuc_te
+  const tt = nInt(document.getElementById("thuc_te").value);
+  const hs = ke>0 ? (tt/ke*100) : 0;
+  document.getElementById("hs_gio").value = ke>0 ? (fmt1(hs) + "%") : "0%";
+}
+
+document.getElementById("thuc_te").addEventListener("input", updateAutoFields);
+document.getElementById("khung").addEventListener("change", ()=>{
+  clearForm(true);
+  updateAutoFields();
+});
 
 /* ================== SAVE ================== */
 async function save(){
@@ -340,6 +514,12 @@ async function save(){
   if(!ngay){ return showWarn("Vui lòng chọn ngày."); }
   if(!khung){ return showWarn("Vui lòng chọn khung giờ."); }
   if(thuc_te <= 0){ return showWarn("Thực tế phải > 0."); }
+
+  // Nếu chưa có kế hoạch thì vẫn cho nhập, nhưng cảnh báo rõ
+  if(!plan){
+    // không chặn vì thực tế có thể TK nhập trễ, nhưng nên báo
+    showWarn("Chưa có kế hoạch đầu ngày (TK chưa nhập). Vẫn có thể nhập giờ, nhưng KH/giờ sẽ là 0 hoặc tính tạm.");
+  }
 
   const btn = document.getElementById("btnSave");
   btn.disabled = true;
@@ -375,14 +555,15 @@ async function save(){
 function clearForm(keepReason=false){
   document.getElementById("thuc_te").value = "";
   if(!keepReason) document.getElementById("nguyen_nhan").value = "";
-  document.getElementById("warnBox").style.display="none";
+  // không tắt warnBox ngay nếu warn đang dùng để nhắc "chưa có KH"
+  updateAutoFields();
   document.getElementById("thuc_te").focus();
 }
 
 function showWarn(t){
   const b=document.getElementById("warnBox");
   b.style.display="block";
-  b.innerText = "⛔ " + t;
+  b.innerText = "⚠️ " + t;
 }
 
 function alertReason(khung, reason){
@@ -390,19 +571,10 @@ function alertReason(khung, reason){
   alert(`Khung giờ ${khung}\n\nNguyên nhân:\n${reason}`);
 }
 
-function escapeStr(s){
-  return String(s??"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
 /* reload when date changes */
 document.getElementById("ngay").addEventListener("change", reload);
 
-/* Enter để lưu nhanh */
+/* Enter để lưu nhanh: Ctrl+Enter */
 document.addEventListener("keydown",(e)=>{
   if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){
     save();
