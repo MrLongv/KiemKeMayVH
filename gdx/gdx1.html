@@ -3,542 +3,268 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDX1 – Dashboard XN1</title>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<title>GDX1 – Dashboard Giám đốc xưởng (XN1)</title>
 
 <style>
-  :root{
-    --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
-    --head:#eef2f7;--head2:#e5e7eb;--primary:#2563eb;
-    --good:#16a34a;--warn:#f59e0b;--bad:#dc2626;--shadow:0 10px 24px rgba(0,0,0,.06);
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
-  .topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0b1b3a,#0e2552);color:#fff;padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
-  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-  .brand b{display:block}
-  .brand span{font-size:12px;opacity:.85}
-  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  .ctl{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);padding:6px 8px;border-radius:12px}
-  .ctl label{font-size:12px;opacity:.9}
-  .ctl input,.ctl select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:6px 8px;border-radius:10px;outline:none;font-size:12px}
-  .ctl select option{color:#111}
-  .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
-  .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:680px}
+:root{
+  --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
+  --head:#eef2f7;--head2:#e5e7eb;
+  --primary:#2563eb;--good:#16a34a;--warn:#f59e0b;--bad:#dc2626;
+  --shadow:0 10px 24px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
 
-  .wrap{padding:14px}
-  .kpi{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
-  .card .label{font-size:12px;color:var(--muted)}
-  .card .value{font-size:20px;font-weight:900;margin-top:4px}
-  .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(180deg,#0b1b3a,#0e2552);
+  color:#fff;padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.18)
+}
+.toprow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.brand b{display:block}
+.brand span{font-size:12px;opacity:.85}
 
-  .grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-bottom:12px}
-  .chartBox{height:300px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ctl{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.12);padding:6px 8px;border-radius:12px}
+.ctl label{font-size:12px;opacity:.9}
+.ctl input,.ctl select{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  color:#fff;padding:6px 8px;border-radius:10px;font-size:12px
+}
+.btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer}
+.btn.ghost{background:rgba(255,255,255,.18)}
 
-  .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1780px,100%);border-collapse:collapse;font-size:12.5px}
-  th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
-  thead tr:nth-child(1) th{background:var(--head);font-weight:900}
-  thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
-  thead th{position:sticky;top:0;z-index:5}
-  thead tr:nth-child(2) th{top:34px}
-  tbody tr:nth-child(even) td{background:#fafafa}
-  tfoot td{background:#f1f5f9;font-weight:900}
+.status{
+  font-size:12px;opacity:.95;padding:6px 10px;
+  background:rgba(255,255,255,.12);border-radius:12px
+}
 
-  .sticky1{position:sticky;left:0;z-index:6;background:#fff}
-  .sticky2{position:sticky;left:62px;z-index:6;background:#fff}
-  thead .sticky1, thead .sticky2{z-index:10;background:var(--head)}
-  thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2{background:var(--head2)}
+.wrap{padding:14px}
 
-  .pct{font-weight:900}
-  .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
-  .calc{font-weight:900}
-  .left{text-align:left}
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(180px,1fr));
+  gap:12px;margin-bottom:14px
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:14px
+}
+.card .label{font-size:12px;color:var(--muted)}
+.card .value{font-size:22px;font-weight:900;margin-top:4px}
+.card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
-  .miniTable table{width:100%;border-collapse:collapse;font-size:13px}
-  .miniTable th,.miniTable td{border:1px solid var(--line);padding:8px;text-align:center}
-  .miniTable th{background:var(--head);font-weight:900}
-  .clickRow{cursor:pointer}
-  .clickRow:hover td{background:#fff7ed !important}
+.tableWrap{
+  background:#fff;border:1px solid var(--line);
+  border-radius:16px;overflow:auto;box-shadow:var(--shadow)
+}
 
-  @media(max-width:980px){
-    .kpi{grid-template-columns:repeat(2,1fr)}
-    .grid2{grid-template-columns:1fr}
-    table{width:max(1200px,100%)}
-  }
+table{
+  width:max(1600px,100%);
+  border-collapse:collapse;
+  font-size:12.5px
+}
+th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
+thead tr:nth-child(1) th{background:var(--head);font-weight:900}
+thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
+tbody tr:nth-child(even) td{background:#fafafa}
+
+.calc{font-weight:900}
+.pct.good{color:var(--good)}
+.pct.warn{color:var(--warn)}
+.pct.bad{color:var(--bad)}
+
+tfoot td{background:#f1f5f9;font-weight:900}
+
+.small{font-size:12px;color:var(--muted);margin-top:10px}
 </style>
 </head>
 
 <body>
+
+<!-- ================= TOPBAR ================= -->
 <div class="topbar">
-  <div class="row">
+  <div class="toprow">
     <div class="brand">
-      <b>📈 GDX1 – DASHBOARD THEO DÕI NĂNG SUẤT GIỜ (XN1)</b>
+      <b>📊 GDX1 – DASHBOARD GIÁM ĐỐC XƯỞNG</b>
       <span id="roleHint">—</span>
     </div>
 
     <div class="controls">
       <div class="ctl">
-        <label>Chế độ</label>
-        <select id="mode">
-          <option value="day">Ngày</option>
-          <option value="week">Tuần</option>
-          <option value="month">Tháng</option>
-          <option value="quarter">Quý</option>
-          <option value="year">Năm</option>
-        </select>
-      </div>
-      <div class="ctl">
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
-      <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <button class="btn" onclick="reload()">Tải dữ liệu</button>
-      <div class="status" id="status">Chưa tải dữ liệu</div>
+      <button class="btn ghost" onclick="logout()">Đăng xuất</button>
+      <div class="status" id="status">Chưa tải</div>
     </div>
   </div>
 </div>
 
 <div class="wrap">
 
-  <!-- KPI -->
-  <div class="kpi">
-    <div class="card">
-      <div class="label">Tổng SP</div>
-      <div class="value" id="kpiSp">0</div>
-      <div class="sub" id="kpiSpSub">—</div>
-    </div>
-    <div class="card">
-      <div class="label">Tổng USD/TH (ước tính)</div>
-      <div class="value" id="kpiUsd">0.00</div>
-      <div class="sub">USD/TH = Tổng SP * Đơn giá</div>
-    </div>
-    <div class="card">
-      <div class="label">Hiệu suất TB</div>
-      <div class="value" id="kpiHs">0%</div>
-      <div class="sub">Theo ĐM ngày</div>
-    </div>
-    <div class="card">
-      <div class="label">USD/giờ cao nhất</div>
-      <div class="value" id="kpiMax">0.00</div>
-      <div class="sub">Chỉ có ở chế độ Ngày</div>
-    </div>
+<!-- ================= KPI ================= -->
+<div class="kpi">
+  <div class="card">
+    <div class="label">TỔNG SẢN LƯỢNG</div>
+    <div class="value" id="kpiSp">0</div>
+    <div class="sub">Toàn xưởng (ngày)</div>
   </div>
 
-  <!-- RANGE VIEW -->
-  <div class="grid2" id="rangeArea" style="display:none">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <b>Xu hướng theo ngày</b>
-        <span style="font-size:12px;color:var(--muted)" id="rangeLabel">—</span>
-      </div>
-      <div class="chartBox"><canvas id="chart"></canvas></div>
-    </div>
-
-    <div class="card miniTable">
-      <b>Danh sách ngày (click để xem chi tiết)</b>
-      <div style="margin-top:10px;overflow:auto;max-height:320px">
-        <table>
-          <thead>
-            <tr>
-              <th>Ngày</th>
-              <th>Tổng SP</th>
-              <th>ĐM ngày</th>
-              <th>HS</th>
-            </tr>
-          </thead>
-          <tbody id="rangeTbody"></tbody>
-        </table>
-      </div>
-    </div>
+  <div class="card">
+    <div class="label">HIỆU SUẤT TB</div>
+    <div class="value" id="kpiHs">0%</div>
+    <div class="sub">So với định mức ngày</div>
   </div>
 
-  <!-- DAY DETAIL TABLE -->
-  <div class="tableWrap" id="dayArea">
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th class="sticky1" rowspan="2" style="min-width:62px;">TỔ</th>
-          <th class="sticky2" rowspan="2" style="min-width:170px;">MÃ HÀNG</th>
-          <th rowspan="2" style="min-width:90px;">SL KH</th>
-          <th rowspan="2" style="min-width:90px;">ĐM NGÀY</th>
-          <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
-          <th rowspan="2" style="min-width:95px;">USD/QT</th>
-
-          <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
-
-          <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
-          <th rowspan="2" style="min-width:110px;">USD/TH</th>
-          <th rowspan="2" style="min-width:105px;">HIỆU SUẤT</th>
-
-          <th colspan="2">LAO ĐỘNG</th>
-
-          <th rowspan="2" style="min-width:90px;">ĐG</th>
-          <th rowspan="2" style="min-width:100px;">TG/QT</th>
-          <th rowspan="2" style="min-width:110px;">USD 80%</th>
-          <th rowspan="2" style="min-width:110px;">USD 100%</th>
-          <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
-          <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
-        </tr>
-        <tr id="hourHead"></tr>
-      </thead>
-
-      <tbody id="tbody"></tbody>
-
-      <tfoot>
-        <tr>
-          <td class="sticky1 left" colspan="6" style="padding-left:10px;">TỔNG USD / GIỜ</td>
-          <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
-          <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
-          <td colspan="11"></td>
-        </tr>
-        <tr>
-          <td class="left" colspan="24" style="padding-left:10px;">TỔNG USD CUỐI NGÀY</td>
-          <td id="usdNgay">0.00</td>
-        </tr>
-      </tfoot>
-    </table>
+  <div class="card">
+    <div class="label">TỔNG USD CUỐI NGÀY</div>
+    <div class="value" id="usdNgayTop">0.00</div>
+    <div class="sub">USD toàn xưởng</div>
   </div>
+
+  <div class="card">
+    <div class="label">USD / GIỜ CAO NHẤT</div>
+    <div class="value" id="kpiMax">0.00</div>
+    <div class="sub">Trong 9 khung giờ</div>
+  </div>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="tableWrap">
+<table id="tbl">
+<thead>
+  <tr>
+    <th rowspan="2">TỔ</th>
+    <th rowspan="2">MÃ HÀNG</th>
+    <th rowspan="2">ĐM NGÀY</th>
+    <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+    <th rowspan="2">TỔNG SP</th>
+    <th rowspan="2">USD/TH</th>
+    <th rowspan="2">HIỆU SUẤT</th>
+  </tr>
+  <tr id="hourHead"></tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+<tfoot>
+<tr>
+  <td colspan="3">TỔNG USD / GIỜ</td>
+  <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
+  <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
+  <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
+  <td colspan="3"></td>
+</tr>
+</tfoot>
+</table>
+</div>
+
+<div class="small" id="rangeInfo"></div>
 
 </div>
 
 <script>
-/* ================== CONFIG ================== */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-const XUONG = 1;
-const TO_LIST = [1,3,5,7,9];
-const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
-const HOURS_COUNT = 9;
+/* ================= CONFIG ================= */
+const API_URL="https://nang-suat-may.hoalangiongxoai.workers.dev";
+const XUONG=1;
+const HOURS=["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 
-/* ================== SESSION ================== */
+/* ================= SESSION ================= */
 const KEY="NS_SESSION";
-function getSess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
-function mustLogin(){
-  const s=getSess();
-  if(!s || !s.token){ location.href="../login.html"; return null; }
-  return s;
-}
-function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
+function sess(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null}}
+function mustLogin(){const s=sess();if(!s||!s.token){location.href="../login.html";return null}return s}
+function logout(){localStorage.removeItem(KEY);location.href="../login.html"}
 
-/* ================== UTIL ================== */
-async function apiPost(payload){
-  const r = await fetch(API_URL,{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) });
+/* ================= UTIL ================= */
+function todayISO(){
+  const d=new Date();
+  return d.toISOString().slice(0,10);
+}
+function n(v){return Number(v)||0}
+function fmt2(v){return n(v).toFixed(2)}
+function fmt1(v){return n(v).toFixed(1)}
+function pctClass(h){return h>=95?"good":h>=80?"warn":"bad"}
+async function apiPost(p){
+  const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)});
   return await r.json();
 }
-function setStatus(t){ document.getElementById("status").innerText = t; }
-function todayISO(){
-  const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
-function toNum(v){ const n=Number(String(v??"").replaceAll(",","").trim()); return Number.isFinite(n)?n:0; }
-function fmt0(n){ return String(Math.round(Number(n)||0)); }
-function fmt1(n){ return (Number(n)||0).toFixed(1); }
-function fmt2(n){ return (Number(n)||0).toFixed(2); }
-function escapeHtml(s){
-  return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-function pctClass(hs){
-  hs = Number(hs)||0;
-  if(hs>=95) return "good";
-  if(hs>=80) return "warn";
-  return "bad";
-}
 
-/* ================== RANGE ================== */
-function getRange(mode, dateStr){
-  const d = new Date(dateStr+"T00:00:00");
-  const yyyy = d.getFullYear();
-  const mm = d.getMonth();
-  const dd = d.getDate();
-  const toISO = (x)=>{
-    const m=String(x.getMonth()+1).padStart(2,"0");
-    const da=String(x.getDate()).padStart(2,"0");
-    return `${x.getFullYear()}-${m}-${da}`;
-  };
+/* ================= INIT ================= */
+document.getElementById("date").value=todayISO();
+document.getElementById("hourHead").innerHTML=HOURS.map(h=>`<th>${h}</th>`).join("");
 
-  if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
-  if(mode === "week"){
-    const day = (d.getDay()+6)%7; // monday=0
-    const start = new Date(d); start.setDate(dd - day);
-    const end = new Date(start); end.setDate(start.getDate()+6);
-    return { from: toISO(start), to: toISO(end), label:`Tuần ${toISO(start)} → ${toISO(end)}` };
-  }
-  if(mode === "month"){
-    const start = new Date(yyyy, mm, 1);
-    const end = new Date(yyyy, mm+1, 0);
-    return { from: toISO(start), to: toISO(end), label:`Tháng ${yyyy}-${String(mm+1).padStart(2,"0")}` };
-  }
-  if(mode === "quarter"){
-    const q = Math.floor(mm/3);
-    const start = new Date(yyyy, q*3, 1);
-    const end = new Date(yyyy, q*3+3, 0);
-    return { from: toISO(start), to: toISO(end), label:`Quý ${q+1}/${yyyy}` };
-  }
-  const start = new Date(yyyy, 0, 1);
-  const end = new Date(yyyy, 12, 0);
-  return { from: toISO(start), to: toISO(end), label:`Năm ${yyyy}` };
-}
-
-/* ================== STATE ================== */
-let S = null;
-let chart = null;
-
-/* ================== INIT ================== */
-document.getElementById("date").value = todayISO();
-document.getElementById("hourHead").innerHTML = HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
-
-S = mustLogin();
-initAuthAndLoad();
-
-/* ================== AUTH + LOAD ================== */
-function initAuthAndLoad(){
-  if(!S) return;
-
-  const role = String(S.role || "").trim();
-  const xu = (S.xuong === null || S.xuong === undefined || S.xuong === "") ? NaN : Number(S.xuong);
-
-  // debug status để bạn nhìn thấy session thực tế
-  setStatus(`SESSION: user=${S.username} role=${role} xuong=${S.xuong} to=${S.to_nhom}`);
-
-  const ok = (role === "gdx" && xu === XUONG) || (role === "gdc");
+let S=mustLogin();
+if(S){
+  const ok=(S.role==="gdx" && Number(S.xuong)===XUONG)||(S.role==="gdc");
   if(!ok){
-    document.getElementById("roleHint").innerText =
-      `⛔ Không đúng quyền: role=${role} xuong=${S.xuong} to=${S.to_nhom} (cần gdx xuong ${XUONG})`;
-    setStatus(`BLOCKED: role=${role} xu=${xu} need=${XUONG}`);
-    return;
+    document.getElementById("roleHint").innerText=`⛔ Không đúng quyền: role=${S.role} xuong=${S.xuong}`;
+  }else{
+    document.getElementById("roleHint").innerText=
+      S.role==="gdc"?"👀 GĐC – xem XN1":"👀 GĐX1 – chỉ xem";
+    reload();
   }
-
-  document.getElementById("roleHint").innerText =
-    (role === "gdc")
-      ? `👀 GĐC: đang xem XN${XUONG}`
-      : `👀 GĐX1: chỉ xem • Tài khoản: ${S.username}`;
-
-  reload();
 }
 
-/* ================== MAIN ================== */
+/* ================= MAIN ================= */
 async function reload(){
-  S = mustLogin(); if(!S) return;
+  const ngay=document.getElementById("date").value;
+  document.getElementById("status").innerText="Đang tải...";
 
-  const role = String(S.role || "").trim();
-  const xu = (S.xuong === null || S.xuong === undefined || S.xuong === "") ? NaN : Number(S.xuong);
-  const ok = (role === "gdx" && xu === XUONG) || (role === "gdc");
-  if(!ok){
-    setStatus(`BLOCKED: role=${role} xu=${xu} need=${XUONG}`);
-    return;
-  }
-
-  const mode = document.getElementById("mode").value;
-  const date = document.getElementById("date").value;
-  const range = getRange(mode, date);
-
-  if(mode === "day"){
-    document.getElementById("rangeArea").style.display = "none";
-    document.getElementById("dayArea").style.display = "block";
-    await loadDayDetail(date);
-  } else {
-    document.getElementById("dayArea").style.display = "none";
-    document.getElementById("rangeArea").style.display = "grid";
-    document.getElementById("rangeLabel").innerText = `${range.label} • XN${XUONG}`;
-    await loadRangeSummary(range.from, range.to);
-  }
-}
-
-function setKpi(sp, usd, hs, maxUsdGio, spSub="—"){
-  document.getElementById("kpiSp").innerText = fmt0(sp);
-  document.getElementById("kpiUsd").innerText = fmt2(usd);
-  document.getElementById("kpiHs").innerText = fmt1(hs) + "%";
-  document.getElementById("kpiMax").innerText = fmt2(maxUsdGio);
-  document.getElementById("kpiSpSub").innerText = spSub;
-}
-
-/* ================== DAY DETAIL ================== */
-async function loadDayDetail(ngay){
-  setStatus(`Đang tải chi tiết ngày ${ngay}...`);
-
-  const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:XUONG });
-  if(!res.success){
-    setStatus("Lỗi: " + (res.msg||""));
-    document.getElementById("tbody").innerHTML = "";
-    setKpi(0,0,0,0,"—");
-    return;
-  }
-
-  const map = new Map();
-  (res.rows||[]).forEach(r => map.set(Number(r.to_nhom), r));
-  const rows = TO_LIST.map(to=>{
-    const r = map.get(to) || { to_nhom:to, hours:Array(HOURS_COUNT).fill(0) };
-    if(!Array.isArray(r.hours)) r.hours = Array(HOURS_COUNT).fill(0);
-    if(r.hours.length !== HOURS_COUNT) r.hours = Array(HOURS_COUNT).fill(0);
-    return r;
+  const res=await apiPost({
+    action:"getTkXuongDay",
+    token:S.token,
+    ngay,
+    xuong:XUONG
   });
 
-  renderDayRows(rows);
-  calcFooterAndKpi(rows);
+  if(!res.success){
+    document.getElementById("status").innerText="Lỗi tải";
+    return;
+  }
 
-  setStatus(`Đã tải • ${ngay} • XN${XUONG}`);
+  render(res.rows||[]);
+  document.getElementById("status").innerText=`Đã tải • ${ngay}`;
 }
 
-function renderDayRows(rows){
-  const tb = document.getElementById("tbody");
-  tb.innerHTML = rows.map(r=>{
-    const hours = r.hours || Array(HOURS_COUNT).fill(0);
-    const tongSP = hours.reduce((a,b)=>a+toNum(b),0);
+function render(rows){
+  let sumSp=0,sumKe=0,sumUsd=0;
+  const usdGio=Array(HOURS.length).fill(0);
 
-    const dmNgay = toNum(r.dinh_muc_ngay);
-    const dg = toNum(r.don_gia);
+  document.getElementById("tbody").innerHTML=rows.map(r=>{
+    const hours=r.hours||Array(HOURS.length).fill(0);
+    const tongSp=hours.reduce((a,b)=>a+n(b),0);
+    const usd=tongSp*n(r.don_gia);
+    const hs=r.dinh_muc_ngay>0?(tongSp/r.dinh_muc_ngay*100):0;
 
-    const dmGio = (toNum(r.dinh_muc_gio) > 0) ? toNum(r.dinh_muc_gio) : (dmNgay ? dmNgay/9 : 0);
-    const usdQt = (toNum(r.usd_quy_trinh) > 0) ? toNum(r.usd_quy_trinh) : (dmNgay*dg);
+    sumSp+=tongSp;
+    sumKe+=n(r.dinh_muc_ngay);
+    sumUsd+=usd;
+    hours.forEach((v,i)=>usdGio[i]+=n(v)*n(r.don_gia));
 
-    const usdTh = tongSP * dg;
-    const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
-
-    const usd100 = dmNgay * dg;
-    const usd80 = usd100 * 0.8;
-
-    return `
-      <tr data-to="${r.to_nhom}">
-        <td class="sticky1"><b>${r.to_nhom}</b></td>
-
-        <td class="sticky2 left" style="padding-left:8px">${escapeHtml(r.ma_hang||"")}</td>
-        <td>${fmt0(r.so_luong_ke_hoach||0)}</td>
-        <td>${fmt0(dmNgay)}</td>
-        <td>${fmt2(dmGio)}</td>
-        <td>${fmt2(usdQt)}</td>
-
-        ${hours.map(v=>`<td>${fmt0(v||0)}</td>`).join("")}
-
-        <td class="calc">${fmt0(tongSP)}</td>
-        <td class="calc">${fmt2(usdTh)}</td>
-        <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
-
-        <td>${fmt0(r.lao_dong_thuc_te||0)}</td>
-        <td>${fmt0(r.lao_dong_chuyen||0)}</td>
-
-        <td>${fmt2(dg)}</td>
-        <td>${fmt2(r.thoi_gian_giay||0)}</td>
-
-        <td class="calc">${fmt2(usd80)}</td>
-        <td class="calc">${fmt2(usd100)}</td>
-
-        <td>${fmt0(r.chuyen_doi_ngay||0)}</td>
-
-        <td class="left" style="white-space:normal;min-width:220px;padding-left:8px">${escapeHtml(r.ghi_chu||"")}</td>
-      </tr>
-    `;
+    return `<tr>
+      <td><b>${r.to_nhom}</b></td>
+      <td>${r.ma_hang||""}</td>
+      <td>${r.dinh_muc_ngay||0}</td>
+      ${hours.map(v=>`<td>${v||0}</td>`).join("")}
+      <td class="calc">${tongSp}</td>
+      <td class="calc">${fmt2(usd)}</td>
+      <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
+    </tr>`;
   }).join("");
+
+  document.querySelectorAll(".usdGio").forEach((td,i)=>td.innerText=fmt2(usdGio[i]||0));
+
+  document.getElementById("kpiSp").innerText=sumSp;
+  document.getElementById("kpiHs").innerText=fmt1(sumKe?sumSp/sumKe*100:0)+"%";
+  document.getElementById("usdNgayTop").innerText=fmt2(sumUsd);
+  document.getElementById("kpiMax").innerText=fmt2(Math.max(...usdGio));
 }
-
-function calcFooterAndKpi(rows){
-  let tongUsdNgay=0, tongSpAll=0, hsSum=0, hsCount=0;
-  const usdGio = Array(HOURS_COUNT).fill(0);
-
-  rows.forEach(r=>{
-    const hours = r.hours || Array(HOURS_COUNT).fill(0);
-    const tongSP = hours.reduce((a,b)=>a+toNum(b),0);
-    tongSpAll += tongSP;
-
-    const dg = toNum(r.don_gia);
-    hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
-
-    const usdTh = tongSP*dg;
-    tongUsdNgay += usdTh;
-
-    const dmNgay = toNum(r.dinh_muc_ngay);
-    const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
-    hsSum += hs; hsCount++;
-  });
-
-  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmt2(usdGio[i]||0));
-  document.getElementById("usdNgay").innerText = fmt2(tongUsdNgay);
-
-  const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
-  const hsTb = hsCount ? (hsSum/hsCount) : 0;
-
-  setKpi(tongSpAll, tongUsdNgay, hsTb, maxUsdGio, "Theo ngày đang chọn");
-}
-
-/* ================== RANGE SUMMARY ================== */
-async function loadRangeSummary(from, to){
-  setStatus(`Đang tải tổng hợp ${from} → ${to}...`);
-
-  const res = await apiPost({ action:"getDayRangeByXuong", token:S.token, xuong:XUONG, from, to });
-  if(!res.success){
-    setStatus("Lỗi: " + (res.msg||""));
-    document.getElementById("rangeTbody").innerHTML = "";
-    if(chart){ chart.destroy(); chart=null; }
-    setKpi(0,0,0,0,"—");
-    return;
-  }
-
-  const data = res.data || [];
-  const labels = data.map(x=>String(x.ngay));
-  const sp = data.map(x=>toNum(x.tong_sp));
-  const ke = data.map(x=>toNum(x.dinh_muc_ngay));
-  const hs = data.map((x,i)=> (ke[i]>0 ? (sp[i]/ke[i]*100) : 0));
-
-  const sumSp = sp.reduce((a,b)=>a+b,0);
-  const sumKe = ke.reduce((a,b)=>a+b,0);
-  const hsAll = sumKe>0 ? (sumSp/sumKe*100) : 0;
-
-  // Range mode: USD không tính chính xác theo khoảng (thiếu tổng đơn giá theo ngày), nên để 0
-  setKpi(sumSp, 0, hsAll, 0, `Tổng ${from} → ${to}`);
-
-  // Table
-  const tb = document.getElementById("rangeTbody");
-  tb.innerHTML = data.map((r, idx)=>{
-    const hsRow = hs[idx];
-    return `
-      <tr class="clickRow" onclick="jumpToDay('${escapeHtml(r.ngay)}')">
-        <td><b>${escapeHtml(r.ngay)}</b></td>
-        <td>${fmt0(r.tong_sp||0)}</td>
-        <td>${fmt0(r.dinh_muc_ngay||0)}</td>
-        <td class="pct ${pctClass(hsRow)}">${fmt1(hsRow)}%</td>
-      </tr>
-    `;
-  }).join("") || `<tr><td colspan="4" class="left" style="padding-left:10px;color:#6b7280">Không có dữ liệu.</td></tr>`;
-
-  // Chart
-  const ctx = document.getElementById("chart");
-  if(chart){ chart.destroy(); }
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        { label: "Tổng SP", data: sp, yAxisID: "ySp", tension: 0.25 },
-        { label: "Hiệu suất (%)", data: hs, yAxisID: "yHs", tension: 0.25 }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      scales: {
-        ySp: { type:"linear", position:"left", title:{ display:true, text:"SP" } },
-        yHs: { type:"linear", position:"right", title:{ display:true, text:"%" }, grid:{ drawOnChartArea:false } }
-      }
-    }
-  });
-
-  setStatus(`Đã tải tổng hợp • ${from} → ${to} • XN${XUONG}`);
-}
-
-function jumpToDay(ngay){
-  document.getElementById("mode").value = "day";
-  document.getElementById("date").value = ngay;
-  reload();
-}
-
-/* ================== EVENTS ================== */
-document.getElementById("mode").addEventListener("change", reload);
-document.getElementById("date").addEventListener("change", reload);
 </script>
+
 </body>
 </html>
