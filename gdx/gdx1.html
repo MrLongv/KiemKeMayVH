@@ -24,7 +24,7 @@
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
+  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
   .wrap{padding:14px}
 
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:12px}
@@ -56,16 +56,18 @@
   .left{text-align:left}
   .right{text-align:right}
 
-  /* Reason area */
-  .reasonGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-  @media(max-width:980px){ .kpi{grid-template-columns:1fr 1fr} .reasonGrid{grid-template-columns:1fr} }
-  .input2{
-    padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;
-    width:220px;background:#fff
-  }
-  .select2{
-    padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff
-  }
+  /* Reason & Compare area */
+  .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;margin-top:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media(max-width:1100px){ .kpi{grid-template-columns:1fr 1fr} .grid2,.grid3{grid-template-columns:1fr} }
+
+  .input2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;width:220px;background:#fff}
+  .select2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800}
+  .pill.bad{background:rgba(220,38,38,.10);color:#991b1b;border:1px solid rgba(220,38,38,.25)}
+  .pill.warn{background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.25)}
+  .pill.good{background:rgba(22,163,74,.10);color:#166534;border:1px solid rgba(22,163,74,.22)}
 </style>
 </head>
 <body>
@@ -90,6 +92,7 @@
 </div>
 
 <div class="wrap">
+
   <!-- KPI -->
   <div class="kpi">
     <div class="card">
@@ -103,19 +106,64 @@
       <div class="sub">Cộng sản lượng các tổ</div>
     </div>
     <div class="card">
-      <div class="label">Hiệu suất TB</div>
+      <div class="label">Hiệu suất TB (ngày)</div>
       <div class="value" id="kpiHs">0%</div>
       <div class="sub">TB theo tổ (dựa ĐM ngày)</div>
     </div>
     <div class="card">
       <div class="label">TỔNG USD CUỐI NGÀY</div>
       <div class="value" id="usdNgayTop">0.00</div>
-      <div class="sub">USD/giờ max: <b id="kpiMaxSub">0.00</b></div>
+      <div class="sub">
+        USD/giờ max: <b id="kpiMaxSub">0.00</b> •
+        Thiếu hụt giờ (TT-KH): <b id="kpiDeficit">0</b>
+      </div>
     </div>
   </div>
 
-  <!-- TABLE (giống TK1) -->
-  <div class="tableWrap">
+  <!-- SO SÁNH THEO GIỜ (TOÀN XƯỞNG) -->
+  <div class="grid2">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <b>⏱️ So sánh theo giờ (toàn xưởng)</b>
+        <div class="small" id="cmpMeta">—</div>
+      </div>
+      <div style="margin-top:10px;overflow:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th>Khung</th>
+              <th>KH (SP)</th>
+              <th>TT (SP)</th>
+              <th>Thiếu hụt (TT-KH)</th>
+              <th>HS</th>
+            </tr>
+          </thead>
+          <tbody id="cmpTbody"></tbody>
+          <tfoot>
+            <tr>
+              <td><b>Tổng</b></td>
+              <td id="cmpSumKH"><b>0</b></td>
+              <td id="cmpSumTT"><b>0</b></td>
+              <td id="cmpSumDef"><b>0</b></td>
+              <td id="cmpSumHS"><b>0%</b></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- QUICK ALERTS -->
+    <div class="card">
+      <b>🚦 Cảnh báo nhanh</b>
+      <div class="small">Tập trung các điểm “đáng gọi điện”</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px" id="alerts">
+        <!-- inject -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE giống TK1 -->
+  <div class="tableWrap" style="margin-top:12px">
     <table id="tbl">
       <thead>
         <tr>
@@ -153,19 +201,12 @@
           <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
           <td colspan="11"></td>
         </tr>
-
-        <!-- Dòng tổng USD ngày để lại nhưng ẨN (tránh phải kéo ngang) -->
-        <tr style="display:none">
-          <td class="left" colspan="24" style="padding-left:10px;">TỔNG USD CUỐI NGÀY</td>
-          <td id="usdNgay">0.00</td>
-          <td></td>
-        </tr>
       </tfoot>
     </table>
   </div>
 
-  <!-- REASONS AREA -->
-  <div class="reasonGrid">
+  <!-- NGUYÊN NHÂN -->
+  <div class="grid3">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <b>🧾 Top nguyên nhân trong ngày</b>
@@ -193,16 +234,18 @@
     </div>
 
     <div class="card">
-      <b>🚨 Giờ giảm năng suất (chi tiết)</b>
-      <div class="small">Click 1 dòng để xem full nguyên nhân</div>
+      <b>🚨 Giờ giảm năng suất (HS&lt;80%) – chi tiết</b>
+      <div class="small">Có Mã hàng + Thiếu hụt. Click 1 dòng để xem full nguyên nhân.</div>
       <div style="margin-top:10px;overflow:auto;max-height:320px">
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr>
               <th>Tổ</th>
+              <th>Mã hàng</th>
               <th>Khung</th>
               <th>KH</th>
               <th>TT</th>
+              <th>Thiếu</th>
               <th>HS</th>
               <th class="left" style="text-align:left;padding-left:10px">Nguyên nhân</th>
             </tr>
@@ -214,7 +257,7 @@
   </div>
 
   <div class="small">
-    <b>Ghi chú:</b> “Giờ đỏ” mặc định là HS &lt; 80%. Có thể đổi ngưỡng sau.
+    <b>Ghi chú:</b> “Giờ đỏ” mặc định HS &lt; 80%. “Thiếu hụt” = TT - KH (âm là thiếu).
   </div>
 </div>
 
@@ -250,6 +293,12 @@ function pctClass(hs){
   if(hs>=80) return "warn";
   return "bad";
 }
+function pill(hs){
+  hs = Number(hs)||0;
+  if(hs>=95) return `<span class="pill good">✅ ${fmt1(hs)}%</span>`;
+  if(hs>=80) return `<span class="pill warn">⚠️ ${fmt1(hs)}%</span>`;
+  return `<span class="pill bad">⛔ ${fmt1(hs)}%</span>`;
+}
 function normReason(s){
   s = String(s||"").trim();
   if(!s) return "";
@@ -259,9 +308,10 @@ function normReason(s){
 
 /* ================== STATE ================== */
 let S = mustLogin();
-let dayHoursRaw = []; // raw hours của ngày (có nguyên nhân)
+let dayHoursRaw = [];     // rows production_hour for day
+let planMap = new Map();  // to_nhom -> {ma_hang,...}
 
-/* ================== INIT UI ================== */
+/* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML = HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
@@ -296,20 +346,37 @@ async function reload(){
   if(!res.success){
     setStatus("Lỗi: " + (res.msg||""));
     document.getElementById("tbody").innerHTML = "";
+    renderCompare([]); // clear
+    renderAlerts([]);
+    renderReasonPanels([]);
     return;
   }
 
   const rows = res.rows || [];
+  planMap = new Map(rows.map(r=>[Number(r.to_nhom), r]));
+
   renderDayRows(rows);
   calcFooterAndKpi(rows);
 
-  // 2) Raw hour range để lấy nguyên nhân
-  await loadReasonsForDay(ngay);
+  // 2) Raw hour range: có KH/giờ, TT, HS, nguyên nhân
+  const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:XUONG, from: ngay, to: ngay });
+  if(!hr.success){
+    dayHoursRaw = [];
+    document.getElementById("cmpMeta").innerText = "Không tải được production_hour";
+    document.getElementById("reasonMeta").innerText = "Không tải được nguyên nhân";
+  }else{
+    dayHoursRaw = hr.data || [];
+  }
+
+  // 3) Render compare + alerts + reasons
+  renderCompare(dayHoursRaw);
+  renderAlerts(dayHoursRaw);
+  renderReasonPanels(dayHoursRaw);
 
   setStatus(`Đã tải • ${ngay} • XN${XUONG}`);
 }
 
-/* ================== RENDER TABLE ================== */
+/* ================== TABLE (GIỐNG TK1) ================== */
 function renderDayRows(rows){
   const tb = document.getElementById("tbody");
   tb.innerHTML = rows.map(r=>{
@@ -381,7 +448,6 @@ function calcFooterAndKpi(rows){
   });
 
   document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmt2(usdGio[i]||0));
-  document.getElementById("usdNgay").innerText = fmt2(tongUsdNgay);
 
   const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
   const hsTb = hsCount ? (hsSum/hsCount) : 0;
@@ -389,63 +455,178 @@ function calcFooterAndKpi(rows){
   document.getElementById("kpiUsd").innerText = fmt2(tongUsdNgay);
   document.getElementById("kpiSp").innerText = fmt0(tongSpAll);
   document.getElementById("kpiHs").innerText = fmt1(hsTb) + "%";
-
-  // tổng usd ngày gọn phía trên
   document.getElementById("usdNgayTop").innerText = fmt2(tongUsdNgay);
   document.getElementById("kpiMaxSub").innerText = fmt2(maxUsdGio);
 }
 
-/* ================== LOAD REASONS ================== */
-async function loadReasonsForDay(ngay){
-  const res = await apiPost({
-    action:"getHourRange",
-    token:S.token,
-    xuong:XUONG,
-    from: ngay,
-    to: ngay
-  });
+/* ================== COMPARE BY HOUR ================== */
+function renderCompare(raw){
+  const ngay = document.getElementById("date").value;
 
-  if(!res.success){
-    dayHoursRaw = [];
-    document.getElementById("reasonMeta").innerText = "Không tải được nguyên nhân: " + (res.msg||"");
-    renderReasonPanels();
-    return;
+  // group by hour across all to
+  const byH = new Map();
+  HOURS.forEach(h=> byH.set(h, {kh:0, tt:0}));
+
+  for(const r of (raw||[])){
+    const h = String(r.khung_gio||"");
+    if(!byH.has(h)) continue;
+    byH.get(h).kh += toNum(r.ke_hoach_gio);
+    byH.get(h).tt += toNum(r.thuc_te);
   }
 
-  dayHoursRaw = res.data || [];
-  renderReasonPanels();
+  let sumKH=0, sumTT=0, sumDef=0;
+  const tb = document.getElementById("cmpTbody");
+  tb.innerHTML = HOURS.map(h=>{
+    const o = byH.get(h) || {kh:0, tt:0};
+    const def = o.tt - o.kh;
+    const hs = o.kh>0 ? (o.tt/o.kh*100) : 0;
+
+    sumKH += o.kh; sumTT += o.tt; sumDef += def;
+
+    return `
+      <tr>
+        <td><b>${escapeHtml(h)}</b></td>
+        <td>${fmt0(o.kh)}</td>
+        <td>${fmt0(o.tt)}</td>
+        <td class="${def<0?'pct bad':'pct good'}">${fmt0(def)}</td>
+        <td>${pill(hs)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const sumHS = sumKH>0 ? (sumTT/sumKH*100) : 0;
+  document.getElementById("cmpSumKH").innerHTML = `<b>${fmt0(sumKH)}</b>`;
+  document.getElementById("cmpSumTT").innerHTML = `<b>${fmt0(sumTT)}</b>`;
+  document.getElementById("cmpSumDef").innerHTML = `<b>${fmt0(sumDef)}</b>`;
+  document.getElementById("cmpSumHS").innerHTML = `<b>${fmt1(sumHS)}%</b>`;
+
+  document.getElementById("cmpMeta").innerText = `Ngày ${ngay} • Tổng KH=${fmt0(sumKH)} • TT=${fmt0(sumTT)} • HS=${fmt1(sumHS)}%`;
+  document.getElementById("kpiDeficit").innerText = fmt0(sumDef);
 }
 
-/* ================== RENDER REASONS ================== */
-function renderReasonPanels(){
+/* ================== ALERTS ================== */
+function renderAlerts(raw){
+  // 1) Giờ HS thấp nhất (toàn xưởng)
+  // 2) Tổ thiếu hụt lớn nhất trong ngày
+  // 3) Top 3 bản ghi HS<80 kèm lý do
+  const wrap = document.getElementById("alerts");
+  const rows = (raw||[]).map(r=>{
+    const kh = toNum(r.ke_hoach_gio);
+    const tt = toNum(r.thuc_te);
+    const hs = toNum(r.hieu_suat);
+    return {
+      to: Number(r.to_nhom||0),
+      khung: String(r.khung_gio||""),
+      kh, tt, hs,
+      def: tt-kh,
+      reason: normReason(r.nguyen_nhan||""),
+    };
+  });
+
+  // giờ tệ nhất (group)
+  const byH = new Map();
+  HOURS.forEach(h=> byH.set(h, {kh:0, tt:0}));
+  rows.forEach(r=>{
+    if(!byH.has(r.khung)) return;
+    byH.get(r.khung).kh += r.kh;
+    byH.get(r.khung).tt += r.tt;
+  });
+  let worstH=null;
+  for(const h of HOURS){
+    const o=byH.get(h);
+    const hs = o.kh>0 ? (o.tt/o.kh*100) : 0;
+    if(!worstH || hs < worstH.hs){
+      worstH = {h, hs, kh:o.kh, tt:o.tt, def:o.tt-o.kh};
+    }
+  }
+
+  // tổ thiếu hụt lớn nhất
+  const byTo = new Map();
+  for(const r of rows){
+    const to = r.to;
+    if(!byTo.has(to)) byTo.set(to, {kh:0, tt:0});
+    byTo.get(to).kh += r.kh;
+    byTo.get(to).tt += r.tt;
+  }
+  let worstTo=null;
+  for(const [to,o] of byTo.entries()){
+    const def = o.tt-o.kh;
+    const hs = o.kh>0 ? (o.tt/o.kh*100) : 0;
+    if(!worstTo || def < worstTo.def){
+      worstTo = {to, def, hs, kh:o.kh, tt:o.tt, ma: (planMap.get(to)?.ma_hang||"")};
+    }
+  }
+
+  // top bad records
+  const bad = rows.filter(r=>r.hs>0 && r.hs<80).sort((a,b)=>a.hs-b.hs).slice(0,3);
+
+  wrap.innerHTML = `
+    <div class="card" style="box-shadow:none;border-style:dashed">
+      <div class="label">Giờ tệ nhất (toàn xưởng)</div>
+      <div class="value" style="font-size:16px">
+        ${worstH ? `${worstH.h} • ${pill(worstH.hs)} • Thiếu ${fmt0(worstH.def)}` : "—"}
+      </div>
+      <div class="sub">${worstH ? `KH ${fmt0(worstH.kh)} • TT ${fmt0(worstH.tt)}` : ""}</div>
+    </div>
+
+    <div class="card" style="box-shadow:none;border-style:dashed">
+      <div class="label">Tổ thiếu hụt lớn nhất</div>
+      <div class="value" style="font-size:16px">
+        ${worstTo ? `Tổ ${worstTo.to} (${escapeHtml(worstTo.ma||"")}) • Thiếu ${fmt0(worstTo.def)} • ${pill(worstTo.hs)}` : "—"}
+      </div>
+      <div class="sub">${worstTo ? `KH ${fmt0(worstTo.kh)} • TT ${fmt0(worstTo.tt)}` : ""}</div>
+    </div>
+
+    <div class="card" style="box-shadow:none;border-style:dashed">
+      <div class="label">3 bản ghi đỏ nhất (HS thấp)</div>
+      <div class="sub">
+        ${bad.length ? bad.map(x=>`
+          • T${x.to} ${escapeHtml(x.khung)}: <b class="pct bad">${fmt1(x.hs)}%</b> (Thiếu ${fmt0(x.def)}) ${x.reason?`— ${escapeHtml(x.reason)}`:""}
+        `).join("<br/>") : "—"}
+      </div>
+    </div>
+  `;
+}
+
+/* ================== REASONS ================== */
+function renderReasonPanels(rawOverride){
+  const raw = Array.isArray(rawOverride) ? rawOverride : dayHoursRaw;
+
   const ngay = document.getElementById("date").value;
   const filter = document.getElementById("reasonFilter")?.value || "all";
   const q = String(document.getElementById("reasonSearch")?.value||"").trim().toLowerCase();
 
-  let rows = Array.isArray(dayHoursRaw) ? dayHoursRaw.slice() : [];
+  let rows = (raw||[]).map(r=>{
+    const to = Number(r.to_nhom||0);
+    const plan = planMap.get(to) || {};
+    const reason = normReason(r.nguyen_nhan||"");
+    return {
+      to,
+      ma_hang: String(plan.ma_hang||""),
+      khung: String(r.khung_gio||""),
+      kh: toNum(r.ke_hoach_gio),
+      tt: toNum(r.thuc_te),
+      hs: toNum(r.hieu_suat),
+      def: toNum(r.thuc_te) - toNum(r.ke_hoach_gio),
+      reason
+    };
+  });
 
-  if(filter === "bad"){
-    rows = rows.filter(r => Number(r.hieu_suat||0) < 80);
-  }
-  if(q){
-    rows = rows.filter(r => String(r.nguyen_nhan||"").toLowerCase().includes(q));
-  }
+  if(filter === "bad") rows = rows.filter(r => r.hs < 80);
+  if(q) rows = rows.filter(r => (r.reason||"").toLowerCase().includes(q));
 
-  const badCount = rows.filter(r => Number(r.hieu_suat||0) < 80).length;
+  const badCount = rows.filter(r => r.hs < 80).length;
   document.getElementById("reasonMeta").innerText =
-    `Ngày ${ngay} • Tổng bản ghi giờ: ${rows.length} • Giờ đỏ (HS<80%): ${badCount}`;
+    `Ngày ${ngay} • Bản ghi giờ: ${rows.length} • Giờ đỏ (HS<80%): ${badCount}`;
 
-  // TOP REASONS
+  // TOP reasons
   const counter = new Map();
   for(const r of rows){
-    const reason = normReason(r.nguyen_nhan);
-    if(!reason) continue;
-    counter.set(reason, (counter.get(reason)||0) + 1);
+    if(!r.reason) continue;
+    counter.set(r.reason, (counter.get(r.reason)||0)+1);
   }
   const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20);
-
-  const topTbody = document.getElementById("reasonTopTbody");
-  topTbody.innerHTML = top.length
+  document.getElementById("reasonTopTbody").innerHTML = top.length
     ? top.map(([reason,c])=>`
       <tr>
         <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(reason)}</td>
@@ -454,34 +635,30 @@ function renderReasonPanels(){
     `).join("")
     : `<tr><td colspan="2" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có nguyên nhân.</td></tr>`;
 
-  // BAD HOURS DETAIL
-  const bad = rows
-    .filter(r => Number(r.hieu_suat||0) < 80)
-    .sort((a,b)=> String(a.khung_gio).localeCompare(String(b.khung_gio)) || (Number(a.to_nhom)-Number(b.to_nhom)));
-
-  const badTbody = document.getElementById("reasonBadTbody");
-  badTbody.innerHTML = bad.length
+  // bad detail table
+  const bad = rows.filter(r=>r.hs>0 && r.hs<80).sort((a,b)=>a.hs-b.hs || a.def-b.def).slice(0,60);
+  document.getElementById("reasonBadTbody").innerHTML = bad.length
     ? bad.map(r=>{
-        const hs = Number(r.hieu_suat||0);
-        const shortReason = normReason(r.nguyen_nhan);
-        const show = shortReason ? (shortReason.length>48 ? shortReason.slice(0,48)+"…" : shortReason) : "";
-        return `
-          <tr style="cursor:pointer" onclick="alertReason('${escapeHtml(r.to_nhom)}','${escapeHtml(r.khung_gio)}','${escapeHtml(shortReason||"")}')">
-            <td><b>${escapeHtml(r.to_nhom)}</b></td>
-            <td>${escapeHtml(r.khung_gio)}</td>
-            <td>${fmt0(r.ke_hoach_gio||0)}</td>
-            <td>${fmt0(r.thuc_te||0)}</td>
-            <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
-            <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(show||"(Không có)")}</td>
-          </tr>
-        `;
-      }).join("")
-    : `<tr><td colspan="6" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Không có giờ đỏ.</td></tr>`;
+      const show = r.reason ? (r.reason.length>46 ? r.reason.slice(0,46)+"…" : r.reason) : "(Không có)";
+      return `
+        <tr style="cursor:pointer" onclick="alertReason('${r.to}','${escapeHtml(r.ma_hang)}','${escapeHtml(r.khung)}','${escapeHtml(r.reason||"")}')">
+          <td><b>${r.to}</b></td>
+          <td>${escapeHtml(r.ma_hang||"")}</td>
+          <td>${escapeHtml(r.khung)}</td>
+          <td>${fmt0(r.kh)}</td>
+          <td>${fmt0(r.tt)}</td>
+          <td class="${r.def<0?'pct bad':'pct good'}">${fmt0(r.def)}</td>
+          <td class="pct ${pctClass(r.hs)}">${fmt1(r.hs)}%</td>
+          <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(show)}</td>
+        </tr>
+      `;
+    }).join("")
+    : `<tr><td colspan="8" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Không có giờ đỏ.</td></tr>`;
 }
 
-function alertReason(to, khung, reason){
+function alertReason(to, ma, khung, reason){
   reason = reason || "(Không có ghi chú)";
-  alert(`Tổ ${to} • Khung ${khung}\n\nNguyên nhân:\n${reason}`);
+  alert(`Tổ ${to} • ${ma?("Mã "+ma+" • "):""}Khung ${khung}\n\nNguyên nhân:\n${reason}`);
 }
 
 /* ================== EVENTS ================== */
