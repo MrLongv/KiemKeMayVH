@@ -340,22 +340,18 @@ async function reload(){
   const ngay = document.getElementById("ngay").value;
   setStatus("Đang tải dữ liệu ngày...");
   document.getElementById("warnBox").style.display="none";
+// 1) Load PLAN trực tiếp của tổ (chuẩn nghiệp vụ)
+const planRes = await apiPost({
+  action: "getPlanByTo",
+  token: S.token,
+  ngay
+});
 
-  // 1) Load PLAN via getTkXuongDay then filter TO
-  const planRes = await apiPost({
-    action:"getTkXuongDay",
-    token:S.token,
-    ngay,
-    xuong:XUONG
-  });
+plan = (planRes && planRes.success) ? (planRes.data || null) : null;
 
-  if(planRes.success){
-    plan = (planRes.rows || []).find(r => Number(r.to_nhom) === Number(TO)) || null;
-  } else {
-    plan = null;
-  }
+// render lại khu vực hiển thị kế hoạch
+renderPlan(ngay);
 
-  renderPlan(ngay);
 
   // 2) Load HOURS history
   const res = await apiPost({
