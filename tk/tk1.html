@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>TK1 – Thống kê năng suất giờ (XN1)</title>
+<title>TK1 – Thống kê năng suất giờ (XN1) • line_no</title>
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -24,8 +24,9 @@
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn.warn{background:#f59e0b}
+  .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:360px}
+  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
   .wrap{padding:14px}
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-bottom:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
@@ -33,7 +34,7 @@
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1750px,100%);border-collapse:collapse;font-size:12.5px}
+  table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
@@ -41,8 +42,9 @@
   thead tr:nth-child(2) th{top:34px}
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:62px;z-index:6;background:#fff}
-  thead .sticky1, thead .sticky2{z-index:10;background:var(--head)}
-  thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2{background:var(--head2)}
+  .sticky3{position:sticky;left:250px;z-index:6;background:#fff}
+  thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
+  thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
   tbody tr:nth-child(even) td{background:#fafafa}
   .calc{font-weight:900}
   .pct{font-weight:900}
@@ -50,7 +52,6 @@
   tfoot td{background:#f1f5f9;font-weight:900}
   tfoot .strong{background:#0e2552;color:#fff}
   .small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
-
   input.cell{
     width:100%;border:none;outline:none;background:transparent;text-align:center;font:inherit;padding:6px;
   }
@@ -59,16 +60,26 @@
   .saveMini{padding:6px 8px;border-radius:10px;font-size:12px}
   .right{text-align:right}
   .left{text-align:left}
+  .tagLine{
+    font-size:11px;font-weight:900;
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:26px;height:22px;padding:0 8px;border-radius:999px;
+    background:#0e2552;color:#fff;
+  }
+  .btnMini{
+    padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;
+    background:#111827;color:#fff;
+  }
+  .btnMini.gray{background:#6b7280}
 </style>
 </head>
 <body>
 
-<!-- ===== TOPBAR ===== -->
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>📊 TK1 – THEO DÕI NĂNG SUẤT GIỜ (XN1)</b>
-      <span id="roleHint">TK nhập kế hoạch đầu ngày • Giờ do tổ trưởng nhập • GĐX chỉ xem</span>
+      <b>📊 TK1 – THEO DÕI NĂNG SUẤT GIỜ (XN1) • LINE_NO</b>
+      <span id="roleHint">TK nhập kế hoạch theo LINE • Giờ do tổ trưởng nhập • GĐX chỉ xem</span>
     </div>
 
     <div class="controls">
@@ -98,7 +109,6 @@
 </div>
 
 <div class="wrap">
-  <!-- ===== KPI ===== -->
   <div class="kpi">
     <div class="card">
       <div class="label">Tổng USD (ước tính)</div>
@@ -108,12 +118,12 @@
     <div class="card">
       <div class="label">Tổng SP</div>
       <div class="value" id="kpiSp">0</div>
-      <div class="sub">Cộng sản lượng các tổ</div>
+      <div class="sub">Cộng sản lượng tất cả line</div>
     </div>
     <div class="card">
       <div class="label">Hiệu suất TB</div>
       <div class="value" id="kpiHs">0%</div>
-      <div class="sub">TB theo tổ (dựa ĐM ngày)</div>
+      <div class="sub">TB theo line (dựa ĐM ngày)</div>
     </div>
     <div class="card">
       <div class="label">USD/giờ cao nhất</div>
@@ -122,13 +132,14 @@
     </div>
   </div>
 
-  <!-- ===== TABLE ===== -->
   <div class="tableWrap">
     <table id="tbl">
       <thead>
         <tr>
           <th class="sticky1" rowspan="2" style="min-width:62px;">TỔ</th>
-          <th class="sticky2" rowspan="2" style="min-width:170px;">MÃ HÀNG</th>
+          <th class="sticky2" rowspan="2" style="min-width:188px;">LINE</th>
+          <th class="sticky3" rowspan="2" style="min-width:170px;">MÃ HÀNG</th>
+
           <th rowspan="2" style="min-width:90px;">SL KH</th>
           <th rowspan="2" style="min-width:90px;">ĐM NGÀY</th>
           <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
@@ -148,7 +159,7 @@
           <th rowspan="2" style="min-width:110px;">USD 100%</th>
           <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
           <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
-          <th rowspan="2" style="min-width:110px;">LƯU KH</th>
+          <th rowspan="2" style="min-width:150px;">THAO TÁC</th>
         </tr>
         <tr id="hourHead"></tr>
       </thead>
@@ -157,13 +168,13 @@
 
       <tfoot>
         <tr>
-          <td class="sticky1 left" colspan="6" style="padding-left:10px;">TỔNG USD / GIỜ</td>
+          <td class="sticky1 left" colspan="7" style="padding-left:10px;">TỔNG USD / GIỜ</td>
           <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
           <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
           <td colspan="11"></td>
         </tr>
         <tr class="strong">
-          <td class="left" colspan="24" style="padding-left:10px;">TỔNG USD CUỐI NGÀY</td>
+          <td class="left" colspan="25" style="padding-left:10px;">TỔNG USD CUỐI NGÀY</td>
           <td id="usdNgay">0.00</td>
           <td></td>
         </tr>
@@ -173,22 +184,23 @@
 
   <div class="small" id="rangeInfo"></div>
   <div class="small">
-    <b>Ghi chú:</b> Chế độ Tuần/Tháng/Quý/Năm chỉ dùng để xem tổng hợp (chưa hiển thị pivot giờ).
-    Lượt sau mình sẽ làm dashboard chart cho GĐX/GĐC dựa theo action range trong worker.
+    <b>Nghiệp vụ line:</b> Khi Tổ đổi sang mã mới trong ngày, TK bấm <b>+ Thêm dòng</b> cho đúng Tổ → tạo <b>line_no</b> mới.
+    Giờ do Tổ trưởng nhập sẽ map vào đúng line theo rule ở Worker (thường: giờ nào thuộc line nào sẽ do Tổ trưởng chọn line, hoặc Worker tự gán theo “line đang active” — phần này làm tiếp ở màn to).
   </div>
 </div>
 
 <script>
 /* ================== CONFIG (TK1 cố định XN1) ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
-const XUONG = 1;                         // ✅ tk1 cố định xưởng 1
-const TO_LIST = [1,3,5,7,9];             // ✅ tổ của XN1
+const XUONG = 1;
+const TO_LIST = [1,3,5,7,9];
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
+const KEY="NS_SESSION";
 
 /* ================== SESSION ================== */
-function sess(){ try{return JSON.parse(localStorage.getItem("NS_SESSION")||"null")}catch{return null} }
+function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
 function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
-function logout(){ localStorage.removeItem("NS_SESSION"); location.href="../login.html"; }
+function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
 
 /* ================== UTIL ================== */
 async function apiPost(payload){
@@ -212,6 +224,9 @@ function pctClass(hs){
   if(hs>=80) return "warn";
   return "bad";
 }
+function uid(){
+  return Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
 
 /* ================== STATE ================== */
 let S = mustLogin();
@@ -219,18 +234,18 @@ let canEditPlan = false;
 
 /* ================== INIT UI ================== */
 document.getElementById("date").value = todayISO();
-
-// hour head
 document.getElementById("hourHead").innerHTML = HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
 if(S){
-  // Quyền file tk1.html: chỉ chấp nhận tk xuong=1 hoặc gdx xuong=1
   if(S.role === "tk" && Number(S.xuong) === XUONG){
     canEditPlan = true;
-    document.getElementById("roleHint").innerText = "✅ TK1: được nhập & lưu kế hoạch đầu ngày (XN1)";
+    document.getElementById("roleHint").innerText = "✅ TK1: được nhập & lưu kế hoạch theo LINE (XN1)";
   } else if(S.role === "gdx" && Number(S.xuong) === XUONG){
     canEditPlan = false;
     document.getElementById("roleHint").innerText = "👀 GĐX1: chỉ xem (XN1)";
+  } else if(S.role === "gdc"){
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "👀 GĐC: đang xem XN1";
   } else {
     canEditPlan = false;
     document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
@@ -254,7 +269,7 @@ function getRange(mode, dateStr){
 
   if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
   if(mode === "week"){
-    const day = (d.getDay()+6)%7; // monday=0
+    const day = (d.getDay()+6)%7;
     const start = new Date(d); start.setDate(dd - day);
     const end = new Date(start); end.setDate(start.getDate()+6);
     return { from: toISO(start), to: toISO(end), label:`Tuần ${toISO(start)} → ${toISO(end)}` };
@@ -279,7 +294,13 @@ function getRange(mode, dateStr){
 async function reload(){
   S = mustLogin(); if(!S) return;
 
-  if(!((S.role==="tk"||S.role==="gdx") && Number(S.xuong)===XUONG)){
+  const allowed = (
+    (S.role==="tk" && Number(S.xuong)===XUONG) ||
+    (S.role==="gdx" && Number(S.xuong)===XUONG) ||
+    (S.role==="gdc")
+  );
+
+  if(!allowed){
     setStatus("⛔ Bạn không có quyền mở TK1 hoặc sai xưởng");
     clearAll();
     return;
@@ -294,7 +315,6 @@ async function reload(){
   if(mode === "day"){
     await loadDayDetail(date);
   } else {
-    // Chỉ hiển thị KPI tổng hợp cho khoảng
     await loadRangeSummary(range.from, range.to);
   }
 }
@@ -324,20 +344,34 @@ async function loadDayDetail(ngay){
     return;
   }
 
-  // Chuẩn hoá: đảm bảo luôn có row cho TO_LIST (kể cả chưa nhập plan)
-  const map = new Map();
-  (res.rows||[]).forEach(r=> map.set(Number(r.to_nhom), r));
-  const rows = TO_LIST.map(to=>{
-    const r = map.get(to) || { to_nhom:to, hours:Array(HOURS.length).fill(0) };
-    if(!Array.isArray(r.hours)) r.hours = Array(HOURS.length).fill(0);
-    if(r.hours.length !== HOURS.length) r.hours = Array(HOURS.length).fill(0);
-    return r;
-  });
+  // res.rows: có thể nhiều dòng cho mỗi tổ (line_no)
+  const got = Array.isArray(res.rows) ? res.rows : [];
+
+  // đảm bảo mỗi tổ có ít nhất 1 dòng (line 1) để TK nhập
+  const rows = [];
+  for(const to of TO_LIST){
+    const list = got.filter(r => Number(r.to_nhom)===Number(to))
+                    .sort((a,b)=>Number(a.line_no||1)-Number(b.line_no||1));
+    if(list.length){
+      rows.push(...list.map(x=>normalizeRow(to, x)));
+    }else{
+      rows.push(normalizeRow(to, { to_nhom:to, line_no:1, hours:Array(HOURS.length).fill(0) }));
+    }
+  }
 
   renderDayRows(rows);
   calcFooterAndKpi(rows);
 
   setStatus(`Đã tải • ${ngay} • XN${XUONG} • ${canEditPlan ? "TK nhập KH" : "Chỉ xem"}`);
+}
+
+function normalizeRow(to, r){
+  const out = { ...r };
+  out.to_nhom = Number(to);
+  out.line_no = Number(r.line_no || 1);
+  if(!Array.isArray(out.hours)) out.hours = Array(HOURS.length).fill(0);
+  if(out.hours.length !== HOURS.length) out.hours = Array(HOURS.length).fill(0);
+  return out;
 }
 
 function renderDayRows(rows){
@@ -349,7 +383,9 @@ function renderDayRows(rows){
     const dmNgay = toNum(r.dinh_muc_ngay);
     const dg = toNum(r.don_gia);
 
-    const dmGio = r.dinh_muc_gio ? toNum(r.dinh_muc_gio) : (dmNgay ? dmNgay/9 : 0);
+    const dmGio = (dmNgay ? dmNgay/9 : 0);
+    const usdQt = (dmNgay>0 && dg>0) ? (dmNgay*dg) : 0;
+
     const usdTh = tongSP * dg;
     const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
 
@@ -357,16 +393,29 @@ function renderDayRows(rows){
     const usd80 = usd100 * 0.8;
 
     const ro = canEditPlan ? "" : "ro";
+    const rid = `${r.to_nhom}__${r.line_no}`;
 
     return `
-      <tr data-to="${r.to_nhom}">
+      <tr data-to="${r.to_nhom}" data-line="${r.line_no}" data-rid="${rid}">
         <td class="sticky1"><b>${r.to_nhom}</b></td>
 
-        <td class="sticky2"><input class="cell ${ro} ma_hang" ${canEditPlan?"":"readonly"} value="${escapeHtml(r.ma_hang||"")}" /></td>
+        <td class="sticky2 left" style="padding-left:8px;">
+          <span class="tagLine">L${r.line_no}</span>
+          ${canEditPlan
+            ? `<button class="btnMini gray" style="margin-left:8px" onclick="addLine(${r.to_nhom})">+ Thêm dòng</button>`
+            : `<span style="margin-left:8px;color:#6b7280;font-size:12px">—</span>`
+          }
+        </td>
+
+        <td class="sticky3">
+          <input class="cell ${ro} ma_hang" ${canEditPlan?"":"readonly"} value="${escapeHtml(r.ma_hang||"")}" />
+        </td>
+
         <td><input class="cell ${ro} so_luong_ke_hoach" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(r.so_luong_ke_hoach||0)}" /></td>
         <td><input class="cell ${ro} dinh_muc_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(dmNgay)}" /></td>
-        <td><input class="cell ro dinh_muc_gio" readonly inputmode="decimal" value="${fmt2(dmGio)}" /></td>
-        <td><input class="cell ro usd_quy_trinh" readonly inputmode="decimal" value="${fmt2(dmNgay*dg)}" /></td>
+        <td><input class="cell ro dinh_muc_gio" readonly value="${fmt2(dmGio)}" /></td>
+        <td><input class="cell ro usd_quy_trinh" readonly value="${fmt2(usdQt)}" /></td>
+
         ${hours.map(v=>`<td>${fmt0(v||0)}</td>`).join("")}
 
         <td class="calc">${fmt0(tongSP)}</td>
@@ -389,7 +438,11 @@ function renderDayRows(rows){
         </td>
 
         <td>
-          ${canEditPlan ? `<button class="btn saveMini" onclick="savePlanRow('${r.to_nhom}')">Lưu</button>` : "—"}
+          ${canEditPlan
+            ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+               <button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+            : "—"
+          }
         </td>
       </tr>
     `;
@@ -424,42 +477,118 @@ function calcFooterAndKpi(rows){
   setKpi(tongUsdNgay, tongSpAll, hsTb, maxUsdGio);
 }
 
+/* ================== ADD LINE (UI only) ================== */
+function addLine(to){
+  if(!canEditPlan) return;
+
+  // tìm line_no lớn nhất hiện có của tổ
+  const trs = [...document.querySelectorAll(`#tbody tr[data-to="${to}"]`)];
+  let maxLine = 0;
+  for(const tr of trs) maxLine = Math.max(maxLine, Number(tr.dataset.line||1));
+  const newLine = maxLine + 1;
+
+  // tạo row local “trống” (chưa lưu)
+  const blank = {
+    to_nhom: to,
+    line_no: newLine,
+    ma_hang: "",
+    so_luong_ke_hoach: 0,
+    dinh_muc_ngay: 0,
+    don_gia: 0,
+    lao_dong_thuc_te: 0,
+    lao_dong_chuyen: 0,
+    thoi_gian_giay: 0,
+    chuyen_doi_ngay: 0,
+    ghi_chu: "",
+    hours: Array(HOURS.length).fill(0)
+  };
+
+  // append vào cuối block tổ
+  const tbody = document.getElementById("tbody");
+  // tìm vị trí insert sau dòng cuối của tổ
+  const last = trs[trs.length-1];
+  const tmp = document.createElement("tbody");
+  tmp.innerHTML = renderRowHtml(blank);
+  const newTr = tmp.firstElementChild;
+
+  if(last && last.nextSibling){
+    tbody.insertBefore(newTr, last.nextSibling);
+  }else{
+    tbody.appendChild(newTr);
+  }
+}
+
+function renderRowHtml(r){
+  // reuse rendering logic bằng cách renderDayRows? -> ở đây render nhanh 1 row
+  const hours = r.hours || Array(HOURS.length).fill(0);
+  const tongSP = 0;
+  const ro = "";
+  const rid = `${r.to_nhom}__${r.line_no}`;
+  return `
+    <tr data-to="${r.to_nhom}" data-line="${r.line_no}" data-rid="${rid}">
+      <td class="sticky1"><b>${r.to_nhom}</b></td>
+      <td class="sticky2 left" style="padding-left:8px;">
+        <span class="tagLine">L${r.line_no}</span>
+        <button class="btnMini gray" style="margin-left:8px" onclick="addLine(${r.to_nhom})">+ Thêm dòng</button>
+      </td>
+      <td class="sticky3"><input class="cell ${ro} ma_hang" value="" /></td>
+      <td><input class="cell ${ro} so_luong_ke_hoach" inputmode="numeric" value="0" /></td>
+      <td><input class="cell ${ro} dinh_muc_ngay" inputmode="numeric" value="0" /></td>
+      <td><input class="cell ro dinh_muc_gio" readonly value="0.00" /></td>
+      <td><input class="cell ro usd_quy_trinh" readonly value="0.00" /></td>
+      ${hours.map(_=>`<td>0</td>`).join("")}
+      <td class="calc">0</td>
+      <td class="calc">0.00</td>
+      <td class="pct bad">0.0%</td>
+      <td><input class="cell ${ro} lao_dong_thuc_te" inputmode="numeric" value="0" /></td>
+      <td><input class="cell ${ro} lao_dong_chuyen" inputmode="numeric" value="0" /></td>
+      <td><input class="cell ${ro} don_gia" inputmode="decimal" value="0.00" /></td>
+      <td><input class="cell ${ro} thoi_gian_giay" inputmode="decimal" value="0.00" /></td>
+      <td class="calc">0.00</td>
+      <td class="calc">0.00</td>
+      <td><input class="cell ${ro} chuyen_doi_ngay" inputmode="numeric" value="0" /></td>
+      <td class="left" style="padding-left:6px;"><input class="cell ${ro} ghi_chu" style="text-align:left" value="" /></td>
+      <td>
+        <button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+        <button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>
+      </td>
+    </tr>
+  `;
+}
+
 /* ================== SAVE PLAN ================== */
-async function savePlanRow(to_nhom){
+async function savePlanRow(to_nhom, line_no){
   if(!canEditPlan){ setStatus("Bạn không có quyền lưu kế hoạch"); return; }
 
   const ngay = document.getElementById("date").value;
-  const tr = document.querySelector(`tr[data-to="${to_nhom}"]`);
-  if(!tr){ setStatus("Không tìm thấy dòng tổ " + to_nhom); return; }
+  const tr = document.querySelector(`tr[data-to="${to_nhom}"][data-line="${line_no}"]`);
+  if(!tr){ setStatus(`Không tìm thấy dòng tổ ${to_nhom} line ${line_no}`); return; }
 
-const payload = {
-  action:"savePlan",
-  token:S.token,
-  ngay, xuong:XUONG, to_nhom:Number(to_nhom),
+  // Payload tối thiểu (TK nhập)
+  const payload = {
+    action:"savePlan",
+    token:S.token,
+    ngay, xuong:XUONG, to_nhom:Number(to_nhom), line_no:Number(line_no),
 
-  ma_hang: tr.querySelector(".ma_hang").value.trim(),
-  so_luong_ke_hoach: toNum(tr.querySelector(".so_luong_ke_hoach").value),
+    ma_hang: tr.querySelector(".ma_hang").value.trim(),
+    so_luong_ke_hoach: toNum(tr.querySelector(".so_luong_ke_hoach").value),
+    dinh_muc_ngay: toNum(tr.querySelector(".dinh_muc_ngay").value),
 
-  dinh_muc_ngay: toNum(tr.querySelector(".dinh_muc_ngay").value),
+    lao_dong_thuc_te: toNum(tr.querySelector(".lao_dong_thuc_te").value),
+    lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen").value),
 
-  // ⛔ KHÔNG gửi dinh_muc_gio, usd_quy_trinh (worker tự tính)
+    don_gia: toNum(tr.querySelector(".don_gia").value),
+    thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay").value),
 
-  lao_dong_thuc_te: toNum(tr.querySelector(".lao_dong_thuc_te").value),
-  lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen").value),
+    chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay").value),
+    ghi_chu: tr.querySelector(".ghi_chu").value.trim()
+  };
 
-  don_gia: toNum(tr.querySelector(".don_gia").value),
-  thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay").value),
-
-  chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay").value),
-  ghi_chu: tr.querySelector(".ghi_chu").value.trim()
-};
-
-
-  setStatus(`Đang lưu kế hoạch tổ ${to_nhom}...`);
+  setStatus(`Đang lưu KH tổ ${to_nhom} • line ${line_no}...`);
   const res = await apiPost(payload);
   if(!res.success){ setStatus("Lỗi lưu: " + (res.msg||"")); return; }
 
-  setStatus(`✅ Đã lưu kế hoạch tổ ${to_nhom}`);
+  setStatus(`✅ Đã lưu KH tổ ${to_nhom} • line ${line_no}`);
   await reload();
 }
 
@@ -468,44 +597,71 @@ async function saveAll(){
   const ngay = document.getElementById("date").value;
 
   setStatus("Đang lưu tất cả kế hoạch...");
-  for(const to of TO_LIST){
-    const tr = document.querySelector(`tr[data-to="${to}"]`);
-    if(!tr) continue;
+  const trs = [...document.querySelectorAll("#tbody tr")];
+
+  for(const tr of trs){
+    const to = Number(tr.dataset.to);
+    const line = Number(tr.dataset.line||1);
 
     const payload = {
       action:"savePlan",
       token:S.token,
-      ngay, xuong:XUONG, to_nhom:Number(to),
+      ngay, xuong:XUONG, to_nhom:to, line_no:line,
 
-      ma_hang: tr.querySelector(".ma_hang").value.trim(),
-      so_luong_ke_hoach: toNum(tr.querySelector(".so_luong_ke_hoach").value),
+      ma_hang: tr.querySelector(".ma_hang")?.value?.trim() || "",
+      so_luong_ke_hoach: toNum(tr.querySelector(".so_luong_ke_hoach")?.value),
+      dinh_muc_ngay: toNum(tr.querySelector(".dinh_muc_ngay")?.value),
 
-      dinh_muc_ngay: toNum(tr.querySelector(".dinh_muc_ngay").value),
-      dinh_muc_gio: toNum(tr.querySelector(".dinh_muc_gio").value),
+      lao_dong_thuc_te: toNum(tr.querySelector(".lao_dong_thuc_te")?.value),
+      lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen")?.value),
 
-      usd_quy_trinh: toNum(tr.querySelector(".usd_quy_trinh").value),
+      don_gia: toNum(tr.querySelector(".don_gia")?.value),
+      thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay")?.value),
 
-      lao_dong_thuc_te: toNum(tr.querySelector(".lao_dong_thuc_te").value),
-      lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen").value),
-
-      don_gia: toNum(tr.querySelector(".don_gia").value),
-      thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay").value),
-
-      chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay").value),
-      ghi_chu: tr.querySelector(".ghi_chu").value.trim()
+      chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay")?.value),
+      ghi_chu: tr.querySelector(".ghi_chu")?.value?.trim() || ""
     };
 
+    // tránh spam save các dòng trống hoàn toàn
+    const isAllEmpty = !payload.ma_hang && payload.so_luong_ke_hoach===0 && payload.dinh_muc_ngay===0 && payload.don_gia===0;
+    if(isAllEmpty) continue;
+
     const res = await apiPost(payload);
-    if(!res.success){ setStatus(`Lỗi tại tổ ${to}: ${res.msg||""}`); return; }
+    if(!res.success){ setStatus(`Lỗi tại tổ ${to} line ${line}: ${res.msg||""}`); return; }
   }
 
   setStatus("✅ Đã lưu tất cả kế hoạch");
   await reload();
 }
 
+/* ================== DELETE LINE ==================
+   Worker cần có action deletePlanLine (bạn sẽ thêm ở worker)
+   Nếu chưa có, nút sẽ báo lỗi.
+=================================================== */
+async function deleteLine(to_nhom, line_no){
+  if(!canEditPlan) return;
+  if(!confirm(`Xóa kế hoạch Tổ ${to_nhom} • Line ${line_no} ?`)) return;
+
+  const ngay = document.getElementById("date").value;
+  setStatus(`Đang xóa tổ ${to_nhom} line ${line_no}...`);
+
+  const res = await apiPost({
+    action:"deletePlanLine",
+    token:S.token,
+    ngay, xuong:XUONG, to_nhom:Number(to_nhom), line_no:Number(line_no)
+  });
+
+  if(!res.success){
+    setStatus("Lỗi xóa: " + (res.msg||""));
+    return;
+  }
+
+  setStatus(`✅ Đã xóa tổ ${to_nhom} line ${line_no}`);
+  await reload();
+}
+
 /* ================== RANGE SUMMARY (KPI only) ================== */
 async function loadRangeSummary(from, to){
-  // TK1 và GĐX1 đều xem range theo xưởng được
   setStatus("Đang tải tổng hợp khoảng...");
 
   const res = await apiPost({ action:"getDayRangeByXuong", token:S.token, xuong:XUONG, from, to });
@@ -522,34 +678,37 @@ async function loadRangeSummary(from, to){
   const hs = tongKe>0 ? (tongSp/tongKe*100) : 0;
   setKpi(0, tongSp, hs, 0);
 
-  // không vẽ bảng giờ ở mode tổng hợp
   document.getElementById("tbody").innerHTML = "";
   document.getElementById("usdNgay").innerText = "0.00";
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
 
   setStatus(`Đã tải tổng hợp • ${from} → ${to} • XN${XUONG}`);
 }
-  // Auto-calc: ĐM giờ = ĐM ngày / 9, USD/QT = ĐM ngày * ĐG
-document.addEventListener("input", (e)=>{
-  if(!canEditPlan) return;
-  const el = e.target;
-  if(!el.classList.contains("dinh_muc_ngay") && !el.classList.contains("don_gia")) return;
 
-  const tr = el.closest("tr");
+/* ================== EVENTS ================== */
+document.getElementById("date").addEventListener("change", reload);
+document.getElementById("mode").addEventListener("change", reload);
+
+// auto-calc dm_gio & usd_qt ngay trên UI khi TK sửa dm_ngay/don_gia
+document.addEventListener("input",(e)=>{
+  const t = e.target;
+  if(!t) return;
+  const tr = t.closest("tr");
   if(!tr) return;
 
-  const dmNgay = toNum(tr.querySelector(".dinh_muc_ngay")?.value);
-  const dg = toNum(tr.querySelector(".don_gia")?.value);
+  if(t.classList.contains("dinh_muc_ngay") || t.classList.contains("don_gia")){
+    const dmNgay = toNum(tr.querySelector(".dinh_muc_ngay")?.value);
+    const dg = toNum(tr.querySelector(".don_gia")?.value);
 
-  const dmGio = dmNgay ? (dmNgay/9) : 0;
-  const usdQT = dmNgay * dg;
+    const dmGio = dmNgay ? dmNgay/9 : 0;
+    const usdQt = (dmNgay>0 && dg>0) ? dmNgay*dg : 0;
 
-  const dmGioEl = tr.querySelector(".dinh_muc_gio");
-  const usdEl = tr.querySelector(".usd_quy_trinh");
-  if(dmGioEl) dmGioEl.value = fmt2(dmGio);
-  if(usdEl) usdEl.value = fmt2(usdQT);
+    const dmGioEl = tr.querySelector(".dinh_muc_gio");
+    const usdQtEl = tr.querySelector(".usd_quy_trinh");
+    if(dmGioEl) dmGioEl.value = fmt2(dmGio);
+    if(usdQtEl) usdQtEl.value = fmt2(usdQt);
+  }
 });
-
 </script>
 </body>
 </html>
