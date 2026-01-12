@@ -169,6 +169,7 @@
             <thead>
               <tr>
                 <th>TỔ</th>
+                <th>LINE</th>
                 <th class="left" style="min-width:180px;text-align:left;padding-left:10px">MÃ HÀNG</th>
                 <th>LĐTT</th>
                 <th>ĐM/NGÀY</th>
@@ -184,7 +185,7 @@
             <tbody id="detailTbody"></tbody>
             <tfoot>
               <tr>
-                <td colspan="6" class="right" style="padding-right:10px;font-weight:900">TỔNG</td>
+                <td colspan="7" class="right" style="padding-right:10px;font-weight:900">TỔNG</td>
                 <td id="detailUsd" style="font-weight:900">0.00</td>
                 <td id="detailHs" style="font-weight:900">0%</td>
                 <td id="detailUsdPer" style="font-weight:900">0.00</td>
@@ -194,11 +195,11 @@
           </table>
         </div>
         <div class="small" style="margin-top:8px">
-          * Các số “USD/Ngày, %NS, USD/người” được tính giống Excel: <b>USD = TH * Đơn giá</b>, <b>%NS = TH/ĐM</b>, <b>USD/người = USD/LĐTT</b>.
+          * USD = TH * Đơn giá • %NS = TH/ĐM • USD/người = USD/LĐTT.
         </div>
       </div>
 
-      <!-- nguyên nhân giảm NS (theo xưởng đang xem) -->
+      <!-- nguyên nhân giảm NS -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <b>🧾 Nguyên nhân giảm năng suất (XN đang chọn)</b>
@@ -251,25 +252,24 @@
         </div>
 
         <div class="small" style="margin-top:10px">
-          Gợi ý: sau này mình có thể thêm “Top tổ giảm NS”, “Top giờ giảm NS”, và “cảnh báo realtime”.
+          Gợi ý: sau này có thể thêm “Top tổ giảm NS”, “Top giờ giảm NS”, “cảnh báo realtime”.
         </div>
       </div>
     </div>
   </div>
 
   <div class="small" style="margin-top:10px">
-    <b>Ghi chú kỹ thuật:</b> Mode Tuần/Tháng/Quý/Năm hiện dùng bảng tổng hợp `summary_xuong_day` (nhanh).
-    Mode Ngày dùng `getTkXuongDay` (kế hoạch + giờ) và `getHourRange` (lý do).
+    <b>Ghi chú kỹ thuật:</b> Mode Tuần/Tháng/Quý/Năm dùng `summary_xuong_day`. Mode Ngày dùng `getTkXuongDay` + `getHourRange`.
   </div>
 </div>
 
 <script>
 /* ================== CONFIG ================== */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ đổi nếu khác
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
 
-// TO LIST theo xưởng (đúng bạn chốt)
+// TO LIST theo xưởng
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
   2:[11,13,15,17],
@@ -342,9 +342,9 @@ function getRange(mode, dateStr){
 
 /* ================== STATE ================== */
 let S = mustLogin();
-let activeTab = 1;            // xưởng đang xem chi tiết (1/2/3)
-let dayDetail = { 1:[], 2:[], 3:[] };  // rows plan+hours cho mode day
-let dayHoursRaw = { 1:[], 2:[], 3:[] }; // raw production_hour (có lý do)
+let activeTab = 1;
+let dayDetail = { 1:[], 2:[], 3:[] };   // ✅ giờ chứa NHIỀU line cho 1 tổ
+let dayHoursRaw = { 1:[], 2:[], 3:[] };
 
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
@@ -383,15 +383,13 @@ async function reload(){
   const range = getRange(mode, date);
 
   document.getElementById("rangeInfo").innerText = range.label;
-
   setStatus("Đang tải dữ liệu...");
 
   if(mode === "day"){
     document.getElementById("dayDetailBlock").style.display = "";
     await loadDayAllXuong(date);
-    // default render tab hiện tại
     setTab(activeTab);
-    document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày.";
+    document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (tính qua tất cả line_no).";
   }else{
     document.getElementById("dayDetailBlock").style.display = "none";
     await loadRangeAll(range.from, range.to);
@@ -411,14 +409,12 @@ async function loadRangeAll(from, to){
     return;
   }
 
-  // tổng hợp theo xưởng trong khoảng
   const agg = {1:{sp:0,dm:0,usd:0},2:{sp:0,dm:0,usd:0},3:{sp:0,dm:0,usd:0}};
   for(const r of (res.data||[])){
     const x = Number(r.xuong);
     if(!agg[x]) continue;
     agg[x].sp += toNum(r.tong_sp);
     agg[x].dm += toNum(r.tong_ke_hoach);
-    // range không có USD (vì thiếu đơn giá tổng hợp), để 0
   }
   for(const x of XUONGS){
     agg[x].hs = agg[x].dm>0 ? (agg[x].sp/agg[x].dm*100) : 0;
@@ -426,7 +422,6 @@ async function loadRangeAll(from, to){
 
   renderCompare(agg);
 
-  // KPI tổng
   const spAll = XUONGS.reduce((s,x)=>s+agg[x].sp,0);
   const dmAll = XUONGS.reduce((s,x)=>s+agg[x].dm,0);
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
@@ -436,26 +431,36 @@ async function loadRangeAll(from, to){
 
 /* ================== LOAD: DAY (all xuong) ================== */
 async function loadDayAllXuong(ngay){
-  // load plan+hours cho 3 xưởng
+  // ✅ lấy FULL rows của getTkXuongDay (đã có line_no) và KHÔNG ép 1 tổ 1 dòng
   for(const x of XUONGS){
     const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
     const rows = res.success ? (res.rows||[]) : [];
-    // bảo đảm đủ tổ theo cấu hình
-    const need = TO_BY_XUONG[x] || [];
-    const map = new Map(rows.map(r=>[Number(r.to_nhom), r]));
-    dayDetail[x] = need.map(to=>{
-      const r = map.get(Number(to)) || { to_nhom: to };
-      return r;
-    });
+
+    const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
+
+    // giữ các dòng thuộc danh sách tổ cho xưởng đó
+    let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
+
+    // nếu 1 tổ hoàn toàn chưa có plan line nào -> chèn placeholder line 1 để bảng đủ tổ (đỡ trống)
+    const existingTo = new Set(filtered.map(r=>Number(r.to_nhom)));
+    for(const to of allowTos){
+      if(!existingTo.has(to)){
+        filtered.push({ to_nhom: to, line_no: 1, ma_hang:"", dinh_muc_ngay:0, don_gia:0, lao_dong_thuc_te:0, chuyen_doi_ngay:0, ghi_chu:"", hours: [] });
+      }
+    }
+
+    // sort: to_nhom, line_no
+    filtered.sort((a,b)=> Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
+    dayDetail[x] = filtered;
   }
 
-  // load reasons raw (production_hour) cho 3 xưởng
+  // reasons raw (production_hour) cho 3 xưởng
   for(const x of XUONGS){
     const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:x, from:ngay, to:ngay });
     dayHoursRaw[x] = hr.success ? (hr.data||[]) : [];
   }
 
-  // compare + KPI
+  // compare + KPI (tính qua TẤT CẢ line)
   const agg = {};
   for(const x of XUONGS){
     const rows = dayDetail[x] || [];
@@ -499,9 +504,7 @@ function renderCompare(agg){
         <td>${fmt0(sp)}</td>
         <td>${fmt0(dm)}</td>
         <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
-        <td>
-          <div class="bar"><i style="width:${w.toFixed(1)}%"></i></div>
-        </td>
+        <td><div class="bar"><i style="width:${w.toFixed(1)}%"></i></div></td>
         <td>${fmt2(usd)}</td>
       </tr>
     `;
@@ -533,7 +536,6 @@ function renderDayDetailForXuong(xuong, ngay){
   let usdSum=0, dmSum=0, spSum=0, ldSum=0;
 
   const body = rows.map(r=>{
-    // tổng SP theo giờ (giống TK)
     const hours = Array.isArray(r.hours) ? r.hours : [];
     const th = hours.reduce((a,b)=>a+toNum(b),0);
 
@@ -550,9 +552,12 @@ function renderDayDetailForXuong(xuong, ngay){
     spSum += th;
     ldSum += ld;
 
+    const ln = Number(r.line_no||1);
+
     return `
       <tr>
         <td><b>${escapeHtml(r.to_nhom)}</b></td>
+        <td><b>${ln}</b></td>
         <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(r.ma_hang||"")}</td>
         <td>${fmt0(ld)}</td>
         <td>${fmt0(dm)}</td>
@@ -565,7 +570,7 @@ function renderDayDetailForXuong(xuong, ngay){
         <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(r.ghi_chu||"")}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="11" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có dữ liệu kế hoạch/giờ.</td></tr>`;
+  }).join("") || `<tr><td colspan="12" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có dữ liệu kế hoạch/giờ.</td></tr>`;
 
   document.getElementById("detailTbody").innerHTML = body;
 
@@ -597,7 +602,6 @@ function renderReasons(){
   document.getElementById("reasonMeta").innerText =
     `XN${xuong} • Ngày ${ngay} • Tổng bản ghi giờ: ${rows.length} • Giờ đỏ (HS<80%): ${badCount}`;
 
-  // TOP REASONS
   const counter = new Map();
   for(const r of rows){
     const reason = normReason(r.nguyen_nhan);
@@ -615,7 +619,6 @@ function renderReasons(){
     `).join("")
     : `<tr><td colspan="2" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có nguyên nhân.</td></tr>`;
 
-  // BAD HOURS
   const bad = rows
     .filter(r => Number(r.hieu_suat||0) < 80)
     .sort((a,b)=> String(a.khung_gio).localeCompare(String(b.khung_gio)) || (Number(a.to_nhom)-Number(b.to_nhom)));
