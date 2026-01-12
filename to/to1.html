@@ -22,12 +22,12 @@
   .brand span{font-size:12px;opacity:.85}
   .status{
     font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);
-    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px
+    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:560px
   }
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.55;cursor:not-allowed}
-  .wrap{padding:14px;max-width:1100px;margin:0 auto}
+  .wrap{padding:14px;max-width:1120px;margin:0 auto}
   .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
   .card h3{margin:0 0 10px;font-size:14px}
@@ -38,25 +38,27 @@
   }
   input:focus,select:focus,textarea:focus{border-color:rgba(37,99,235,.55);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
   textarea{min-height:92px;resize:vertical}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
   .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
   .kpi .val{font-size:18px;font-weight:900;margin-top:2px}
   .kpi .lab{font-size:12px;color:var(--muted)}
 
   /* plan box */
-  .planGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-  .planItem{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
-  .planItem .k{font-size:11px;color:var(--muted)}
-  .planItem .v{font-size:14px;font-weight:900;margin-top:2px}
+  .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .pill{
     display:inline-flex;align-items:center;gap:6px;
     padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
     border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.12);color:#7c2d12
   }
   .pill.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.10);color:#14532d}
-  .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .pill.bad{border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.08);color:#7f1d1d}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+
+  .planLineWrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .planGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  .planItem{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
+  .planItem .k{font-size:11px;color:var(--muted)}
+  .planItem .v{font-size:14px;font-weight:900;margin-top:2px}
 
   table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
   th,td{border:1px solid var(--line);padding:8px;text-align:center;white-space:nowrap}
@@ -70,6 +72,7 @@
     border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.06);
     border-radius:14px;padding:10px;color:#7f1d1d;font-size:13px
   }
+
   @media(max-width:980px){
     .grid{grid-template-columns:1fr}
     .planGrid{grid-template-columns:repeat(2,1fr)}
@@ -96,7 +99,7 @@
   <!-- KPI -->
   <div class="kpi">
     <div class="card">
-      <div class="lab">Số giờ đã nhập</div>
+      <div class="lab">Số bản ghi giờ</div>
       <div class="val" id="kpiCount">0</div>
     </div>
     <div class="card">
@@ -115,15 +118,25 @@
       <h3 style="margin:0">📌 Kế hoạch đầu ngày (chỉ xem)</h3>
       <span id="planBadge" class="pill">Chưa tải kế hoạch</span>
     </div>
-    <div class="hint" id="planMeta">—</div>
 
-    <div class="planGrid" style="margin-top:10px" id="planGrid">
-      <!-- inject -->
+    <div class="planLineWrap" style="margin-top:8px">
+      <div style="min-width:230px;flex:1">
+        <div class="hint" id="planMeta">—</div>
+      </div>
+      <div style="min-width:260px">
+        <label>Chọn line (mã hàng)</label>
+        <select id="lineSelect"></select>
+      </div>
     </div>
+
+    <div class="planGrid" style="margin-top:10px" id="planGrid"></div>
 
     <div class="hint" style="margin-top:10px">
-      Nếu chưa có kế hoạch: yêu cầu <b>TK</b> nhập KH/ĐM trước, sau đó bấm <b>Tải lại</b>.
+      • Nếu cần nhập 2 mã trong cùng giờ (vd 12-13), hãy chọn <b>line 1</b> hoặc <b>line 2</b> rồi nhập. <br/>
+      • Nếu chưa có line: yêu cầu <b>TK</b> tạo thêm line_no (2,3…) cho tổ này.
     </div>
+
+    <div id="planWarn" class="dangerBox" style="margin-top:10px;display:none"></div>
   </div>
 
   <div class="grid">
@@ -131,23 +144,15 @@
     <div class="card">
       <h3>Nhập giờ</h3>
 
-      <!-- 4 cột: Ngày / Line / Khung / Thực tế -->
-      <div class="row3" style="grid-template-columns:1fr 1fr 1fr 1fr">
+      <div class="row3">
         <div>
           <label>Ngày</label>
           <input type="date" id="ngay" />
         </div>
-
-        <div>
-          <label>Dòng mã (line)</label>
-          <select id="line"></select>
-        </div>
-
         <div>
           <label>Khung giờ</label>
           <select id="khung"></select>
         </div>
-
         <div>
           <label>Thực tế (SP)</label>
           <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
@@ -163,9 +168,8 @@
         <button class="btn" id="btnSave" onclick="save()">Lưu giờ</button>
         <button class="btn ghost" onclick="clearForm()">Xóa nhập</button>
         <div class="hint">
-          • Tổ trưởng chỉ nhập <b>đúng tổ của mình</b> (tự khóa).<br/>
-          • Có thể nhập <b>trùng khung giờ</b> nếu khác <b>line</b> (mã hàng khác).<br/>
-          • Nếu đã nhập đúng <b>giờ + line</b>, hệ thống sẽ báo “⛔ Giờ này đã nhập”.
+          • Tổ trưởng chỉ nhập <b>đúng tổ</b> (tự khóa).<br/>
+          • Chỉ chặn trùng: <b>cùng khung + cùng line</b>.
         </div>
       </div>
 
@@ -205,6 +209,7 @@
         <thead>
           <tr>
             <th>Line</th>
+            <th>Mã hàng</th>
             <th>Khung giờ</th>
             <th>Kế hoạch giờ</th>
             <th>Thực tế</th>
@@ -222,8 +227,8 @@
 
 <script>
 /* ================== CONFIG ================== */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
-const XUONG = 1; // to1.html là cho xưởng 1
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const XUONG = 1;
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const HOURS_COUNT = 9;
 
@@ -239,12 +244,7 @@ function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; 
 
 /* ================== UTIL ================== */
 function setStatus(t){ document.getElementById("status").innerText=t; }
-function todayISO(){
-  const d=new Date();
-  const mm=String(d.getMonth()+1).padStart(2,"0");
-  const dd=String(d.getDate()).padStart(2,"0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 function nInt(v){
   const n=Number(String(v??"").replaceAll(",","").trim());
   if(!Number.isFinite(n)) return 0;
@@ -264,6 +264,11 @@ function pctClass(hs){
   if(hs>=80) return "warn";
   return "bad";
 }
+function esc(s){
+  return String(s??"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
 async function apiPost(payload){
   const r=await fetch(API_URL,{
     method:"POST",
@@ -272,26 +277,24 @@ async function apiPost(payload){
   });
   const text = await r.text();
   try{ return JSON.parse(text); }
-  catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,220) }; }
-}
-function esc(s){
-  return String(s??"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
 }
 
 /* ================== STATE ================== */
 let S = mustLogin();
-let TO = null;
+let TO = 0;
 
-let PLAN_LINES = [];   // tất cả line của tổ trong ngày
-let CUR_LINE = 1;      // line đang chọn
-let PLAN = null;       // plan của CUR_LINE (để show box)
-let LAST_HOURS_DATA = [];
+// planLines: [{line_no, ...plan fields}]
+let planLines = [];
+let selectedLine = 1;
+
+// hoursRows: raw from getHourByTo (can include many lines)
+let hoursRows = [];
 
 /* ================== INIT ================== */
 document.getElementById("ngay").value = todayISO();
 document.getElementById("khung").innerHTML = HOURS.map(h=>`<option value="${h}">${h}</option>`).join("");
+document.getElementById("lineSelect").innerHTML = `<option value="1">Line 1</option>`;
 
 if(S){
   const roleOk = (S.role === "to");
@@ -313,14 +316,14 @@ async function reload(){
   S = mustLogin(); if(!S) return;
   const ngay = document.getElementById("ngay").value;
 
-  setStatus("Đang tải dữ liệu ngày...");
-  document.getElementById("warnBox").style.display="none";
+  setStatus("Đang tải...");
+  hideWarn();
 
-  // 1) Load PLAN lines cho tổ (từ getTkXuongDay) rồi dựng dropdown line + plan box
+  // 1) load plan lines
   await loadPlanLines(ngay);
 
-  // 2) Load hours for this TO (kèm line_no)
-  const res = await apiPost({
+  // 2) load hours by to (kèm line_no + ma_hang)
+  const resH = await apiPost({
     action:"getHourByTo",
     token:S.token,
     ngay,
@@ -328,24 +331,27 @@ async function reload(){
     to_nhom: TO
   });
 
-  if(!res.success){
-    setStatus("Lỗi tải giờ: " + (res.msg||""));
-    LAST_HOURS_DATA = [];
+  if(!resH.success){
+    setStatus("Lỗi tải giờ: " + (resH.msg||""));
+    hoursRows = [];
     renderHours([], ngay);
+    applyHourDisableByLine();
     return;
   }
 
-  const data = res.data || [];
-  LAST_HOURS_DATA = data;
-
-  setStatus(`Đã tải • ${ngay} • ${data.length} bản ghi giờ`);
-  renderHours(data, ngay);
+  hoursRows = resH.data || [];
+  setStatus(`Đã tải • ${ngay} • ${hoursRows.length} bản ghi giờ`);
+  renderHours(hoursRows, ngay);
+  applyHourDisableByLine();
 }
 
 async function loadPlanLines(ngay){
-  PLAN_LINES = [];
-  PLAN = null;
+  planLines = [];
+  const warn = document.getElementById("planWarn");
+  warn.style.display = "none";
 
+  // Cách load ổn nhất hiện tại: lấy từ getTkXuongDay rồi lọc theo TO
+  // Nhưng Worker của bạn có thể chặn role=to -> sẽ fail và mình sẽ báo rõ.
   const res = await apiPost({
     action:"getTkXuongDay",
     token:S.token,
@@ -353,87 +359,78 @@ async function loadPlanLines(ngay){
     xuong:XUONG
   });
 
-  if(res && res.success){
-    PLAN_LINES = (res.rows || []).filter(r => Number(r.to_nhom) === Number(TO));
+  if(res.success){
+    const rows = res.rows || [];
+    planLines = rows.filter(r => Number(r.to_nhom) === Number(TO))
+                    .map(r => ({...r, line_no: Number(r.line_no||1)}))
+                    .sort((a,b)=>a.line_no-b.line_no);
   } else {
-    PLAN_LINES = [];
+    planLines = [];
+    warn.style.display = "block";
+    warn.innerText =
+      "⛔ TO không xem được kế hoạch vì Worker đang chặn action getTkXuongDay cho role=to.\n" +
+      "➡️ Cách sửa: trong worker.js, ở action getTkXuongDay, thêm 'to' vào ensureRole (mình ghi hướng dẫn ở cuối).";
   }
 
-  renderLineSelect(); // dựng dropdown line
-  renderPlan(ngay);   // show plan box theo CUR_LINE
-}
+  // build line select
+  const sel = document.getElementById("lineSelect");
+  const lines = planLines.length ? planLines.map(p => Number(p.line_no||1)) : [1];
+  const uniqueLines = [...new Set(lines)].sort((a,b)=>a-b);
 
-function renderLineSelect(){
-  const sel = document.getElementById("line");
-  if(!sel) return;
-
-  if(!Array.isArray(PLAN_LINES) || PLAN_LINES.length===0){
-    sel.innerHTML = `<option value="1">Line 1</option>`;
-    CUR_LINE = 1;
-    PLAN = null;
-    return;
-  }
-
-  PLAN_LINES.sort((a,b)=> Number(a.line_no||1) - Number(b.line_no||1));
-
-  sel.innerHTML = PLAN_LINES.map(p=>{
-    const ln = Number(p.line_no||1);
-    const mh = (p.ma_hang||"").trim();
-    return `<option value="${ln}">Line ${ln}${mh?` • ${esc(mh)}`:""}</option>`;
+  sel.innerHTML = uniqueLines.map(ln=>{
+    const p = planLines.find(x=>Number(x.line_no)===ln);
+    const mh = p?.ma_hang ? ` – ${p.ma_hang}` : "";
+    return `<option value="${ln}">Line ${ln}${esc(mh)}</option>`;
   }).join("");
 
-  const has = PLAN_LINES.some(p=>Number(p.line_no||1)===Number(CUR_LINE));
-  CUR_LINE = has ? CUR_LINE : Number(PLAN_LINES[0].line_no||1);
-  sel.value = String(CUR_LINE);
+  // keep selected if possible
+  const keep = uniqueLines.includes(selectedLine) ? selectedLine : uniqueLines[0];
+  selectedLine = keep;
+  sel.value = String(keep);
 
-  PLAN = PLAN_LINES.find(p=>Number(p.line_no||1)===Number(CUR_LINE)) || PLAN_LINES[0] || null;
-
-  sel.onchange = () => {
-    CUR_LINE = Number(sel.value||1);
-    PLAN = PLAN_LINES.find(p=>Number(p.line_no||1)===Number(CUR_LINE)) || PLAN_LINES[0] || null;
-    renderPlan(document.getElementById("ngay").value);
-    applyDisableHoursByLine(LAST_HOURS_DATA || []);
-  };
+  renderPlan(ngay);
 }
 
 function renderPlan(ngay){
   const badge = document.getElementById("planBadge");
-  const meta = document.getElementById("planMeta");
-  const grid = document.getElementById("planGrid");
+  const meta  = document.getElementById("planMeta");
+  const grid  = document.getElementById("planGrid");
 
-  meta.innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO} • Line đang chọn: ${CUR_LINE}`;
+  meta.innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
 
-  if(!PLAN || !String(PLAN.ma_hang||"").trim()){
-    badge.className = "pill";
-    badge.innerText = "⚠️ Chưa có kế hoạch (TK chưa nhập)";
+  const p = planLines.find(x=>Number(x.line_no)===Number(selectedLine)) || null;
+
+  if(!p || !p.ma_hang){
+    badge.className = "pill bad";
+    badge.innerText = "⚠️ Chưa có kế hoạch (hoặc chưa được quyền xem)";
     grid.innerHTML = `
       <div class="planItem" style="grid-column:1/-1">
         <div class="k">Trạng thái</div>
-        <div class="v">Chưa có mã hàng / định mức cho tổ này</div>
+        <div class="v">Chưa có mã hàng / định mức cho line đang chọn</div>
         <div class="k" style="margin-top:6px">
-          Hãy yêu cầu TK nhập kế hoạch cho <b>tổ ${TO}</b> (đúng line), sau đó bấm <b>Tải lại</b>.
+          Hãy yêu cầu TK nhập kế hoạch cho <b>tổ ${TO}</b> (line ${selectedLine}), sau đó bấm <b>Tải lại</b>.
         </div>
       </div>
     `;
     return;
   }
 
-  const dmNgay = nInt(PLAN.dinh_muc_ngay);
-  const dg = nNum(PLAN.don_gia);
-  const dmGio = PLAN.dinh_muc_gio ? nNum(PLAN.dinh_muc_gio) : (dmNgay>0 ? (dmNgay / HOURS_COUNT) : 0);
-  const usdQT = PLAN.usd_quy_trinh ? nNum(PLAN.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay * dg : 0);
+  const dmNgay = nInt(p.dinh_muc_ngay);
+  const dg = nNum(p.don_gia);
+  const dmGio = p.dinh_muc_gio ? nNum(p.dinh_muc_gio) : (dmNgay>0 ? (dmNgay / HOURS_COUNT) : 0);
+  const usdQT = p.usd_quy_trinh ? nNum(p.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay * dg : 0);
 
   badge.className = "pill ok";
-  badge.innerText = "✅ Đã có kế hoạch";
+  badge.innerText = `✅ Line ${selectedLine} đã có kế hoạch`;
 
   grid.innerHTML = `
     <div class="planItem" style="grid-column:span 2">
-      <div class="k">Mã hàng (Line ${CUR_LINE})</div>
-      <div class="v mono">${esc(PLAN.ma_hang)}</div>
+      <div class="k">Mã hàng</div>
+      <div class="v mono">${esc(p.ma_hang)}</div>
     </div>
     <div class="planItem">
       <div class="k">SL kế hoạch</div>
-      <div class="v">${fmt0(PLAN.so_luong_ke_hoach || 0)}</div>
+      <div class="v">${fmt0(p.so_luong_ke_hoach || 0)}</div>
     </div>
     <div class="planItem">
       <div class="k">ĐM ngày</div>
@@ -453,44 +450,42 @@ function renderPlan(ngay){
     </div>
     <div class="planItem">
       <div class="k">TG/QT</div>
-      <div class="v">${fmt2(PLAN.thoi_gian_giay || 0)}</div>
+      <div class="v">${fmt2(p.thoi_gian_giay || 0)}</div>
     </div>
     <div class="planItem">
       <div class="k">LĐ thực tế</div>
-      <div class="v">${fmt0(PLAN.lao_dong_thuc_te || 0)}</div>
+      <div class="v">${fmt0(p.lao_dong_thuc_te || 0)}</div>
     </div>
     <div class="planItem">
       <div class="k">LĐ SĐC</div>
-      <div class="v">${fmt0(PLAN.lao_dong_chuyen || 0)}</div>
+      <div class="v">${fmt0(p.lao_dong_chuyen || 0)}</div>
     </div>
     <div class="planItem">
       <div class="k">Chuyển đổi/ngày</div>
-      <div class="v">${fmt0(PLAN.chuyen_doi_ngay || 0)}</div>
+      <div class="v">${fmt0(p.chuyen_doi_ngay || 0)}</div>
     </div>
   `;
 }
 
-function renderHours(data, ngay){
+/* ================== HOURS RENDER ================== */
+function renderHours(rows, ngay){
   document.getElementById("meta").innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
 
-  // KPI (tính theo tất cả line)
-  const count = data.length;
+  const count = rows.length;
   let sumTT=0, sumKH=0;
-  data.forEach(r=>{ sumTT += nInt(r.thuc_te); sumKH += nInt(r.ke_hoach_gio); });
+  rows.forEach(r=>{ sumTT += nInt(r.thuc_te); sumKH += nInt(r.ke_hoach_gio); });
   const hsTB = sumKH>0 ? (sumTT/sumKH*100) : 0;
 
   document.getElementById("kpiCount").innerText = fmt0(count);
   document.getElementById("kpiSum").innerText = fmt0(sumTT);
   document.getElementById("kpiHs").innerText = fmt1(hsTB) + "%";
 
-  // mini table (hiện line để dễ nhìn)
   const mini = document.getElementById("mini");
-  mini.innerHTML = (data.length?data:[]).map(r=>{
+  mini.innerHTML = rows.map(r=>{
     const hs = nInt(r.hieu_suat);
-    const ln = nInt(r.line_no || 1);
     return `
-      <tr onclick="alertReason('${esc(r.khung_gio)}','${esc(r.nguyen_nhan)}')">
-        <td><b>${fmt0(ln)}</b></td>
+      <tr onclick="alertReason('${esc(r.line_no)}','${esc(r.khung_gio)}','${esc(r.nguyen_nhan||"")}')">
+        <td><b>${esc(r.line_no||1)}</b></td>
         <td><b>${esc(r.khung_gio)}</b></td>
         <td>${fmt0(r.ke_hoach_gio)}</td>
         <td>${fmt0(r.thuc_te)}</td>
@@ -499,38 +494,33 @@ function renderHours(data, ngay){
     `;
   }).join("") || `<tr><td colspan="5" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập giờ nào.</td></tr>`;
 
-  // detail table
   const tb = document.getElementById("tbody");
-  tb.innerHTML = (data.length?data:[]).map(r=>{
+  tb.innerHTML = rows.map(r=>{
     const hs = nInt(r.hieu_suat);
-    const ln = nInt(r.line_no || 1);
     return `
       <tr>
-        <td><b>${fmt0(ln)}</b></td>
+        <td><b>${esc(r.line_no||1)}</b></td>
+        <td class="mono">${esc(r.ma_hang||"")}</td>
         <td><b>${esc(r.khung_gio)}</b></td>
         <td>${fmt0(r.ke_hoach_gio)}</td>
         <td>${fmt0(r.thuc_te)}</td>
         <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
-        <td class="left" style="white-space:normal;min-width:280px">${esc(r.nguyen_nhan||"")}</td>
+        <td class="left" style="white-space:normal;min-width:260px">${esc(r.nguyen_nhan||"")}</td>
         <td>${esc((r.created_at||"").replace("T"," ").slice(0,19))}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="7" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
-
-  // IMPORTANT: disable theo line đang chọn, không disable theo toàn tổ
-  applyDisableHoursByLine(data);
+  }).join("") || `<tr><td colspan="8" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
 }
 
-function applyDisableHoursByLine(data){
-  const sel = document.getElementById("khung");
-  if(!sel) return;
-
+/* ✅ Khoá giờ theo line đang chọn (cho phép trùng khung giữa line 1 và 2) */
+function applyHourDisableByLine(){
   const used = new Set(
-    (data||[])
-      .filter(x => Number(x.line_no||1) === Number(CUR_LINE))
-      .map(x => String(x.khung_gio))
+    (hoursRows||[])
+      .filter(r => Number(r.line_no||1) === Number(selectedLine))
+      .map(r => String(r.khung_gio))
   );
 
+  const sel = document.getElementById("khung");
   [...sel.options].forEach(op=>{
     op.disabled = used.has(op.value);
   });
@@ -548,16 +538,11 @@ async function save(){
   const khung = document.getElementById("khung").value;
   const thuc_te = nInt(document.getElementById("thuc_te").value);
   const nguyen_nhan = document.getElementById("nguyen_nhan").value.trim();
+  const line_no = Number(selectedLine || 1);
 
-  if(!ngay){ return showWarn("Vui lòng chọn ngày."); }
-  if(!khung){ return showWarn("Vui lòng chọn khung giờ."); }
-  if(thuc_te <= 0){ return showWarn("Thực tế phải > 0."); }
-
-  // Nếu có plan lines mà line đang chọn không tồn tại => chặn
-  if(Array.isArray(PLAN_LINES) && PLAN_LINES.length>0){
-    const okLine = PLAN_LINES.some(p=>Number(p.line_no||1)===Number(CUR_LINE));
-    if(!okLine) return showWarn("Line không hợp lệ (TK chưa nhập kế hoạch line này).");
-  }
+  if(!ngay) return showWarn("Vui lòng chọn ngày.");
+  if(!khung) return showWarn("Vui lòng chọn khung giờ.");
+  if(thuc_te <= 0) return showWarn("Thực tế phải > 0.");
 
   const btn = document.getElementById("btnSave");
   btn.disabled = true;
@@ -568,8 +553,8 @@ async function save(){
       action:"saveHour",
       token:S.token,
       ngay,
-      line_no: CUR_LINE,
       khung_gio: khung,
+      line_no,
       thuc_te,
       nguyen_nhan
     });
@@ -580,7 +565,7 @@ async function save(){
       return;
     }
 
-    setStatus(`✅ Đã lưu ${khung} (Line ${CUR_LINE})`);
+    setStatus(`✅ Đã lưu ${khung} (line ${line_no})`);
     clearForm(true);
     await reload();
   }catch(e){
@@ -594,7 +579,7 @@ async function save(){
 function clearForm(keepReason=false){
   document.getElementById("thuc_te").value = "";
   if(!keepReason) document.getElementById("nguyen_nhan").value = "";
-  document.getElementById("warnBox").style.display="none";
+  hideWarn();
   document.getElementById("thuc_te").focus();
 }
 
@@ -603,16 +588,24 @@ function showWarn(t){
   b.style.display="block";
   b.innerText = "⛔ " + t;
 }
-
-function alertReason(khung, reason){
-  reason = reason || "(Không có ghi chú)";
-  alert(`Khung giờ ${khung}\n\nNguyên nhân:\n${reason}`);
+function hideWarn(){
+  document.getElementById("warnBox").style.display="none";
 }
 
-/* reload when date changes */
+function alertReason(line, khung, reason){
+  reason = reason || "(Không có ghi chú)";
+  alert(`Line ${line} • Khung ${khung}\n\nNguyên nhân:\n${reason}`);
+}
+
+/* ================== EVENTS ================== */
 document.getElementById("ngay").addEventListener("change", reload);
 
-/* Enter để lưu nhanh */
+document.getElementById("lineSelect").addEventListener("change", ()=>{
+  selectedLine = Number(document.getElementById("lineSelect").value || 1);
+  renderPlan(document.getElementById("ngay").value);
+  applyHourDisableByLine();
+});
+
 document.addEventListener("keydown",(e)=>{
   if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){
     save();
