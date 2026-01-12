@@ -38,24 +38,18 @@
   }
   input:focus,select:focus,textarea:focus{border-color:rgba(37,99,235,.55);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
   textarea{min-height:92px;resize:vertical}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
   .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
   .kpi .val{font-size:18px;font-weight:900;margin-top:2px}
   .kpi .lab{font-size:12px;color:var(--muted)}
 
-  /* plan box */
-  .planGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-  .planItem{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
-  .planItem .k{font-size:11px;color:var(--muted)}
-  .planItem .v{font-size:14px;font-weight:900;margin-top:2px}
+  .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .pill{
     display:inline-flex;align-items:center;gap:6px;
     padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
     border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.12);color:#7c2d12
   }
   .pill.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.10);color:#14532d}
-  .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
 
   table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -72,7 +66,6 @@
   }
   @media(max-width:980px){
     .grid{grid-template-columns:1fr}
-    .planGrid{grid-template-columns:repeat(2,1fr)}
   }
 </style>
 </head>
@@ -117,8 +110,24 @@
     </div>
     <div class="hint" id="planMeta">—</div>
 
-    <div class="planGrid" style="margin-top:10px" id="planGrid">
-      <!-- inject -->
+    <div style="margin-top:10px;overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Line</th>
+            <th>Mã hàng</th>
+            <th>SL KH</th>
+            <th>ĐM ngày</th>
+            <th>ĐM giờ</th>
+            <th>ĐG</th>
+            <th>USD/QT</th>
+            <th>LĐ</th>
+            <th>SĐC</th>
+            <th>Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody id="planTbody"></tbody>
+      </table>
     </div>
 
     <div class="hint" style="margin-top:10px">
@@ -137,13 +146,18 @@
           <input type="date" id="ngay" />
         </div>
         <div>
+          <label>Dòng mã (line)</label>
+          <select id="lineNo"></select>
+        </div>
+        <div>
           <label>Khung giờ</label>
           <select id="khung"></select>
         </div>
-        <div>
-          <label>Thực tế (SP)</label>
-          <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
-        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Thực tế (SP)</label>
+        <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
       </div>
 
       <div style="margin-top:10px">
@@ -156,7 +170,7 @@
         <button class="btn ghost" onclick="clearForm()">Xóa nhập</button>
         <div class="hint">
           • Tổ trưởng chỉ nhập <b>đúng tổ của mình</b> (tự khóa).<br/>
-          • Nếu đã nhập giờ đó, hệ thống báo “⛔ Giờ này đã nhập”.
+          • Chọn đúng <b>Line</b> tương ứng mã hàng đang chạy.
         </div>
       </div>
 
@@ -172,6 +186,8 @@
           <thead>
             <tr>
               <th>Khung</th>
+              <th>Line</th>
+              <th>Mã hàng</th>
               <th>KH/giờ</th>
               <th>Thực tế</th>
               <th>HS</th>
@@ -195,6 +211,8 @@
         <thead>
           <tr>
             <th>Khung giờ</th>
+            <th>Line</th>
+            <th>Mã hàng</th>
             <th>Kế hoạch giờ</th>
             <th>Thực tế</th>
             <th>Hiệu suất</th>
@@ -211,8 +229,8 @@
 
 <script>
 /* ================== CONFIG ================== */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
-const XUONG = 1; // to1.html là cho xưởng 1
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const XUONG = 1;
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const HOURS_COUNT = 9;
 
@@ -272,7 +290,7 @@ function esc(s){
 /* ================== STATE ================== */
 let S = mustLogin();
 let TO = null;
-let PLAN = null;
+let PLAN_LINES = []; // [{line_no, ma_hang, ...}]
 
 /* ================== INIT ================== */
 document.getElementById("ngay").value = todayISO();
@@ -298,13 +316,11 @@ async function reload(){
   S = mustLogin(); if(!S) return;
   const ngay = document.getElementById("ngay").value;
 
-  setStatus("Đang tải dữ liệu ngày...");
+  setStatus("Đang tải dữ liệu...");
   document.getElementById("warnBox").style.display="none";
 
-  // 1) Load PLAN (ưu tiên action getPlanByTo nếu có; fallback getTkXuongDay)
-  await loadPlan(ngay);
+  await loadPlanLines(ngay);
 
-  // 2) Load hours for this TO
   const res = await apiPost({
     action:"getHourByTo",
     token:S.token,
@@ -324,11 +340,13 @@ async function reload(){
   renderHours(data, ngay);
 }
 
-async function loadPlan(ngay){
-  PLAN = null;
+async function loadPlanLines(ngay){
+  const badge = document.getElementById("planBadge");
+  const meta = document.getElementById("planMeta");
 
-  // Try A: getPlanByTo (chuẩn nhất nếu worker có)
-  let res = await apiPost({
+  meta.innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
+
+  const planRes = await apiPost({
     action:"getPlanByTo",
     token:S.token,
     ngay,
@@ -336,108 +354,73 @@ async function loadPlan(ngay){
     to_nhom: TO
   });
 
-  if(res && res.success){
-    PLAN = res.plan || res.data || res.row || null;
-    renderPlan(ngay);
+  if(!planRes.success){
+    PLAN_LINES = [];
+    badge.className = "pill";
+    badge.innerText = "⚠️ Không tải được kế hoạch";
+    renderPlanTable();
+    // dropdown line fallback
+    document.getElementById("lineNo").innerHTML = `<option value="1">Line 1</option>`;
     return;
   }
 
-  // Try B: fallback getTkXuongDay rồi lọc theo tổ
-  res = await apiPost({
-    action:"getTkXuongDay",
-    token:S.token,
-    ngay,
-    xuong:XUONG
-  });
-
-  if(res && res.success){
-    PLAN = (res.rows || []).find(r => Number(r.to_nhom) === Number(TO)) || null;
-  } else {
-    PLAN = null;
-  }
-
-  renderPlan(ngay);
-}
-
-function renderPlan(ngay){
-  const badge = document.getElementById("planBadge");
-  const meta = document.getElementById("planMeta");
-  const grid = document.getElementById("planGrid");
-
-  meta.innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
-
-  if(!PLAN || !PLAN.ma_hang){
+  PLAN_LINES = planRes.lines || [];
+  if(!PLAN_LINES.length){
     badge.className = "pill";
     badge.innerText = "⚠️ Chưa có kế hoạch (TK chưa nhập)";
-    grid.innerHTML = `
-      <div class="planItem" style="grid-column:1/-1">
-        <div class="k">Trạng thái</div>
-        <div class="v">Chưa có mã hàng / định mức cho tổ này</div>
-        <div class="k" style="margin-top:6px">
-          Hãy yêu cầu TK nhập kế hoạch cho <b>tổ ${TO}</b>, sau đó bấm <b>Tải lại</b>.
-        </div>
-      </div>
-    `;
+  }else{
+    badge.className = "pill ok";
+    badge.innerText = "✅ Đã có kế hoạch";
+  }
+
+  // fill line dropdown
+  const lineSel = document.getElementById("lineNo");
+  if(PLAN_LINES.length){
+    lineSel.innerHTML = PLAN_LINES.map(p=>{
+      const ln = nInt(p.line_no||1);
+      const mh = esc(p.ma_hang||"");
+      return `<option value="${ln}">Line ${ln} • ${mh}</option>`;
+    }).join("");
+  }else{
+    lineSel.innerHTML = `<option value="1">Line 1</option>`;
+  }
+
+  renderPlanTable();
+}
+
+function renderPlanTable(){
+  const tb = document.getElementById("planTbody");
+  if(!PLAN_LINES.length){
+    tb.innerHTML = `<tr><td colspan="10" class="left" style="padding-left:10px;color:#6b7280">Chưa có kế hoạch cho tổ này.</td></tr>`;
     return;
   }
 
-  // Auto-calc nếu worker chưa trả dinh_muc_gio/usd_quy_trinh
-  const dmNgay = nInt(PLAN.dinh_muc_ngay);
-  const dg = nNum(PLAN.don_gia);
-  const dmGio = PLAN.dinh_muc_gio ? nNum(PLAN.dinh_muc_gio) : (dmNgay>0 ? (dmNgay / HOURS_COUNT) : 0);
-  const usdQT = PLAN.usd_quy_trinh ? nNum(PLAN.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay * dg : 0);
+  tb.innerHTML = PLAN_LINES.map(p=>{
+    const dmNgay = nInt(p.dinh_muc_ngay);
+    const dg = nNum(p.don_gia);
+    const dmGio = (p.dinh_muc_gio && Number(p.dinh_muc_gio)>0) ? nNum(p.dinh_muc_gio) : (dmNgay>0 ? dmNgay/HOURS_COUNT : 0);
+    const usdQT = (p.usd_quy_trinh && Number(p.usd_quy_trinh)>0) ? nNum(p.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay*dg : 0);
 
-  badge.className = "pill ok";
-  badge.innerText = "✅ Đã có kế hoạch";
-
-  grid.innerHTML = `
-    <div class="planItem" style="grid-column:span 2">
-      <div class="k">Mã hàng</div>
-      <div class="v mono">${esc(PLAN.ma_hang)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">SL kế hoạch</div>
-      <div class="v">${fmt0(PLAN.so_luong_ke_hoach || 0)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">ĐM ngày</div>
-      <div class="v">${fmt0(dmNgay)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">ĐM giờ</div>
-      <div class="v">${fmt2(dmGio)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">Đơn giá</div>
-      <div class="v">${fmt2(dg)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">USD/QT</div>
-      <div class="v">${fmt2(usdQT)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">TG/QT</div>
-      <div class="v">${fmt2(PLAN.thoi_gian_giay || 0)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">LĐ thực tế</div>
-      <div class="v">${fmt0(PLAN.lao_dong_thuc_te || 0)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">LĐ SĐC</div>
-      <div class="v">${fmt0(PLAN.lao_dong_chuyen || 0)}</div>
-    </div>
-    <div class="planItem">
-      <div class="k">Chuyển đổi/ngày</div>
-      <div class="v">${fmt0(PLAN.chuyen_doi_ngay || 0)}</div>
-    </div>
-  `;
+    return `
+      <tr>
+        <td><b>${fmt0(p.line_no||1)}</b></td>
+        <td class="mono">${esc(p.ma_hang||"")}</td>
+        <td>${fmt0(p.so_luong_ke_hoach||0)}</td>
+        <td>${fmt0(dmNgay)}</td>
+        <td>${fmt2(dmGio)}</td>
+        <td>${fmt2(dg)}</td>
+        <td>${fmt2(usdQT)}</td>
+        <td>${fmt0(p.lao_dong_thuc_te||0)}</td>
+        <td>${fmt0(p.lao_dong_chuyen||0)}</td>
+        <td class="left" style="white-space:normal;min-width:220px;padding-left:8px">${esc(p.ghi_chu||"")}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function renderHours(data, ngay){
   document.getElementById("meta").innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
 
-  // KPI
   const count = data.length;
   let sumTT=0, sumKH=0;
   data.forEach(r=>{ sumTT += nInt(r.thuc_te); sumKH += nInt(r.ke_hoach_gio); });
@@ -447,27 +430,31 @@ function renderHours(data, ngay){
   document.getElementById("kpiSum").innerText = fmt0(sumTT);
   document.getElementById("kpiHs").innerText = fmt1(hsTB) + "%";
 
-  // mini table
+  // mini
   const mini = document.getElementById("mini");
   mini.innerHTML = (data.length?data:[]).map(r=>{
     const hs = nInt(r.hieu_suat);
     return `
       <tr onclick="alertReason('${esc(r.khung_gio)}','${esc(r.nguyen_nhan)}')">
         <td><b>${esc(r.khung_gio)}</b></td>
+        <td><b>${fmt0(r.line_no||1)}</b></td>
+        <td class="mono">${esc(r.ma_hang||"")}</td>
         <td>${fmt0(r.ke_hoach_gio)}</td>
         <td>${fmt0(r.thuc_te)}</td>
         <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="4" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập giờ nào.</td></tr>`;
+  }).join("") || `<tr><td colspan="6" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập giờ nào.</td></tr>`;
 
-  // detail table
+  // detail
   const tb = document.getElementById("tbody");
   tb.innerHTML = (data.length?data:[]).map(r=>{
     const hs = nInt(r.hieu_suat);
     return `
       <tr>
         <td><b>${esc(r.khung_gio)}</b></td>
+        <td><b>${fmt0(r.line_no||1)}</b></td>
+        <td class="mono">${esc(r.ma_hang||"")}</td>
         <td>${fmt0(r.ke_hoach_gio)}</td>
         <td>${fmt0(r.thuc_te)}</td>
         <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
@@ -475,14 +462,12 @@ function renderHours(data, ngay){
         <td>${esc((r.created_at||"").replace("T"," ").slice(0,19))}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="6" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
+  }).join("") || `<tr><td colspan="8" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
 
-  // disable giờ đã nhập trong dropdown
+  // disable giờ đã nhập
   const used = new Set(data.map(x=>String(x.khung_gio)));
   const sel = document.getElementById("khung");
   [...sel.options].forEach(op=>{ op.disabled = used.has(op.value); });
-
-  // auto chọn khung giờ chưa nhập đầu tiên
   const firstAvail = [...sel.options].find(op=>!op.disabled);
   if(firstAvail) sel.value = firstAvail.value;
 }
@@ -493,6 +478,7 @@ async function save(){
   if(S.role !== "to" || Number(S.xuong)!==XUONG){ return; }
 
   const ngay = document.getElementById("ngay").value;
+  const line_no = Math.max(1, nInt(document.getElementById("lineNo").value || 1));
   const khung = document.getElementById("khung").value;
   const thuc_te = nInt(document.getElementById("thuc_te").value);
   const nguyen_nhan = document.getElementById("nguyen_nhan").value.trim();
@@ -500,6 +486,15 @@ async function save(){
   if(!ngay){ return showWarn("Vui lòng chọn ngày."); }
   if(!khung){ return showWarn("Vui lòng chọn khung giờ."); }
   if(thuc_te <= 0){ return showWarn("Thực tế phải > 0."); }
+
+  // bắt buộc có plan line
+  if(!PLAN_LINES.length){
+    return showWarn("Chưa có kế hoạch. Báo TK nhập kế hoạch trước.");
+  }
+  const hasLine = PLAN_LINES.some(p => nInt(p.line_no||1) === line_no);
+  if(!hasLine){
+    return showWarn("Line đang chọn không tồn tại trong kế hoạch.");
+  }
 
   const btn = document.getElementById("btnSave");
   btn.disabled = true;
@@ -511,6 +506,7 @@ async function save(){
       token:S.token,
       ngay,
       khung_gio: khung,
+      line_no,           // ✅ cực quan trọng
       thuc_te,
       nguyen_nhan
     });
@@ -521,7 +517,7 @@ async function save(){
       return;
     }
 
-    setStatus(`✅ Đã lưu ${khung}`);
+    setStatus(`✅ Đã lưu ${khung} (Line ${line_no})`);
     clearForm(true);
     await reload();
   }catch(e){
@@ -550,10 +546,7 @@ function alertReason(khung, reason){
   alert(`Khung giờ ${khung}\n\nNguyên nhân:\n${reason}`);
 }
 
-/* reload when date changes */
 document.getElementById("ngay").addEventListener("change", reload);
-
-/* Enter để lưu nhanh */
 document.addEventListener("keydown",(e)=>{
   if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){
     save();
