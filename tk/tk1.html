@@ -41,17 +41,13 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-  /* ====== STICKY COLUMNS ======
-     TỔ: 62px
-     LINE: 96px (mới)
-     => sticky3 left = 62 + 96 = 158px
-  */
+  /* sticky */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:62px;z-index:6;background:#fff}
   .sticky3{position:sticky;left:158px;z-index:6;background:#fff}
-
   thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
   thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
+
   tbody tr:nth-child(even) td{background:#fafafa}
   .calc{font-weight:900}
   .pct{font-weight:900}
@@ -69,28 +65,19 @@
   .right{text-align:right}
   .left{text-align:left}
 
-  /* ====== LINE COLUMN COMPACT ====== */
-  th.sticky2, td.sticky2{
-    min-width:96px !important;
-    max-width:96px !important;
-  }
-  .lineCell{
-    display:flex;align-items:center;justify-content:space-between;
-    gap:6px;
-  }
+  /* LINE compact */
+  th.sticky2, td.sticky2{min-width:96px !important;max-width:96px !important;}
+  .lineCell{display:flex;align-items:center;justify-content:space-between;gap:6px;}
   .tagLine{
     font-size:11px;font-weight:900;
     display:inline-flex;align-items:center;justify-content:center;
     min-width:26px;height:22px;padding:0 8px;border-radius:999px;
-    background:#0e2552;color:#fff;
-    flex:0 0 auto;
+    background:#0e2552;color:#fff;flex:0 0 auto;
   }
   .btnMini{
-    width:26px;height:26px;
-    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;
     border-radius:10px;font-size:14px;font-weight:1000;border:none;cursor:pointer;
-    background:#6b7280;color:#fff;
-    flex:0 0 auto;
+    background:#6b7280;color:#fff;flex:0 0 auto;
   }
 </style>
 </head>
@@ -133,7 +120,7 @@
   <div class="kpi">
     <div class="card">
       <div class="label">Tổng USD (ước tính)</div>
-      <div class="value" id="kpiUsd">0.00</div>
+      <div class="value" id="kpiUsd">0</div>
       <div class="sub">USD/TH = Tổng SP * Đơn giá</div>
     </div>
     <div class="card">
@@ -148,7 +135,7 @@
     </div>
     <div class="card">
       <div class="label">USD/giờ cao nhất</div>
-      <div class="value" id="kpiMax">0.00</div>
+      <div class="value" id="kpiMax">0</div>
       <div class="sub">Trong 9 khung giờ</div>
     </div>
   </div>
@@ -196,7 +183,7 @@
         </tr>
         <tr class="strong">
           <td class="left" colspan="25" style="padding-left:10px;">TỔNG USD CUỐI NGÀY</td>
-          <td id="usdNgay">0.00</td>
+          <td id="usdNgay">0</td>
           <td></td>
         </tr>
       </tfoot>
@@ -232,10 +219,13 @@ function todayISO(){
   const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
-function toNum(v){ const n=Number(String(v??"").replaceAll(",","").trim()); return Number.isFinite(n)?n:0; }
-function fmt2(n){ return (Number(n)||0).toFixed(2); }
-function fmt1(n){ return (Number(n)||0).toFixed(1); }
-function fmt0(n){ return String(Math.round(Number(n)||0)); }
+function toNum(v){
+  const s = String(v ?? "").trim();
+  // hỗ trợ nhập kiểu VN: "1.234,56"
+  const norm = s.replaceAll(".","").replaceAll(",",".");
+  const n = Number(norm);
+  return Number.isFinite(n)?n:0;
+}
 function escapeHtml(s){
   return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
@@ -245,6 +235,17 @@ function pctClass(hs){
   if(hs>=80) return "warn";
   return "bad";
 }
+
+/* ====== FORMATTERS (VIETNAM) ======
+   - tiền USD: vi-VN, tối đa 2 lẻ, không hiện ,00 nếu số nguyên
+   - số nguyên: vi-VN, không lẻ
+*/
+const NF_MONEY = new Intl.NumberFormat("vi-VN", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const NF_INT   = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
+function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
+function fmt1(n){ return (Number(n)||0).toFixed(1); }    // dùng cho %
+function fmt2(n){ return (Number(n)||0).toFixed(2); }    // dùng cho ĐM GIỜ (cần 2 số)
 
 /* ================== STATE ================== */
 let S = mustLogin();
@@ -339,16 +340,16 @@ async function reload(){
 
 function clearAll(){
   document.getElementById("tbody").innerHTML = "";
-  document.getElementById("usdNgay").innerText = "0.00";
-  document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
+  document.getElementById("usdNgay").innerText = "0";
+  document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0");
   setKpi(0,0,0,0);
 }
 
 function setKpi(usd, sp, hs, max){
-  document.getElementById("kpiUsd").innerText = fmt2(usd);
-  document.getElementById("kpiSp").innerText = fmt0(sp);
+  document.getElementById("kpiUsd").innerText = fmtMoney(usd);
+  document.getElementById("kpiSp").innerText = fmtInt(sp);
   document.getElementById("kpiHs").innerText = fmt1(hs) + "%";
-  document.getElementById("kpiMax").innerText = fmt2(max);
+  document.getElementById("kpiMax").innerText = fmtMoney(max);
 }
 
 /* ================== DAY DETAIL (PLAN + HOUR) ================== */
@@ -425,27 +426,27 @@ function renderDayRows(rows){
           <input class="cell ${ro} ma_hang" ${canEditPlan?"":"readonly"} value="${escapeHtml(r.ma_hang||"")}" />
         </td>
 
-        <td><input class="cell ${ro} so_luong_ke_hoach" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(r.so_luong_ke_hoach||0)}" /></td>
-        <td><input class="cell ${ro} dinh_muc_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(dmNgay)}" /></td>
+        <td><input class="cell ${ro} so_luong_ke_hoach" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.so_luong_ke_hoach||0)}" /></td>
+        <td><input class="cell ${ro} dinh_muc_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(dmNgay)}" /></td>
         <td><input class="cell ro dinh_muc_gio" readonly value="${fmt2(dmGio)}" /></td>
-        <td><input class="cell ro usd_quy_trinh" readonly value="${fmt2(usdQt)}" /></td>
+        <td><input class="cell ro usd_quy_trinh" readonly value="${fmtMoney(usdQt)}" /></td>
 
-        ${hours.map(v=>`<td>${fmt0(v||0)}</td>`).join("")}
+        ${hours.map(v=>`<td>${fmtInt(v||0)}</td>`).join("")}
 
-        <td class="calc">${fmt0(tongSP)}</td>
-        <td class="calc">${fmt2(usdTh)}</td>
+        <td class="calc">${fmtInt(tongSP)}</td>
+        <td class="calc">${fmtMoney(usdTh)}</td>
         <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
 
-        <td><input class="cell ${ro} lao_dong_thuc_te" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(r.lao_dong_thuc_te||0)}" /></td>
-        <td><input class="cell ${ro} lao_dong_chuyen" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(r.lao_dong_chuyen||0)}" /></td>
+        <td><input class="cell ${ro} lao_dong_thuc_te" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.lao_dong_thuc_te||0)}" /></td>
+        <td><input class="cell ${ro} lao_dong_chuyen" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.lao_dong_chuyen||0)}" /></td>
 
-        <td><input class="cell ${ro} don_gia" ${canEditPlan?"":"readonly"} inputmode="decimal" value="${fmt2(dg)}" /></td>
-        <td><input class="cell ${ro} thoi_gian_giay" ${canEditPlan?"":"readonly"} inputmode="decimal" value="${fmt2(r.thoi_gian_giay||0)}" /></td>
+        <td><input class="cell ${ro} don_gia" ${canEditPlan?"":"readonly"} inputmode="decimal" value="${fmtMoney(dg)}" /></td>
+        <td><input class="cell ${ro} thoi_gian_giay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.thoi_gian_giay||0)}" /></td>
 
-        <td class="calc">${fmt2(usd80)}</td>
-        <td class="calc">${fmt2(usd100)}</td>
+        <td class="calc">${fmtMoney(usd80)}</td>
+        <td class="calc">${fmtMoney(usd100)}</td>
 
-        <td><input class="cell ${ro} chuyen_doi_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmt0(r.chuyen_doi_ngay||0)}" /></td>
+        <td><input class="cell ${ro} chuyen_doi_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.chuyen_doi_ngay||0)}" /></td>
 
         <td class="left" style="padding-left:6px;">
           <input class="cell ${ro} ghi_chu" ${canEditPlan?"":"readonly"} style="text-align:left" value="${escapeHtml(r.ghi_chu||"")}" />
@@ -483,8 +484,8 @@ function calcFooterAndKpi(rows){
     hsSum += hs; hsCount++;
   });
 
-  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmt2(usdGio[i]||0));
-  document.getElementById("usdNgay").innerText = fmt2(tongUsdNgay);
+  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
+  document.getElementById("usdNgay").innerText = fmtMoney(tongUsdNgay);
 
   const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
   const hsTb = hsCount ? (hsSum/hsCount) : 0;
@@ -547,17 +548,23 @@ function renderRowHtml(r){
       <td><input class="cell ${ro} so_luong_ke_hoach" inputmode="numeric" value="0" /></td>
       <td><input class="cell ${ro} dinh_muc_ngay" inputmode="numeric" value="0" /></td>
       <td><input class="cell ro dinh_muc_gio" readonly value="0.00" /></td>
-      <td><input class="cell ro usd_quy_trinh" readonly value="0.00" /></td>
+      <td><input class="cell ro usd_quy_trinh" readonly value="0" /></td>
+
       ${hours.map(_=>`<td>0</td>`).join("")}
+
       <td class="calc">0</td>
-      <td class="calc">0.00</td>
+      <td class="calc">0</td>
       <td class="pct bad">0.0%</td>
+
       <td><input class="cell ${ro} lao_dong_thuc_te" inputmode="numeric" value="0" /></td>
       <td><input class="cell ${ro} lao_dong_chuyen" inputmode="numeric" value="0" /></td>
-      <td><input class="cell ${ro} don_gia" inputmode="decimal" value="0.00" /></td>
-      <td><input class="cell ${ro} thoi_gian_giay" inputmode="decimal" value="0.00" /></td>
-      <td class="calc">0.00</td>
-      <td class="calc">0.00</td>
+
+      <td><input class="cell ${ro} don_gia" inputmode="decimal" value="0" /></td>
+      <td><input class="cell ${ro} thoi_gian_giay" inputmode="numeric" value="0" /></td>
+
+      <td class="calc">0</td>
+      <td class="calc">0</td>
+
       <td><input class="cell ${ro} chuyen_doi_ngay" inputmode="numeric" value="0" /></td>
       <td class="left" style="padding-left:6px;"><input class="cell ${ro} ghi_chu" style="text-align:left" value="" /></td>
       <td>
@@ -589,7 +596,7 @@ async function savePlanRow(to_nhom, line_no){
     lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen").value),
 
     don_gia: toNum(tr.querySelector(".don_gia").value),
-    thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay").value),
+    thoi_gian_giay: Math.round(toNum(tr.querySelector(".thoi_gian_giay").value)),
 
     chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay").value),
     ghi_chu: tr.querySelector(".ghi_chu").value.trim()
@@ -627,7 +634,7 @@ async function saveAll(){
       lao_dong_chuyen: toNum(tr.querySelector(".lao_dong_chuyen")?.value),
 
       don_gia: toNum(tr.querySelector(".don_gia")?.value),
-      thoi_gian_giay: toNum(tr.querySelector(".thoi_gian_giay")?.value),
+      thoi_gian_giay: Math.round(toNum(tr.querySelector(".thoi_gian_giay")?.value)),
 
       chuyen_doi_ngay: toNum(tr.querySelector(".chuyen_doi_ngay")?.value),
       ghi_chu: tr.querySelector(".ghi_chu")?.value?.trim() || ""
@@ -686,8 +693,8 @@ async function loadRangeSummary(from, to){
   setKpi(0, tongSp, hs, 0);
 
   document.getElementById("tbody").innerHTML = "";
-  document.getElementById("usdNgay").innerText = "0.00";
-  document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
+  document.getElementById("usdNgay").innerText = "0";
+  document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0");
 
   setStatus(`Đã tải tổng hợp • ${from} → ${to} • XN${XUONG}`);
 }
@@ -696,6 +703,7 @@ async function loadRangeSummary(from, to){
 document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
 
+// auto-calc dm_gio & usd_qt ngay trên UI khi TK sửa dm_ngay/don_gia
 document.addEventListener("input",(e)=>{
   const t = e.target;
   if(!t) return;
@@ -712,7 +720,12 @@ document.addEventListener("input",(e)=>{
     const dmGioEl = tr.querySelector(".dinh_muc_gio");
     const usdQtEl = tr.querySelector(".usd_quy_trinh");
     if(dmGioEl) dmGioEl.value = fmt2(dmGio);
-    if(usdQtEl) usdQtEl.value = fmt2(usdQt);
+    if(usdQtEl) usdQtEl.value = fmtMoney(usdQt);
+  }
+
+  // TG/QT luôn là số nguyên (nếu user gõ lẻ thì tự làm tròn)
+  if(t.classList.contains("thoi_gian_giay")){
+    t.value = String(Math.round(toNum(t.value) || 0));
   }
 });
 </script>
