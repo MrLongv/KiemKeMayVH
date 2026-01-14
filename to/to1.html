@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nhập năng suất giờ (XN1)</title>
+<title>TO1 – Nhập năng suất giờ (XN1)</title>
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -42,6 +42,62 @@
   .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
   .kpi .val{font-size:18px;font-weight:900;margin-top:2px}
   .kpi .lab{font-size:12px;color:var(--muted)}
+
+  /* ✅ chỉ đạo GĐC ticker (giống TK1) */
+  .gdc-ticker{
+    position:sticky;
+    top:64px;
+    z-index:9;
+    height:38px;
+    display:none;
+    align-items:center;
+    overflow:hidden;
+    background:#0e2552;
+    color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.16);
+  }
+  .gdc-ticker .label{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    font-weight:900;
+    font-size:13px;
+    background:#0b1b3a;
+    border-right:1px solid rgba(255,255,255,.14);
+  }
+  .gdc-ticker .track{flex:1;overflow:hidden;white-space:nowrap;position:relative}
+  .gdc-ticker .text{
+    display:inline-block;
+    padding-left:100%;
+    font-weight:800;
+    font-size:14px;
+    line-height:38px;
+    animation:gdc-marquee 22s linear infinite;
+    will-change:transform;
+  }
+  @keyframes gdc-marquee{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-100%); }
+  }
+  .gdc-ticker .meta{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 12px;
+    font-size:12px;
+    opacity:.9;
+    border-left:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.08);
+  }
+  .gdc-ticker .dot{
+    width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;
+    box-shadow:0 0 0 4px rgba(34,197,94,.14);
+  }
+  .gdc-ticker .time{opacity:.9;font-variant-numeric:tabular-nums}
 
   /* plan box */
   .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -84,7 +140,7 @@
 <div class="topbar">
   <div class="toprow">
     <div class="brand">
-      <b>🧵 NHẬP NĂNG SUẤT GIỜ (XN1)</b>
+      <b>🧵 TO1 – NHẬP NĂNG SUẤT GIỜ (XN1)</b>
       <span id="who">—</span>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -92,6 +148,19 @@
       <button class="btn" onclick="reload()">Tải lại</button>
       <div class="status" id="status">Chưa tải</div>
     </div>
+  </div>
+</div>
+
+<!-- ✅ CHỈ ĐẠO GĐC (ticker) -->
+<div class="gdc-ticker" id="gdcTicker">
+  <div class="label">📣 CHỈ ĐẠO GĐC</div>
+  <div class="track">
+    <div class="text" id="gdcTickerText">—</div>
+  </div>
+  <div class="meta" title="Tự cập nhật mỗi 30 giây">
+    <span class="dot"></span>
+    <span id="gdcTickerScope">—</span>
+    <span class="time" id="gdcTickerTime">—</span>
   </div>
 </div>
 
@@ -280,6 +349,71 @@ async function apiPost(payload){
   catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
 }
 
+/* ============================
+   ✅ GĐC TICKER (giống TK1)
+============================ */
+let gdcTimer=null;
+function fmtTickerTime(iso){
+  if(!iso) return "";
+  const d=new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  const hh=String(d.getHours()).padStart(2,"0");
+  const mm=String(d.getMinutes()).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  const mo=String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}/${mo} ${hh}:${mm}`;
+}
+async function loadGdcTicker(){
+  if(!S || !S.token) return;
+
+  try{
+    const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
+    const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
+
+    let picked=null;
+    if(resX?.success && (resX.message||"").trim()) picked=resX;
+    else if(resAll?.success && (resAll.message||"").trim()) picked=resAll;
+
+    const box=document.getElementById("gdcTicker");
+    const textEl=document.getElementById("gdcTickerText");
+    const scopeEl=document.getElementById("gdcTickerScope");
+    const timeEl=document.getElementById("gdcTickerTime");
+
+    if(!picked){
+      box.style.display="none";
+      return;
+    }
+
+    const scope=String(picked.scope||"").toUpperCase();
+    const msg=String(picked.message||"").trim();
+    if(!msg){
+      box.style.display="none";
+      return;
+    }
+
+    box.style.display="flex";
+    scopeEl.innerText = scope==="ALL" ? "ALL" : `XN${scope}`;
+    timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
+
+    textEl.style.animation="none";
+    textEl.offsetHeight; // reflow
+    textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
+    textEl.style.animation="gdc-marquee 22s linear infinite";
+  }catch(e){
+    console.warn("GDC ticker error:", e);
+  }
+}
+function startGdcTicker(){
+  stopGdcTicker();
+  loadGdcTicker();
+  gdcTimer=setInterval(loadGdcTicker, 30000);
+}
+function stopGdcTicker(){
+  if(gdcTimer) clearInterval(gdcTimer);
+  gdcTimer=null;
+}
+window.addEventListener("beforeunload", stopGdcTicker);
+
 /* ================== STATE ================== */
 let S = mustLogin();
 let TO = 0;
@@ -307,6 +441,8 @@ if(S){
     setStatus("Không đúng quyền / thiếu tổ");
   }else{
     document.getElementById("who").innerText = `Tài khoản: ${S.username} • Xưởng: XN${S.xuong} • Tổ: ${TO}`;
+    // ✅ bật ticker khi vào được trang
+    startGdcTicker();
     reload();
   }
 }
@@ -350,8 +486,8 @@ async function loadPlanLines(ngay){
   const warn = document.getElementById("planWarn");
   warn.style.display = "none";
 
-  // Cách load ổn nhất hiện tại: lấy từ getTkXuongDay rồi lọc theo TO
-  // Nhưng Worker của bạn có thể chặn role=to -> sẽ fail và mình sẽ báo rõ.
+  // Lấy từ getTkXuongDay rồi lọc theo TO
+  // Nếu worker đang chặn role=to thì sẽ báo rõ.
   const res = await apiPost({
     action:"getTkXuongDay",
     token:S.token,
@@ -369,7 +505,7 @@ async function loadPlanLines(ngay){
     warn.style.display = "block";
     warn.innerText =
       "⛔ TO không xem được kế hoạch vì Worker đang chặn action getTkXuongDay cho role=to.\n" +
-      "➡️ Cách sửa: trong worker.js, ở action getTkXuongDay, thêm 'to' vào ensureRole (mình ghi hướng dẫn ở cuối).";
+      "➡️ Cách sửa: trong worker.js, ở action getTkXuongDay, thêm 'to' vào ensureRole.";
   }
 
   // build line select
