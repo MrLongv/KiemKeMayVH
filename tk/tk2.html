@@ -165,7 +165,6 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
-        <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
         <tr>
           <td class="sticky1 left" colspan="6" style="padding-left:10px;">CỘNG USD</td>
           <td id="usdQtSum" class="right">0.00</td>
@@ -176,7 +175,6 @@
           <td colspan="11"></td>
         </tr>
 
-        <!-- ƯỚC TÍNH USD TRONG NGÀY -->
         <tr class="strong">
           <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
           <td id="usdNgay" class="right">0.00</td>
@@ -196,7 +194,11 @@
 /* ================== CONFIG (TK2 cố định XN2) ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const XUONG = 2;
-const TO_LIST = [1,3,5,7,9];
+
+/* ✅ SỬA TỔ XN2 Ở ĐÂY (nếu XN2 tổ khác thì đổi mảng này) */
+const TO_LIST = [11,13,15,17];
+
+/* ✅ KHUNG GIỜ GIỮ NGUYÊN như TK1 */
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
@@ -214,11 +216,10 @@ function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 
-/* parse số: chấp nhận dạng người dùng nhập có dấu phẩy group */
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
-  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping theo chuẩn mới
+  s = s.replace(/\s+/g,"").replaceAll(",","");
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -322,7 +323,7 @@ async function reload(){
   );
 
   if(!allowed){
-    setStatus("⛔ Bạn không có quyền mở TK1 hoặc sai xưởng");
+    setStatus("⛔ Bạn không có quyền mở TK2 hoặc sai xưởng");
     clearAll();
     return;
   }
@@ -693,7 +694,6 @@ async function loadRangeSummary(from, to){
 document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
 
-/* auto-calc dm_gio & usd_qt khi TK sửa dm_ngay/don_gia */
 document.addEventListener("input",(e)=>{
   const t = e.target;
   if(!t) return;
