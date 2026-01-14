@@ -3,310 +3,306 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC – Báo cáo năng suất (Tất cả xưởng)</title>
+<title>GDC – Điều hành & Chỉ đạo (XN1/XN2/XN3)</title>
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
     --head:#eef2f7;--head2:#e5e7eb;--primary:#2563eb;
     --good:#16a34a;--warn:#f59e0b;--bad:#dc2626;--shadow:0 10px 24px rgba(0,0,0,.06);
+    --nav:#0e2552;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+  a{color:inherit;text-decoration:none}
   .topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0b1b3a,#0e2552);color:#fff;padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .topbar .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
   .brand b{display:block}
-  .brand span{font-size:12px;opacity:.85}
+  .brand span{font-size:12px;opacity:.9}
   .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .ctl{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);padding:6px 8px;border-radius:12px}
   .ctl label{font-size:12px;opacity:.9}
   .ctl input,.ctl select{
-    background:rgba(255,255,255,.12);
-    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
     color:#fff;padding:6px 8px;border-radius:10px;outline:none;font-size:12px
   }
   .ctl select option{color:#111}
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
+  .btn.warn{background:#f59e0b}
+  .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
+  /* ticker */
+  .ticker{
+    margin-top:10px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:14px;
+    overflow:hidden;
+    height:34px;
+    display:flex;align-items:center;
+  }
+  .ticker .label{
+    flex:0 0 auto;
+    padding:0 10px;
+    font-weight:900;
+    font-size:12px;
+    letter-spacing:.2px;
+    background:rgba(245,158,11,.25);
+    border-right:1px solid rgba(255,255,255,.18);
+    height:34px;display:flex;align-items:center;
+  }
+  .ticker .track{
+    position:relative;flex:1;overflow:hidden;height:34px;
+  }
+  .ticker .run{
+    position:absolute;white-space:nowrap;will-change:transform;
+    animation: marquee 18s linear infinite;
+    padding-left:100%;
+    font-size:12.5px;
+    font-weight:800;
+    opacity:.95;
+  }
+  @keyframes marquee{
+    0%{transform:translateX(0)}
+    100%{transform:translateX(-100%)}
+  }
+  .ticker small{opacity:.85;font-weight:700}
+
   .wrap{padding:14px}
-  .kpi{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
-  .card .label{font-size:12px;color:var(--muted)}
-  .card .value{font-size:20px;font-weight:900;margin-top:4px}
-  .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
-
-  .grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:12px}
-  @media(max-width:1000px){ .kpi{grid-template-columns:1fr 1fr} .grid2{grid-template-columns:1fr} }
-
+  .card h3{margin:0 0 8px 0;font-size:14px}
+  .muted{color:var(--muted);font-size:12px}
+  .kpi{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px}
+  .kpi .value{font-size:20px;font-weight:1000;margin-top:4px}
+  .kpi .label{font-size:12px;color:var(--muted)}
+  .pillRow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .pill{
+    border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:6px 10px;font-size:12px;font-weight:900;cursor:pointer;
+  }
+  .pill.active{background:var(--nav);color:#fff;border-color:transparent}
+  .row2{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+  textarea{
+    width:100%;min-height:110px;resize:vertical;
+    border:1px solid var(--line);border-radius:14px;padding:10px;
+    font:inherit;font-size:13px;outline:none;
+  }
+  textarea:focus{box-shadow:0 0 0 3px rgba(37,99,235,.15);border-color:#93c5fd}
+  .mini{font-size:12px}
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1200px,100%);border-collapse:collapse;font-size:12.5px}
-  th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
-  thead th{background:var(--head);font-weight:900}
+  table{width:max(1100px,100%);border-collapse:collapse;font-size:12.5px}
+  th,td{border:1px solid var(--line);padding:7px;text-align:center;white-space:nowrap}
+  thead th{background:var(--head);font-weight:900;position:sticky;top:0;z-index:2}
   tbody tr:nth-child(even) td{background:#fafafa}
-  .left{text-align:left}
   .right{text-align:right}
-  .pct{font-weight:900}
-  .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
-  .small{font-size:12px;color:var(--muted);line-height:1.45}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-  .tab{
-    padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;
-    font-weight:800;font-size:12px
+  .left{text-align:left}
+  .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-weight:900;font-size:12px}
+  .b1{background:#e0f2fe;color:#075985}
+  .b2{background:#dcfce7;color:#166534}
+  .b3{background:#fef3c7;color:#92400e}
+  .bAll{background:#ede9fe;color:#5b21b6}
+  .hs.good{color:var(--good);font-weight:1000}
+  .hs.warn{color:var(--warn);font-weight:1000}
+  .hs.bad{color:var(--bad);font-weight:1000}
+  .split{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .linkBtn{
+    display:inline-flex;gap:6px;align-items:center;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(255,255,255,.10);
+    color:#fff;border-radius:999px;padding:6px 10px;font-weight:900;font-size:12px
   }
-  .tab.active{background:#0e2552;color:#fff;border-color:#0e2552}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#fff}
-  .bar{
-    height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb
-  }
-  .bar > i{display:block;height:100%;background:#2563eb;width:0%}
-
-  .reasonGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:980px){ .reasonGrid{grid-template-columns:1fr} }
-  .input2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;width:240px;background:#fff}
-  .select2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff}
 </style>
 </head>
-
 <body>
+
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>🏢 GDC – BÁO CÁO NĂNG SUẤT (TẤT CẢ XƯỞNG)</b>
-      <span id="roleHint">—</span>
+      <b>🧭 GDC – ĐIỀU HÀNH & CHỈ ĐẠO (XN1/XN2/XN3)</b>
+      <span id="roleHint">Chỉ tài khoản GDC được phép vào trang này</span>
+
+      <div class="ticker" title="Chỉ đạo đang phát ra cho toàn hệ thống">
+        <div class="label">📢 CHỈ ĐẠO</div>
+        <div class="track">
+          <div class="run" id="tickerText">Đang tải chỉ đạo...</div>
+        </div>
+      </div>
     </div>
 
     <div class="controls">
+      <div class="split">
+        <a class="linkBtn" href="../tk/tk1.html">TK1</a>
+        <a class="linkBtn" href="../tk/tk2.html">TK2</a>
+        <a class="linkBtn" href="../tk/tk3.html">TK3</a>
+      </div>
+
       <div class="ctl">
         <label>Chế độ</label>
         <select id="mode">
-          <option value="day">Ngày</option>
           <option value="week">Tuần</option>
           <option value="month">Tháng</option>
           <option value="quarter">Quý</option>
           <option value="year">Năm</option>
+          <option value="day">Ngày</option>
         </select>
       </div>
+
       <div class="ctl">
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
 
-      <button class="btn" onclick="reload()">Tải dữ liệu</button>
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
+      <button class="btn" onclick="reload()">Tải dữ liệu</button>
+
       <div class="status" id="status">Chưa tải dữ liệu</div>
     </div>
   </div>
 </div>
 
 <div class="wrap">
-  <!-- KPI tổng -->
-  <div class="kpi">
-    <div class="card">
-      <div class="label">Tổng USD (ước tính)</div>
-      <div class="value" id="kpiUsd">0.00</div>
-      <div class="sub">USD/TH = Tổng SP * Đơn giá</div>
-    </div>
-    <div class="card">
-      <div class="label">Tổng SP</div>
-      <div class="value" id="kpiSp">0</div>
-      <div class="sub">Tất cả xưởng</div>
-    </div>
-    <div class="card">
-      <div class="label">Hiệu suất TB</div>
-      <div class="value" id="kpiHs">0%</div>
-      <div class="sub">Tổng TH / Tổng ĐM</div>
-    </div>
-    <div class="card">
-      <div class="label">So sánh nhanh</div>
-      <div class="value" id="kpiBest">—</div>
-      <div class="sub">Xưởng HS cao nhất</div>
-    </div>
-  </div>
+  <div class="grid">
+    <!-- MESSAGE CARD -->
+    <div class="card" style="grid-column: span 5;">
+      <h3>📣 Nhập chỉ đạo GĐC</h3>
+      <div class="muted">
+        Chỉ đạo có thể gửi theo XN1 / XN2 / XN3 riêng, hoặc <b>ALL</b> để áp dụng cho cả 3.
+        TK + Tổ trưởng + GĐC đều thấy (màn hình của đúng xưởng).
+      </div>
 
-  <!-- So sánh 3 xưởng -->
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <b>📌 Tổng hợp & so sánh 3 xưởng</b>
-      <span class="pill" id="rangeInfo">—</span>
-    </div>
-    <div class="small" style="margin-top:6px" id="compareHint">—</div>
+      <div class="pillRow">
+        <button class="pill active" data-scope="ALL" onclick="pickScope('ALL')">ALL</button>
+        <button class="pill" data-scope="1" onclick="pickScope('1')">XN1</button>
+        <button class="pill" data-scope="2" onclick="pickScope('2')">XN2</button>
+        <button class="pill" data-scope="3" onclick="pickScope('3')">XN3</button>
+      </div>
 
-    <div style="margin-top:10px;overflow:auto">
-      <table style="width:max(860px,100%)">
+      <div class="row2">
+        <div class="muted mini">
+          Scope đang chọn: <b id="scopeName">ALL</b> •
+          <span>Gợi ý: nội dung ngắn gọn, rõ việc, có deadline</span>
+        </div>
+
+        <textarea id="msgBox" placeholder="Nhập chỉ đạo tại đây..."></textarea>
+
+        <div class="split">
+          <button class="btn warn" onclick="saveMessage()">💾 Lưu chỉ đạo</button>
+          <button class="btn ghost" onclick="loadMessage()">↻ Nạp lại</button>
+          <button class="btn danger" onclick="clearBox()">✖ Xóa nội dung</button>
+        </div>
+
+        <div class="muted mini" id="msgMeta">Chưa có dữ liệu</div>
+      </div>
+    </div>
+
+    <!-- KPI CARD -->
+    <div class="card" style="grid-column: span 7;">
+      <h3>📊 Tổng hợp sản lượng & hiệu suất (ALL xưởng)</h3>
+      <div class="muted" id="rangeInfo">—</div>
+
+      <div class="kpi" style="margin-top:10px">
+        <div class="card" style="box-shadow:none;border-radius:14px;padding:10px">
+          <div class="label">Tổng SP (ALL)</div>
+          <div class="value" id="kpiSpAll">0</div>
+          <div class="muted">Cộng XN1+XN2+XN3 theo khoảng</div>
+        </div>
+        <div class="card" style="box-shadow:none;border-radius:14px;padding:10px">
+          <div class="label">Tổng Kế hoạch (ALL)</div>
+          <div class="value" id="kpiKeAll">0</div>
+          <div class="muted">Tổng ĐM ngày (từ production_day)</div>
+        </div>
+        <div class="card" style="box-shadow:none;border-radius:14px;padding:10px">
+          <div class="label">Hiệu suất (ALL)</div>
+          <div class="value" id="kpiHsAll">0%</div>
+          <div class="muted">SP / Kế hoạch</div>
+        </div>
+        <div class="card" style="box-shadow:none;border-radius:14px;padding:10px">
+          <div class="label">Ngày có HS cao nhất</div>
+          <div class="value" id="kpiBest">—</div>
+          <div class="muted">Dựa trên HS ALL theo ngày</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="tableWrap" style="grid-column: span 12;">
+      <table>
         <thead>
           <tr>
-            <th>Xưởng</th>
-            <th>Tổng SP</th>
-            <th>Tổng ĐM</th>
-            <th>HS</th>
-            <th style="min-width:220px">Thanh so sánh HS</th>
-            <th>USD ước tính</th>
+            <th style="min-width:110px">NGÀY</th>
+            <th style="min-width:90px">XƯỞNG</th>
+            <th style="min-width:140px">TỔNG SP</th>
+            <th style="min-width:160px">TỔNG KẾ HOẠCH</th>
+            <th style="min-width:120px">HIỆU SUẤT</th>
           </tr>
         </thead>
-        <tbody id="cmpTbody"></tbody>
+        <tbody id="tbody">
+          <tr><td colspan="5" class="muted">Chưa có dữ liệu</td></tr>
+        </tbody>
       </table>
     </div>
-  </div>
 
-  <!-- Tabs: chi tiết theo xưởng (chỉ hiển thị khi mode=day) -->
-  <div id="dayDetailBlock" style="display:none">
-    <div class="tabs">
-      <button class="tab active" id="tab1" onclick="setTab(1)">Chi tiết XN1</button>
-      <button class="tab" id="tab2" onclick="setTab(2)">Chi tiết XN2</button>
-      <button class="tab" id="tab3" onclick="setTab(3)">Chi tiết XN3</button>
+    <div class="muted" style="grid-column: span 12;">
+      ⚙️ Lưu ý: để ticker/“chỉ đạo” hiển thị ở TK & TO, các trang đó sẽ gọi API:
+      <b>getDirectorMessage</b> với scope = xưởng (1/2/3) và merge với scope ALL.
     </div>
-
-    <div class="grid2">
-      <!-- bảng chi tiết giống excel -->
-      <div class="card">
-        <b id="detailTitle">📄 Báo cáo cuối ngày – XN1</b>
-        <div class="small" id="detailMeta" style="margin-top:6px">—</div>
-
-        <div class="tableWrap" style="margin-top:10px">
-          <table id="detailTbl" style="width:max(1180px,100%)">
-            <thead>
-              <tr>
-                <th>TỔ</th>
-                <th>LINE</th>
-                <th class="left" style="min-width:180px;text-align:left;padding-left:10px">MÃ HÀNG</th>
-                <th>LĐTT</th>
-                <th>ĐM/NGÀY</th>
-                <th>THỰC HIỆN</th>
-                <th>ĐƠN GIÁ</th>
-                <th>USD ĐẠT/NGÀY</th>
-                <th>% ĐẠT NS</th>
-                <th>USD/NGƯỜI</th>
-                <th>CHUYỂN ĐỔI/NGÀY</th>
-                <th class="left" style="min-width:260px;text-align:left;padding-left:10px">GHI CHÚ</th>
-              </tr>
-            </thead>
-            <tbody id="detailTbody"></tbody>
-            <tfoot>
-              <tr>
-                <td colspan="7" class="right" style="padding-right:10px;font-weight:900">TỔNG</td>
-                <td id="detailUsd" style="font-weight:900">0.00</td>
-                <td id="detailHs" style="font-weight:900">0%</td>
-                <td id="detailUsdPer" style="font-weight:900">0.00</td>
-                <td colspan="2"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        <div class="small" style="margin-top:8px">
-          * USD = TH * Đơn giá • %NS = TH/ĐM • USD/người = USD/LĐTT.
-        </div>
-      </div>
-
-      <!-- nguyên nhân giảm NS -->
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <b>🧾 Nguyên nhân giảm năng suất (XN đang chọn)</b>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input id="reasonSearch" class="input2" placeholder="Tìm nguyên nhân..." />
-            <select id="reasonFilter" class="select2">
-              <option value="all">Tất cả giờ</option>
-              <option value="bad">Chỉ giờ đỏ (HS&lt;80%)</option>
-            </select>
-            <button class="btn" onclick="renderReasons()">Lọc</button>
-          </div>
-        </div>
-        <div class="small" id="reasonMeta" style="margin-top:6px">—</div>
-
-        <div class="reasonGrid" style="margin-top:10px">
-          <div class="card" style="box-shadow:none">
-            <b>Top nguyên nhân</b>
-            <div style="margin-top:8px;overflow:auto;max-height:320px">
-              <table style="width:100%">
-                <thead>
-                  <tr>
-                    <th class="left" style="text-align:left;padding-left:10px">Nguyên nhân</th>
-                    <th>Số lần</th>
-                  </tr>
-                </thead>
-                <tbody id="reasonTopTbody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card" style="box-shadow:none">
-            <b>Giờ đỏ (HS&lt;80%)</b>
-            <div class="small">Click để xem full nguyên nhân</div>
-            <div style="margin-top:8px;overflow:auto;max-height:320px">
-              <table style="width:100%">
-                <thead>
-                  <tr>
-                    <th>Tổ</th>
-                    <th>Khung</th>
-                    <th>KH</th>
-                    <th>TT</th>
-                    <th>HS</th>
-                    <th class="left" style="text-align:left;padding-left:10px">Nguyên nhân</th>
-                  </tr>
-                </thead>
-                <tbody id="reasonBadTbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="small" style="margin-top:10px">
-          Gợi ý: sau này có thể thêm “Top tổ giảm NS”, “Top giờ giảm NS”, “cảnh báo realtime”.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="small" style="margin-top:10px">
-    <b>Ghi chú kỹ thuật:</b> Mode Tuần/Tháng/Quý/Năm dùng `summary_xuong_day`. Mode Ngày dùng `getTkXuongDay` + `getHourRange`.
   </div>
 </div>
 
 <script>
 /* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
-const KEY="NS_SESSION";
-const XUONGS = [1,2,3];
+const KEY = "NS_SESSION";
 
-// TO LIST theo xưởng
-const TO_BY_XUONG = {
-  1:[1,3,5,7,9],
-  2:[11,13,15,17],
-  3:[19,21,23,25,27]
-};
-
-/* ================== SESSION ================== */
-function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
-function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
-function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
-
-/* ================== UTIL ================== */
-async function apiPost(payload){
-  const r = await fetch(API_URL,{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) });
-  return await r.json();
-}
-function setStatus(t){ document.getElementById("status").innerText=t; }
-function todayISO(){ return new Date().toISOString().slice(0,10); }
-function toNum(v){ const n=Number(String(v??"").replaceAll(",","").trim()); return Number.isFinite(n)?n:0; }
-function fmt2(n){ return (Number(n)||0).toFixed(2); }
-function fmt1(n){ return (Number(n)||0).toFixed(1); }
-function fmt0(n){ return String(Math.round(Number(n)||0)); }
-function escapeHtml(s){
-  return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
+/* ================== FORMAT ==================
+   - Số nguyên: 10,000
+   - %: 1 decimal
+================================================ */
+const NF_INT = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
+function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
+function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 function pctClass(hs){
-  hs = Number(hs)||0;
   if(hs>=95) return "good";
   if(hs>=80) return "warn";
   return "bad";
 }
-function normReason(s){
-  s = String(s||"").trim();
-  if(!s) return "";
-  s = s.replace(/\s+/g," ").replace(/[.。]+$/,"");
+
+/* ================== SESSION ================== */
+function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
+function mustLogin(){
+  const s=sess();
+  if(!s||!s.token){ location.href="../login.html"; return null; }
   return s;
 }
+function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
+
+/* ================== UTIL ================== */
+async function apiPost(payload){
+  const r = await fetch(API_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  return await r.json();
+}
+function setStatus(t){ document.getElementById("status").innerText = t; }
+function todayISO(){
+  const d=new Date();
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+function badgeXuong(x){
+  if(String(x)==="1") return `<span class="badge b1">XN1</span>`;
+  if(String(x)==="2") return `<span class="badge b2">XN2</span>`;
+  if(String(x)==="3") return `<span class="badge b3">XN3</span>`;
+  return `<span class="badge bAll">ALL</span>`;
+}
+
+/* ================== RANGE ================== */
 function getRange(mode, dateStr){
   const d = new Date(dateStr+"T00:00:00");
   const yyyy = d.getFullYear();
@@ -317,9 +313,10 @@ function getRange(mode, dateStr){
     const da=String(x.getDate()).padStart(2,"0");
     return `${x.getFullYear()}-${m}-${da}`;
   };
+
   if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
   if(mode === "week"){
-    const day = (d.getDay()+6)%7; // monday=0
+    const day = (d.getDay()+6)%7;
     const start = new Date(d); start.setDate(dd - day);
     const end = new Date(start); end.setDate(start.getDate()+6);
     return { from: toISO(start), to: toISO(end), label:`Tuần ${toISO(start)} → ${toISO(end)}` };
@@ -340,322 +337,225 @@ function getRange(mode, dateStr){
   return { from: toISO(start), to: toISO(end), label:`Năm ${yyyy}` };
 }
 
-/* ================== STATE ================== */
+/* ================== MESSAGE STATE/UI ================== */
 let S = mustLogin();
-let activeTab = 1;
-let dayDetail = { 1:[], 2:[], 3:[] };   // ✅ giờ chứa NHIỀU line cho 1 tổ
-let dayHoursRaw = { 1:[], 2:[], 3:[] };
+let currentScope = "ALL";
 
-/* ================== INIT ================== */
-document.getElementById("date").value = todayISO();
+function pickScope(scope){
+  currentScope = scope;
+  document.querySelectorAll(".pill").forEach(p=>{
+    p.classList.toggle("active", p.dataset.scope === scope);
+  });
+  document.getElementById("scopeName").innerText =
+    scope==="ALL" ? "ALL (cả 3 xưởng)" : `XN${scope}`;
+  loadMessage();
+}
 
-if(S){
-  const ok = (S.role==="gdc");
-  document.getElementById("roleHint").innerText = ok
-    ? `✅ GĐC: ${S.username} • xem tất cả xưởng`
-    : `⛔ Không đúng quyền: role=${S.role} (cần gdc)`;
-  if(!ok){
-    setStatus("Không đúng quyền");
-  }else{
-    reload();
+function clearBox(){
+  document.getElementById("msgBox").value = "";
+}
+
+async function loadMessage(){
+  S = mustLogin(); if(!S) return;
+  if(S.role !== "gdc"){
+    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền (chỉ GDC)";
+    setStatus("⛔ Không đúng quyền");
+    return;
   }
+
+  setStatus(`Đang tải chỉ đạo scope ${currentScope}...`);
+
+  // Worker bạn cần bổ sung action: getDirectorMessage
+  const res = await apiPost({ action:"getDirectorMessage", token:S.token, scope: currentScope });
+  if(!res.success){
+    setStatus("Lỗi tải chỉ đạo: " + (res.msg||""));
+    return;
+  }
+
+  document.getElementById("msgBox").value = res.message || "";
+  document.getElementById("msgMeta").innerHTML =
+    `Cập nhật lúc: <b>${res.updated_at || "—"}</b> • bởi: <b>${res.updated_by || "—"}</b>`;
+
+  setStatus("✅ Đã nạp chỉ đạo");
+  await refreshTicker(); // ticker ưu tiên ALL + scope đang chọn
 }
 
-/* ================== TABS ================== */
-function setTab(x){
-  activeTab = Number(x)||1;
-  document.getElementById("tab1").classList.toggle("active", activeTab===1);
-  document.getElementById("tab2").classList.toggle("active", activeTab===2);
-  document.getElementById("tab3").classList.toggle("active", activeTab===3);
+async function saveMessage(){
+  S = mustLogin(); if(!S) return;
+  if(S.role !== "gdc"){ setStatus("⛔ Không đúng quyền"); return; }
 
-  const date = document.getElementById("date").value;
-  renderDayDetailForXuong(activeTab, date);
-  renderReasons();
+  const message = String(document.getElementById("msgBox").value || "").trim();
+  if(!message){
+    setStatus("⚠️ Chưa nhập nội dung chỉ đạo");
+    return;
+  }
+
+  setStatus(`Đang lưu chỉ đạo scope ${currentScope}...`);
+
+  // Worker bạn cần bổ sung action: setDirectorMessage
+  const res = await apiPost({
+    action:"setDirectorMessage",
+    token:S.token,
+    scope: currentScope,
+    message
+  });
+
+  if(!res.success){
+    setStatus("Lỗi lưu: " + (res.msg||""));
+    return;
+  }
+
+  setStatus("✅ Đã lưu chỉ đạo");
+  await loadMessage();
 }
 
-/* ================== MAIN LOAD ================== */
+/* Ticker: hiển thị ALL + XN đang chọn (nếu đang chọn XN1/2/3) */
+async function refreshTicker(){
+  S = mustLogin(); if(!S) return;
+
+  // lấy ALL
+  const all = await apiPost({ action:"getDirectorMessage", token:S.token, scope:"ALL" });
+  // lấy scope đang chọn nếu không phải ALL
+  let sc = { success:true, message:"" };
+  if(currentScope !== "ALL"){
+    sc = await apiPost({ action:"getDirectorMessage", token:S.token, scope: currentScope });
+  }
+
+  const parts = [];
+  if(all?.success && all.message) parts.push(`(ALL) ${all.message}`);
+  if(currentScope!=="ALL" && sc?.success && sc.message) parts.push(`(XN${currentScope}) ${sc.message}`);
+
+  const text = parts.length ? parts.join("  •  ") : "Chưa có chỉ đạo";
+  document.getElementById("tickerText").innerHTML = `${escapeHtml(text)} <small>• cập nhật tự động</small>`;
+
+  // reset animation để chạy lại mượt
+  const el = document.getElementById("tickerText");
+  el.style.animation = "none";
+  // reflow
+  void el.offsetHeight;
+  el.style.animation = "";
+}
+
+function escapeHtml(s){
+  return String(s??"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+/* ================== DATA (summary_xuong_day) ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
-  if(S.role!=="gdc"){ setStatus("⛔ Chỉ gdc được xem trang này"); return; }
+
+  if(S.role !== "gdc"){
+    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền (chỉ GDC)";
+    setStatus("⛔ Bạn không có quyền mở GDC");
+    return;
+  }else{
+    document.getElementById("roleHint").innerText = "✅ GDC: xem ALL xưởng + nhập chỉ đạo";
+  }
 
   const mode = document.getElementById("mode").value;
   const date = document.getElementById("date").value;
   const range = getRange(mode, date);
 
-  document.getElementById("rangeInfo").innerText = range.label;
-  setStatus("Đang tải dữ liệu...");
+  document.getElementById("rangeInfo").innerText = `Bộ lọc: ${range.label} • Nguồn: summary_xuong_day`;
+  setStatus("Đang tải tổng hợp ALL...");
 
-  if(mode === "day"){
-    document.getElementById("dayDetailBlock").style.display = "";
-    await loadDayAllXuong(date);
-    setTab(activeTab);
-    document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (tính qua tất cả line_no).";
-  }else{
-    document.getElementById("dayDetailBlock").style.display = "none";
-    await loadRangeAll(range.from, range.to);
-    document.getElementById("compareHint").innerText = "Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary_xuong_day (nhanh).";
-  }
-
-  setStatus(`✅ Đã tải • ${range.label}`);
-}
-
-/* ================== LOAD: RANGE (all xuong) ================== */
-async function loadRangeAll(from, to){
-  const res = await apiPost({ action:"getDayRangeAll", token:S.token, from, to });
+  const res = await apiPost({ action:"getDayRangeAll", token:S.token, from: range.from, to: range.to });
   if(!res.success){
-    setStatus("Lỗi tải range: " + (res.msg||""));
-    renderCompare({1:{sp:0,dm:0,usd:0,hs:0},2:{sp:0,dm:0,usd:0,hs:0},3:{sp:0,dm:0,usd:0,hs:0}});
-    setKpi(0,0,0,"—");
+    setStatus("Lỗi: " + (res.msg||""));
+    document.getElementById("tbody").innerHTML = `<tr><td colspan="5" class="muted">Không có dữ liệu</td></tr>`;
     return;
   }
 
-  const agg = {1:{sp:0,dm:0,usd:0},2:{sp:0,dm:0,usd:0},3:{sp:0,dm:0,usd:0}};
-  for(const r of (res.data||[])){
-    const x = Number(r.xuong);
-    if(!agg[x]) continue;
-    agg[x].sp += toNum(r.tong_sp);
-    agg[x].dm += toNum(r.tong_ke_hoach);
-  }
-  for(const x of XUONGS){
-    agg[x].hs = agg[x].dm>0 ? (agg[x].sp/agg[x].dm*100) : 0;
-  }
+  const data = Array.isArray(res.data) ? res.data : [];
+  renderTable(data);
+  calcKpi(data);
 
-  renderCompare(agg);
-
-  const spAll = XUONGS.reduce((s,x)=>s+agg[x].sp,0);
-  const dmAll = XUONGS.reduce((s,x)=>s+agg[x].dm,0);
-  const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
-  const best = bestXuongLabel(agg);
-  setKpi(0, spAll, hsAll, best);
+  setStatus(`✅ Đã tải • ${range.from} → ${range.to}`);
+  await refreshTicker();
 }
 
-/* ================== LOAD: DAY (all xuong) ================== */
-async function loadDayAllXuong(ngay){
-  // ✅ lấy FULL rows của getTkXuongDay (đã có line_no) và KHÔNG ép 1 tổ 1 dòng
-  for(const x of XUONGS){
-    const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
-    const rows = res.success ? (res.rows||[]) : [];
-
-    const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
-
-    // giữ các dòng thuộc danh sách tổ cho xưởng đó
-    let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
-
-    // nếu 1 tổ hoàn toàn chưa có plan line nào -> chèn placeholder line 1 để bảng đủ tổ (đỡ trống)
-    const existingTo = new Set(filtered.map(r=>Number(r.to_nhom)));
-    for(const to of allowTos){
-      if(!existingTo.has(to)){
-        filtered.push({ to_nhom: to, line_no: 1, ma_hang:"", dinh_muc_ngay:0, don_gia:0, lao_dong_thuc_te:0, chuyen_doi_ngay:0, ghi_chu:"", hours: [] });
-      }
-    }
-
-    // sort: to_nhom, line_no
-    filtered.sort((a,b)=> Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
-    dayDetail[x] = filtered;
+function renderTable(data){
+  const tb = document.getElementById("tbody");
+  if(!data.length){
+    tb.innerHTML = `<tr><td colspan="5" class="muted">Không có dữ liệu</td></tr>`;
+    return;
   }
 
-  // reasons raw (production_hour) cho 3 xưởng
-  for(const x of XUONGS){
-    const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:x, from:ngay, to:ngay });
-    dayHoursRaw[x] = hr.success ? (hr.data||[]) : [];
-  }
-
-  // compare + KPI (tính qua TẤT CẢ line)
-  const agg = {};
-  for(const x of XUONGS){
-    const rows = dayDetail[x] || [];
-    let sp=0, dm=0, usd=0;
-    for(const r of rows){
-      const hours = Array.isArray(r.hours) ? r.hours : [];
-      const tongSP = hours.reduce((a,b)=>a+toNum(b),0);
-      sp += tongSP;
-      dm += toNum(r.dinh_muc_ngay);
-      usd += tongSP * toNum(r.don_gia);
-    }
-    const hs = dm>0 ? (sp/dm*100) : 0;
-    agg[x] = { sp, dm, usd, hs };
-  }
-
-  renderCompare(agg);
-
-  const spAll = XUONGS.reduce((s,x)=>s+(agg[x]?.sp||0),0);
-  const dmAll = XUONGS.reduce((s,x)=>s+(agg[x]?.dm||0),0);
-  const usdAll = XUONGS.reduce((s,x)=>s+(agg[x]?.usd||0),0);
-  const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
-  const best = bestXuongLabel(agg);
-
-  setKpi(usdAll, spAll, hsAll, best);
-}
-
-/* ================== RENDER: COMPARE TABLE ================== */
-function renderCompare(agg){
-  const tb = document.getElementById("cmpTbody");
-  const hsMax = Math.max(...XUONGS.map(x=>Number(agg[x]?.hs||0)), 0) || 1;
-
-  tb.innerHTML = XUONGS.map(x=>{
-    const sp = agg[x]?.sp||0;
-    const dm = agg[x]?.dm||0;
-    const hs = agg[x]?.hs||0;
-    const usd = agg[x]?.usd||0;
-    const w = Math.max(0, Math.min(100, (hs/hsMax)*100));
+  tb.innerHTML = data.map(r=>{
+    const hs = Number(r.hieu_suat)||0;
+    const cls = pctClass(hs);
     return `
       <tr>
-        <td><b>XN${x}</b></td>
-        <td>${fmt0(sp)}</td>
-        <td>${fmt0(dm)}</td>
-        <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
-        <td><div class="bar"><i style="width:${w.toFixed(1)}%"></i></div></td>
-        <td>${fmt2(usd)}</td>
+        <td><b>${escapeHtml(r.ngay||"")}</b></td>
+        <td>${badgeXuong(r.xuong)}</td>
+        <td class="right">${fmtInt(r.tong_sp||0)}</td>
+        <td class="right">${fmtInt(r.tong_ke_hoach||0)}</td>
+        <td class="hs ${cls}">${fmtPct1(hs)}%</td>
       </tr>
     `;
   }).join("");
 }
 
-function bestXuongLabel(agg){
-  let best = {x:null, hs:-1};
-  for(const x of XUONGS){
-    const hs = Number(agg[x]?.hs||0);
-    if(hs > best.hs){ best = {x, hs}; }
+function calcKpi(data){
+  // KPI ALL theo toàn khoảng: tổng sp / tổng kế hoạch
+  let spAll=0, keAll=0;
+
+  // tìm ngày tốt nhất (theo ALL: cộng 3 xưởng từng ngày)
+  const byDay = new Map(); // ngay -> {sp,ke}
+  data.forEach(r=>{
+    const ngay = String(r.ngay||"");
+    const sp = Number(r.tong_sp)||0;
+    const ke = Number(r.tong_ke_hoach)||0;
+    spAll += sp; keAll += ke;
+
+    if(!byDay.has(ngay)) byDay.set(ngay,{sp:0,ke:0});
+    const x = byDay.get(ngay);
+    x.sp += sp; x.ke += ke;
+  });
+
+  const hsAll = keAll>0 ? (spAll/keAll*100) : 0;
+
+  let bestDay = "—";
+  let bestHs = -1;
+  for(const [ngay,val] of byDay.entries()){
+    const hs = val.ke>0 ? (val.sp/val.ke*100) : 0;
+    if(hs > bestHs){
+      bestHs = hs;
+      bestDay = `${ngay} (${fmtPct1(hs)}%)`;
+    }
   }
-  return best.x ? `XN${best.x} (${fmt1(best.hs)}%)` : "—";
+
+  document.getElementById("kpiSpAll").innerText = fmtInt(spAll);
+  document.getElementById("kpiKeAll").innerText = fmtInt(keAll);
+  document.getElementById("kpiHsAll").innerText = fmtPct1(hsAll) + "%";
+  document.getElementById("kpiBest").innerText = bestDay;
 }
 
-/* ================== KPI ================== */
-function setKpi(usd, sp, hs, best){
-  document.getElementById("kpiUsd").innerText = fmt2(usd);
-  document.getElementById("kpiSp").innerText = fmt0(sp);
-  document.getElementById("kpiHs").innerText = fmt1(hs) + "%";
-  document.getElementById("kpiBest").innerText = best || "—";
-}
+/* ================== INIT ================== */
+document.getElementById("date").value = todayISO();
 
-/* ================== RENDER: DAY DETAIL TABLE ================== */
-function renderDayDetailForXuong(xuong, ngay){
-  document.getElementById("detailTitle").innerText = `📄 Báo cáo cuối ngày – XN${xuong}`;
-  const rows = dayDetail[xuong] || [];
-
-  let usdSum=0, dmSum=0, spSum=0, ldSum=0;
-
-  const body = rows.map(r=>{
-    const hours = Array.isArray(r.hours) ? r.hours : [];
-    const th = hours.reduce((a,b)=>a+toNum(b),0);
-
-    const dm = toNum(r.dinh_muc_ngay);
-    const dg = toNum(r.don_gia);
-    const usd = th * dg;
-    const hs = dm>0 ? (th/dm*100) : 0;
-
-    const ld = toNum(r.lao_dong_thuc_te);
-    const usdPer = ld>0 ? (usd/ld) : 0;
-
-    usdSum += usd;
-    dmSum += dm;
-    spSum += th;
-    ldSum += ld;
-
-    const ln = Number(r.line_no||1);
-
-    return `
-      <tr>
-        <td><b>${escapeHtml(r.to_nhom)}</b></td>
-        <td><b>${ln}</b></td>
-        <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(r.ma_hang||"")}</td>
-        <td>${fmt0(ld)}</td>
-        <td>${fmt0(dm)}</td>
-        <td>${fmt0(th)}</td>
-        <td>${fmt2(dg)}</td>
-        <td><b>${fmt2(usd)}</b></td>
-        <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
-        <td>${fmt2(usdPer)}</td>
-        <td>${fmt0(r.chuyen_doi_ngay||0)}</td>
-        <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(r.ghi_chu||"")}</td>
-      </tr>
-    `;
-  }).join("") || `<tr><td colspan="12" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có dữ liệu kế hoạch/giờ.</td></tr>`;
-
-  document.getElementById("detailTbody").innerHTML = body;
-
-  const hsAll = dmSum>0 ? (spSum/dmSum*100) : 0;
-  const usdPerAll = ldSum>0 ? (usdSum/ldSum) : 0;
-
-  document.getElementById("detailUsd").innerText = fmt2(usdSum);
-  document.getElementById("detailHs").innerText = fmt1(hsAll) + "%";
-  document.getElementById("detailUsdPer").innerText = fmt2(usdPerAll);
-
-  document.getElementById("detailMeta").innerText =
-    `Ngày: ${ngay} • Tổng SP: ${fmt0(spSum)} • Tổng ĐM: ${fmt0(dmSum)} • Tổng USD: ${fmt2(usdSum)}`;
-}
-
-/* ================== REASONS (active tab only) ================== */
-function renderReasons(){
-  const ngay = document.getElementById("date").value;
-  const xuong = activeTab;
-
-  const filter = document.getElementById("reasonFilter")?.value || "all";
-  const q = String(document.getElementById("reasonSearch")?.value||"").trim().toLowerCase();
-
-  let rows = Array.isArray(dayHoursRaw[xuong]) ? dayHoursRaw[xuong].slice() : [];
-
-  if(filter === "bad") rows = rows.filter(r => Number(r.hieu_suat||0) < 80);
-  if(q) rows = rows.filter(r => String(r.nguyen_nhan||"").toLowerCase().includes(q));
-
-  const badCount = rows.filter(r => Number(r.hieu_suat||0) < 80).length;
-  document.getElementById("reasonMeta").innerText =
-    `XN${xuong} • Ngày ${ngay} • Tổng bản ghi giờ: ${rows.length} • Giờ đỏ (HS<80%): ${badCount}`;
-
-  const counter = new Map();
-  for(const r of rows){
-    const reason = normReason(r.nguyen_nhan);
-    if(!reason) continue;
-    counter.set(reason, (counter.get(reason)||0) + 1);
-  }
-  const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20);
-
-  document.getElementById("reasonTopTbody").innerHTML = top.length
-    ? top.map(([reason,c])=>`
-      <tr>
-        <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(reason)}</td>
-        <td><b>${c}</b></td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="2" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có nguyên nhân.</td></tr>`;
-
-  const bad = rows
-    .filter(r => Number(r.hieu_suat||0) < 80)
-    .sort((a,b)=> String(a.khung_gio).localeCompare(String(b.khung_gio)) || (Number(a.to_nhom)-Number(b.to_nhom)));
-
-  document.getElementById("reasonBadTbody").innerHTML = bad.length
-    ? bad.map(r=>{
-        const hs = Number(r.hieu_suat||0);
-        const shortReason = normReason(r.nguyen_nhan);
-        const show = shortReason ? (shortReason.length>55 ? shortReason.slice(0,55)+"…" : shortReason) : "";
-        return `
-          <tr style="cursor:pointer" onclick="alertReason('${escapeHtml(r.to_nhom)}','${escapeHtml(r.khung_gio)}','${escapeHtml(shortReason||"")}')">
-            <td><b>${escapeHtml(r.to_nhom)}</b></td>
-            <td>${escapeHtml(r.khung_gio)}</td>
-            <td>${fmt0(r.ke_hoach_gio||0)}</td>
-            <td>${fmt0(r.thuc_te||0)}</td>
-            <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
-            <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(show||"(Không có)")}</td>
-          </tr>
-        `;
-      }).join("")
-    : `<tr><td colspan="6" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Không có giờ đỏ.</td></tr>`;
-}
-
-function alertReason(to, khung, reason){
-  reason = reason || "(Không có ghi chú)";
-  alert(`Tổ ${to} • Khung ${khung}\n\nNguyên nhân:\n${reason}`);
-}
-
-/* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
-document.addEventListener("input",(e)=>{
-  if(e.target && e.target.id==="reasonSearch") renderReasons();
-});
-document.addEventListener("change",(e)=>{
-  if(e.target && e.target.id==="reasonFilter") renderReasons();
-});
+document.getElementById("date").addEventListener("change", reload);
+
+if(S){
+  if(S.role !== "gdc"){
+    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền (chỉ GDC)";
+    setStatus("⛔ Bạn không có quyền mở GDC");
+  }else{
+    document.getElementById("roleHint").innerText = "✅ GDC: xem ALL xưởng + nhập chỉ đạo";
+    pickScope("ALL");
+    reload();
+  }
+}
+
+/* auto refresh ticker mỗi 30s */
+setInterval(()=>{
+  const s = sess();
+  if(s?.token) refreshTicker();
+}, 30000);
 </script>
+
 </body>
 </html>
