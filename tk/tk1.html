@@ -27,6 +27,75 @@
   .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
+
+  /* ============================
+     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
+     - giống kiểu GDC: 1 ticker mảnh
+     - sticky dưới topbar
+  ============================ */
+  .gdc-ticker{
+    position:sticky;
+    top:64px; /* gần đúng chiều cao topbar */
+    z-index:19;
+    height:38px;
+    display:none; /* show khi có message */
+    align-items:center;
+    overflow:hidden;
+    background:#0e2552;
+    color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.16);
+  }
+  .gdc-ticker .label{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    font-weight:900;
+    font-size:13px;
+    background:#0b1b3a;
+    border-right:1px solid rgba(255,255,255,.14);
+  }
+  .gdc-ticker .track{
+    flex:1;
+    overflow:hidden;
+    white-space:nowrap;
+    position:relative;
+  }
+  .gdc-ticker .text{
+    display:inline-block;
+    padding-left:100%;
+    font-weight:800;
+    font-size:14px;
+    line-height:38px;
+    animation: gdc-marquee 22s linear infinite;
+    will-change: transform;
+  }
+  @keyframes gdc-marquee{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-100%); }
+  }
+  .gdc-ticker .meta{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 12px;
+    font-size:12px;
+    opacity:.9;
+    border-left:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.08);
+  }
+  .gdc-ticker .dot{
+    width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;
+    box-shadow:0 0 0 4px rgba(34,197,94,.14);
+  }
+  .gdc-ticker .time{
+    opacity:.9;
+    font-variant-numeric: tabular-nums;
+  }
+
   .wrap{padding:14px}
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-bottom:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
@@ -69,63 +138,6 @@
   }
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
-
-  /* ================== GĐC TICKER (CHỈ ĐẠO) ================== */
-  .tickerWrap{
-    position:sticky; top:66px; z-index:19; /* nằm ngay dưới topbar */
-    padding:10px 14px;
-    background:linear-gradient(180deg, rgba(14,37,82,.10), rgba(14,37,82,0));
-    backdrop-filter: blur(6px);
-  }
-  .tickerCard{
-    background:#fff; border:1px solid var(--line); border-radius:16px;
-    box-shadow:var(--shadow);
-    overflow:hidden;
-  }
-  .tickerHead{
-    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-    padding:10px 12px;
-    background:linear-gradient(180deg,#0b1b3a,#0e2552);
-    color:#fff;
-  }
-  .tickerHead b{display:flex; align-items:center; gap:8px}
-  .tickerMeta{font-size:12px; opacity:.9}
-  .tickerBody{
-    padding:10px 12px;
-    border-top:1px solid rgba(255,255,255,.08);
-    background:#fff;
-  }
-  .tickerMsg{
-    font-size:14px;
-    font-weight:900;
-    line-height:1.35;
-    color:#111827;
-    white-space:normal;
-    word-break:break-word;
-  }
-  .tickerMsg .scopeTag{
-    display:inline-flex; align-items:center; justify-content:center;
-    padding:2px 8px; border-radius:999px; border:1px solid var(--line);
-    font-size:12px; font-weight:900; margin-right:6px;
-    background:#f8fafc;
-  }
-  .tickerHint{
-    font-size:12px; color:var(--muted); margin-top:6px;
-  }
-  .tickerActions{
-    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-  }
-  .btnTiny{
-    border:none; cursor:pointer;
-    padding:6px 10px; border-radius:999px;
-    font-size:12px; font-weight:900;
-    background:rgba(255,255,255,.14); color:#fff;
-    border:1px solid rgba(255,255,255,.20);
-  }
-  .btnTiny:disabled{opacity:.6; cursor:not-allowed}
-  @media(max-width:980px){
-    .tickerWrap{ top:72px; }
-  }
 </style>
 </head>
 <body>
@@ -163,20 +175,21 @@
   </div>
 </div>
 
-<!-- ✅ CHỈ ĐẠO GĐC: đặt ngay dưới topbar cho dễ nhìn -->
-<div class="tickerWrap">
-  <div class="tickerCard">
-    <div class="tickerHead">
-      <b>📣 Chỉ đạo GĐC</b>
-      <div class="tickerActions">
-        <span class="tickerMeta" id="tickerMeta">—</span>
-        <button class="btnTiny" id="btnTickerRefresh" onclick="refreshDirector(true)">Làm mới</button>
-      </div>
-    </div>
-    <div class="tickerBody">
-      <div class="tickerMsg" id="tickerMsg">Đang tải chỉ đạo…</div>
-      <div class="tickerHint">Hiển thị chỉ đạo phạm vi <b>ALL</b> và <b>XN1</b> (nếu có).</div>
-    </div>
+<!-- ============================
+     ✅ CHỈ ĐẠO GĐC (TICKER)
+     - ưu tiên scope theo xưởng (1)
+     - fallback ALL
+     - refresh 30s, chạy mượt như GDC
+============================ -->
+<div class="gdc-ticker" id="gdcTicker">
+  <div class="label">📣 CHỈ ĐẠO GĐC</div>
+  <div class="track">
+    <div class="text" id="gdcTickerText">—</div>
+  </div>
+  <div class="meta" title="Tự cập nhật mỗi 30 giây">
+    <span class="dot"></span>
+    <span id="gdcTickerScope">—</span>
+    <span class="time" id="gdcTickerTime">—</span>
   </div>
 </div>
 
@@ -239,6 +252,7 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
+        <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
         <tr>
           <td class="sticky1 left" colspan="6" style="padding-left:10px;">CỘNG USD</td>
           <td id="usdQtSum" class="right">0.00</td>
@@ -249,6 +263,7 @@
           <td colspan="11"></td>
         </tr>
 
+        <!-- ƯỚC TÍNH USD TRONG NGÀY -->
         <tr class="strong">
           <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
           <td id="usdNgay" class="right">0.00</td>
@@ -269,17 +284,14 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const XUONG = 1;
 const TO_LIST = [1,3,5,7,9];
-
-/* ⚠️ TK1 của bạn đang dùng 12-13.
-   Nếu worker đã sửa sang 11-12 (đúng chuẩn mới), bạn NÊN đồng bộ UI lại.
-   Mình giữ nguyên theo code bạn gửi để tránh phá hệ thống cũ.
-   Nếu bạn muốn đồng bộ chuẩn mới: thay "12-13" -> "11-12" ở đây.
-*/
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
-
 const KEY="NS_SESSION";
 
-/* ================== FORMAT (CHUẨN MỚI) ================== */
+/* ================== FORMAT (CHUẨN MỚI) ==================
+   - Số nguyên: 10,000 (group bằng dấu phẩy)
+   - Tiền: 1,972.00 (luôn 2 decimals, dấu chấm)
+   - Đơn giá: 2.4 / 2.22 (dấu chấm, không grouping)
+=========================================================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -289,10 +301,11 @@ function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 
+/* parse số: chấp nhận dạng người dùng nhập có dấu phẩy group */
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
-  s = s.replace(/\s+/g,"").replaceAll(",","");
+  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping theo chuẩn mới
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -327,85 +340,94 @@ function pctClass(hs){
 let S = mustLogin();
 let canEditPlan = false;
 
-/* ================== GĐC MESSAGE (ticker) ================== */
-let tickerTimer = null;
-let lastTickerText = "";
+/* =========================================================
+   ✅ CHỈ ĐẠO GĐC (TICKER) — CHỈ BỔ SUNG PHẦN NÀY
+   - ưu tiên scope theo xưởng (1)
+   - fallback ALL
+   - refresh 30s, chạy mượt như GDC
+========================================================= */
+let gdcTimer = null;
 
-function setTicker(text, metaText){
-  const el = document.getElementById("tickerMsg");
-  const meta = document.getElementById("tickerMeta");
-
-  el.innerHTML = text;
-  meta.innerText = metaText || "—";
-}
-
-function scopeBlock(scope, msg){
-  if(!msg) return "";
-  const safe = escapeHtml(msg);
-  return `<div style="margin-bottom:8px">
-    <span class="scopeTag">${scope}</span>${safe}
-  </div>`;
-}
-
-function fmtWhen(iso){
+function fmtTickerTime(iso){
   if(!iso) return "";
-  // hiển thị gọn: YYYY-MM-DD HH:mm:ss (nếu có)
-  return String(iso).replace("T"," ").replace("Z","");
+  // iso: 2026-01-14T03:12:34.000Z
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}/${mo} ${hh}:${mm}`;
 }
 
-async function refreshDirector(showStatus=false){
-  S = mustLogin(); if(!S) return;
-  const btn = document.getElementById("btnTickerRefresh");
-  if(btn) btn.disabled = true;
+async function loadGdcTicker(){
+  if(!S || !S.token) return;
 
   try{
-    // lấy ALL + XN1
-    const [allRes, xRes] = await Promise.all([
-      apiPost({ action:"getDirectorMessage", token:S.token, scope:"ALL" }),
-      apiPost({ action:"getDirectorMessage", token:S.token, scope:String(XUONG) })
-    ]);
+    // 1) scope xưởng
+    const resX = await apiPost({
+      action:"getDirectorMessage",
+      token:S.token,
+      xuong:XUONG
+    });
 
-    const allMsg = (allRes && allRes.success) ? String(allRes.message||"").trim() : "";
-    const xMsg   = (xRes && xRes.success) ? String(xRes.message||"").trim() : "";
+    // 2) fallback ALL (để chắc chắn, dù worker đã tự fallback)
+    const resAll = await apiPost({
+      action:"getDirectorMessage",
+      token:S.token,
+      xuong:"ALL"
+    });
 
-    const parts = [];
-    if(allMsg) parts.push(scopeBlock("ALL", allMsg));
-    if(xMsg) parts.push(scopeBlock("XN"+XUONG, xMsg));
+    let picked = null;
 
-    const text = parts.length
-      ? parts.join("")
-      : `<div class="tickerMsg" style="font-weight:900;color:#6b7280">Chưa có chỉ đạo.</div>`;
-
-    const metaAll = (allRes && allRes.success && allRes.updated_at) ? `ALL: ${fmtWhen(allRes.updated_at)} • ${allRes.updated_by||""}` : "";
-    const metaX   = (xRes && xRes.success && xRes.updated_at) ? `XN${XUONG}: ${fmtWhen(xRes.updated_at)} • ${xRes.updated_by||""}` : "";
-    const metaText = [metaAll, metaX].filter(Boolean).join(" | ") || "—";
-
-    // tránh nháy nếu không đổi
-    const flat = (allMsg ? ("ALL:"+allMsg) : "") + "|" + (xMsg ? ("X:"+xMsg) : "");
-    if(flat !== lastTickerText){
-      lastTickerText = flat;
-      setTicker(text, metaText);
-      if(showStatus) setStatus("✅ Đã làm mới chỉ đạo GĐC");
-    }else{
-      if(showStatus) setStatus("✅ Chỉ đạo không thay đổi");
+    if(resX?.success && (resX.message||"").trim()){
+      picked = resX;
+    }else if(resAll?.success && (resAll.message||"").trim()){
+      picked = resAll;
     }
+
+    const box = document.getElementById("gdcTicker");
+    const textEl = document.getElementById("gdcTickerText");
+    const scopeEl = document.getElementById("gdcTickerScope");
+    const timeEl = document.getElementById("gdcTickerTime");
+
+    if(!picked){
+      box.style.display = "none";
+      return;
+    }
+
+    const scope = String(picked.scope || "").toUpperCase();
+    const msg = String(picked.message || "").trim();
+    if(!msg){
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "flex";
+    scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
+    timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
+
+    // reset animation để chạy lại mượt khi nội dung đổi
+    textEl.style.animation = "none";
+    textEl.offsetHeight; // force reflow
+    textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
+    textEl.style.animation = "gdc-marquee 22s linear infinite";
   }catch(e){
-    setTicker(`<div class="tickerMsg" style="font-weight:900;color:#dc2626">Không tải được chỉ đạo.</div>`, "—");
-    if(showStatus) setStatus("Lỗi tải chỉ đạo");
-  }finally{
-    if(btn) btn.disabled = false;
+    console.warn("GDC ticker error:", e);
+    // không làm gì để tránh phá UI
   }
 }
 
-function startTicker(){
-  stopTicker();
-  refreshDirector(false);
-  tickerTimer = setInterval(()=> refreshDirector(false), 30000); // 30s
+function startGdcTicker(){
+  stopGdcTicker();
+  loadGdcTicker();
+  gdcTimer = setInterval(loadGdcTicker, 30000);
 }
-function stopTicker(){
-  if(tickerTimer) clearInterval(tickerTimer);
-  tickerTimer = null;
+function stopGdcTicker(){
+  if(gdcTimer) clearInterval(gdcTimer);
+  gdcTimer = null;
 }
+window.addEventListener("beforeunload", stopGdcTicker);
 
 /* ================== INIT UI ================== */
 document.getElementById("date").value = todayISO();
@@ -428,7 +450,9 @@ if(S){
   }
   document.getElementById("btnSaveAll").disabled = !canEditPlan;
 
-  startTicker(); // ✅ bật ticker ngay khi login OK
+  // ✅ start ticker ngay khi login ok
+  startGdcTicker();
+
   reload();
 }
 
@@ -480,12 +504,8 @@ async function reload(){
   if(!allowed){
     setStatus("⛔ Bạn không có quyền mở TK1 hoặc sai xưởng");
     clearAll();
-    stopTicker();
     return;
   }
-
-  // ✅ mỗi lần reload cũng làm mới chỉ đạo (không spam status)
-  refreshDirector(false);
 
   const mode = document.getElementById("mode").value;
   const date = document.getElementById("date").value;
@@ -850,9 +870,10 @@ async function loadRangeSummary(from, to){
 }
 
 /* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", ()=>{ reload(); refreshDirector(false); });
-document.getElementById("mode").addEventListener("change", ()=>{ reload(); refreshDirector(false); });
+document.getElementById("date").addEventListener("change", reload);
+document.getElementById("mode").addEventListener("change", reload);
 
+/* auto-calc dm_gio & usd_qt khi TK sửa dm_ngay/don_gia */
 document.addEventListener("input",(e)=>{
   const t = e.target;
   if(!t) return;
@@ -877,9 +898,6 @@ document.addEventListener("input",(e)=>{
     }
   }
 });
-
-// tránh leak timer khi rời trang
-window.addEventListener("beforeunload", stopTicker);
 </script>
 </body>
 </html>
