@@ -194,16 +194,12 @@
         <span class="badgeScope">Scope</span>
 
         <!-- FIX: dùng input + datalist để bạn gõ xn1/all/1... đều OK -->
-        <input id="msgScope" class="select2" style="width:220px" list="scopeList" value="ALL" placeholder="ALL | XN1 | 1 | ...">
-        <datalist id="scopeList">
-          <option value="ALL"></option>
-          <option value="XN1"></option>
-          <option value="XN2"></option>
-          <option value="XN3"></option>
-          <option value="1"></option>
-          <option value="2"></option>
-          <option value="3"></option>
-        </datalist>
+        <select id="msgScope" class="select2" style="width:220px" onchange="onScopeChange()">
+  <option value="ALL">ALL (cả 3 xưởng)</option>
+  <option value="XN1">XN1</option>
+  <option value="XN2">XN2</option>
+  <option value="XN3">XN3</option>
+</select>
 
         <button class="btn warn" onclick="saveDirectorMessage()">Lưu</button>
         <button class="btn ghost" onclick="clearDirectorBox()">Xóa ô nhập</button>
