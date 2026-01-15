@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
-    --head:#eef2f7;--primary:#2563eb;
+    --head:#eef2f7;--head2:#e5e7eb;--primary:#2563eb;
     --good:#16a34a;--warn:#f59e0b;--bad:#dc2626;--shadow:0 10px 24px rgba(0,0,0,.06);
   }
   *{box-sizing:border-box}
@@ -28,8 +28,6 @@
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn.warn{background:#f59e0b}
-  .btn.danger{background:#dc2626}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
   .wrap{padding:14px}
@@ -59,57 +57,15 @@
   }
   .tab.active{background:#0e2552;color:#fff;border-color:#0e2552}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#fff}
-  .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb}
+  .bar{
+    height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb
+  }
   .bar > i{display:block;height:100%;background:#2563eb;width:0%}
 
   .reasonGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:980px){ .reasonGrid{grid-template-columns:1fr} }
   .input2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;width:240px;background:#fff}
   .select2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff}
-
-  /* ====== TICKER ====== */
-  .tickerWrap{
-    margin-top:10px;background:rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.18);border-radius:14px;
-    overflow:hidden;height:34px;display:flex;align-items:center;
-  }
-  .tickerLabel{
-    flex:0 0 auto;padding:0 10px;font-weight:900;font-size:12px;
-    background:rgba(245,158,11,.22);border-right:1px solid rgba(255,255,255,.18);
-    height:34px;display:flex;align-items:center;
-  }
-  .tickerTrack{position:relative;flex:1;overflow:hidden;height:34px}
-  .tickerRun{
-    position:absolute;white-space:nowrap;will-change:transform;
-    animation: marquee 18s linear infinite;
-    padding-left:100%;
-    font-size:12.5px;font-weight:800;opacity:.95;
-  }
-  @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-
-  /* ====== CHỈ ĐẠO ====== */
-  .msgGrid{display:grid;grid-template-columns:1.05fr .95fr;gap:12px;margin-bottom:12px}
-  @media(max-width:1000px){ .msgGrid{grid-template-columns:1fr} }
-  .msgBox{
-    width:100%;min-height:120px;resize:vertical;
-    border:1px solid var(--line);border-radius:14px;padding:10px;
-    font:inherit;font-size:13px;outline:none;background:#fff;
-  }
-  .msgBox:focus{box-shadow:0 0 0 3px rgba(37,99,235,.15);border-color:#93c5fd}
-  .msgRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .badgeScope{
-    display:inline-flex;align-items:center;justify-content:center;
-    padding:2px 8px;border-radius:999px;font-weight:900;font-size:12px;
-    border:1px solid var(--line);background:#fff;
-  }
-  .miniTableWrap{overflow:auto;max-height:360px;border:1px solid var(--line);border-radius:14px}
-  .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
-  .btnMini.danger{background:#dc2626}
-  .btnMini.gray{background:#6b7280}
-  .dangerBox{
-    border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.06);
-    border-radius:14px;padding:10px;color:#7f1d1d;font-size:13px
-  }
 </style>
 </head>
 
@@ -119,13 +75,6 @@
     <div class="brand">
       <b>🏢 GDC – BÁO CÁO NĂNG SUẤT (TẤT CẢ XƯỞNG)</b>
       <span id="roleHint">—</span>
-
-      <div class="tickerWrap" title="Chỉ đạo hiển thị cho TK/Tổ trưởng theo từng xưởng">
-        <div class="tickerLabel">📢 CHỈ ĐẠO</div>
-        <div class="tickerTrack">
-          <div class="tickerRun" id="tickerText">Đang tải chỉ đạo...</div>
-        </div>
-      </div>
     </div>
 
     <div class="controls">
@@ -176,73 +125,6 @@
     </div>
   </div>
 
-  <!-- ✅ CHỈ ĐẠO -->
-  <div class="msgGrid">
-    <!-- LEFT -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <b>🧭 CHỈ ĐẠO GĐC</b>
-        <span class="pill">Áp dụng: <b id="scopeShow">ALL</b> • <b id="msgDayShow">—</b></span>
-      </div>
-
-      <div class="small" style="margin-top:6px">
-        • Lưu <b>ALL</b> sẽ tự “phát xuống” cả XN1–XN3 để TK/Tổ trưởng luôn nhìn thấy.<br/>
-        • Khung phải sẽ hiển thị <b>tất cả</b> chỉ đạo hôm nay (ALL + XN1 + XN2 + XN3).
-      </div>
-
-      <div class="msgRow" style="margin-top:10px">
-        <span class="badgeScope">Scope</span>
-        <select id="msgScope" class="select2" style="width:220px" onchange="onScopeChange()">
-          <option value="ALL">ALL (cả 3 xưởng)</option>
-          <option value="XN1">XN1</option>
-          <option value="XN2">XN2</option>
-          <option value="XN3">XN3</option>
-        </select>
-
-        <button class="btn warn" onclick="saveDirectorMessage()">Lưu</button>
-        <button class="btn ghost" onclick="clearDirectorBox()">Xóa ô nhập</button>
-      </div>
-
-      <textarea id="msgBox" class="msgBox" placeholder="Nhập chỉ đạo... (ngắn gọn, rõ việc, có deadline)"></textarea>
-
-      <div id="msgMeta" class="small">—</div>
-      <div id="msgApiHint" class="small" style="margin-top:8px;display:none"></div>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <b>📋 TẤT CẢ CHỈ ĐẠO HÔM NAY</b>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn ghost" onclick="loadMessageHistoryAll()">Tải lại</button>
-        </div>
-      </div>
-      <div class="small" style="margin-top:6px">
-        Danh sách gộp: <b>ALL</b> + <b>XN1</b> + <b>XN2</b> + <b>XN3</b>. (Bấm <b>Xóa</b> nếu Worker hỗ trợ)
-      </div>
-
-      <div class="miniTableWrap" style="margin-top:10px">
-        <table style="width:100%">
-          <thead>
-            <tr>
-              <th style="min-width:80px">Scope</th>
-              <th class="left" style="min-width:420px;text-align:left;padding-left:10px">Nội dung</th>
-              <th style="min-width:140px">Cập nhật</th>
-              <th style="min-width:120px">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody id="msgHistoryTbody">
-            <tr><td colspan="4" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa tải.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="small" style="margin-top:8px">
-        * Nếu Worker chưa có <code>listDirectorMessages</code>/<code>deleteDirectorMessage</code> thì bảng sẽ fallback lấy “1 dòng mới nhất” cho từng scope.
-      </div>
-    </div>
-  </div>
-
   <!-- So sánh 3 xưởng -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -277,7 +159,7 @@
     </div>
 
     <div class="grid2">
-      <!-- bảng chi tiết -->
+      <!-- bảng chi tiết giống excel -->
       <div class="card">
         <b id="detailTitle">📄 Báo cáo cuối ngày – XN1</b>
         <div class="small" id="detailMeta" style="margin-top:6px">—</div>
@@ -386,29 +268,26 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
-const TO_BY_XUONG = { 1:[1,3,5,7,9], 2:[11,13,15,17], 3:[19,21,23,25,27] };
+
+// TO LIST theo xưởng
+const TO_BY_XUONG = {
+  1:[1,3,5,7,9],
+  2:[11,13,15,17],
+  3:[19,21,23,25,27]
+};
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
 function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
 function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
-function roleOf(s){ return String(s?.role||"").toLowerCase().trim(); }
 
 /* ================== UTIL ================== */
 async function apiPost(payload){
   const r = await fetch(API_URL,{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) });
-  const text = await r.text();
-  try{ return JSON.parse(text); }
-  catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
+  return await r.json();
 }
 function setStatus(t){ document.getElementById("status").innerText=t; }
-function todayISO(){
-  const d = new Date();
-  const yyyy=d.getFullYear();
-  const mm=String(d.getMonth()+1).padStart(2,"0");
-  const dd=String(d.getDate()).padStart(2,"0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 function toNum(v){ const n=Number(String(v??"").replaceAll(",","").trim()); return Number.isFinite(n)?n:0; }
 function fmt2(n){ return (Number(n)||0).toFixed(2); }
 function fmt1(n){ return (Number(n)||0).toFixed(1); }
@@ -440,7 +319,7 @@ function getRange(mode, dateStr){
   };
   if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
   if(mode === "week"){
-    const day = (d.getDay()+6)%7;
+    const day = (d.getDay()+6)%7; // monday=0
     const start = new Date(d); start.setDate(dd - day);
     const end = new Date(start); end.setDate(start.getDate()+6);
     return { from: toISO(start), to: toISO(end), label:`Tuần ${toISO(start)} → ${toISO(end)}` };
@@ -461,307 +340,25 @@ function getRange(mode, dateStr){
   return { from: toISO(start), to: toISO(end), label:`Năm ${yyyy}` };
 }
 
-/* ================== SCOPE ================== */
-function normScope(v){
-  v = String(v||"").trim();
-  if(!v) return "ALL";
-  const s = v.toUpperCase().replace(/\s+/g,"");
-  if(s === "ALL" || s === "ALLXUONG" || s === "TATCA" || s === "TẤTCA") return "ALL";
-  const m = s.match(/(\d+)/);
-  if(m && m[1]){
-    const n = Number(m[1]);
-    if([1,2,3].includes(n)) return String(n);
-  }
-  if(["XN1","XUONG1"].includes(s)) return "1";
-  if(["XN2","XUONG2"].includes(s)) return "2";
-  if(["XN3","XUONG3"].includes(s)) return "3";
-  return "ALL";
-}
-function scopeLabel(sc){
-  sc = normScope(sc);
-  return sc === "ALL" ? "ALL" : ("XN"+sc);
-}
-function uiScopeValue(){
-  // select returns "ALL" or "XN1"...
-  return normScope(document.getElementById("msgScope").value);
-}
-
 /* ================== STATE ================== */
 let S = mustLogin();
 let activeTab = 1;
-let dayDetail = { 1:[], 2:[], 3:[] };
+let dayDetail = { 1:[], 2:[], 3:[] };   // ✅ giờ chứa NHIỀU line cho 1 tổ
 let dayHoursRaw = { 1:[], 2:[], 3:[] };
 
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
-document.getElementById("msgDayShow").innerText = `Hôm nay: ${todayISO()}`;
 
 if(S){
-  const ok = (roleOf(S)==="gdc");
+  const ok = (S.role==="gdc");
   document.getElementById("roleHint").innerText = ok
     ? `✅ GĐC: ${S.username} • xem tất cả xưởng`
     : `⛔ Không đúng quyền: role=${S.role} (cần gdc)`;
   if(!ok){
     setStatus("Không đúng quyền");
   }else{
-    document.getElementById("msgScope").value = "ALL";
-    onScopeChange();
-    loadMessageHistoryAll();
     reload();
   }
-}
-
-/* ================== UI HELPERS ================== */
-function clearDirectorBox(){ document.getElementById("msgBox").value = ""; }
-function showApiHint(html){
-  const el = document.getElementById("msgApiHint");
-  el.style.display = "";
-  el.innerHTML = html;
-}
-function hideApiHint(){
-  const el = document.getElementById("msgApiHint");
-  el.style.display = "none";
-  el.innerHTML = "";
-}
-
-/* ================== DIRECTOR MSG API ================== */
-async function apiGetMsg(scope, ngay){
-  const sc = normScope(scope);
-  let res = await apiPost({ action:"getDirectorMessage", token:S.token, scope: sc, ngay });
-  if(res?.success) return res;
-  res = await apiPost({ action:"getDirectorMessage", token:S.token, scope: sc });
-  return res;
-}
-
-/* ===== SAVE: lưu ALL -> phát xuống ALL + 1 + 2 + 3 ===== */
-async function setMsg(scope, ngay, message){
-  // thử worker mới
-  let res = await apiPost({ action:"setDirectorMessage", token:S.token, scope, ngay, message });
-  if(res?.success) return res;
-  // fallback worker cũ
-  res = await apiPost({ action:"setDirectorMessage", token:S.token, scope, message });
-  return res;
-}
-
-async function saveDirectorMessage(){
-  S = mustLogin(); if(!S) return;
-  if(roleOf(S)!=="gdc"){ setStatus("⛔ Chỉ gdc được lưu chỉ đạo"); return; }
-
-  const scope = uiScopeValue();          // "ALL" | "1" | "2" | "3"
-  const ngay  = todayISO();
-  const message = String(document.getElementById("msgBox").value||"").trim();
-  if(!message){ setStatus("⚠️ Chưa nhập nội dung chỉ đạo"); return; }
-
-  hideApiHint();
-  setStatus(`Đang lưu chỉ đạo (${scopeLabel(scope)})...`);
-
-  // FIX 1: nếu ALL thì lưu xuống cả 4 scope để TK/TO chắc chắn thấy
-  const scopesToWrite = (scope==="ALL") ? ["ALL","1","2","3"] : [scope];
-
-  let okAny = false;
-  const errors = [];
-
-  for(const sc of scopesToWrite){
-    const r = await setMsg(sc, ngay, message);
-    if(r?.success){ okAny = true; }
-    else errors.push(`(${scopeLabel(sc)}) ${r?.msg||"fail"}`);
-  }
-
-  if(!okAny){
-    setStatus("Lỗi lưu chỉ đạo");
-    showApiHint(`<div class="dangerBox">
-      ⚠️ Không lưu được. Chi tiết:<br/>
-      ${escapeHtml(errors.join(" | ") || "unknown")}
-    </div>`);
-    return;
-  }
-
-  setStatus(scope==="ALL" ? "✅ Đã lưu (ALL + phát xuống XN1–XN3)" : "✅ Đã lưu chỉ đạo");
-  document.getElementById("msgMeta").innerText =
-    scope==="ALL"
-      ? `Đã lưu • Scope: ALL + XN1–XN3 • Ngày: ${ngay}`
-      : `Đã lưu • Scope: ${scopeLabel(scope)} • Ngày: ${ngay}`;
-
-  clearDirectorBox();
-  await loadMessageHistoryAll();
-  await refreshTicker();
-}
-
-/* ================== LIST RIGHT: luôn hiện ALL + 1 + 2 + 3 ================== */
-async function tryList(scope, ngay){
-  // worker mới
-  const res = await apiPost({ action:"listDirectorMessages", token:S.token, scope, ngay });
-  if(res?.success && Array.isArray(res.items)) return res.items.map(it=>({
-    id: it.id,
-    scope: normScope(it.scope || scope),
-    message: String(it.message||""),
-    updated_at: it.updated_at || it.created_at || ""
-  }));
-  return null;
-}
-
-async function listNewestFallback(scope, ngay){
-  const r = await apiGetMsg(scope, ngay);
-  if(!r?.success) return [];
-  const msg = String(r.message||"").trim();
-  if(!msg) return [];
-  return [{
-    id: null,
-    scope: normScope(scope),
-    message: msg,
-    updated_at: r.updated_at || ""
-  }];
-}
-
-function rowKey(it){
-  // chống trùng khi ALL được phát xuống 1/2/3
-  const t = String(it.updated_at||"").slice(0,16);
-  return `${it.scope}||${it.message.trim()}||${t}`;
-}
-
-async function loadMessageHistoryAll(){
-  S = mustLogin(); if(!S) return;
-  if(roleOf(S)!=="gdc") return;
-
-  const ngay  = todayISO();
-  const tb = document.getElementById("msgHistoryTbody");
-  tb.innerHTML = `<tr><td colspan="4" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Đang tải...</td></tr>`;
-  hideApiHint();
-
-  const scopes = ["ALL","1","2","3"];
-
-  // 1) thử list (worker mới)
-  let allItems = [];
-  let hasList = false;
-
-  for(const sc of scopes){
-    const items = await tryList(sc, ngay);
-    if(items){
-      hasList = true;
-      allItems = allItems.concat(items);
-    }
-  }
-
-  // 2) fallback worker cũ: get newest cho từng scope
-  if(!hasList){
-    for(const sc of scopes){
-      const items = await listNewestFallback(sc, ngay);
-      allItems = allItems.concat(items);
-    }
-    showApiHint(`<div class="dangerBox">
-      ⚠️ Worker đang kiểu cũ (không có list/delete). Bảng này đang hiển thị “mới nhất” của từng scope.<br/>
-      Muốn có lịch sử + xóa: cần thêm <code>listDirectorMessages</code> và <code>deleteDirectorMessage</code>.
-    </div>`);
-  }
-
-  // gộp + bỏ trùng
-  const uniq = new Map();
-  for(const it of allItems){
-    if(!it.message || !it.message.trim()) continue;
-    const k = rowKey(it);
-    if(!uniq.has(k)) uniq.set(k, it);
-  }
-
-  const items = [...uniq.values()]
-    .sort((a,b)=>{
-      // ưu tiên ALL trước, rồi XN1,2,3; sau đó thời gian desc
-      const ord = (s)=> s==="ALL"?0:Number(s);
-      const ao = ord(a.scope), bo = ord(b.scope);
-      if(ao!==bo) return ao-bo;
-      return String(b.updated_at||"").localeCompare(String(a.updated_at||""));
-    });
-
-  if(!items.length){
-    tb.innerHTML = `<tr><td colspan="4" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Hôm nay chưa có chỉ đạo.</td></tr>`;
-    return;
-  }
-
-  tb.innerHTML = items.map(it=>{
-    const sc = normScope(it.scope);
-    const t = it.updated_at ? String(it.updated_at).replace("T"," ").slice(0,16) : "—";
-    const canDelete = !!it.id; // chỉ xóa được khi worker list trả id
-    return `
-      <tr>
-        <td><b>${escapeHtml(scopeLabel(sc))}</b></td>
-        <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(it.message)}</td>
-        <td>${escapeHtml(t)}</td>
-        <td>
-          ${
-            canDelete
-              ? `<button class="btnMini danger" onclick="deleteHistoryItem('${escapeHtml(sc)}','${escapeHtml(it.id)}')">Xóa</button>`
-              : `<span class="pill">—</span>`
-          }
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
-async function deleteHistoryItem(scope, id){
-  S = mustLogin(); if(!S) return;
-  if(roleOf(S)!=="gdc") return;
-
-  if(!id){ alert("Worker hiện tại không hỗ trợ xóa (thiếu id)."); return; }
-
-  const ngay = todayISO();
-  const sc = normScope(scope);
-
-  if(!confirm(`Xóa thông báo của ${scopeLabel(sc)}?`)) return;
-
-  const res = await apiPost({ action:"deleteDirectorMessage", token:S.token, scope: sc, ngay, id });
-  if(!res?.success){
-    setStatus("⛔ Xóa thất bại: " + (res.msg||""));
-    showApiHint(`<div class="dangerBox">
-      ⚠️ Worker chưa hỗ trợ <code>deleteDirectorMessage</code> hoặc đang lỗi.<br/>
-      Chi tiết: ${escapeHtml(res.msg||"")}
-    </div>`);
-    return;
-  }
-
-  setStatus("✅ Đã xóa thông báo");
-  await loadMessageHistoryAll();
-  await refreshTicker();
-}
-
-/* ================== TICKER: luôn (ALL) + (XN tab) ================== */
-async function refreshTicker(){
-  const s = sess();
-  if(!s?.token) return;
-  S = s;
-
-  const mode = document.getElementById("mode").value;
-  const scopeX = (mode==="day") ? String(activeTab) : null;
-  const ngay = todayISO();
-
-  const all = await apiGetMsg("ALL", ngay);
-  const allMsg = (all?.success ? String(all.message||"") : "").trim();
-
-  let xMsg = "";
-  if(scopeX){
-    const sc = await apiGetMsg(scopeX, ngay);
-    xMsg = (sc?.success ? String(sc.message||"") : "").trim();
-  }
-
-  const parts = [];
-  if(allMsg) parts.push(`(ALL) ${allMsg}`);
-  if(scopeX && xMsg) parts.push(`(XN${scopeX}) ${xMsg}`);
-
-  const text = parts.length ? parts.join("  •  ") : "Chưa có chỉ đạo hôm nay";
-  const el = document.getElementById("tickerText");
-  el.innerHTML = escapeHtml(text);
-
-  el.style.animation = "none";
-  void el.offsetHeight;
-  el.style.animation = "";
-}
-
-/* ================== UI change ================== */
-function onScopeChange(){
-  const v = uiScopeValue();
-  document.getElementById("scopeShow").innerText = scopeLabel(v);
-  // khung phải bây giờ luôn all scopes, nên scopeShow2 chỉ để tham khảo
-  document.getElementById("scopeShow2").innerText = "ALL + XN1–XN3";
-  refreshTicker();
 }
 
 /* ================== TABS ================== */
@@ -774,13 +371,12 @@ function setTab(x){
   const date = document.getElementById("date").value;
   renderDayDetailForXuong(activeTab, date);
   renderReasons();
-  refreshTicker();
 }
 
 /* ================== MAIN LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
-  if(roleOf(S)!=="gdc"){ setStatus("⛔ Chỉ gdc được xem trang này"); return; }
+  if(S.role!=="gdc"){ setStatus("⛔ Chỉ gdc được xem trang này"); return; }
 
   const mode = document.getElementById("mode").value;
   const date = document.getElementById("date").value;
@@ -801,8 +397,6 @@ async function reload(){
   }
 
   setStatus(`✅ Đã tải • ${range.label}`);
-  await loadMessageHistoryAll();
-  refreshTicker();
 }
 
 /* ================== LOAD: RANGE (all xuong) ================== */
@@ -837,13 +431,17 @@ async function loadRangeAll(from, to){
 
 /* ================== LOAD: DAY (all xuong) ================== */
 async function loadDayAllXuong(ngay){
+  // ✅ lấy FULL rows của getTkXuongDay (đã có line_no) và KHÔNG ép 1 tổ 1 dòng
   for(const x of XUONGS){
     const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
     const rows = res.success ? (res.rows||[]) : [];
 
     const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
+
+    // giữ các dòng thuộc danh sách tổ cho xưởng đó
     let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
+    // nếu 1 tổ hoàn toàn chưa có plan line nào -> chèn placeholder line 1 để bảng đủ tổ (đỡ trống)
     const existingTo = new Set(filtered.map(r=>Number(r.to_nhom)));
     for(const to of allowTos){
       if(!existingTo.has(to)){
@@ -851,15 +449,18 @@ async function loadDayAllXuong(ngay){
       }
     }
 
+    // sort: to_nhom, line_no
     filtered.sort((a,b)=> Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
     dayDetail[x] = filtered;
   }
 
+  // reasons raw (production_hour) cho 3 xưởng
   for(const x of XUONGS){
     const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:x, from:ngay, to:ngay });
     dayHoursRaw[x] = hr.success ? (hr.data||[]) : [];
   }
 
+  // compare + KPI (tính qua TẤT CẢ line)
   const agg = {};
   for(const x of XUONGS){
     const rows = dayDetail[x] || [];
@@ -909,6 +510,7 @@ function renderCompare(agg){
     `;
   }).join("");
 }
+
 function bestXuongLabel(agg){
   let best = {x:null, hs:-1};
   for(const x of XUONGS){
@@ -917,6 +519,8 @@ function bestXuongLabel(agg){
   }
   return best.x ? `XN${best.x} (${fmt1(best.hs)}%)` : "—";
 }
+
+/* ================== KPI ================== */
 function setKpi(usd, sp, hs, best){
   document.getElementById("kpiUsd").innerText = fmt2(usd);
   document.getElementById("kpiSp").innerText = fmt0(sp);
@@ -943,7 +547,10 @@ function renderDayDetailForXuong(xuong, ngay){
     const ld = toNum(r.lao_dong_thuc_te);
     const usdPer = ld>0 ? (usd/ld) : 0;
 
-    usdSum += usd; dmSum += dm; spSum += th; ldSum += ld;
+    usdSum += usd;
+    dmSum += dm;
+    spSum += th;
+    ldSum += ld;
 
     const ln = Number(r.line_no||1);
 
@@ -1034,6 +641,7 @@ function renderReasons(){
       }).join("")
     : `<tr><td colspan="6" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Không có giờ đỏ.</td></tr>`;
 }
+
 function alertReason(to, khung, reason){
   reason = reason || "(Không có ghi chú)";
   alert(`Tổ ${to} • Khung ${khung}\n\nNguyên nhân:\n${reason}`);
@@ -1048,9 +656,6 @@ document.addEventListener("input",(e)=>{
 document.addEventListener("change",(e)=>{
   if(e.target && e.target.id==="reasonFilter") renderReasons();
 });
-
-/* auto refresh ticker mỗi 30s */
-setInterval(()=>{ refreshTicker(); }, 30000);
 </script>
 </body>
 </html>
