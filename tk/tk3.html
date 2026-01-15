@@ -587,13 +587,17 @@ function renderDayRows(rows){
           <input class="cell ${ro} ghi_chu" ${canEditPlan?"":"readonly"} style="text-align:left" value="${escapeHtml(r.ghi_chu||"")}" />
         </td>
 
-        <td>
-          ${canEditPlan
-            ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-               <button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
-            : "—"
-          }
-        </td>
+       <td>
+  ${canEditPlan
+    ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+       ${Number(r.line_no) > 1
+         ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+         : ``
+       }`
+    : "—"
+  }
+</td>
+
       </tr>
     `;
   }).join("");
