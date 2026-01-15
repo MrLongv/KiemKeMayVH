@@ -68,6 +68,40 @@
   .pill.bad{background:rgba(220,38,38,.10);color:#991b1b;border:1px solid rgba(220,38,38,.25)}
   .pill.warn{background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.25)}
   .pill.good{background:rgba(22,163,74,.10);color:#166534;border:1px solid rgba(22,163,74,.22)}
+
+  /* ====== TICKER (STICKER THÔNG BÁO GDC) ====== */
+  .tickerWrap{
+    margin-top:10px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:14px;
+    overflow:hidden;
+    height:34px;
+    display:flex;
+    align-items:center;
+  }
+  .tickerLabel{
+    flex:0 0 auto;
+    padding:0 10px;
+    font-weight:900;
+    font-size:12px;
+    background:rgba(245,158,11,.22);
+    border-right:1px solid rgba(255,255,255,.18);
+    height:34px;display:flex;align-items:center;
+  }
+  .tickerTrack{position:relative;flex:1;overflow:hidden;height:34px}
+  .tickerRun{
+    position:absolute;white-space:nowrap;will-change:transform;
+    animation: marquee 18s linear infinite;
+    padding-left:100%;
+    font-size:12.5px;
+    font-weight:800;
+    opacity:.95;
+  }
+  @keyframes marquee{
+    0%{transform:translateX(0)}
+    100%{transform:translateX(-100%)}
+  }
 </style>
 </head>
 <body>
@@ -77,6 +111,14 @@
     <div class="brand">
       <b>📊 GDX1 – THEO DÕI NĂNG SUẤT GIỜ (XN1)</b>
       <span id="roleHint">GĐX chỉ xem • Theo dõi theo ngày</span>
+
+      <!-- ✅ STICKER / TICKER CHỈ ĐẠO GDC (GIỐNG TK1/TO1) -->
+      <div class="tickerWrap" title="Chỉ đạo từ GĐC (hiển thị ALL + XN1)">
+        <div class="tickerLabel">📢 CHỈ ĐẠO</div>
+        <div class="tickerTrack">
+          <div class="tickerRun" id="tickerText">Đang tải chỉ đạo...</div>
+        </div>
+      </div>
     </div>
 
     <div class="controls">
@@ -276,7 +318,9 @@ function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; 
 /* ================== UTIL ================== */
 async function apiPost(payload){
   const r = await fetch(API_URL,{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) });
-  return await r.json();
+  const text = await r.text();
+  try{ return JSON.parse(text); }
+  catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
 }
 function setStatus(t){ document.getElementById("status").innerText=t; }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -328,6 +372,60 @@ if(S){
   }
 }
 
+/* ================== TICKER (CHỈ ĐẠO) ==================
+   - Hiển thị: (ALL) + (XN1)
+   - Ưu tiên worker mới: getDirectorMessage(scope, ngay)
+   - Fallback: getDirectorMessage(scope)
+======================================================== */
+async function apiGetMsg(scope, ngay){
+  // ưu tiên có 'ngay'
+  let res = await apiPost({ action:"getDirectorMessage", token:S?.token, scope, ngay });
+  if(res?.success) return res;
+
+  // fallback cũ
+  res = await apiPost({ action:"getDirectorMessage", token:S?.token, scope });
+  return res;
+}
+
+async function refreshTicker(){
+  const s = sess();
+  if(!s?.token) return;
+  S = s;
+
+  const ngay = todayISO(); // chỉ đạo theo ngày hôm nay
+  const all = await apiGetMsg("ALL", ngay);
+  const xn  = await apiGetMsg(String(XUONG), ngay);
+
+  let allMsg = (all?.success ? String(all.message||"") : "").trim();
+  let xnMsg  = (xn?.success  ? String(xn.message||"")  : "").trim();
+
+  // nếu worker trả updated_at và không phải hôm nay -> coi như hết hạn
+  if(all?.updated_at){
+    const d = String(all.updated_at).slice(0,10);
+    if(d && d !== ngay) allMsg = "";
+  }
+  if(xn?.updated_at){
+    const d = String(xn.updated_at).slice(0,10);
+    if(d && d !== ngay) xnMsg = "";
+  }
+
+  const parts = [];
+  if(allMsg) parts.push(`(ALL) ${allMsg}`);
+  if(xnMsg)  parts.push(`(XN${XUONG}) ${xnMsg}`);
+
+  const text = parts.length ? parts.join("  •  ") : "Chưa có chỉ đạo hôm nay";
+  const el = document.getElementById("tickerText");
+  el.innerHTML = escapeHtml(text);
+
+  // reset animation cho mượt
+  el.style.animation = "none";
+  void el.offsetHeight;
+  el.style.animation = "";
+}
+
+// auto refresh ticker mỗi 30s
+setInterval(()=>{ refreshTicker(); }, 30000);
+
 /* ================== LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
@@ -340,6 +438,9 @@ async function reload(){
 
   const ngay = document.getElementById("date").value;
   setStatus("Đang tải dữ liệu ngày...");
+
+  // nạp ticker ngay khi vào/đổi ngày
+  refreshTicker();
 
   // 1) Plan + hours array (giống TK1)
   const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:XUONG });
@@ -463,7 +564,6 @@ function calcFooterAndKpi(rows){
 function renderCompare(raw){
   const ngay = document.getElementById("date").value;
 
-  // group by hour across all to
   const byH = new Map();
   HOURS.forEach(h=> byH.set(h, {kh:0, tt:0}));
 
@@ -506,9 +606,6 @@ function renderCompare(raw){
 
 /* ================== ALERTS ================== */
 function renderAlerts(raw){
-  // 1) Giờ HS thấp nhất (toàn xưởng)
-  // 2) Tổ thiếu hụt lớn nhất trong ngày
-  // 3) Top 3 bản ghi HS<80 kèm lý do
   const wrap = document.getElementById("alerts");
   const rows = (raw||[]).map(r=>{
     const kh = toNum(r.ke_hoach_gio);
@@ -523,7 +620,6 @@ function renderAlerts(raw){
     };
   });
 
-  // giờ tệ nhất (group)
   const byH = new Map();
   HOURS.forEach(h=> byH.set(h, {kh:0, tt:0}));
   rows.forEach(r=>{
@@ -540,7 +636,6 @@ function renderAlerts(raw){
     }
   }
 
-  // tổ thiếu hụt lớn nhất
   const byTo = new Map();
   for(const r of rows){
     const to = r.to;
@@ -557,7 +652,6 @@ function renderAlerts(raw){
     }
   }
 
-  // top bad records
   const bad = rows.filter(r=>r.hs>0 && r.hs<80).sort((a,b)=>a.hs-b.hs).slice(0,3);
 
   wrap.innerHTML = `
@@ -619,7 +713,6 @@ function renderReasonPanels(rawOverride){
   document.getElementById("reasonMeta").innerText =
     `Ngày ${ngay} • Bản ghi giờ: ${rows.length} • Giờ đỏ (HS<80%): ${badCount}`;
 
-  // TOP reasons
   const counter = new Map();
   for(const r of rows){
     if(!r.reason) continue;
@@ -635,7 +728,6 @@ function renderReasonPanels(rawOverride){
     `).join("")
     : `<tr><td colspan="2" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có nguyên nhân.</td></tr>`;
 
-  // bad detail table
   const bad = rows.filter(r=>r.hs>0 && r.hs<80).sort((a,b)=>a.hs-b.hs || a.def-b.def).slice(0,60);
   document.getElementById("reasonBadTbody").innerHTML = bad.length
     ? bad.map(r=>{
