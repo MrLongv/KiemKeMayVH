@@ -25,6 +25,76 @@
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
+
+  /* ============================
+     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY) – GIỐNG TK1
+     - sticky dưới topbar
+  ============================ */
+  .gdc-ticker{
+    position:sticky;
+    top:64px; /* gần đúng chiều cao topbar */
+    z-index:19;
+    height:38px;
+    display:none; /* show khi có message */
+    align-items:center;
+    overflow:hidden;
+    background:#0e2552;
+    color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.16);
+  }
+  .gdc-ticker .label{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    font-weight:900;
+    font-size:13px;
+    background:#0b1b3a;
+    border-right:1px solid rgba(255,255,255,.14);
+    white-space:nowrap;
+  }
+  .gdc-ticker .track{
+    flex:1;
+    overflow:hidden;
+    white-space:nowrap;
+    position:relative;
+  }
+  .gdc-ticker .text{
+    display:inline-block;
+    padding-left:100%;
+    font-weight:800;
+    font-size:14px;
+    line-height:38px;
+    animation: gdc-marquee 22s linear infinite;
+    will-change: transform;
+  }
+  @keyframes gdc-marquee{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-100%); }
+  }
+  .gdc-ticker .meta{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 12px;
+    font-size:12px;
+    opacity:.9;
+    border-left:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.08);
+    white-space:nowrap;
+  }
+  .gdc-ticker .dot{
+    width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;
+    box-shadow:0 0 0 4px rgba(34,197,94,.14);
+  }
+  .gdc-ticker .time{
+    opacity:.9;
+    font-variant-numeric: tabular-nums;
+  }
+
   .wrap{padding:14px}
 
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:12px}
@@ -68,74 +138,6 @@
   .pill.bad{background:rgba(220,38,38,.10);color:#991b1b;border:1px solid rgba(220,38,38,.25)}
   .pill.warn{background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.25)}
   .pill.good{background:rgba(22,163,74,.10);color:#166534;border:1px solid rgba(22,163,74,.22)}
-
-  /* ====== STICKER (GIỐNG TK1/TO1) ======
-     - Không "marquee" kiểu GDC.
-     - Hiển thị gọn, có nút mở rộng xem đầy đủ.
-  */
-  .stWrap{
-    margin-top:10px;
-    display:flex;
-    gap:8px;
-    align-items:stretch;
-    flex-wrap:wrap;
-  }
-  .stCard{
-    flex:1 1 520px;
-    background:rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.18);
-    border-radius:14px;
-    padding:8px 10px;
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-    min-width:280px;
-  }
-  .stBadge{
-    flex:0 0 auto;
-    height:26px;
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:0 10px;
-    border-radius:999px;
-    font-weight:900;
-    font-size:12px;
-    background:rgba(245,158,11,.22);
-    border:1px solid rgba(255,255,255,.18);
-    white-space:nowrap;
-    margin-top:1px;
-  }
-  .stText{
-    flex:1 1 auto;
-    font-size:12.5px;
-    font-weight:800;
-    line-height:1.25;
-    opacity:.96;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    padding-top:4px;
-  }
-  .stActions{
-    flex:0 0 auto;
-    display:flex;
-    gap:6px;
-    align-items:center;
-    margin-top:1px;
-  }
-  .stBtn{
-    height:26px;
-    padding:0 10px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.20);
-    background:rgba(255,255,255,.12);
-    color:#fff;
-    font-weight:900;
-    font-size:12px;
-    cursor:pointer;
-  }
-  .stBtn:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
@@ -145,18 +147,6 @@
     <div class="brand">
       <b>📊 GDX1 – THEO DÕI NĂNG SUẤT GIỜ (XN1)</b>
       <span id="roleHint">GĐX chỉ xem • Theo dõi theo ngày</span>
-
-      <!-- ✅ STICKER CHỈ ĐẠO (GIỐNG TK1/TO1: gọn + ellipsis + xem full) -->
-      <div class="stWrap" title="Chỉ đạo từ GĐC (hiển thị ALL + XN1)">
-        <div class="stCard">
-          <div class="stBadge">📢 CHỈ ĐẠO</div>
-          <div class="stText" id="stickerText">Đang tải chỉ đạo...</div>
-          <div class="stActions">
-            <button class="stBtn" onclick="showStickerFull()">Xem</button>
-            <button class="stBtn" onclick="refreshSticker()">↻</button>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div class="controls">
@@ -168,6 +158,19 @@
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <div class="status" id="status">Chưa tải dữ liệu</div>
     </div>
+  </div>
+</div>
+
+<!-- ✅ TICKER CHỈ ĐẠO – GIỐNG TK1 -->
+<div class="gdc-ticker" id="gdcTicker">
+  <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
+  <div class="track">
+    <div class="text" id="gdcTickerText">—</div>
+  </div>
+  <div class="meta" title="Tự cập nhật mỗi 30 giây">
+    <span class="dot"></span>
+    <span id="gdcTickerScope">—</span>
+    <span class="time" id="gdcTickerTime">—</span>
   </div>
 </div>
 
@@ -236,9 +239,7 @@
     <div class="card">
       <b>🚦 Cảnh báo nhanh</b>
       <div class="small">Tập trung các điểm “đáng gọi điện”</div>
-      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px" id="alerts">
-        <!-- inject -->
-      </div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px" id="alerts"></div>
     </div>
   </div>
 
@@ -390,17 +391,103 @@ function normReason(s){
 
 /* ================== STATE ================== */
 let S = mustLogin();
-let dayHoursRaw = [];     // rows production_hour for day
-let planMap = new Map();  // to_nhom -> {ma_hang,...}
-
-// sticker state
-let stickerFullText = "";
+let dayHoursRaw = [];
+let planMap = new Map();
 
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
-document.getElementById("hourHead").innerHTML = HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
+document.getElementById("hourHead").innerHTML =
+  HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
 /* ================== AUTH CHECK ================== */
+let gdcTimer = null;
+
+function fmtTickerTime(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}/${mo} ${hh}:${mm}`;
+}
+
+/* ✅ tương thích worker cũ/mới:
+   - worker mới: { action:"getDirectorMessage", scope:"1"/"ALL", ngay? }
+   - worker cũ:  { action:"getDirectorMessage", xuong:1/"ALL" }
+*/
+async function callDirectorMessage(scopeOrXuong, ngay){
+  const base = { action:"getDirectorMessage", token:S.token };
+
+  // thử kiểu mới trước
+  let r = await apiPost({ ...base, scope:String(scopeOrXuong), ngay });
+  if(r && r.success) return r;
+
+  // fallback kiểu cũ
+  r = await apiPost({ ...base, xuong:scopeOrXuong });
+  if(r && r.success) return r;
+
+  // fallback cũ không có ngay
+  r = await apiPost({ ...base, scope:String(scopeOrXuong) });
+  if(r && r.success) return r;
+
+  r = await apiPost({ ...base, xuong:scopeOrXuong, ngay });
+  return r;
+}
+
+async function loadGdcTicker(){
+  if(!S?.token) return;
+
+  const ngay = document.getElementById("date").value || todayISO();
+
+  try{
+    const resX  = await callDirectorMessage(String(XUONG), ngay);
+    const resAll= await callDirectorMessage("ALL", ngay);
+
+    let picked = null;
+    if(resX?.success && String(resX.message||"").trim()) picked = resX;
+    else if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
+
+    const box = document.getElementById("gdcTicker");
+    const textEl = document.getElementById("gdcTickerText");
+    const scopeEl = document.getElementById("gdcTickerScope");
+    const timeEl = document.getElementById("gdcTickerTime");
+
+    if(!picked){
+      box.style.display = "none";
+      return;
+    }
+
+    const scope = String(picked.scope ?? picked.xuong ?? "").toUpperCase();
+    const msg = String(picked.message||"").trim();
+    if(!msg){ box.style.display = "none"; return; }
+
+    box.style.display = "flex";
+    scopeEl.innerText = (scope === "ALL") ? "ALL" : `XN${scope}`;
+    timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
+
+    // reset animation để chạy lại mượt khi nội dung đổi
+    textEl.style.animation = "none";
+    textEl.offsetHeight; // force reflow
+    textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
+    textEl.style.animation = "gdc-marquee 22s linear infinite";
+  }catch(e){
+    console.warn("GDC ticker error:", e);
+  }
+}
+
+function startGdcTicker(){
+  stopGdcTicker();
+  loadGdcTicker();
+  gdcTimer = setInterval(loadGdcTicker, 30000);
+}
+function stopGdcTicker(){
+  if(gdcTimer) clearInterval(gdcTimer);
+  gdcTimer = null;
+}
+window.addEventListener("beforeunload", stopGdcTicker);
+
 if(S){
   const ok = (S.role==="gdx" && Number(S.xuong)===XUONG) || (S.role==="gdc");
   if(!ok){
@@ -409,63 +496,10 @@ if(S){
   } else {
     document.getElementById("roleHint").innerText =
       S.role==="gdc" ? "👀 GĐC (đang xem XN1)" : "👀 GĐX1: chỉ xem (XN1)";
+    startGdcTicker();
     reload();
   }
 }
-
-/* ================== STICKER (CHỈ ĐẠO) ==================
-   - Gọn giống TK/TO: hiển thị 1 dòng ellipsis
-   - Nút Xem: alert full
-   - Tải theo ngày đang chọn (không cố định today)
-   - Ưu tiên API mới: getDirectorMessage(ngay, scope)
-======================================================== */
-async function apiGetMsg(scope, ngay){
-  // ưu tiên có 'ngay'
-  let res = await apiPost({ action:"getDirectorMessage", token:S?.token, scope, ngay });
-  if(res?.success) return res;
-
-  // fallback cũ
-  res = await apiPost({ action:"getDirectorMessage", token:S?.token, scope });
-  return res;
-}
-
-async function refreshSticker(){
-  const s = sess();
-  if(!s?.token) return;
-  S = s;
-
-  const ngay = document.getElementById("date").value || todayISO();
-
-  const all = await apiGetMsg("ALL", ngay);
-  const xn  = await apiGetMsg(String(XUONG), ngay);
-
-  let allMsg = (all?.success ? String(all.message||"") : "").trim();
-  let xnMsg  = (xn?.success  ? String(xn.message||"")  : "").trim();
-
-  // Nếu API trả updated_at mà khác ngày đang xem => bỏ
-  if(all?.updated_at){
-    const d = String(all.updated_at).slice(0,10);
-    if(d && d !== ngay) allMsg = "";
-  }
-  if(xn?.updated_at){
-    const d = String(xn.updated_at).slice(0,10);
-    if(d && d !== ngay) xnMsg = "";
-  }
-
-  const parts = [];
-  if(allMsg) parts.push(`(ALL) ${allMsg}`);
-  if(xnMsg)  parts.push(`(XN${XUONG}) ${xnMsg}`);
-
-  stickerFullText = parts.length ? parts.join("\n\n") : "Chưa có chỉ đạo trong ngày này";
-  document.getElementById("stickerText").textContent = stickerFullText.replace(/\n+/g," • ");
-}
-
-function showStickerFull(){
-  alert(stickerFullText || "Chưa có chỉ đạo");
-}
-
-// auto refresh sticker mỗi 45s
-setInterval(()=>{ refreshSticker(); }, 45000);
 
 /* ================== LOAD ================== */
 async function reload(){
@@ -480,15 +514,15 @@ async function reload(){
   const ngay = document.getElementById("date").value;
   setStatus("Đang tải dữ liệu ngày...");
 
-  // sticker theo ngày đang xem
-  refreshSticker();
+  // ticker theo ngày đang xem
+  loadGdcTicker();
 
   // 1) Plan + hours array
   const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:XUONG });
   if(!res.success){
     setStatus("Lỗi: " + (res.msg||""));
     document.getElementById("tbody").innerHTML = "";
-    renderCompare([]); // clear
+    renderCompare([]);
     renderAlerts([]);
     renderReasonPanels([]);
     return;
@@ -502,13 +536,7 @@ async function reload(){
 
   // 2) Raw hour range
   const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:XUONG, from: ngay, to: ngay });
-  if(!hr.success){
-    dayHoursRaw = [];
-    document.getElementById("cmpMeta").innerText = "Không tải được production_hour";
-    document.getElementById("reasonMeta").innerText = "Không tải được nguyên nhân";
-  }else{
-    dayHoursRaw = hr.data || [];
-  }
+  dayHoursRaw = hr.success ? (hr.data||[]) : [];
 
   // 3) Render compare + alerts + reasons
   renderCompare(dayHoursRaw);
@@ -795,7 +823,10 @@ function alertReason(to, ma, khung, reason){
 }
 
 /* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", reload);
+document.getElementById("date").addEventListener("change", ()=>{
+  loadGdcTicker(); // ✅ ticker đổi theo ngày
+  reload();
+});
 document.addEventListener("input",(e)=>{
   if(e.target && e.target.id==="reasonSearch") renderReasonPanels();
 });
