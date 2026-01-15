@@ -27,6 +27,7 @@
   .ctl select option{color:#111}
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
+  .btn.danger{background:#b91c1c}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
@@ -66,6 +67,51 @@
   @media(max-width:980px){ .reasonGrid{grid-template-columns:1fr} }
   .input2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;width:240px;background:#fff}
   .select2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff}
+
+  /* ====== GDC DIRECTOR PANEL (BỔ SUNG) ====== */
+  .dirGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  @media(max-width:1000px){ .dirGrid{grid-template-columns:1fr} }
+  .dirBox{
+    border:1px dashed var(--line);
+    border-radius:14px;
+    padding:10px;
+    background:#fff;
+  }
+  .dirCtlRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .dirCtlRow .select2, .dirCtlRow .input2{width:auto}
+  textarea.dirTxt{
+    width:100%;min-height:96px;resize:vertical;
+    padding:10px;border:1px solid var(--line);border-radius:12px;outline:none;
+    font-family:inherit;font-size:13px;line-height:1.35;
+  }
+  .dirPreview{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px;
+    background:#fafafa;
+    max-height:150px; /* ✅ giới hạn để không dài quá */
+    overflow:auto;
+    white-space:pre-wrap;
+  }
+  .dirList{
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:auto;
+    max-height:240px; /* ✅ giới hạn lịch sử để đẹp */
+    background:#fff;
+  }
+  .dirItem{
+    display:flex;gap:8px;align-items:flex-start;justify-content:space-between;
+    padding:10px;border-bottom:1px solid var(--line);
+  }
+  .dirItem:last-child{border-bottom:none}
+  .dirItem .meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .dirItem .msg{white-space:pre-wrap;font-size:13px;line-height:1.35}
+  .miniBtn{
+    border:1px solid var(--line);background:#fff;cursor:pointer;
+    border-radius:10px;padding:6px 8px;font-size:12px;font-weight:800;
+  }
+  .miniBtn.danger{border-color:#fecaca;background:#fff5f5;color:#b91c1c}
 </style>
 </head>
 
@@ -101,6 +147,84 @@
 </div>
 
 <div class="wrap">
+
+  <!-- ================== (BỔ SUNG) CHỈ ĐẠO GĐC ================== -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <b>📣 CHỈ ĐẠO GĐC (theo ngày & phạm vi)</b>
+      <span class="pill" id="dirInfo">—</span>
+    </div>
+    <div class="small" style="margin-top:6px">
+      - Nhập <b>ALL</b>: tất cả xưởng nhìn thấy. <br/>
+      - Nhập <b>XN1/XN2/XN3</b>: chỉ xưởng đó. <br/>
+      - TO/TK khi xem XN1/2/3 sẽ tự thấy <b>(ALL + XN)</b> (do worker.js đã ghép).
+    </div>
+
+    <div class="dirGrid" style="margin-top:10px">
+      <!-- Soạn chỉ đạo -->
+      <div class="dirBox">
+        <div class="dirCtlRow">
+          <b>Soạn chỉ đạo</b>
+          <span class="pill" id="dirDatePill">—</span>
+        </div>
+
+        <div class="dirCtlRow" style="margin-top:10px">
+          <label class="small" style="min-width:70px;color:var(--text);font-weight:800">Phạm vi</label>
+          <select id="dirScope" class="select2">
+            <option value="ALL">ALL (Tất cả)</option>
+            <option value="1">XN1</option>
+            <option value="2">XN2</option>
+            <option value="3">XN3</option>
+          </select>
+
+          <button class="btn" onclick="dirSave()">Lưu chỉ đạo</button>
+          <button class="btn ghost" onclick="dirReload()">Tải lại</button>
+          <button class="btn danger" onclick="dirClearDay()">Xóa ALL trong ngày (scope đang chọn)</button>
+        </div>
+
+        <div style="margin-top:10px">
+          <textarea id="dirText" class="dirTxt" placeholder="Nhập chỉ đạo... (vd: Ưu tiên tăng line A, kiểm soát lỗi, báo cáo trước 16h)"></textarea>
+        </div>
+
+        <div class="small" style="margin-top:8px">
+          Mẹo: xuống dòng để dễ đọc. Nội dung lưu theo <b>ngày</b> (theo ô “Ngày” trên cùng).
+        </div>
+      </div>
+
+      <!-- Preview + lịch sử -->
+      <div class="dirBox">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <b>Preview (TO/TK sẽ thấy)</b>
+          <div class="dirCtlRow">
+            <select id="dirPreviewXuong" class="select2">
+              <option value="1">Xem như XN1</option>
+              <option value="2">Xem như XN2</option>
+              <option value="3">Xem như XN3</option>
+              <option value="ALL">Xem như ALL</option>
+            </select>
+            <button class="miniBtn" onclick="dirPreview()">Refresh preview</button>
+          </div>
+        </div>
+
+        <div id="dirPreviewBox" class="dirPreview" style="margin-top:10px">(Chưa có)</div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <b>Lịch sử trong ngày (scope đang chọn)</b>
+          <span class="small" id="dirHistMeta">—</span>
+        </div>
+
+        <div id="dirList" class="dirList" style="margin-top:10px">
+          <!-- items -->
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          Lưu ý: Lịch sử hiển thị tối đa 100 dòng trong ngày.
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ================== END CHỈ ĐẠO GĐC ================== -->
+
   <!-- KPI tổng -->
   <div class="kpi">
     <div class="card">
@@ -259,7 +383,7 @@
   </div>
 
   <div class="small" style="margin-top:10px">
-    <b>Ghi chú kỹ thuật:</b> Mode Tuần/Tháng/Quý/Năm dùng `summary_xuong_day`. Mode Ngày dùng `getTkXuongDay` + `getHourRange`.
+    <b>Ghi chú kỹ thuật:</b> Mode Tuần/Tháng/Quý/Năm dùng <code>summary_xuong_day</code>. Mode Ngày dùng <code>getTkXuongDay</code> + <code>getHourRange</code>.
   </div>
 </div>
 
@@ -357,8 +481,150 @@ if(S){
   if(!ok){
     setStatus("Không đúng quyền");
   }else{
+    // init director date pill + load
+    dirSyncDatePill();
+    dirReload();
     reload();
   }
+}
+
+/* ================== (BỔ SUNG) DIRECTOR FUNCTIONS ================== */
+function dirSyncDatePill(){
+  const ngay = document.getElementById("date").value;
+  document.getElementById("dirDatePill").innerText = `Ngày: ${ngay}`;
+  document.getElementById("dirInfo").innerText = `Đang thao tác theo ngày ${ngay}`;
+}
+
+function dirScopeLabel(v){
+  if(String(v)==="ALL") return "ALL";
+  if(String(v)==="1") return "XN1";
+  if(String(v)==="2") return "XN2";
+  if(String(v)==="3") return "XN3";
+  return String(v||"");
+}
+
+async function dirSave(){
+  S = mustLogin(); if(!S) return;
+  if(S.role!=="gdc"){ alert("Chỉ GDC mới được dùng chức năng này"); return; }
+
+  const ngay = document.getElementById("date").value;
+  const scope = document.getElementById("dirScope").value;
+  const message = String(document.getElementById("dirText").value||"").trim();
+  if(!message){ alert("Nội dung chỉ đạo trống"); return; }
+
+  const btns = document.querySelectorAll("#dirScope, #dirText");
+  btns.forEach(x=>x.disabled=true);
+
+  try{
+    const res = await apiPost({ action:"setDirectorMessage", token:S.token, ngay, scope, message });
+    if(!res.success){
+      alert("Lỗi lưu chỉ đạo: " + (res.msg||""));
+      return;
+    }
+    document.getElementById("dirText").value = "";
+    await dirReload();
+    alert("✅ Đã lưu chỉ đạo ("+dirScopeLabel(scope)+")");
+  }finally{
+    btns.forEach(x=>x.disabled=false);
+  }
+}
+
+async function dirReload(){
+  S = mustLogin(); if(!S) return;
+  if(S.role!=="gdc") return;
+
+  const ngay = document.getElementById("date").value;
+  const scope = document.getElementById("dirScope").value;
+
+  // load history for selected scope
+  const hist = await apiPost({ action:"listDirectorMessages", token:S.token, ngay, scope });
+  const items = (hist && hist.success) ? (hist.items||[]) : [];
+
+  document.getElementById("dirHistMeta").innerText =
+    `${dirScopeLabel(scope)} • ${items.length} mục`;
+
+  const box = document.getElementById("dirList");
+  if(!items.length){
+    box.innerHTML = `<div class="dirItem"><div class="small">Chưa có chỉ đạo trong ngày cho scope này.</div></div>`;
+  }else{
+    box.innerHTML = items.map(it=>{
+      const msg = String(it.message||"");
+      const meta = `${it.updated_at||""} • by ${it.updated_by||""}`;
+      return `
+        <div class="dirItem">
+          <div style="min-width:0;flex:1">
+            <div class="msg">${escapeHtml(msg)}</div>
+            <div class="meta">${escapeHtml(meta)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="miniBtn danger" title="Xóa dòng này" onclick="dirDelete('${escapeHtml(it.id)}')">Xóa</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // refresh preview
+  await dirPreview();
+}
+
+async function dirDelete(id){
+  S = mustLogin(); if(!S) return;
+  if(S.role!=="gdc"){ alert("Chỉ GDC mới được dùng chức năng này"); return; }
+
+  const ngay = document.getElementById("date").value;
+  const scope = document.getElementById("dirScope").value;
+  if(!confirm("Xóa chỉ đạo này?")) return;
+
+  const res = await apiPost({ action:"deleteDirectorMessage", token:S.token, ngay, scope, id });
+  if(!res.success){
+    alert("Lỗi xóa: " + (res.msg||""));
+    return;
+  }
+  await dirReload();
+}
+
+async function dirClearDay(){
+  S = mustLogin(); if(!S) return;
+  if(S.role!=="gdc"){ alert("Chỉ GDC mới được dùng chức năng này"); return; }
+
+  const ngay = document.getElementById("date").value;
+  const scope = document.getElementById("dirScope").value;
+
+  if(!confirm(`Xóa TẤT CẢ chỉ đạo trong ngày ${ngay} cho scope ${dirScopeLabel(scope)}?`)) return;
+
+  const res = await apiPost({ action:"deleteDirectorMessagesByDay", token:S.token, ngay, scope });
+  if(!res.success){
+    alert("Lỗi xóa: " + (res.msg||""));
+    return;
+  }
+  await dirReload();
+}
+
+async function dirPreview(){
+  S = mustLogin(); if(!S) return;
+  const ngay = document.getElementById("date").value;
+
+  // preview theo "như XN?"
+  let pv = document.getElementById("dirPreviewXuong").value; // 1/2/3/ALL
+  const payload = { action:"getDirectorMessage", token:S.token, ngay };
+
+  // trick: worker.js ưu tiên d.scope
+  if(pv === "ALL"){
+    payload.scope = "ALL";
+  }else{
+    payload.scope = String(pv); // 1/2/3 -> worker trả ALL + scope
+  }
+
+  const res = await apiPost(payload);
+  const box = document.getElementById("dirPreviewBox");
+  if(!res || !res.success){
+    box.innerText = "(Lỗi tải preview)";
+    return;
+  }
+
+  const msg = String(res.message||"").trim();
+  box.innerText = msg ? msg : "(Chưa có chỉ đạo)";
 }
 
 /* ================== TABS ================== */
@@ -648,13 +914,21 @@ function alertReason(to, khung, reason){
 }
 
 /* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", reload);
+document.getElementById("date").addEventListener("change", async ()=>{
+  dirSyncDatePill();
+  await dirReload();
+  reload();
+});
 document.getElementById("mode").addEventListener("change", reload);
+
 document.addEventListener("input",(e)=>{
   if(e.target && e.target.id==="reasonSearch") renderReasons();
 });
 document.addEventListener("change",(e)=>{
   if(e.target && e.target.id==="reasonFilter") renderReasons();
+  if(e.target && (e.target.id==="dirScope" || e.target.id==="dirPreviewXuong")){
+    dirReload();
+  }
 });
 </script>
 </body>
