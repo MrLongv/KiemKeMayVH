@@ -22,12 +22,12 @@
   .brand span{font-size:12px;opacity:.85}
   .status{
     font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);
-    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px
+    border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:560px
   }
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.55;cursor:not-allowed}
-  .wrap{padding:14px;max-width:1100px;margin:0 auto}
+  .wrap{padding:14px;max-width:1120px;margin:0 auto}
   .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
   .card h3{margin:0 0 10px;font-size:14px}
@@ -38,24 +38,81 @@
   }
   input:focus,select:focus,textarea:focus{border-color:rgba(37,99,235,.55);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
   textarea{min-height:92px;resize:vertical}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
   .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
   .kpi .val{font-size:18px;font-weight:900;margin-top:2px}
   .kpi .lab{font-size:12px;color:var(--muted)}
 
-  .planGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-  .planItem{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
-  .planItem .k{font-size:11px;color:var(--muted)}
-  .planItem .v{font-size:14px;font-weight:900;margin-top:2px}
+  .gdc-ticker{
+    position:sticky;
+    top:64px;
+    z-index:9;
+    height:38px;
+    display:none;
+    align-items:center;
+    overflow:hidden;
+    background:#0e2552;
+    color:#fff;
+    box-shadow:0 8px 18px rgba(0,0,0,.16);
+  }
+  .gdc-ticker .label{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    font-weight:900;
+    font-size:13px;
+    background:#0b1b3a;
+    border-right:1px solid rgba(255,255,255,.14);
+  }
+  .gdc-ticker .track{flex:1;overflow:hidden;white-space:nowrap;position:relative}
+  .gdc-ticker .text{
+    display:inline-block;
+    padding-left:100%;
+    font-weight:800;
+    font-size:14px;
+    line-height:38px;
+    animation:gdc-marquee 22s linear infinite;
+    will-change:transform;
+  }
+  @keyframes gdc-marquee{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-100%); }
+  }
+  .gdc-ticker .meta{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 12px;
+    font-size:12px;
+    opacity:.9;
+    border-left:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.08);
+  }
+  .gdc-ticker .dot{
+    width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;
+    box-shadow:0 0 0 4px rgba(34,197,94,.14);
+  }
+  .gdc-ticker .time{opacity:.9;font-variant-numeric:tabular-nums}
+
+  .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .pill{
     display:inline-flex;align-items:center;gap:6px;
     padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
     border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.12);color:#7c2d12
   }
   .pill.ok{border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.10);color:#14532d}
-  .planTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .pill.bad{border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.08);color:#7f1d1d}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+
+  .planLineWrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .planGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  .planItem{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
+  .planItem .k{font-size:11px;color:var(--muted)}
+  .planItem .v{font-size:14px;font-weight:900;margin-top:2px}
 
   table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
   th,td{border:1px solid var(--line);padding:8px;text-align:center;white-space:nowrap}
@@ -69,6 +126,7 @@
     border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.06);
     border-radius:14px;padding:10px;color:#7f1d1d;font-size:13px
   }
+
   @media(max-width:980px){
     .grid{grid-template-columns:1fr}
     .planGrid{grid-template-columns:repeat(2,1fr)}
@@ -80,7 +138,7 @@
 <div class="topbar">
   <div class="toprow">
     <div class="brand">
-      <b>🧵 TO – NHẬP NĂNG SUẤT GIỜ (XN3)</b>
+      <b>🧵 TO3 – NHẬP NĂNG SUẤT GIỜ (XN3)</b>
       <span id="who">—</span>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -91,10 +149,22 @@
   </div>
 </div>
 
+<div class="gdc-ticker" id="gdcTicker">
+  <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
+  <div class="track">
+    <div class="text" id="gdcTickerText">—</div>
+  </div>
+  <div class="meta" title="Tự cập nhật mỗi 30 giây">
+    <span class="dot"></span>
+    <span id="gdcTickerScope">—</span>
+    <span class="time" id="gdcTickerTime">—</span>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="kpi">
     <div class="card">
-      <div class="lab">Số giờ đã nhập</div>
+      <div class="lab">Số bản ghi giờ</div>
       <div class="val" id="kpiCount">0</div>
     </div>
     <div class="card">
@@ -112,11 +182,25 @@
       <h3 style="margin:0">📌 Kế hoạch đầu ngày (chỉ xem)</h3>
       <span id="planBadge" class="pill">Chưa tải kế hoạch</span>
     </div>
-    <div class="hint" id="planMeta">—</div>
-    <div class="planGrid" style="margin-top:10px" id="planGrid"></div>
-    <div class="hint" style="margin-top:10px">
-      Nếu chưa có kế hoạch: yêu cầu <b>TK3</b> nhập KH/ĐM trước, sau đó bấm <b>Tải lại</b>.
+
+    <div class="planLineWrap" style="margin-top:8px">
+      <div style="min-width:230px;flex:1">
+        <div class="hint" id="planMeta">—</div>
+      </div>
+      <div style="min-width:260px">
+        <label>Chọn line (mã hàng)</label>
+        <select id="lineSelect"></select>
+      </div>
     </div>
+
+    <div class="planGrid" style="margin-top:10px" id="planGrid"></div>
+
+    <div class="hint" style="margin-top:10px">
+      • Nếu cần nhập 2 mã trong cùng giờ (vd 11-12), hãy chọn <b>line 1</b> hoặc <b>line 2</b> rồi nhập. <br/>
+      • Nếu chưa có line: yêu cầu <b>TK</b> tạo thêm line_no (2,3…) cho tổ này.
+    </div>
+
+    <div id="planWarn" class="dangerBox" style="margin-top:10px;display:none"></div>
   </div>
 
   <div class="grid">
@@ -133,14 +217,9 @@
           <select id="khung"></select>
         </div>
         <div>
-          <label>Line</label>
-          <select id="lineSel"></select>
+          <label>Thực tế (SP)</label>
+          <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
         </div>
-      </div>
-
-      <div style="margin-top:10px">
-        <label>Thực tế (SP)</label>
-        <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
       </div>
 
       <div style="margin-top:10px">
@@ -152,8 +231,8 @@
         <button class="btn" id="btnSave" onclick="save()">Lưu giờ</button>
         <button class="btn ghost" onclick="clearForm()">Xóa nhập</button>
         <div class="hint">
-          • Được nhập <b>trùng khung giờ</b> nếu khác <b>line_no</b>.<br/>
-          • Nếu báo “⛔ Giờ này đã nhập” → do trùng (ngày, xưởng, tổ, line, khung).
+          • Tổ trưởng chỉ nhập <b>đúng tổ</b> (tự khóa).<br/>
+          • Chỉ chặn trùng: <b>cùng khung + cùng line</b>.
         </div>
       </div>
 
@@ -167,8 +246,8 @@
         <table>
           <thead>
             <tr>
-              <th>Khung</th>
               <th>Line</th>
+              <th>Khung</th>
               <th>KH/giờ</th>
               <th>Thực tế</th>
               <th>HS</th>
@@ -177,7 +256,10 @@
           <tbody id="mini"></tbody>
         </table>
       </div>
-      <div class="hint" style="margin-top:10px">Click 1 dòng để xem nguyên nhân.</div>
+
+      <div class="hint" style="margin-top:10px">
+        Chạm 1 dòng để xem nguyên nhân.
+      </div>
     </div>
   </div>
 
@@ -187,9 +269,9 @@
       <table>
         <thead>
           <tr>
-            <th>Khung giờ</th>
             <th>Line</th>
             <th>Mã hàng</th>
+            <th>Khung giờ</th>
             <th>Kế hoạch giờ</th>
             <th>Thực tế</th>
             <th>Hiệu suất</th>
@@ -201,23 +283,34 @@
       </table>
     </div>
   </div>
+
 </div>
 
 <script>
+/* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const XUONG = 3;
-const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
-const KEY="NS_SESSION";
 
+/* ✅ XN3: tổ hợp lệ */
+const VALID_TOS = [19,21,23,25,27];
+
+/* ✅ XN3: khung giờ theo yêu cầu (có 11-12, không có 12-13) */
+const HOURS = ["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"];
+const HOURS_COUNT = 9;
+
+/* ================== SESSION ================== */
+const KEY="NS_SESSION";
 function getSess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
-function mustLogin(){ const s=getSess(); if(!s||!s.token){ location.href="../login.html"; return null; } return s; }
+function mustLogin(){
+  const s=getSess();
+  if(!s || !s.token){ location.href="../login.html"; return null; }
+  return s;
+}
 function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
 
+/* ================== UTIL ================== */
 function setStatus(t){ document.getElementById("status").innerText=t; }
-function todayISO(){
-  const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 function nInt(v){
   const n=Number(String(v??"").replaceAll(",","").trim());
   if(!Number.isFinite(n)) return 0;
@@ -250,40 +343,118 @@ async function apiPost(payload){
   });
   const text = await r.text();
   try{ return JSON.parse(text); }
-  catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,220) }; }
+  catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
 }
 
-let S = mustLogin();
-let TO = null;
-let PLAN_LINES = [];  // nhiều line của tổ
+/* ============================
+   ✅ GĐC TICKER
+============================ */
+let gdcTimer=null;
+function fmtTickerTime(iso){
+  if(!iso) return "";
+  const d=new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  const hh=String(d.getHours()).padStart(2,"0");
+  const mm=String(d.getMinutes()).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  const mo=String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}/${mo} ${hh}:${mm}`;
+}
+async function loadGdcTicker(){
+  if(!S || !S.token) return;
 
+  try{
+    const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
+    const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
+
+    let picked=null;
+    if(resX?.success && (resX.message||"").trim()) picked=resX;
+    else if(resAll?.success && (resAll.message||"").trim()) picked=resAll;
+
+    const box=document.getElementById("gdcTicker");
+    const textEl=document.getElementById("gdcTickerText");
+    const scopeEl=document.getElementById("gdcTickerScope");
+    const timeEl=document.getElementById("gdcTickerTime");
+
+    if(!picked){
+      box.style.display="none";
+      return;
+    }
+
+    const scope=String(picked.scope||"").toUpperCase();
+    const msg=String(picked.message||"").trim();
+    if(!msg){
+      box.style.display="none";
+      return;
+    }
+
+    box.style.display="flex";
+    scopeEl.innerText = scope==="ALL" ? "ALL" : `XN${scope}`;
+    timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
+
+    textEl.style.animation="none";
+    textEl.offsetHeight;
+    textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
+    textEl.style.animation="gdc-marquee 22s linear infinite";
+  }catch(e){
+    console.warn("GDC ticker error:", e);
+  }
+}
+function startGdcTicker(){
+  stopGdcTicker();
+  loadGdcTicker();
+  gdcTimer=setInterval(loadGdcTicker, 30000);
+}
+function stopGdcTicker(){
+  if(gdcTimer) clearInterval(gdcTimer);
+  gdcTimer=null;
+}
+window.addEventListener("beforeunload", stopGdcTicker);
+
+/* ================== STATE ================== */
+let S = mustLogin();
+let TO = 0;
+
+let planLines = [];
+let selectedLine = 1;
+
+let hoursRows = [];
+
+/* ================== INIT ================== */
 document.getElementById("ngay").value = todayISO();
 document.getElementById("khung").innerHTML = HOURS.map(h=>`<option value="${h}">${h}</option>`).join("");
+document.getElementById("lineSelect").innerHTML = `<option value="1">Line 1</option>`;
 
 if(S){
   const roleOk = (S.role === "to");
   const xuongOk = (Number(S.xuong) === XUONG);
   TO = Number(S.to_nhom || 0);
 
-  if(!roleOk || !xuongOk || !TO){
-    document.getElementById("who").innerText = `⛔ Không đúng quyền: role=${S.role} xuong=${S.xuong} to=${S.to_nhom}`;
+  const toOk = VALID_TOS.includes(TO);
+
+  if(!roleOk || !xuongOk || !TO || !toOk){
+    document.getElementById("who").innerText =
+      `⛔ Không đúng quyền: role=${S.role} xuong=${S.xuong} to=${S.to_nhom} (hợp lệ: ${VALID_TOS.join(",")})`;
     document.getElementById("btnSave").disabled = true;
-    setStatus("Không đúng quyền / thiếu tổ");
+    setStatus("Không đúng quyền / sai xưởng / sai tổ");
   }else{
     document.getElementById("who").innerText = `Tài khoản: ${S.username} • Xưởng: XN${S.xuong} • Tổ: ${TO}`;
+    startGdcTicker();
     reload();
   }
 }
 
+/* ================== LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
   const ngay = document.getElementById("ngay").value;
-  setStatus("Đang tải dữ liệu...");
-  document.getElementById("warnBox").style.display="none";
+
+  setStatus("Đang tải...");
+  hideWarn();
 
   await loadPlanLines(ngay);
 
-  const res = await apiPost({
+  const resH = await apiPost({
     action:"getHourByTo",
     token:S.token,
     ngay,
@@ -291,19 +462,24 @@ async function reload(){
     to_nhom: TO
   });
 
-  if(!res.success){
-    setStatus("Lỗi tải giờ: " + (res.msg||""));
+  if(!resH.success){
+    setStatus("Lỗi tải giờ: " + (resH.msg||""));
+    hoursRows = [];
     renderHours([], ngay);
+    applyHourDisableByLine();
     return;
   }
 
-  const data = res.data || [];
-  setStatus(`✅ Đã tải • ${ngay} • ${data.length} bản ghi`);
-  renderHours(data, ngay);
+  hoursRows = resH.data || [];
+  setStatus(`Đã tải • ${ngay} • ${hoursRows.length} bản ghi giờ`);
+  renderHours(hoursRows, ngay);
+  applyHourDisableByLine();
 }
 
 async function loadPlanLines(ngay){
-  PLAN_LINES = [];
+  planLines = [];
+  const warn = document.getElementById("planWarn");
+  warn.style.display = "none";
 
   const res = await apiPost({
     action:"getTkXuongDay",
@@ -312,128 +488,189 @@ async function loadPlanLines(ngay){
     xuong:XUONG
   });
 
-  if(res && res.success){
-    PLAN_LINES = (res.rows||[])
-      .filter(r => Number(r.to_nhom) === Number(TO))
-      .sort((a,b)=>Number(a.line_no||1)-Number(b.line_no||1));
+  if(res.success){
+    const rows = res.rows || [];
+    planLines = rows.filter(r => Number(r.to_nhom) === Number(TO))
+                    .map(r => ({...r, line_no: Number(r.line_no||1)}))
+                    .sort((a,b)=>a.line_no-b.line_no);
+  } else {
+    planLines = [];
+    warn.style.display = "block";
+    warn.innerText =
+      "⛔ TO không xem được kế hoạch vì Worker đang chặn action getTkXuongDay cho role=to.\n" +
+      "➡️ Cách sửa: trong worker.js, ở action getTkXuongDay, thêm 'to' vào ensureRole.";
   }
+
+  const sel = document.getElementById("lineSelect");
+  const lines = planLines.length ? planLines.map(p => Number(p.line_no||1)) : [1];
+  const uniqueLines = [...new Set(lines)].sort((a,b)=>a-b);
+
+  sel.innerHTML = uniqueLines.map(ln=>{
+    const p = planLines.find(x=>Number(x.line_no)===ln);
+    const mh = p?.ma_hang ? ` – ${p.ma_hang}` : "";
+    return `<option value="${ln}">Line ${ln}${esc(mh)}</option>`;
+  }).join("");
+
+  const keep = uniqueLines.includes(selectedLine) ? selectedLine : uniqueLines[0];
+  selectedLine = keep;
+  sel.value = String(keep);
 
   renderPlan(ngay);
-  renderLineSelect();
-}
-
-function renderLineSelect(){
-  const sel = document.getElementById("lineSel");
-  if(!PLAN_LINES.length){
-    sel.innerHTML = `<option value="1">Line 1</option>`;
-    return;
-  }
-  sel.innerHTML = PLAN_LINES.map(p=>{
-    const ln = Number(p.line_no||1);
-    const mh = p.ma_hang ? ` • ${p.ma_hang}` : "";
-    return `<option value="${ln}">Line ${ln}${mh}</option>`;
-  }).join("");
 }
 
 function renderPlan(ngay){
   const badge = document.getElementById("planBadge");
-  const meta = document.getElementById("planMeta");
-  const grid = document.getElementById("planGrid");
+  const meta  = document.getElementById("planMeta");
+  const grid  = document.getElementById("planGrid");
+
   meta.innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
 
-  if(!PLAN_LINES.length){
-    badge.className = "pill";
+  const p = planLines.find(x=>Number(x.line_no)===Number(selectedLine)) || null;
+
+  if(!p || !p.ma_hang){
+    badge.className = "pill bad";
     badge.innerText = "⚠️ Chưa có kế hoạch (Báo TK nhập KH đầu ngày)";
     grid.innerHTML = `
       <div class="planItem" style="grid-column:1/-1">
         <div class="k">Trạng thái</div>
-        <div class="v">TK chưa nhập kế hoạch cho tổ này</div>
-      </div>`;
+        <div class="v">Chưa có mã hàng / định mức cho line đang chọn</div>
+        <div class="k" style="margin-top:6px">
+          Hãy yêu cầu TK nhập kế hoạch cho <b>tổ ${TO}</b> (line ${selectedLine}), sau đó bấm <b>Tải lại</b>.
+        </div>
+      </div>
+    `;
     return;
   }
 
-  badge.className = "pill ok";
-  badge.innerText = `✅ ${PLAN_LINES.length} line`;
+  const dmNgay = nInt(p.dinh_muc_ngay);
+  const dg = nNum(p.don_gia);
+  const dmGio = p.dinh_muc_gio ? nNum(p.dinh_muc_gio) : (dmNgay>0 ? (dmNgay / HOURS_COUNT) : 0);
+  const usdQT = p.usd_quy_trinh ? nNum(p.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay * dg : 0);
 
-  // hiển thị line đầu tiên cho gọn + gợi ý chọn line ở form
-  const p0 = PLAN_LINES[0];
-  const dmNgay = nInt(p0.dinh_muc_ngay);
-  const dg = nNum(p0.don_gia);
-  const dmGio = p0.dinh_muc_gio ? nNum(p0.dinh_muc_gio) : (dmNgay>0 ? dmNgay/9 : 0);
-  const usdQT = p0.usd_quy_trinh ? nNum(p0.usd_quy_trinh) : (dmNgay>0 && dg>0 ? dmNgay*dg : 0);
+  badge.className = "pill ok";
+  badge.innerText = `✅ Line ${selectedLine} đã có kế hoạch`;
 
   grid.innerHTML = `
     <div class="planItem" style="grid-column:span 2">
-      <div class="k">Line (đầu tiên)</div>
-      <div class="v mono">L${esc(p0.line_no)} • ${esc(p0.ma_hang||"")}</div>
+      <div class="k">Mã hàng</div>
+      <div class="v mono">${esc(p.ma_hang)}</div>
     </div>
-    <div class="planItem"><div class="k">SL KH</div><div class="v">${fmt0(p0.so_luong_ke_hoach||0)}</div></div>
-    <div class="planItem"><div class="k">ĐM ngày</div><div class="v">${fmt0(dmNgay)}</div></div>
-    <div class="planItem"><div class="k">ĐM giờ</div><div class="v">${fmt2(dmGio)}</div></div>
-    <div class="planItem"><div class="k">Đơn giá</div><div class="v">${fmt2(dg)}</div></div>
-    <div class="planItem"><div class="k">USD/QT</div><div class="v">${fmt2(usdQT)}</div></div>
+    <div class="planItem">
+      <div class="k">SL kế hoạch</div>
+      <div class="v">${fmt0(p.so_luong_ke_hoach || 0)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">ĐM ngày</div>
+      <div class="v">${fmt0(dmNgay)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">ĐM giờ</div>
+      <div class="v">${fmt2(dmGio)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">Đơn giá</div>
+      <div class="v">${fmt2(dg)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">USD/QT</div>
+      <div class="v">${fmt2(usdQT)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">TG/QT</div>
+      <div class="v">${fmt2(p.thoi_gian_giay || 0)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">LĐ thực tế</div>
+      <div class="v">${fmt0(p.lao_dong_thuc_te || 0)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">LĐ SĐC</div>
+      <div class="v">${fmt0(p.lao_dong_chuyen || 0)}</div>
+    </div>
+    <div class="planItem">
+      <div class="k">Chuyển đổi/ngày</div>
+      <div class="v">${fmt0(p.chuyen_doi_ngay || 0)}</div>
+    </div>
   `;
 }
 
-function renderHours(data, ngay){
+/* ================== HOURS RENDER ================== */
+function renderHours(rows, ngay){
   document.getElementById("meta").innerText = `Ngày: ${ngay} • Xưởng: XN${XUONG} • Tổ: ${TO}`;
 
+  const count = rows.length;
   let sumTT=0, sumKH=0;
-  data.forEach(r=>{ sumTT += nInt(r.thuc_te); sumKH += nInt(r.ke_hoach_gio); });
+  rows.forEach(r=>{ sumTT += nInt(r.thuc_te); sumKH += nInt(r.ke_hoach_gio); });
   const hsTB = sumKH>0 ? (sumTT/sumKH*100) : 0;
 
-  document.getElementById("kpiCount").innerText = fmt0(data.length);
+  document.getElementById("kpiCount").innerText = fmt0(count);
   document.getElementById("kpiSum").innerText = fmt0(sumTT);
   document.getElementById("kpiHs").innerText = fmt1(hsTB) + "%";
 
   const mini = document.getElementById("mini");
-  mini.innerHTML = data.length ? data.map(r=>{
+  mini.innerHTML = rows.map(r=>{
     const hs = nInt(r.hieu_suat);
     return `
-      <tr onclick="alertReason('${esc(r.khung_gio)}','${esc(r.line_no)}','${esc(r.nguyen_nhan)}')">
+      <tr onclick="alertReason('${esc(r.line_no)}','${esc(r.khung_gio)}','${esc(r.nguyen_nhan||"")}')">
+        <td><b>${esc(r.line_no||1)}</b></td>
         <td><b>${esc(r.khung_gio)}</b></td>
-        <td><b>L${esc(r.line_no||1)}</b></td>
         <td>${fmt0(r.ke_hoach_gio)}</td>
         <td>${fmt0(r.thuc_te)}</td>
         <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
       </tr>
     `;
-  }).join("") : `<tr><td colspan="5" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập.</td></tr>`;
+  }).join("") || `<tr><td colspan="5" class="left" style="padding-left:10px;color:#6b7280">Chưa nhập giờ nào.</td></tr>`;
 
   const tb = document.getElementById("tbody");
-  tb.innerHTML = data.length ? data.map(r=>{
+  tb.innerHTML = rows.map(r=>{
     const hs = nInt(r.hieu_suat);
     return `
       <tr>
+        <td><b>${esc(r.line_no||1)}</b></td>
+        <td class="mono">${esc(r.ma_hang||"")}</td>
         <td><b>${esc(r.khung_gio)}</b></td>
-        <td><b>L${esc(r.line_no||1)}</b></td>
-        <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${esc(r.ma_hang||"")}</td>
         <td>${fmt0(r.ke_hoach_gio)}</td>
         <td>${fmt0(r.thuc_te)}</td>
         <td class="pct ${pctClass(hs)}">${fmt0(hs)}%</td>
-        <td class="left" style="white-space:normal;min-width:280px">${esc(r.nguyen_nhan||"")}</td>
+        <td class="left" style="white-space:normal;min-width:260px">${esc(r.nguyen_nhan||"")}</td>
         <td>${esc((r.created_at||"").replace("T"," ").slice(0,19))}</td>
       </tr>
     `;
-  }).join("") : `<tr><td colspan="8" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
+  }).join("") || `<tr><td colspan="8" class="left" style="padding-left:10px;color:#6b7280">Chưa có dữ liệu.</td></tr>`;
 }
 
+function applyHourDisableByLine(){
+  const used = new Set(
+    (hoursRows||[])
+      .filter(r => Number(r.line_no||1) === Number(selectedLine))
+      .map(r => String(r.khung_gio))
+  );
+
+  const sel = document.getElementById("khung");
+  [...sel.options].forEach(op=>{ op.disabled = used.has(op.value); });
+
+  const firstAvail = [...sel.options].find(op=>!op.disabled);
+  if(firstAvail) sel.value = firstAvail.value;
+}
+
+/* ================== SAVE ================== */
 async function save(){
   S = mustLogin(); if(!S) return;
   if(S.role !== "to" || Number(S.xuong)!==XUONG){ return; }
 
   const ngay = document.getElementById("ngay").value;
   const khung = document.getElementById("khung").value;
-  const line_no = nInt(document.getElementById("lineSel").value) || 1;
   const thuc_te = nInt(document.getElementById("thuc_te").value);
   const nguyen_nhan = document.getElementById("nguyen_nhan").value.trim();
+  const line_no = Number(selectedLine || 1);
 
   if(!ngay) return showWarn("Vui lòng chọn ngày.");
   if(!khung) return showWarn("Vui lòng chọn khung giờ.");
-  if(thuc_te<=0) return showWarn("Thực tế phải > 0.");
+  if(thuc_te <= 0) return showWarn("Thực tế phải > 0.");
 
-  const btn=document.getElementById("btnSave");
-  btn.disabled=true; btn.innerText="Đang lưu...";
+  const btn = document.getElementById("btnSave");
+  btn.disabled = true;
+  btn.innerText = "Đang lưu...";
 
   try{
     const res = await apiPost({
@@ -452,36 +689,53 @@ async function save(){
       return;
     }
 
-    setStatus(`✅ Đã lưu ${khung} • L${line_no}`);
+    setStatus(`✅ Đã lưu ${khung} (line ${line_no})`);
     clearForm(true);
     await reload();
   }catch(e){
-    showWarn("Lỗi kết nối: " + (e.message||e));
+    showWarn("Lỗi kết nối: " + (e.message || e));
   }finally{
-    btn.disabled=false; btn.innerText="Lưu giờ";
+    btn.disabled = false;
+    btn.innerText = "Lưu giờ";
   }
 }
 
 function clearForm(keepReason=false){
-  document.getElementById("thuc_te").value="";
-  if(!keepReason) document.getElementById("nguyen_nhan").value="";
-  document.getElementById("warnBox").style.display="none";
+  document.getElementById("thuc_te").value = "";
+  if(!keepReason) document.getElementById("nguyen_nhan").value = "";
+  hideWarn();
   document.getElementById("thuc_te").focus();
 }
+
 function showWarn(t){
   const b=document.getElementById("warnBox");
   b.style.display="block";
-  b.innerText="⛔ " + t;
+  b.innerText = "⛔ " + t;
 }
-function alertReason(khung, line, reason){
-  reason = reason || "(Không có ghi chú)";
-  alert(`Khung ${khung} • Line ${line}\n\nNguyên nhân:\n${reason}`);
+function hideWarn(){
+  document.getElementById("warnBox").style.display="none";
 }
 
+function alertReason(line, khung, reason){
+  reason = reason || "(Không có ghi chú)";
+  alert(`Line ${line} • Khung ${khung}\n\nNguyên nhân:\n${reason}`);
+}
+
+/* ================== EVENTS ================== */
 document.getElementById("ngay").addEventListener("change", reload);
+
+document.getElementById("lineSelect").addEventListener("change", ()=>{
+  selectedLine = Number(document.getElementById("lineSelect").value || 1);
+  renderPlan(document.getElementById("ngay").value);
+  applyHourDisableByLine();
+});
+
 document.addEventListener("keydown",(e)=>{
-  if(e.key==="Enter" && (e.ctrlKey || e.metaKey)) save();
+  if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){
+    save();
+  }
 });
 </script>
+
 </body>
 </html>
