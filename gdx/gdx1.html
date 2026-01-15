@@ -27,15 +27,14 @@
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
   /* ============================
-     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY) – GIỐNG TK1
-     - sticky dưới topbar
+     ✅ CHỈ ĐẠO GĐC (GIỐNG TK1)
   ============================ */
   .gdc-ticker{
     position:sticky;
-    top:64px; /* gần đúng chiều cao topbar */
+    top:64px;
     z-index:19;
     height:38px;
-    display:none; /* show khi có message */
+    display:none;
     align-items:center;
     overflow:hidden;
     background:#0e2552;
@@ -96,7 +95,6 @@
   }
 
   .wrap{padding:14px}
-
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;margin-bottom:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
   .card .label{font-size:12px;color:var(--muted)}
@@ -126,7 +124,6 @@
   .left{text-align:left}
   .right{text-align:right}
 
-  /* Reason & Compare area */
   .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;margin-top:12px}
   .grid3{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
   @media(max-width:1100px){ .kpi{grid-template-columns:1fr 1fr} .grid2,.grid3{grid-template-columns:1fr} }
@@ -161,7 +158,6 @@
   </div>
 </div>
 
-<!-- ✅ TICKER CHỈ ĐẠO – GIỐNG TK1 -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track">
@@ -176,7 +172,6 @@
 
 <div class="wrap">
 
-  <!-- KPI -->
   <div class="kpi">
     <div class="card">
       <div class="label">Tổng USD (ước tính)</div>
@@ -190,7 +185,7 @@
     </div>
     <div class="card">
       <div class="label">Hiệu suất TB (ngày)</div>
-      <div class="value" id="kpiHs">0%</div>
+      <div class="value" id="kpiHs">0.0%</div>
       <div class="sub">TB theo tổ (dựa ĐM ngày)</div>
     </div>
     <div class="card">
@@ -203,7 +198,6 @@
     </div>
   </div>
 
-  <!-- SO SÁNH THEO GIỜ (TOÀN XƯỞNG) -->
   <div class="grid2">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -228,14 +222,13 @@
               <td id="cmpSumKH"><b>0</b></td>
               <td id="cmpSumTT"><b>0</b></td>
               <td id="cmpSumDef"><b>0</b></td>
-              <td id="cmpSumHS"><b>0%</b></td>
+              <td id="cmpSumHS"><b>0.0%</b></td>
             </tr>
           </tfoot>
         </table>
       </div>
     </div>
 
-    <!-- QUICK ALERTS -->
     <div class="card">
       <b>🚦 Cảnh báo nhanh</b>
       <div class="small">Tập trung các điểm “đáng gọi điện”</div>
@@ -243,7 +236,6 @@
     </div>
   </div>
 
-  <!-- TABLE giống TK1 -->
   <div class="tableWrap" style="margin-top:12px">
     <table id="tbl">
       <thead>
@@ -278,15 +270,14 @@
       <tfoot>
         <tr>
           <td class="sticky1 left" colspan="6" style="padding-left:10px;">TỔNG USD / GIỜ</td>
-          <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
-          <td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td><td class="usdGio"></td>
+          <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
+          <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
           <td colspan="11"></td>
         </tr>
       </tfoot>
     </table>
   </div>
 
-  <!-- NGUYÊN NHÂN -->
   <div class="grid3">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -349,6 +340,28 @@ const XUONG = 1;
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
+/* ================== FORMAT (GIỐNG TK1) ==================
+   - Số nguyên: 10,000
+   - Tiền: 1,972.00 (2 decimals)
+   - Đơn giá: 2.4 / 2.22 (không grouping, tối đa 2 decimals)
+=========================================================== */
+const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
+const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
+const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
+
+function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
+function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
+function fmtDg(n){ return NF_DG.format(Number(n)||0); }
+function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
+
+function toNum(v){
+  let s = String(v ?? "").trim();
+  if(!s) return 0;
+  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
 function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
@@ -363,12 +376,10 @@ async function apiPost(payload){
 }
 function setStatus(t){ document.getElementById("status").innerText=t; }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
-function toNum(v){ const n=Number(String(v??"").replaceAll(",","").trim()); return Number.isFinite(n)?n:0; }
-function fmt2(n){ return (Number(n)||0).toFixed(2); }
-function fmt1(n){ return (Number(n)||0).toFixed(1); }
-function fmt0(n){ return String(Math.round(Number(n)||0)); }
 function escapeHtml(s){
-  return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  return String(s??"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 function pctClass(hs){
   hs = Number(hs)||0;
@@ -378,9 +389,9 @@ function pctClass(hs){
 }
 function pill(hs){
   hs = Number(hs)||0;
-  if(hs>=95) return `<span class="pill good">✅ ${fmt1(hs)}%</span>`;
-  if(hs>=80) return `<span class="pill warn">⚠️ ${fmt1(hs)}%</span>`;
-  return `<span class="pill bad">⛔ ${fmt1(hs)}%</span>`;
+  if(hs>=95) return `<span class="pill good">✅ ${fmtPct1(hs)}%</span>`;
+  if(hs>=80) return `<span class="pill warn">⚠️ ${fmtPct1(hs)}%</span>`;
+  return `<span class="pill bad">⛔ ${fmtPct1(hs)}%</span>`;
 }
 function normReason(s){
   s = String(s||"").trim();
@@ -399,7 +410,7 @@ document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
-/* ================== AUTH CHECK ================== */
+/* ================== TICKER (GIỐNG TK1) ================== */
 let gdcTimer = null;
 
 function fmtTickerTime(iso){
@@ -413,22 +424,18 @@ function fmtTickerTime(iso){
   return `${dd}/${mo} ${hh}:${mm}`;
 }
 
-/* ✅ tương thích worker cũ/mới:
-   - worker mới: { action:"getDirectorMessage", scope:"1"/"ALL", ngay? }
-   - worker cũ:  { action:"getDirectorMessage", xuong:1/"ALL" }
-*/
 async function callDirectorMessage(scopeOrXuong, ngay){
   const base = { action:"getDirectorMessage", token:S.token };
 
-  // thử kiểu mới trước
+  // kiểu mới: scope
   let r = await apiPost({ ...base, scope:String(scopeOrXuong), ngay });
   if(r && r.success) return r;
 
-  // fallback kiểu cũ
+  // kiểu cũ: xuong
   r = await apiPost({ ...base, xuong:scopeOrXuong });
   if(r && r.success) return r;
 
-  // fallback cũ không có ngay
+  // fallback không có ngay
   r = await apiPost({ ...base, scope:String(scopeOrXuong) });
   if(r && r.success) return r;
 
@@ -467,9 +474,8 @@ async function loadGdcTicker(){
     scopeEl.innerText = (scope === "ALL") ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
-    // reset animation để chạy lại mượt khi nội dung đổi
     textEl.style.animation = "none";
-    textEl.offsetHeight; // force reflow
+    textEl.offsetHeight; // reflow
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation = "gdc-marquee 22s linear infinite";
   }catch(e){
@@ -488,6 +494,7 @@ function stopGdcTicker(){
 }
 window.addEventListener("beforeunload", stopGdcTicker);
 
+/* ================== AUTH CHECK ================== */
 if(S){
   const ok = (S.role==="gdx" && Number(S.xuong)===XUONG) || (S.role==="gdc");
   if(!ok){
@@ -514,10 +521,8 @@ async function reload(){
   const ngay = document.getElementById("date").value;
   setStatus("Đang tải dữ liệu ngày...");
 
-  // ticker theo ngày đang xem
   loadGdcTicker();
 
-  // 1) Plan + hours array
   const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:XUONG });
   if(!res.success){
     setStatus("Lỗi: " + (res.msg||""));
@@ -534,11 +539,9 @@ async function reload(){
   renderDayRows(rows);
   calcFooterAndKpi(rows);
 
-  // 2) Raw hour range
   const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:XUONG, from: ngay, to: ngay });
   dayHoursRaw = hr.success ? (hr.data||[]) : [];
 
-  // 3) Render compare + alerts + reasons
   renderCompare(dayHoursRaw);
   renderAlerts(dayHoursRaw);
   renderReasonPanels(dayHoursRaw);
@@ -557,6 +560,8 @@ function renderDayRows(rows){
     const dg = toNum(r.don_gia);
 
     const dmGio = r.dinh_muc_gio ? toNum(r.dinh_muc_gio) : (dmNgay ? dmNgay/9 : 0);
+    const usdQt = (dmNgay>0 && dg>0) ? (dmNgay*dg) : toNum(r.usd_quy_trinh||0);
+
     const usdTh = tongSP * dg;
     const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
 
@@ -567,27 +572,28 @@ function renderDayRows(rows){
       <tr>
         <td class="sticky1"><b>${r.to_nhom}</b></td>
         <td class="sticky2">${escapeHtml(r.ma_hang||"")}</td>
-        <td>${fmt0(r.so_luong_ke_hoach||0)}</td>
-        <td>${fmt0(dmNgay)}</td>
-        <td>${fmt2(dmGio)}</td>
-        <td>${fmt2(r.usd_quy_trinh||0)}</td>
 
-        ${hours.map(v=>`<td>${fmt0(v||0)}</td>`).join("")}
+        <td>${fmtInt(r.so_luong_ke_hoach||0)}</td>
+        <td>${fmtInt(dmNgay)}</td>
+        <td class="right">${fmtMoney(dmGio)}</td>
+        <td class="right">${fmtMoney(usdQt)}</td>
 
-        <td class="calc">${fmt0(tongSP)}</td>
-        <td class="calc">${fmt2(usdTh)}</td>
-        <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
+        ${hours.map(v=>`<td>${fmtInt(v||0)}</td>`).join("")}
 
-        <td>${fmt0(r.lao_dong_thuc_te||0)}</td>
-        <td>${fmt0(r.lao_dong_chuyen||0)}</td>
+        <td class="calc">${fmtInt(tongSP)}</td>
+        <td class="calc right">${fmtMoney(usdTh)}</td>
+        <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
 
-        <td>${fmt2(dg)}</td>
-        <td>${fmt2(r.thoi_gian_giay||0)}</td>
+        <td>${fmtInt(r.lao_dong_thuc_te||0)}</td>
+        <td>${fmtInt(r.lao_dong_chuyen||0)}</td>
 
-        <td class="calc">${fmt2(usd80)}</td>
-        <td class="calc">${fmt2(usd100)}</td>
+        <td class="right">${fmtDg(dg)}</td>
+        <td>${fmtInt(r.thoi_gian_giay||0)}</td>
 
-        <td>${fmt0(r.chuyen_doi_ngay||0)}</td>
+        <td class="calc right">${fmtMoney(usd80)}</td>
+        <td class="calc right">${fmtMoney(usd100)}</td>
+
+        <td>${fmtInt(r.chuyen_doi_ngay||0)}</td>
 
         <td class="left" style="padding-left:6px;white-space:normal;min-width:220px">
           ${escapeHtml(r.ghi_chu||"")}
@@ -617,16 +623,16 @@ function calcFooterAndKpi(rows){
     hsSum += hs; hsCount++;
   });
 
-  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmt2(usdGio[i]||0));
+  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
 
   const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
   const hsTb = hsCount ? (hsSum/hsCount) : 0;
 
-  document.getElementById("kpiUsd").innerText = fmt2(tongUsdNgay);
-  document.getElementById("kpiSp").innerText = fmt0(tongSpAll);
-  document.getElementById("kpiHs").innerText = fmt1(hsTb) + "%";
-  document.getElementById("usdNgayTop").innerText = fmt2(tongUsdNgay);
-  document.getElementById("kpiMaxSub").innerText = fmt2(maxUsdGio);
+  document.getElementById("kpiUsd").innerText = fmtMoney(tongUsdNgay);
+  document.getElementById("kpiSp").innerText = fmtInt(tongSpAll);
+  document.getElementById("kpiHs").innerText = fmtPct1(hsTb) + "%";
+  document.getElementById("usdNgayTop").innerText = fmtMoney(tongUsdNgay);
+  document.getElementById("kpiMaxSub").innerText = fmtMoney(maxUsdGio);
 }
 
 /* ================== COMPARE BY HOUR ================== */
@@ -655,22 +661,23 @@ function renderCompare(raw){
     return `
       <tr>
         <td><b>${escapeHtml(h)}</b></td>
-        <td>${fmt0(o.kh)}</td>
-        <td>${fmt0(o.tt)}</td>
-        <td class="${def<0?'pct bad':'pct good'}">${fmt0(def)}</td>
+        <td>${fmtInt(o.kh)}</td>
+        <td>${fmtInt(o.tt)}</td>
+        <td class="${def<0?'pct bad':'pct good'}">${fmtInt(def)}</td>
         <td>${pill(hs)}</td>
       </tr>
     `;
   }).join("");
 
   const sumHS = sumKH>0 ? (sumTT/sumKH*100) : 0;
-  document.getElementById("cmpSumKH").innerHTML = `<b>${fmt0(sumKH)}</b>`;
-  document.getElementById("cmpSumTT").innerHTML = `<b>${fmt0(sumTT)}</b>`;
-  document.getElementById("cmpSumDef").innerHTML = `<b>${fmt0(sumDef)}</b>`;
-  document.getElementById("cmpSumHS").innerHTML = `<b>${fmt1(sumHS)}%</b>`;
+  document.getElementById("cmpSumKH").innerHTML = `<b>${fmtInt(sumKH)}</b>`;
+  document.getElementById("cmpSumTT").innerHTML = `<b>${fmtInt(sumTT)}</b>`;
+  document.getElementById("cmpSumDef").innerHTML = `<b>${fmtInt(sumDef)}</b>`;
+  document.getElementById("cmpSumHS").innerHTML = `<b>${fmtPct1(sumHS)}%</b>`;
 
-  document.getElementById("cmpMeta").innerText = `Ngày ${ngay} • Tổng KH=${fmt0(sumKH)} • TT=${fmt0(sumTT)} • HS=${fmt1(sumHS)}%`;
-  document.getElementById("kpiDeficit").innerText = fmt0(sumDef);
+  document.getElementById("cmpMeta").innerText =
+    `Ngày ${ngay} • Tổng KH=${fmtInt(sumKH)} • TT=${fmtInt(sumTT)} • HS=${fmtPct1(sumHS)}%`;
+  document.getElementById("kpiDeficit").innerText = fmtInt(sumDef);
 }
 
 /* ================== ALERTS ================== */
@@ -727,24 +734,24 @@ function renderAlerts(raw){
     <div class="card" style="box-shadow:none;border-style:dashed">
       <div class="label">Giờ tệ nhất (toàn xưởng)</div>
       <div class="value" style="font-size:16px">
-        ${worstH ? `${worstH.h} • ${pill(worstH.hs)} • Thiếu ${fmt0(worstH.def)}` : "—"}
+        ${worstH ? `${worstH.h} • ${pill(worstH.hs)} • Thiếu ${fmtInt(worstH.def)}` : "—"}
       </div>
-      <div class="sub">${worstH ? `KH ${fmt0(worstH.kh)} • TT ${fmt0(worstH.tt)}` : ""}</div>
+      <div class="sub">${worstH ? `KH ${fmtInt(worstH.kh)} • TT ${fmtInt(worstH.tt)}` : ""}</div>
     </div>
 
     <div class="card" style="box-shadow:none;border-style:dashed">
       <div class="label">Tổ thiếu hụt lớn nhất</div>
       <div class="value" style="font-size:16px">
-        ${worstTo ? `Tổ ${worstTo.to} (${escapeHtml(worstTo.ma||"")}) • Thiếu ${fmt0(worstTo.def)} • ${pill(worstTo.hs)}` : "—"}
+        ${worstTo ? `Tổ ${worstTo.to} (${escapeHtml(worstTo.ma||"")}) • Thiếu ${fmtInt(worstTo.def)} • ${pill(worstTo.hs)}` : "—"}
       </div>
-      <div class="sub">${worstTo ? `KH ${fmt0(worstTo.kh)} • TT ${fmt0(worstTo.tt)}` : ""}</div>
+      <div class="sub">${worstTo ? `KH ${fmtInt(worstTo.kh)} • TT ${fmtInt(worstTo.tt)}` : ""}</div>
     </div>
 
     <div class="card" style="box-shadow:none;border-style:dashed">
       <div class="label">3 bản ghi đỏ nhất (HS thấp)</div>
       <div class="sub">
         ${bad.length ? bad.map(x=>`
-          • T${x.to} ${escapeHtml(x.khung)}: <b class="pct bad">${fmt1(x.hs)}%</b> (Thiếu ${fmt0(x.def)}) ${x.reason?`— ${escapeHtml(x.reason)}`:""}
+          • T${x.to} ${escapeHtml(x.khung)}: <b class="pct bad">${fmtPct1(x.hs)}%</b> (Thiếu ${fmtInt(x.def)}) ${x.reason?`— ${escapeHtml(x.reason)}`:""}
         `).join("<br/>") : "—"}
       </div>
     </div>
@@ -780,7 +787,7 @@ function renderReasonPanels(rawOverride){
 
   const badCount = rows.filter(r => r.hs < 80).length;
   document.getElementById("reasonMeta").innerText =
-    `Ngày ${ngay} • Bản ghi giờ: ${rows.length} • Giờ đỏ (HS<80%): ${badCount}`;
+    `Ngày ${ngay} • Bản ghi giờ: ${fmtInt(rows.length)} • Giờ đỏ (HS<80%): ${fmtInt(badCount)}`;
 
   const counter = new Map();
   for(const r of rows){
@@ -792,7 +799,7 @@ function renderReasonPanels(rawOverride){
     ? top.map(([reason,c])=>`
       <tr>
         <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(reason)}</td>
-        <td><b>${c}</b></td>
+        <td><b>${fmtInt(c)}</b></td>
       </tr>
     `).join("")
     : `<tr><td colspan="2" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có nguyên nhân.</td></tr>`;
@@ -806,10 +813,10 @@ function renderReasonPanels(rawOverride){
           <td><b>${r.to}</b></td>
           <td>${escapeHtml(r.ma_hang||"")}</td>
           <td>${escapeHtml(r.khung)}</td>
-          <td>${fmt0(r.kh)}</td>
-          <td>${fmt0(r.tt)}</td>
-          <td class="${r.def<0?'pct bad':'pct good'}">${fmt0(r.def)}</td>
-          <td class="pct ${pctClass(r.hs)}">${fmt1(r.hs)}%</td>
+          <td>${fmtInt(r.kh)}</td>
+          <td>${fmtInt(r.tt)}</td>
+          <td class="${r.def<0?'pct bad':'pct good'}">${fmtInt(r.def)}</td>
+          <td class="pct ${pctClass(r.hs)}">${fmtPct1(r.hs)}%</td>
           <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(show)}</td>
         </tr>
       `;
@@ -824,7 +831,7 @@ function alertReason(to, ma, khung, reason){
 
 /* ================== EVENTS ================== */
 document.getElementById("date").addEventListener("change", ()=>{
-  loadGdcTicker(); // ✅ ticker đổi theo ngày
+  loadGdcTicker();
   reload();
 });
 document.addEventListener("input",(e)=>{
