@@ -69,39 +69,73 @@
   .pill.warn{background:rgba(245,158,11,.12);color:#92400e;border:1px solid rgba(245,158,11,.25)}
   .pill.good{background:rgba(22,163,74,.10);color:#166534;border:1px solid rgba(22,163,74,.22)}
 
-  /* ====== TICKER (STICKER THÔNG BÁO GDC) ====== */
-  .tickerWrap{
+  /* ====== STICKER (GIỐNG TK1/TO1) ======
+     - Không "marquee" kiểu GDC.
+     - Hiển thị gọn, có nút mở rộng xem đầy đủ.
+  */
+  .stWrap{
     margin-top:10px;
+    display:flex;
+    gap:8px;
+    align-items:stretch;
+    flex-wrap:wrap;
+  }
+  .stCard{
+    flex:1 1 520px;
     background:rgba(255,255,255,.10);
     border:1px solid rgba(255,255,255,.18);
     border-radius:14px;
-    overflow:hidden;
-    height:34px;
+    padding:8px 10px;
     display:flex;
-    align-items:center;
+    gap:10px;
+    align-items:flex-start;
+    min-width:280px;
   }
-  .tickerLabel{
+  .stBadge{
     flex:0 0 auto;
+    height:26px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
     padding:0 10px;
+    border-radius:999px;
     font-weight:900;
     font-size:12px;
     background:rgba(245,158,11,.22);
-    border-right:1px solid rgba(255,255,255,.18);
-    height:34px;display:flex;align-items:center;
+    border:1px solid rgba(255,255,255,.18);
+    white-space:nowrap;
+    margin-top:1px;
   }
-  .tickerTrack{position:relative;flex:1;overflow:hidden;height:34px}
-  .tickerRun{
-    position:absolute;white-space:nowrap;will-change:transform;
-    animation: marquee 18s linear infinite;
-    padding-left:100%;
+  .stText{
+    flex:1 1 auto;
     font-size:12.5px;
     font-weight:800;
-    opacity:.95;
+    line-height:1.25;
+    opacity:.96;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    padding-top:4px;
   }
-  @keyframes marquee{
-    0%{transform:translateX(0)}
-    100%{transform:translateX(-100%)}
+  .stActions{
+    flex:0 0 auto;
+    display:flex;
+    gap:6px;
+    align-items:center;
+    margin-top:1px;
   }
+  .stBtn{
+    height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.20);
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    font-weight:900;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .stBtn:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
@@ -112,11 +146,15 @@
       <b>📊 GDX1 – THEO DÕI NĂNG SUẤT GIỜ (XN1)</b>
       <span id="roleHint">GĐX chỉ xem • Theo dõi theo ngày</span>
 
-      <!-- ✅ STICKER / TICKER CHỈ ĐẠO GDC (GIỐNG TK1/TO1) -->
-      <div class="tickerWrap" title="Chỉ đạo từ GĐC (hiển thị ALL + XN1)">
-        <div class="tickerLabel">📢 CHỈ ĐẠO</div>
-        <div class="tickerTrack">
-          <div class="tickerRun" id="tickerText">Đang tải chỉ đạo...</div>
+      <!-- ✅ STICKER CHỈ ĐẠO (GIỐNG TK1/TO1: gọn + ellipsis + xem full) -->
+      <div class="stWrap" title="Chỉ đạo từ GĐC (hiển thị ALL + XN1)">
+        <div class="stCard">
+          <div class="stBadge">📢 CHỈ ĐẠO</div>
+          <div class="stText" id="stickerText">Đang tải chỉ đạo...</div>
+          <div class="stActions">
+            <button class="stBtn" onclick="showStickerFull()">Xem</button>
+            <button class="stBtn" onclick="refreshSticker()">↻</button>
+          </div>
         </div>
       </div>
     </div>
@@ -355,6 +393,9 @@ let S = mustLogin();
 let dayHoursRaw = [];     // rows production_hour for day
 let planMap = new Map();  // to_nhom -> {ma_hang,...}
 
+// sticker state
+let stickerFullText = "";
+
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML = HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
@@ -372,10 +413,11 @@ if(S){
   }
 }
 
-/* ================== TICKER (CHỈ ĐẠO) ==================
-   - Hiển thị: (ALL) + (XN1)
-   - Ưu tiên worker mới: getDirectorMessage(scope, ngay)
-   - Fallback: getDirectorMessage(scope)
+/* ================== STICKER (CHỈ ĐẠO) ==================
+   - Gọn giống TK/TO: hiển thị 1 dòng ellipsis
+   - Nút Xem: alert full
+   - Tải theo ngày đang chọn (không cố định today)
+   - Ưu tiên API mới: getDirectorMessage(ngay, scope)
 ======================================================== */
 async function apiGetMsg(scope, ngay){
   // ưu tiên có 'ngay'
@@ -387,19 +429,20 @@ async function apiGetMsg(scope, ngay){
   return res;
 }
 
-async function refreshTicker(){
+async function refreshSticker(){
   const s = sess();
   if(!s?.token) return;
   S = s;
 
-  const ngay = todayISO(); // chỉ đạo theo ngày hôm nay
+  const ngay = document.getElementById("date").value || todayISO();
+
   const all = await apiGetMsg("ALL", ngay);
   const xn  = await apiGetMsg(String(XUONG), ngay);
 
   let allMsg = (all?.success ? String(all.message||"") : "").trim();
   let xnMsg  = (xn?.success  ? String(xn.message||"")  : "").trim();
 
-  // nếu worker trả updated_at và không phải hôm nay -> coi như hết hạn
+  // Nếu API trả updated_at mà khác ngày đang xem => bỏ
   if(all?.updated_at){
     const d = String(all.updated_at).slice(0,10);
     if(d && d !== ngay) allMsg = "";
@@ -413,18 +456,16 @@ async function refreshTicker(){
   if(allMsg) parts.push(`(ALL) ${allMsg}`);
   if(xnMsg)  parts.push(`(XN${XUONG}) ${xnMsg}`);
 
-  const text = parts.length ? parts.join("  •  ") : "Chưa có chỉ đạo hôm nay";
-  const el = document.getElementById("tickerText");
-  el.innerHTML = escapeHtml(text);
-
-  // reset animation cho mượt
-  el.style.animation = "none";
-  void el.offsetHeight;
-  el.style.animation = "";
+  stickerFullText = parts.length ? parts.join("\n\n") : "Chưa có chỉ đạo trong ngày này";
+  document.getElementById("stickerText").textContent = stickerFullText.replace(/\n+/g," • ");
 }
 
-// auto refresh ticker mỗi 30s
-setInterval(()=>{ refreshTicker(); }, 30000);
+function showStickerFull(){
+  alert(stickerFullText || "Chưa có chỉ đạo");
+}
+
+// auto refresh sticker mỗi 45s
+setInterval(()=>{ refreshSticker(); }, 45000);
 
 /* ================== LOAD ================== */
 async function reload(){
@@ -439,10 +480,10 @@ async function reload(){
   const ngay = document.getElementById("date").value;
   setStatus("Đang tải dữ liệu ngày...");
 
-  // nạp ticker ngay khi vào/đổi ngày
-  refreshTicker();
+  // sticker theo ngày đang xem
+  refreshSticker();
 
-  // 1) Plan + hours array (giống TK1)
+  // 1) Plan + hours array
   const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:XUONG });
   if(!res.success){
     setStatus("Lỗi: " + (res.msg||""));
@@ -459,7 +500,7 @@ async function reload(){
   renderDayRows(rows);
   calcFooterAndKpi(rows);
 
-  // 2) Raw hour range: có KH/giờ, TT, HS, nguyên nhân
+  // 2) Raw hour range
   const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:XUONG, from: ngay, to: ngay });
   if(!hr.success){
     dayHoursRaw = [];
@@ -477,7 +518,7 @@ async function reload(){
   setStatus(`Đã tải • ${ngay} • XN${XUONG}`);
 }
 
-/* ================== TABLE (GIỐNG TK1) ================== */
+/* ================== TABLE ================== */
 function renderDayRows(rows){
   const tb = document.getElementById("tbody");
   tb.innerHTML = rows.map(r=>{
