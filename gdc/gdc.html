@@ -3,273 +3,108 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC Mobile – Dashboard Năng suất</title>
+<title>GDC – Mobile Dashboard</title>
 <style>
   :root{
-    --bg:#0b1220;
-    --card:#111a2e;
-    --card2:#0f172a;
-    --line:rgba(255,255,255,.10);
-    --text:#e5e7eb;
-    --muted:rgba(229,231,235,.72);
-    --primary:#60a5fa;
-    --good:#22c55e;
-    --warn:#f59e0b;
-    --bad:#ef4444;
-    --shadow:0 18px 40px rgba(0,0,0,.28);
-    --radius:18px;
+    --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
+    --head:#eef2f7;--head2:#e5e7eb;--primary:#2563eb;
+    --good:#16a34a;--warn:#f59e0b;--bad:#dc2626;
+    --shadow:0 10px 24px rgba(0,0,0,.06);
   }
   *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    background: radial-gradient(1200px 500px at 20% 0%, rgba(96,165,250,.16), transparent 60%),
-                radial-gradient(900px 500px at 80% 20%, rgba(34,197,94,.12), transparent 60%),
-                var(--bg);
-    color:var(--text);
-  }
-  .topbar{
-    position:sticky; top:0; z-index:50;
-    background:linear-gradient(180deg, rgba(15,23,42,.96), rgba(11,18,32,.92));
-    backdrop-filter: blur(10px);
-    border-bottom:1px solid var(--line);
-    padding:12px 12px 10px;
-  }
-  .row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
-  .brand b{display:block; font-size:14px; letter-spacing:.2px}
-  .brand span{display:block; font-size:12px; color:var(--muted); margin-top:2px}
-  .ctlRow{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-  .ctl{
-    display:flex; align-items:center; gap:8px;
-    background:rgba(255,255,255,.06);
-    border:1px solid var(--line);
-    padding:8px 10px;
-    border-radius:14px;
-  }
-  .ctl label{font-size:12px; color:var(--muted)}
-  input[type="date"]{
-    background:transparent;
-    border:none; outline:none;
-    color:var(--text);
-    font-size:12px;
-  }
-  .btn{
-    border:none; outline:none; cursor:pointer;
-    padding:10px 12px;
-    border-radius:14px;
-    font-weight:900;
-    font-size:12px;
-    background:rgba(96,165,250,.18);
-    color:var(--text);
-    border:1px solid rgba(96,165,250,.35);
-  }
-  .btn:disabled{opacity:.55; cursor:not-allowed}
-  .btn.primary{
-    background:linear-gradient(180deg, rgba(96,165,250,.38), rgba(96,165,250,.18));
-    border:1px solid rgba(96,165,250,.45);
-  }
-  .btn.ghost{
-    background:rgba(255,255,255,.06);
-    border:1px solid var(--line);
-  }
-  .status{
-    margin-top:8px;
-    font-size:12px;
-    color:var(--muted);
-    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  }
-  .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
-  .wrap{padding:12px; max-width:1200px; margin:0 auto}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+  .topbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#0f3a8a,#1d4ed8);color:#fff;padding:10px 12px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+  .topbar .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .brand b{display:block;font-size:14px}
+  .brand span{font-size:12px;opacity:.88}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .ctl{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);padding:6px 8px;border-radius:12px}
+  .ctl label{font-size:12px;opacity:.9}
+  .ctl input,.ctl select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:6px 8px;border-radius:10px;outline:none;font-size:12px}
+  .ctl select option{color:#111}
+  .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}
+  .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
-  /* ticker chỉ đạo */
-  .ticker{
-    display:none;
-    margin:10px 0 0;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-    border-radius:16px;
-    overflow:hidden;
-  }
-  .tickerTop{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 10px;
-    border-bottom:1px solid var(--line);
-    font-size:12px;
-    color:var(--muted);
-  }
-  .tickerTop b{color:var(--text)}
-  .tickerMarquee{
-    white-space:nowrap;
-    overflow:hidden;
-    position:relative;
-    height:36px;
-    display:flex; align-items:center;
-  }
-  .tickerMarquee .text{
-    display:inline-block;
-    padding-left:100%;
-    font-weight:900;
-    font-size:13px;
-    animation: marquee 18s linear infinite;
-  }
-  @keyframes marquee{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-100%); }
-  }
-
-  /* tabs xưởng */
-  .tabs{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-    margin-top:12px;
-  }
-  .tab{
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.05);
-    border-radius:16px;
-    padding:10px;
-    text-align:left;
-    cursor:pointer;
-    min-height:84px;
-  }
-  .tab.active{
-    background:linear-gradient(180deg, rgba(96,165,250,.22), rgba(255,255,255,.05));
-    border-color:rgba(96,165,250,.45);
-    box-shadow:0 12px 30px rgba(96,165,250,.12);
-  }
-  .tab .t1{display:flex; align-items:center; justify-content:space-between; gap:8px}
-  .tab .name{font-weight:1000; font-size:13px}
-  .pill{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:4px 8px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:900;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-  }
-  .pill.good{border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.10); color:#bbf7d0}
-  .pill.warn{border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.10); color:#fde68a}
-  .pill.bad{border-color:rgba(239,68,68,.35); background:rgba(239,68,68,.10); color:#fecaca}
-  .tab .kpis{
-    margin-top:8px;
-    display:grid;
-    grid-template-columns:1fr;
-    gap:4px;
-    font-size:12px;
-    color:var(--muted);
-  }
-  .tab .kpis b{color:var(--text)}
-  .tab .reasons{
-    margin-top:8px;
-    font-size:12px;
-    color:var(--muted);
-    line-height:1.35;
-  }
-
-  /* section cards */
-  .grid2{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:12px;
-    margin-top:12px;
-  }
-  @media(min-width:980px){
-    .grid2{ grid-template-columns:1.25fr .75fr; }
-  }
-  .card{
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.05);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    overflow:hidden;
-  }
-  .card .head{
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-  }
-  .card .head b{font-size:13px}
-  .card .body{padding:10px 12px}
-
-  /* table */
-  .tableWrap{overflow:auto}
-  table{width:max(900px,100%); border-collapse:collapse; font-size:12px}
-  th,td{border:1px solid rgba(255,255,255,.10); padding:7px 8px; text-align:center; white-space:nowrap}
-  th{background:rgba(255,255,255,.06); font-weight:1000}
-  tbody tr:nth-child(even) td{background:rgba(255,255,255,.03)}
-  .left{text-align:left; white-space:normal}
-  .right{text-align:right}
-  .pct{font-weight:1000}
+  .wrap{padding:12px;display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
+  .card .label{font-size:12px;color:var(--muted)}
+  .card .value{font-size:20px;font-weight:900;margin-top:4px}
+  .small{font-size:12px;color:var(--muted);line-height:1.45}
+  .pct{font-weight:900}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
-  .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
 
-  /* modal directive */
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg button{
+    flex:1 1 auto;
+    padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;
+    font-weight:900;font-size:12px;cursor:pointer
+  }
+  .seg button.active{background:#0e2552;border-color:#0e2552;color:#fff}
+  .seg small{display:block;font-weight:700;opacity:.9}
+
+  .kpiGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:420px){ .kpiGrid{grid-template-columns:1fr 1fr} }
+  .kpi{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff}
+  .kpi .label{font-size:12px;color:var(--muted)}
+  .kpi .value{font-size:18px;font-weight:900;margin-top:4px}
+
+  .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
+  table{width:max(980px,100%);border-collapse:collapse;font-size:12.5px}
+  th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
+  thead tr:nth-child(1) th{background:var(--head);font-weight:900}
+  thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
+  thead th{position:sticky;top:0;z-index:5}
+  thead tr:nth-child(2) th{top:34px}
+  tbody tr:nth-child(even) td{background:#fafafa}
+  tfoot td{background:#f1f5f9;font-weight:900}
+
+  /* Sticky 2 cột đầu */
+  .sticky1{position:sticky;left:0;z-index:6;background:#fff}
+  .sticky2{position:sticky;left:62px;z-index:6;background:#fff}
+  thead .sticky1, thead .sticky2{z-index:10;background:var(--head)}
+  thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2{background:var(--head2)}
+
+  /* ✅ MÃ HÀNG NGẮN LẠI */
+  td.codeCell{max-width:150px;width:150px}
+  td.codeCell .ellipsis{
+    display:block;max-width:150px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    text-align:left;padding-left:6px;
+  }
+
+  .left{text-align:left}
+  .right{text-align:right}
+
+  /* Reason list */
+  .reasonBox{border:1px dashed var(--line);border-radius:14px;padding:10px;background:#fff}
+  .reasonItem{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #eee}
+  .reasonItem:last-child{border-bottom:none}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line);background:#fff}
+  .pill.bad{background:rgba(220,38,38,.10);color:#991b1b;border-color:rgba(220,38,38,.25)}
+  .pill.warn{background:rgba(245,158,11,.12);color:#92400e;border-color:rgba(245,158,11,.25)}
+  .pill.good{background:rgba(22,163,74,.10);color:#166534;border-color:rgba(22,163,74,.22)}
+
+  /* Modal chỉ đạo */
   .fab{
-    position:fixed;
-    right:14px;
-    bottom:14px;
-    z-index:80;
-    width:54px; height:54px;
-    border-radius:16px;
-    border:1px solid rgba(96,165,250,.45);
-    background:linear-gradient(180deg, rgba(96,165,250,.42), rgba(96,165,250,.18));
-    box-shadow:0 18px 40px rgba(0,0,0,.35);
-    display:flex; align-items:center; justify-content:center;
-    font-size:20px;
+    position:fixed;right:14px;bottom:14px;z-index:80;
+    width:54px;height:54px;border-radius:999px;border:none;
+    background:#0e2552;color:#fff;font-size:22px;font-weight:900;
+    box-shadow:0 14px 28px rgba(0,0,0,.22);
     cursor:pointer;
   }
-  .modal{
-    position:fixed; inset:0;
-    background:rgba(0,0,0,.55);
-    display:none;
-    align-items:flex-end;
-    z-index:90;
-  }
-  .sheet{
-    width:100%;
-    background:linear-gradient(180deg, rgba(17,26,46,.98), rgba(15,23,42,.98));
-    border-top-left-radius:22px;
-    border-top-right-radius:22px;
-    border:1px solid rgba(255,255,255,.10);
-    box-shadow:0 -18px 50px rgba(0,0,0,.45);
-    padding:12px;
-    max-height:88vh;
-    overflow:auto;
-  }
-  .sheet .titleRow{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin-bottom:10px;
-  }
-  .sheet .titleRow b{font-size:14px}
-  .sheet .close{
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-    color:var(--text);
-    border-radius:12px;
-    padding:8px 10px;
-    cursor:pointer;
-    font-weight:900;
-  }
-  .formRow{display:grid; grid-template-columns:1fr; gap:10px}
-  @media(min-width:700px){ .formRow{grid-template-columns:1fr 1fr} }
-  .field{
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-    border-radius:16px;
-    padding:10px;
-  }
-  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
-  select, textarea{
-    width:100%;
-    border:none; outline:none;
-    background:transparent;
-    color:var(--text);
-    font-size:13px;
-  }
-  textarea{min-height:110px; resize:vertical; line-height:1.35}
-  .sheet .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap}
+  .modalMask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:90;padding:14px}
+  .modal{width:min(560px,100%);background:#fff;border-radius:18px;border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.30);padding:12px}
+  .modal h3{margin:0 0 8px 0}
+  .mRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .mRow select,.mRow input{padding:10px;border:1px solid var(--line);border-radius:12px;outline:none}
+  .mRow select{min-width:130px}
+  .mRow input{flex:1}
+  .mTxt{width:100%;min-height:110px;resize:vertical;padding:10px;border:1px solid var(--line);border-radius:12px;outline:none;margin-top:10px;font-family:inherit}
+  .mBtns{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+  .btnDanger{background:#b91c1c}
+
 </style>
 </head>
 <body>
@@ -277,184 +112,172 @@
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>🏢 GDC – Dashboard Năng suất</b>
+      <b>🏢 GDC – Dashboard (Mobile)</b>
       <span id="roleHint">—</span>
     </div>
 
-    <div class="ctlRow">
+    <div class="controls">
       <div class="ctl">
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
-      <button class="btn primary" id="btnReload">Tải</button>
-      <button class="btn ghost" id="btnLogout">Đăng xuất</button>
-    </div>
-  </div>
-
-  <div class="status">
-    <span class="dot"></span>
-    <span id="status">Đang khởi tạo…</span>
-  </div>
-
-  <div class="ticker" id="ticker">
-    <div class="tickerTop">
-      <div><b>📣 Chỉ đạo GĐC</b> • <span id="tickerScope">—</span></div>
-      <div id="tickerTime">—</div>
-    </div>
-    <div class="tickerMarquee">
-      <div class="text" id="tickerText">—</div>
+      <button class="btn" onclick="reload()">Tải</button>
+      <button class="btn ghost" onclick="logout()">Thoát</button>
+      <div class="status" id="status">Chưa tải dữ liệu</div>
     </div>
   </div>
 </div>
 
 <div class="wrap">
-  <div class="tabs" id="tabs"></div>
 
-  <div class="grid2">
-    <!-- ✅ THEO GIỜ (GIỐNG TK1, CẮT LAO ĐỘNG TRỞ VỀ SAU) -->
-    <div class="card">
-      <div class="head">
-        <b id="hourTitle">⏱️ Năng suất theo giờ – XN1</b>
-        <span class="pill" id="hourMeta">—</span>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <b>📌 Chọn xưởng để xem chi tiết</b>
+      <span class="pill" id="rangeInfo">—</span>
+    </div>
+    <div class="seg" style="margin-top:10px">
+      <button id="seg1" class="active" onclick="setXuong(1)">XN1 <small>7-8..16-17</small></button>
+      <button id="seg2" onclick="setXuong(2)">XN2 <small>7-8..16-17</small></button>
+      <button id="seg3" onclick="setXuong(3)">XN3 <small>7-8..16-17</small></button>
+    </div>
+
+    <div class="kpiGrid" style="margin-top:10px">
+      <div class="kpi">
+        <div class="label">USD (ước tính)</div>
+        <div class="value" id="kpiUsd">0.00</div>
       </div>
-      <div class="body">
-        <div class="tableWrap">
-          <table id="hourTbl" style="width:max(1550px,100%)">
-            <thead>
-              <tr>
-                <th>TỔ</th>
-                <th>LINE</th>
-                <th class="left" style="min-width:180px">MÃ HÀNG</th>
-                <th>SL KH</th>
-                <th>ĐM NGÀY</th>
-                <th>ĐM GIỜ</th>
-                <th>USD/QT</th>
-                <th id="hourHeadHours" colspan="9">SẢN LƯỢNG THEO GIỜ</th>
-                <th>TỔNG SP</th>
-                <th>USD/TH</th>
-                <th>HIỆU SUẤT</th>
-              </tr>
-              <tr id="hourHeadRow2"></tr>
-            </thead>
-            <tbody id="hourTbody"></tbody>
-            <tfoot>
-              <tr>
-                <th colspan="7" class="right">TỔNG</th>
-                <th id="hourSumSp" class="right">0</th>
-                <th id="hourSumUsd" class="right">0.00</th>
-                <th id="hourSumHs">0.0%</th>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-       
+      <div class="kpi">
+        <div class="label">Tổng SP</div>
+        <div class="value" id="kpiSp">0</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Hiệu suất</div>
+        <div class="value" id="kpiHs">0.0%</div>
       </div>
     </div>
 
-    <!-- TOP NGUYÊN NHÂN -->
-    <div class="card">
-      <div class="head">
-        <b>🧾 Nguyên nhân nổi bật</b>
-        <span class="pill" id="reasonMeta">—</span>
+    <div class="reasonBox" style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <b>🧾 Top nguyên nhân (HS&lt;80%)</b>
+        <span class="small" id="reasonMeta">—</span>
       </div>
-      <div class="body">
-        <div class="tableWrap">
-          <table style="width:100%">
-            <thead>
-              <tr>
-                <th class="left">Nguyên nhân</th>
-                <th>Số lần</th>
-              </tr>
-            </thead>
-            <tbody id="reasonTopTbody"></tbody>
-          </table>
-        </div>
-        
-      </div>
+      <div id="reasonList" style="margin-top:6px"></div>
     </div>
   </div>
 
-  <!-- ✅ NĂNG SUẤT NGÀY (XN1/2/3 THEO TAB) -->
-  <div class="card" style="margin-top:12px">
-    <div class="head">
-      <b id="dayTitle">📄 Năng suất ngày – XN1</b>
-      <span class="pill" id="dayMeta">—</span>
+  <!-- =========================
+       ⏱️ BẢNG NĂNG SUẤT GIỜ
+       (giống TK1, bỏ từ Lao động trở về sau)
+  ========================== -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <b id="hourTitle">⏱️ Năng suất theo giờ – XN1</b>
+      <span class="small" id="hourMeta">—</span>
     </div>
-    <div class="body">
-      <div class="tableWrap">
-        <table style="width:max(1180px,100%)">
-          <thead>
-            <tr>
-              <th>TỔ</th>
-              <th>LINE</th>
-              <th class="left">MÃ HÀNG</th>
-              <th>LĐTT</th>
-              <th>ĐM/NGÀY</th>
-              <th>TH</th>
-              <th>ĐG</th>
-              <th>USD</th>
-              <th>%NS</th>
-              <th>USD/NG</th>
-              <th>CD/NGÀY</th>
-              <th class="left">GHI CHÚ</th>
-            </tr>
-          </thead>
-          <tbody id="dayTbody"></tbody>
-          <tfoot>
-            <tr>
-              <th colspan="7" class="right">TỔNG</th>
-              <th id="daySumUsd">0.00</th>
-              <th id="daySumHs">0%</th>
-              <th id="daySumUsdPer">0.00</th>
-              <th colspan="2"></th>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <div class="hint" style="margin-top:10px">
-        ✅ Tab chọn xưởng ở trên sẽ đổi bảng này sang XN2/XN3 tương ứng.
-      </div>
+
+    <div class="tableWrap" style="margin-top:10px">
+      <table id="tblHour">
+        <thead>
+          <tr>
+            <th class="sticky1" rowspan="2" style="min-width:62px;">TỔ</th>
+            <th class="sticky2" rowspan="2" style="min-width:150px;">MÃ HÀNG</th>
+            <th rowspan="2" style="min-width:90px;">SL KH</th>
+            <th rowspan="2" style="min-width:90px;">ĐM NGÀY</th>
+            <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
+            <th rowspan="2" style="min-width:95px;">USD/QT</th>
+            <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+            <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
+            <th rowspan="2" style="min-width:110px;">USD/TH</th>
+            <th rowspan="2" style="min-width:105px;">HIỆU SUẤT</th>
+            <th rowspan="2" style="min-width:90px;">ĐG</th>
+            <th rowspan="2" style="min-width:100px;">TG/QT</th>
+            <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
+            <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
+          </tr>
+          <tr id="hourHead"></tr>
+        </thead>
+        <tbody id="tbodyHour"></tbody>
+        <tfoot>
+          <!-- ✅ THÊM TỔNG USD/QT + TỔNG USD/GIỜ -->
+          <tr>
+            <td class="sticky1 left" colspan="5" style="padding-left:10px;">TỔNG USD/QT</td>
+            <td class="right" id="sumUsdQt">0.00</td>
+            <td colspan="13"></td>
+          </tr>
+          <tr>
+            <td class="sticky1 left" colspan="6" style="padding-left:10px;">TỔNG USD / GIỜ</td>
+            <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
+            <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
+            <td colspan="7"></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
+
+  <!-- =========================
+       📅 Năng suất ngày (XN đang chọn)
+       + nguyên nhân tổng hợp phía sau
+  ========================== -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <b id="dayTitle">📅 Năng suất ngày – XN1</b>
+      <span class="small" id="dayMeta">—</span>
+    </div>
+
+    <div class="tableWrap" style="margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th>TỔ</th>
+            <th>THỰC HIỆN</th>
+            <th>ĐM NGÀY</th>
+            <th>HS</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyDay"></tbody>
+        <tfoot>
+          <tr>
+            <td><b>TỔNG</b></td>
+            <td id="sumDaySp"><b>0</b></td>
+            <td id="sumDayDm"><b>0</b></td>
+            <td id="sumDayHs"><b>0.0%</b></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="reasonBox" style="margin-top:10px">
+      <b>🧩 Nguyên nhân tổng hợp trong ngày (XN đang chọn)</b>
+      <div class="small" id="reasonMetaDay" style="margin-top:4px">—</div>
+      <div id="reasonListDay" style="margin-top:6px"></div>
+    </div>
+  </div>
+
 </div>
 
-<div class="fab" title="Chỉ đạo" id="fabDir">✍️</div>
+<button class="fab" title="Chỉ đạo" onclick="openModal()">✍️</button>
 
-<div class="modal" id="dirModal">
-  <div class="sheet">
-    <div class="titleRow">
-      <b>📣 Chỉ đạo Giám đốc</b>
-      <button class="close" id="btnDirClose">Đóng</button>
+<div class="modalMask" id="modalMask" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>📣 Chỉ đạo GĐC</h3>
+    <div class="small">Chọn phạm vi và lưu. TO/TK/GDX sẽ thấy (ALL + XN).</div>
+
+    <div class="mRow" style="margin-top:10px">
+      <select id="mScope">
+        <option value="ALL">ALL</option>
+        <option value="1">XN1</option>
+        <option value="2">XN2</option>
+        <option value="3">XN3</option>
+      </select>
+      <input id="mNgay" type="date" />
     </div>
 
-    <div class="formRow">
-      <div class="field">
-        <label>Ngày</label>
-        <div id="dirDate" style="font-weight:900"></div>
-      </div>
-      <div class="field">
-        <label>Phạm vi</label>
-        <select id="dirScope">
-          <option value="ALL">ALL (Tất cả)</option>
-          <option value="1">XN1</option>
-          <option value="2">XN2</option>
-          <option value="3">XN3</option>
-        </select>
-      </div>
-    </div>
+    <textarea id="mText" class="mTxt" placeholder="Nhập chỉ đạo..."></textarea>
 
-    <div class="field" style="margin-top:10px">
-      <label>Nội dung</label>
-      <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
-    </div>
-
-    <div class="actions">
-      <button class="btn ghost" id="btnDirUseXuong">Lấy xưởng đang xem</button>
-      <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
-    </div>
-
-    <div class="hint">
-      * TO/TK/GĐX sẽ thấy chỉ đạo (ALL + theo xưởng) đúng như worker.js đã ghép.
+    <div class="mBtns">
+      <button class="btn ghost" onclick="closeModal()">Đóng</button>
+      <button class="btn" onclick="saveDirective()">Lưu</button>
     </div>
   </div>
 </div>
@@ -463,13 +286,9 @@
 /* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
-const XUONGS = [1,2,3];
 
-const HOURS_BY_XUONG = {
-  1:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
-  2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
-  3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
-};
+const HOURS_XN12 = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
+const HOURS_XN3  = ["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"];
 
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
@@ -477,7 +296,7 @@ const TO_BY_XUONG = {
   3:[19,21,23,25,27]
 };
 
-/* ================== FORMAT ================== */
+/* ================== FORMAT (EN-US như bạn chốt) ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -486,23 +305,7 @@ function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
 function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
-function pctClass(hs){
-  hs=Number(hs)||0;
-  if(hs>=95) return "good";
-  if(hs>=80) return "warn";
-  return "bad";
-}
-function escapeHtml(s){
-  return String(s??"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-function normReason(s){
-  s = String(s||"").trim();
-  if(!s) return "";
-  s = s.replace(/\s+/g," ").replace(/[.。]+$/,"");
-  return s;
-}
+
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
@@ -510,467 +313,371 @@ function toNum(v){
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
-function todayISO(){
-  const vn = new Date(Date.now() + 7*60*60*1000);
-  return vn.toISOString().slice(0,10);
+function escapeHtml(s){
+  return String(s??"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function pctClass(hs){
+  hs = Number(hs)||0;
+  if(hs>=95) return "good";
+  if(hs>=80) return "warn";
+  return "bad";
+}
+function pill(hs){
+  hs = Number(hs)||0;
+  if(hs>=95) return `<span class="pill good">✅ ${fmtPct1(hs)}%</span>`;
+  if(hs>=80) return `<span class="pill warn">⚠️ ${fmtPct1(hs)}%</span>`;
+  return `<span class="pill bad">⛔ ${fmtPct1(hs)}%</span>`;
+}
+function normReason(s){
+  s = String(s||"").trim();
+  if(!s) return "";
+  s = s.replace(/\s+/g," ").replace(/[.。]+$/,"");
+  return s;
 }
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
-function mustLogin(){
-  const s=sess();
-  if(!s || !s.token){
-    location.href="../login.html";
-    return null;
-  }
-  return s;
-}
+function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
 function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
 
-/* ================== API (no-store + safe json) ================== */
+/* ================== UTIL ================== */
 async function apiPost(payload){
-  const s = mustLogin(); if(!s) return {success:false,msg:"NO_SESSION"};
-  payload = { ...payload, token:s.token, _ts: Date.now() };
   const r = await fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(payload),
-    cache:"no-store"
+    body:JSON.stringify(payload)
   });
   const text = await r.text();
   try{ return JSON.parse(text); }
   catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
 }
+function setStatus(t){ document.getElementById("status").innerText=t; }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 
 /* ================== STATE ================== */
-let S = null;
+let S = mustLogin();
 let activeXuong = 1;
 
-let hourRawByXuong = {1:[],2:[],3:[]};     // reasons
-let dayRowsByXuong = {1:[],2:[],3:[]};     // rows from getTkXuongDay
-let dayAggByXuong  = {1:null,2:null,3:null};
+let cacheDayRows = {1:[],2:[],3:[]};       // getTkXuongDay (rows có hours)
+let cacheHoursRaw = {1:[],2:[],3:[]};      // getHourRange (raw per day)
 
-/* ================== UI helpers ================== */
-function setStatus(t){ document.getElementById("status").innerText = t; }
-function pillHS(hs){
-  const cls = pctClass(hs);
-  const icon = cls==="good" ? "✅" : (cls==="warn" ? "⚠️" : "⛔");
-  return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
-}
+/* ================== INIT ================== */
+document.getElementById("date").value = todayISO();
+document.getElementById("mNgay").value = todayISO();
 
-/* ================== TICKER ================== */
-let tickerTimer=null;
-
-function fmtTickerTime(iso){
-  if(!iso) return "";
-  const d = new Date(iso);
-  if(Number.isNaN(d.getTime())) return "";
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mi = String(d.getMinutes()).padStart(2,"0");
-  const da = String(d.getDate()).padStart(2,"0");
-  const mo = String(d.getMonth()+1).padStart(2,"0");
-  return `${da}/${mo} ${hh}:${mi}`;
-}
-
-async function loadTicker(){
-  if(!S?.token) return;
-
-  const ngay = document.getElementById("date").value || todayISO();
-  let picked = null;
-
-  const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
-  if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
-
-  if(!picked){
-    const resX = await apiPost({ action:"getDirectorMessage", scope:String(activeXuong), ngay });
-    if(resX?.success && String(resX.message||"").trim()) picked = resX;
+if(S){
+  const ok = (S.role==="gdc");
+  document.getElementById("roleHint").innerText = ok
+    ? `✅ GĐC: ${S.username} • xem tất cả xưởng`
+    : `⛔ Không đúng quyền: role=${S.role} (cần gdc)`;
+  if(!ok){
+    setStatus("Không đúng quyền");
+  }else{
+    reload();
   }
-
-  const box = document.getElementById("ticker");
-  if(!picked){ box.style.display="none"; return; }
-
-  const scope = String(picked.scope||picked.xuong||"").toUpperCase();
-  const msg = String(picked.message||"").trim();
-  if(!msg){ box.style.display="none"; return; }
-
-  box.style.display="";
-  document.getElementById("tickerScope").innerText = (scope==="ALL") ? "ALL" : `XN${scope}`;
-  document.getElementById("tickerTime").innerText = fmtTickerTime(picked.updated_at) || "—";
-
-  const textEl = document.getElementById("tickerText");
-  textEl.style.animation="none"; textEl.offsetHeight;
-  textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
-  textEl.style.animation="marquee 18s linear infinite";
 }
 
-function startTicker(){
-  stopTicker();
-  loadTicker();
-  tickerTimer = setInterval(loadTicker, 30000);
+/* ================== HOURS PER XUONG ================== */
+function hoursOf(x){
+  return (Number(x)===3) ? HOURS_XN3 : HOURS_XN12;
 }
-function stopTicker(){
-  if(tickerTimer) clearInterval(tickerTimer);
-  tickerTimer=null;
+
+/* ================== UI: Segments ================== */
+function setXuong(x){
+  activeXuong = Number(x)||1;
+  document.getElementById("seg1").classList.toggle("active", activeXuong===1);
+  document.getElementById("seg2").classList.toggle("active", activeXuong===2);
+  document.getElementById("seg3").classList.toggle("active", activeXuong===3);
+
+  document.getElementById("hourTitle").innerText = `⏱️ Năng suất theo giờ – XN${activeXuong}`;
+  document.getElementById("dayTitle").innerText = `📅 Năng suất ngày – XN${activeXuong}`;
+
+  renderAllForActive();
 }
-window.addEventListener("beforeunload", stopTicker);
 
 /* ================== LOAD ================== */
-let REQ=0;
-
 async function reload(){
-  if(!S?.token) return;
-  const my = ++REQ;
+  S = mustLogin(); if(!S) return;
+  if(S.role!=="gdc"){ setStatus("⛔ Chỉ gdc được xem"); return; }
+
   const ngay = document.getElementById("date").value || todayISO();
-  const btn = document.getElementById("btnReload");
-  btn.disabled = true;
+  document.getElementById("mNgay").value = ngay;
+  document.getElementById("rangeInfo").innerText = `Ngày ${ngay}`;
 
-  setStatus("⏳ Đang tải dữ liệu...");
-  try{
-    // 1) load getTkXuongDay (rows)
-    for(const x of XUONGS){
-      setStatus(`⏳ Đang tải XN${x} (kế hoạch + theo giờ)…`);
-      const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
-      if(my!==REQ) return;
+  setStatus("Đang tải dữ liệu...");
+  const t0 = Date.now();
 
-      if(!res.success){
-        setStatus(`⛔ Lỗi getTkXuongDay XN${x}: ${(res.msg||"")}${res.raw?(" • "+res.raw):""}`);
-        dayRowsByXuong[x] = [];
-        dayAggByXuong[x] = { usd:0, sp:0, dm:0, hs:0, topReasons:[] };
-        continue;
-      }
+  for(const x of [1,2,3]){
+    const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
+    cacheDayRows[x] = (res && res.success) ? (res.rows||[]) : [];
 
-      const rows = res.rows || [];
-      const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
-      let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
-
-      // add placeholder nếu thiếu tổ
-      const existTo = new Set(filtered.map(r=>Number(r.to_nhom)));
-      for(const to of allowTos){
-        if(!existTo.has(to)){
-          filtered.push({
-            to_nhom:to, line_no:1, ma_hang:"",
-            so_luong_ke_hoach:0, dinh_muc_ngay:0, dinh_muc_gio:0, usd_quy_trinh:0,
-            don_gia:0, lao_dong_thuc_te:0, chuyen_doi_ngay:0, ghi_chu:"", hours:[]
-          });
-        }
-      }
-
-      filtered.sort((a,b)=>Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
-      dayRowsByXuong[x] = filtered;
-
-      // agg (để show trên tab)
-      let usd=0, sp=0, dm=0;
-      for(const r of filtered){
-        const hours = Array.isArray(r.hours) ? r.hours : [];
-        const th = hours.reduce((a,b)=>a+toNum(b),0);
-        sp += th;
-        dm += toNum(r.dinh_muc_ngay);
-        usd += th * toNum(r.don_gia);
-      }
-      const hs = dm>0 ? (sp/dm*100) : 0;
-      dayAggByXuong[x] = { usd, sp, dm, hs, topReasons:[] };
-    }
-
-    // 2) load getHourRange (reasons)
-    for(const x of XUONGS){
-      setStatus(`⏳ Đang tải XN${x} (nguyên nhân)…`);
-      const hr = await apiPost({ action:"getHourRange", xuong:x, from:ngay, to:ngay });
-      if(my!==REQ) return;
-
-      if(!hr.success){
-        setStatus(`⛔ Lỗi getHourRange XN${x}: ${(hr.msg||"")}${hr.raw?(" • "+hr.raw):""}`);
-        hourRawByXuong[x] = [];
-        if(dayAggByXuong[x]) dayAggByXuong[x].topReasons = [];
-        continue;
-      }
-
-      const raw = hr.data || [];
-      hourRawByXuong[x] = raw;
-
-      const counter = new Map();
-      for(const r of raw){
-        const reason = normReason(r.nguyen_nhan||"");
-        if(!reason) continue;
-        counter.set(reason, (counter.get(reason)||0)+1);
-      }
-      const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,c])=>({k,c}));
-      if(dayAggByXuong[x]) dayAggByXuong[x].topReasons = top;
-    }
-
-    renderTabs();
-    renderSelected();
-    await loadTicker();
-
-    setStatus(`✅ Đã tải xong • ${new Date().toLocaleTimeString("vi-VN")}`);
-  }catch(e){
-    console.warn(e);
-    setStatus("⛔ Lỗi tải dữ liệu: " + (e?.message || "unknown"));
-  }finally{
-    if(my===REQ) btn.disabled = false;
+    const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:x, from:ngay, to:ngay });
+    cacheHoursRaw[x] = (hr && hr.success) ? (hr.data||[]) : [];
   }
+
+  const ms = Date.now()-t0;
+  setStatus(`✅ Đã tải • ${ngay} • ${ms}ms`);
+
+  renderAllForActive();
 }
 
-/* ================== RENDER ================== */
-function renderTabs(){
-  const wrap = document.getElementById("tabs");
-
-  wrap.innerHTML = XUONGS.map(x=>{
-    const a = dayAggByXuong[x] || {usd:0,hs:0,sp:0,dm:0, topReasons:[]};
-    const top = (a.topReasons||[]).slice(0,2);
-    const reasons = top.length
-      ? top.map(t=>`• ${escapeHtml(t.k)} (${fmtInt(t.c)})`).join("<br/>")
-      : "• (Chưa có nguyên nhân)";
-
-    return `
-      <div class="tab ${activeXuong===x?'active':''}" data-xuong="${x}">
-        <div class="t1">
-          <div class="name">XN${x}</div>
-          ${pillHS(a.hs)}
-        </div>
-        <div class="kpis">
-          <div>USD đạt: <b>${fmtMoney(a.usd)}</b></div>
-          <div>SP: <b>${fmtInt(a.sp)}</b> • ĐM: <b>${fmtInt(a.dm)}</b></div>
-        </div>
-        <div class="reasons">
-          <b style="color:var(--text);font-size:12px">Top nguyên nhân</b><br/>
-          ${reasons}
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  wrap.querySelectorAll(".tab").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      activeXuong = Number(el.dataset.xuong||1);
-      renderTabs();
-      renderSelected();
-      loadTicker();
-    });
-  });
-}
-
-function renderSelected(){
-  const xuong = activeXuong;
+/* ================== RENDER ALL ================== */
+function renderAllForActive(){
   const ngay = document.getElementById("date").value || todayISO();
+  const x = activeXuong;
+  const hours = hoursOf(x);
 
-  document.getElementById("hourTitle").innerText = `⏱️ Năng suất theo giờ – XN${xuong}`;
-  document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${xuong}`;
+  // header giờ
+  document.getElementById("hourHead").innerHTML =
+    hours.map(h=>`<th>${escapeHtml(h)}</th>`).join("");
 
-  renderHourTkStyle(xuong, ngay);
-  renderReasonTop(xuong);
-  renderDayTable(xuong, ngay);
+  // render hour table
+  renderHourTable(x, hours, ngay);
+
+  // render kpi + reasons (top)
+  renderTopKpiAndReasons(x, hours, ngay);
+
+  // render day table
+  renderDayTable(x, ngay);
+
+  // render day reason summary
+  renderDayReasonSummary(x, ngay);
 }
 
-/* ✅ THEO GIỜ GIỐNG TK1 (cắt Lao động trở về sau) */
-function renderHourTkStyle(xuong, ngay){
-  const hours = HOURS_BY_XUONG[xuong] || [];
-  const rows = dayRowsByXuong[xuong] || [];
+/* ================== HOUR TABLE ================== */
+function renderHourTable(x, hours, ngay){
+  const rows = Array.isArray(cacheDayRows[x]) ? cacheDayRows[x].slice() : [];
+  const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
 
-  // header hour row2
-  const head2 = document.getElementById("hourHeadRow2");
-  const headHours = document.getElementById("hourHeadHours");
-  headHours.setAttribute("colspan", String(hours.length));
+  let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-  // row2: giờ + (không thêm TT/SĐC vì GDC chỉ xem)
-  head2.innerHTML = `
-    <th colspan="7"></th>
-    ${hours.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}
-    <th colspan="3"></th>
-  `;
+  // placeholder cho tổ chưa có
+  const existingTo = new Set(filtered.map(r=>Number(r.to_nhom)));
+  for(const to of (TO_BY_XUONG[x]||[])){
+    if(!existingTo.has(Number(to))){
+      filtered.push({ to_nhom:Number(to), line_no:1, ma_hang:"", so_luong_ke_hoach:0, dinh_muc_ngay:0, dinh_muc_gio:0, usd_quy_trinh:0, don_gia:0, thoi_gian_giay:0, chuyen_doi_ngay:0, ghi_chu:"", hours:[] });
+    }
+  }
 
-  let spSum=0, usdSum=0, dmSum=0;
+  filtered.sort((a,b)=> Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
 
-  const body = rows.map(r=>{
-    const hArr = Array.isArray(r.hours) ? r.hours : Array(hours.length).fill(0);
-    const normHours = hours.map((_,i)=>toNum(hArr[i]||0));
+  // footer USD/GIỜ và ✅ tổng USD/QT
+  const usdGio = Array(hours.length).fill(0);
+  let sumUsdQt = 0;
 
-    const tongSP = normHours.reduce((a,b)=>a+b,0);
+  const body = filtered.map(r=>{
+    const hsArr = Array.isArray(r.hours) ? r.hours : [];
+    const hoursVals = hours.map((_,i)=> toNum(hsArr[i]||0));
+    const tongSP = hoursVals.reduce((a,b)=>a+b,0);
+
     const dmNgay = toNum(r.dinh_muc_ngay);
     const dg = toNum(r.don_gia);
 
-    const dmGio = r.dinh_muc_gio ? toNum(r.dinh_muc_gio) : (dmNgay ? dmNgay / (hours.length||1) : 0);
+    const dmGio = r.dinh_muc_gio ? toNum(r.dinh_muc_gio) : (dmNgay ? dmNgay/9 : 0);
     const usdQt = (dmNgay>0 && dg>0) ? (dmNgay*dg) : toNum(r.usd_quy_trinh||0);
-
     const usdTh = tongSP * dg;
     const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
 
-    spSum += tongSP;
-    usdSum += usdTh;
-    dmSum += dmNgay;
+    sumUsdQt += usdQt;
 
-    const ln = Number(r.line_no||1);
+    hoursVals.forEach((v,i)=>{ usdGio[i] += v * dg; });
+
+    // ✅ mã hàng ellipsis + title
+    const ma = String(r.ma_hang||"");
+    const maSafe = escapeHtml(ma);
 
     return `
       <tr>
-        <td><b>${escapeHtml(r.to_nhom)}</b></td>
-        <td><b>${ln}</b></td>
-        <td class="left" style="min-width:180px">${escapeHtml(r.ma_hang||"")}</td>
+        <td class="sticky1"><b>${escapeHtml(r.to_nhom)}</b></td>
+        <td class="sticky2 codeCell" title="${maSafe}">
+          <span class="ellipsis">${maSafe}</span>
+        </td>
+
         <td>${fmtInt(r.so_luong_ke_hoach||0)}</td>
         <td>${fmtInt(dmNgay)}</td>
         <td class="right">${fmtMoney(dmGio)}</td>
         <td class="right">${fmtMoney(usdQt)}</td>
-        ${normHours.map(v=>`<td>${fmtInt(v)}</td>`).join("")}
-        <td class="right"><b>${fmtInt(tongSP)}</b></td>
+
+        ${hoursVals.map(v=>`<td>${fmtInt(v)}</td>`).join("")}
+
+        <td><b>${fmtInt(tongSP)}</b></td>
         <td class="right"><b>${fmtMoney(usdTh)}</b></td>
         <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
+        <td class="right">${fmtDg(dg)}</td>
+        <td>${fmtInt(r.thoi_gian_giay||0)}</td>
+        <td>${fmtInt(r.chuyen_doi_ngay||0)}</td>
+        <td class="left" style="padding-left:6px;white-space:normal;min-width:220px">${escapeHtml(r.ghi_chu||"")}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="${7+hours.length+3}" class="left">Chưa có dữ liệu.</td></tr>`;
+  }).join("") || `<tr><td colspan="${6+hours.length+6}" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có dữ liệu.</td></tr>`;
 
-  document.getElementById("hourTbody").innerHTML = body;
+  document.getElementById("tbodyHour").innerHTML = body;
 
-  const hsAll = dmSum>0 ? (spSum/dmSum*100) : 0;
-  document.getElementById("hourSumSp").innerText = fmtInt(spSum);
-  document.getElementById("hourSumUsd").innerText = fmtMoney(usdSum);
-  document.getElementById("hourSumHs").innerText = fmtPct1(hsAll) + "%";
-  document.getElementById("hourMeta").innerHTML = pillHS(hsAll);
+  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
+  document.getElementById("sumUsdQt").innerText = fmtMoney(sumUsdQt);
+
+  document.getElementById("hourMeta").innerText =
+    `Ngày ${ngay} • ${filtered.length} dòng (bao gồm line) • USD/QT tổng = ${fmtMoney(sumUsdQt)}`;
 }
 
-function renderReasonTop(xuong){
-  const raw = hourRawByXuong[xuong] || [];
-  const counter = new Map();
-  for(const r of raw){
-    const reason = normReason(r.nguyen_nhan||"");
-    if(!reason) continue;
-    counter.set(reason, (counter.get(reason)||0)+1);
+/* ================== KPI + REASON TOP (HS<80) ================== */
+function renderTopKpiAndReasons(x, hours, ngay){
+  const rows = Array.isArray(cacheDayRows[x]) ? cacheDayRows[x] : [];
+  const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
+  const filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
+
+  let usdSum=0, spSum=0, dmSum=0;
+  for(const r of filtered){
+    const hsArr = Array.isArray(r.hours) ? r.hours : [];
+    const tt = hours.reduce((a,_,i)=> a + toNum(hsArr[i]||0), 0);
+    spSum += tt;
+    dmSum += toNum(r.dinh_muc_ngay);
+    usdSum += tt * toNum(r.don_gia);
   }
-  const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,14);
+  const hsAll = dmSum>0 ? (spSum/dmSum*100) : 0;
 
-  document.getElementById("reasonMeta").innerText = `XN${xuong} • ${top.length} mục`;
+  document.getElementById("kpiUsd").innerText = fmtMoney(usdSum);
+  document.getElementById("kpiSp").innerText = fmtInt(spSum);
+  document.getElementById("kpiHs").innerText = fmtPct1(hsAll) + "%";
 
-  document.getElementById("reasonTopTbody").innerHTML = top.length
-    ? top.map(([k,c])=>`
-      <tr>
-        <td class="left">${escapeHtml(k)}</td>
-        <td><b>${fmtInt(c)}</b></td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="2" class="left">Chưa có nguyên nhân.</td></tr>`;
+  // reasons top (HS<80) từ raw hours
+  const raw = Array.isArray(cacheHoursRaw[x]) ? cacheHoursRaw[x] : [];
+  const counter = new Map();
+  let badCnt = 0;
+
+  for(const r of raw){
+    const hs = toNum(r.hieu_suat);
+    if(hs>0 && hs<80){
+      badCnt++;
+      const rs = normReason(r.nguyen_nhan||"");
+      if(rs) counter.set(rs, (counter.get(rs)||0)+1);
+    }
+  }
+  const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  document.getElementById("reasonMeta").innerText = `${badCnt} giờ đỏ`;
+
+  const list = document.getElementById("reasonList");
+  if(!top.length){
+    list.innerHTML = `<div class="small" style="margin-top:6px">Chưa có nguyên nhân / chưa có giờ đỏ.</div>`;
+  }else{
+    list.innerHTML = top.map(([reason,c])=>`
+      <div class="reasonItem">
+        <div class="left" style="min-width:0;flex:1;white-space:normal">${escapeHtml(reason)}</div>
+        <div><b>${fmtInt(c)}</b></div>
+      </div>
+    `).join("");
+  }
 }
 
-/* NĂNG SUẤT NGÀY (giữ nguyên như bản trước, nhưng đổi theo tab) */
-function renderDayTable(xuong, ngay){
-  const rows = dayRowsByXuong[xuong] || [];
-  let usdSum=0, dmSum=0, spSum=0, ldSum=0;
+/* ================== DAY TABLE ================== */
+async function renderDayTable(x, ngay){
+  // gọi getDayByXuong để đúng logic tổng hợp (nhanh & chuẩn)
+  const res = await apiPost({ action:"getDayByXuong", token:S.token, ngay, xuong:x });
+  const data = (res && res.success) ? (res.data||[]) : [];
 
-  const body = rows.map(r=>{
-    const hours = Array.isArray(r.hours) ? r.hours : [];
-    const th = hours.reduce((a,b)=>a+toNum(b),0);
+  const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
+  let filtered = data.filter(r => allowTos.has(Number(r.to_nhom)));
 
+  // placeholder cho đủ tổ
+  const existingTo = new Set(filtered.map(r=>Number(r.to_nhom)));
+  for(const to of (TO_BY_XUONG[x]||[])){
+    if(!existingTo.has(Number(to))){
+      filtered.push({ to_nhom:Number(to), tong_sp:0, dinh_muc_ngay:0, hieu_suat_ngay:0 });
+    }
+  }
+  filtered.sort((a,b)=>Number(a.to_nhom)-Number(b.to_nhom));
+
+  let sumSp=0, sumDm=0;
+  document.getElementById("tbodyDay").innerHTML = filtered.map(r=>{
+    const sp = toNum(r.tong_sp);
     const dm = toNum(r.dinh_muc_ngay);
-    const dg = toNum(r.don_gia);
-    const usd = th * dg;
-    const hs = dm>0 ? (th/dm*100) : 0;
+    const hs = dm>0 ? (sp/dm*100) : 0;
 
-    const ld = toNum(r.lao_dong_thuc_te);
-    const usdPer = ld>0 ? (usd/ld) : 0;
-
-    usdSum += usd;
-    dmSum += dm;
-    spSum += th;
-    ldSum += ld;
-
-    const ln = Number(r.line_no||1);
+    sumSp += sp; sumDm += dm;
 
     return `
       <tr>
         <td><b>${escapeHtml(r.to_nhom)}</b></td>
-        <td><b>${ln}</b></td>
-        <td class="left">${escapeHtml(r.ma_hang||"")}</td>
-        <td>${fmtInt(ld)}</td>
+        <td>${fmtInt(sp)}</td>
         <td>${fmtInt(dm)}</td>
-        <td>${fmtInt(th)}</td>
-        <td class="right">${fmtDg(dg)}</td>
-        <td class="right"><b>${fmtMoney(usd)}</b></td>
         <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
-        <td class="right">${fmtMoney(usdPer)}</td>
-        <td>${fmtInt(r.chuyen_doi_ngay||0)}</td>
-        <td class="left">${escapeHtml(r.ghi_chu||"")}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="12" class="left">Chưa có dữ liệu.</td></tr>`;
+  }).join("");
 
-  document.getElementById("dayTbody").innerHTML = body;
+  const hsAll = sumDm>0 ? (sumSp/sumDm*100) : 0;
+  document.getElementById("sumDaySp").innerHTML = `<b>${fmtInt(sumSp)}</b>`;
+  document.getElementById("sumDayDm").innerHTML = `<b>${fmtInt(sumDm)}</b>`;
+  document.getElementById("sumDayHs").innerHTML = `<b>${fmtPct1(hsAll)}%</b>`;
 
-  const hsAll = dmSum>0 ? (spSum/dmSum*100) : 0;
-  const usdPerAll = ldSum>0 ? (usdSum/ldSum) : 0;
-
-  document.getElementById("daySumUsd").innerText = fmtMoney(usdSum);
-  document.getElementById("daySumHs").innerText = fmtPct1(hsAll) + "%";
-  document.getElementById("daySumUsdPer").innerText = fmtMoney(usdPerAll);
-
-  document.getElementById("dayMeta").innerHTML =
-    `Ngày ${ngay} • USD <b>${fmtMoney(usdSum)}</b> • HS <b>${fmtPct1(hsAll)}%</b> • SP <b>${fmtInt(spSum)}</b>`;
+  document.getElementById("dayMeta").innerText =
+    `Ngày ${ngay} • Tổng SP ${fmtInt(sumSp)} • Tổng ĐM ${fmtInt(sumDm)} • HS ${fmtPct1(hsAll)}%`;
 }
 
-/* ================== DIRECTIVE MODAL ================== */
-function openDir(){
-  const ngay = document.getElementById("date").value || todayISO();
-  document.getElementById("dirDate").innerText = ngay;
-  document.getElementById("dirModal").style.display="flex";
-}
-function closeDir(){ document.getElementById("dirModal").style.display="none"; }
-function fillScopeFromSelected(){ document.getElementById("dirScope").value = String(activeXuong); }
+/* ================== DAY REASON SUMMARY ================== */
+function renderDayReasonSummary(x, ngay){
+  const raw = Array.isArray(cacheHoursRaw[x]) ? cacheHoursRaw[x] : [];
+  const counter = new Map();
+  let total = 0;
 
-async function saveDir(){
-  const ngay = document.getElementById("date").value || todayISO();
-  const scope = document.getElementById("dirScope").value;
-  const message = String(document.getElementById("dirText").value||"").trim();
-  if(!message){ alert("Nội dung chỉ đạo trống"); return; }
+  for(const r of raw){
+    const rs = normReason(r.nguyen_nhan||"");
+    if(!rs) continue;
+    total++;
+    counter.set(rs, (counter.get(rs)||0)+1);
+  }
+  const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
 
-  const btn = document.getElementById("btnDirSave");
-  btn.disabled = true;
-  try{
-    const res = await apiPost({ action:"setDirectorMessage", ngay, scope, message });
-    if(!res.success){
-      alert("Lỗi lưu chỉ đạo: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
-      return;
-    }
-    document.getElementById("dirText").value = "";
-    closeDir();
-    await loadTicker();
-    alert("✅ Đã lưu chỉ đạo");
-  }finally{
-    btn.disabled = false;
+  document.getElementById("reasonMetaDay").innerText = `Có ${fmtInt(total)} ghi chú nguyên nhân trong ngày`;
+  const box = document.getElementById("reasonListDay");
+
+  if(!top.length){
+    box.innerHTML = `<div class="small" style="margin-top:6px">Chưa có nguyên nhân.</div>`;
+  }else{
+    box.innerHTML = top.map(([reason,c])=>`
+      <div class="reasonItem">
+        <div class="left" style="min-width:0;flex:1;white-space:normal">${escapeHtml(reason)}</div>
+        <div><b>${fmtInt(c)}</b></div>
+      </div>
+    `).join("");
   }
 }
 
-/* ================== BOOTSTRAP ================== */
-document.addEventListener("DOMContentLoaded", ()=>{
-  document.getElementById("btnLogout").addEventListener("click", logout);
-  document.getElementById("btnReload").addEventListener("click", reload);
+/* ================== MODAL DIRECTOR ================== */
+function openModal(){
+  document.getElementById("modalMask").style.display = "flex";
+  document.getElementById("mText").focus();
+}
+function closeModal(e){
+  if(e && e.target && e.target.id !== "modalMask") return;
+  document.getElementById("modalMask").style.display = "none";
+}
+async function saveDirective(){
+  S = mustLogin(); if(!S) return;
+  if(S.role!=="gdc"){ alert("Chỉ GDC mới lưu chỉ đạo"); return; }
 
-  document.getElementById("fabDir").addEventListener("click", openDir);
-  document.getElementById("btnDirClose").addEventListener("click", closeDir);
-  document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
-  document.getElementById("btnDirSave").addEventListener("click", saveDir);
+  const scope = document.getElementById("mScope").value;
+  const ngay  = document.getElementById("mNgay").value || (document.getElementById("date").value || todayISO());
+  const message = String(document.getElementById("mText").value||"").trim();
+  if(!message){ alert("Nội dung trống"); return; }
 
-  document.getElementById("dirModal").addEventListener("click", (e)=>{
-    if(e.target && e.target.id==="dirModal") closeDir();
-  });
-
-  document.getElementById("date").value = todayISO();
-  document.getElementById("date").addEventListener("change", ()=>{
-    reload();
-    loadTicker();
-  });
-
-  S = mustLogin();
-  if(!S) return;
-
-  if(S.role !== "gdc"){
-    document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc)`;
-    setStatus("⛔ Không đúng quyền để mở GDC");
+  const res = await apiPost({ action:"setDirectorMessage", token:S.token, scope, ngay, message });
+  if(!res || !res.success){
+    alert("Lỗi lưu chỉ đạo: " + (res?.msg||""));
     return;
   }
+  document.getElementById("mText").value = "";
+  alert("✅ Đã lưu chỉ đạo");
+  closeModal();
+}
 
-  document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng`;
-  setStatus("⏳ Đang tải dữ liệu lần đầu…");
-
-  startTicker();
+/* ================== EVENTS ================== */
+document.getElementById("date").addEventListener("change", ()=>{
   reload();
 });
 </script>
-
 </body>
 </html>
