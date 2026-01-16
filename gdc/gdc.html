@@ -79,7 +79,7 @@
     display:flex; gap:10px; align-items:center; flex-wrap:wrap;
   }
   .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
-  .wrap{padding:12px; max-width:1100px; margin:0 auto}
+  .wrap{padding:12px; max-width:1200px; margin:0 auto}
 
   /* ticker chỉ đạo */
   .ticker{
@@ -176,7 +176,7 @@
     margin-top:12px;
   }
   @media(min-width:980px){
-    .grid2{ grid-template-columns:1.2fr .8fr; }
+    .grid2{ grid-template-columns:1.25fr .75fr; }
   }
   .card{
     border:1px solid var(--line);
@@ -195,7 +195,7 @@
 
   /* table */
   .tableWrap{overflow:auto}
-  table{width:max(860px,100%); border-collapse:collapse; font-size:12px}
+  table{width:max(900px,100%); border-collapse:collapse; font-size:12px}
   th,td{border:1px solid rgba(255,255,255,.10); padding:7px 8px; text-align:center; white-space:nowrap}
   th{background:rgba(255,255,255,.06); font-weight:1000}
   tbody tr:nth-child(even) td{background:rgba(255,255,255,.03)}
@@ -311,41 +311,49 @@
   <div class="tabs" id="tabs"></div>
 
   <div class="grid2">
+    <!-- ✅ THEO GIỜ (GIỐNG TK1, CẮT LAO ĐỘNG TRỞ VỀ SAU) -->
     <div class="card">
       <div class="head">
-        <b id="hourTitle">⏱️ Theo giờ – XN1</b>
+        <b id="hourTitle">⏱️ Năng suất theo giờ – XN1</b>
         <span class="pill" id="hourMeta">—</span>
       </div>
       <div class="body">
         <div class="tableWrap">
-          <table>
+          <table id="hourTbl" style="width:max(1550px,100%)">
             <thead>
               <tr>
-                <th>Khung</th>
-                <th>KH</th>
-                <th>TT</th>
-                <th>Thiếu (TT-KH)</th>
-                <th>HS</th>
+                <th>TỔ</th>
+                <th>LINE</th>
+                <th class="left" style="min-width:180px">MÃ HÀNG</th>
+                <th>SL KH</th>
+                <th>ĐM NGÀY</th>
+                <th>ĐM GIỜ</th>
+                <th>USD/QT</th>
+                <th id="hourHeadHours" colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+                <th>TỔNG SP</th>
+                <th>USD/TH</th>
+                <th>HIỆU SUẤT</th>
               </tr>
+              <tr id="hourHeadRow2"></tr>
             </thead>
             <tbody id="hourTbody"></tbody>
             <tfoot>
               <tr>
-                <th>Tổng</th>
-                <th id="hourSumKH">0</th>
-                <th id="hourSumTT">0</th>
-                <th id="hourSumDef">0</th>
-                <th id="hourSumHS">0%</th>
+                <th colspan="7" class="right">TỔNG</th>
+                <th id="hourSumSp" class="right">0</th>
+                <th id="hourSumUsd" class="right">0.00</th>
+                <th id="hourSumHs">0.0%</th>
               </tr>
             </tfoot>
           </table>
         </div>
         <div class="hint">
-          * HS theo giờ lấy từ <b>getHourRange</b>. USD hiển thị ở thẻ xưởng phía trên (tính từ dữ liệu ngày).
+          * Bảng này lấy từ <b>getTkXuongDay</b> (kế hoạch + sản lượng theo giờ). Đã bỏ toàn bộ cột từ <b>Lao động</b> trở về sau.
         </div>
       </div>
     </div>
 
+    <!-- TOP NGUYÊN NHÂN -->
     <div class="card">
       <div class="head">
         <b>🧾 Nguyên nhân nổi bật</b>
@@ -364,12 +372,13 @@
           </table>
         </div>
         <div class="hint">
-          * Tính theo <b>tất cả giờ</b> của xưởng đang chọn trong ngày.
+          * Tính từ <b>getHourRange</b> theo xưởng đang chọn.
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ✅ NĂNG SUẤT NGÀY (XN1/2/3 THEO TAB) -->
   <div class="card" style="margin-top:12px">
     <div class="head">
       <b id="dayTitle">📄 Năng suất ngày – XN1</b>
@@ -407,7 +416,7 @@
         </table>
       </div>
       <div class="hint" style="margin-top:10px">
-        ✅ Bảng ngày giữ đúng nghiệp vụ: USD = TH * ĐG, %NS = TH/ĐM.
+        ✅ Tab chọn xưởng ở trên sẽ đổi bảng này sang XN2/XN3 tương ứng.
       </div>
     </div>
   </div>
@@ -475,8 +484,11 @@ const TO_BY_XUONG = {
 /* ================== FORMAT ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
+const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
+
 function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
 function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
+function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 function pctClass(hs){
   hs=Number(hs)||0;
@@ -538,13 +550,12 @@ async function apiPost(payload){
 let S = null;
 let activeXuong = 1;
 
-let hourRawByXuong = {1:[],2:[],3:[]};
-let dayRowsByXuong = {1:[],2:[],3:[]};
+let hourRawByXuong = {1:[],2:[],3:[]};     // reasons
+let dayRowsByXuong = {1:[],2:[],3:[]};     // rows from getTkXuongDay
 let dayAggByXuong  = {1:null,2:null,3:null};
 
 /* ================== UI helpers ================== */
 function setStatus(t){ document.getElementById("status").innerText = t; }
-
 function pillHS(hs){
   const cls = pctClass(hs);
   const icon = cls==="good" ? "✅" : (cls==="warn" ? "⚠️" : "⛔");
@@ -571,21 +582,16 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   let picked = null;
 
-  // ưu tiên ALL
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
   if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
-  // nếu ALL trống thì lấy theo xưởng đang xem
   if(!picked){
     const resX = await apiPost({ action:"getDirectorMessage", scope:String(activeXuong), ngay });
     if(resX?.success && String(resX.message||"").trim()) picked = resX;
   }
 
   const box = document.getElementById("ticker");
-  if(!picked){
-    box.style.display="none";
-    return;
-  }
+  if(!picked){ box.style.display="none"; return; }
 
   const scope = String(picked.scope||picked.xuong||"").toUpperCase();
   const msg = String(picked.message||"").trim();
@@ -624,9 +630,9 @@ async function reload(){
 
   setStatus("⏳ Đang tải dữ liệu...");
   try{
-    // 1) load day rows + agg
+    // 1) load getTkXuongDay (rows)
     for(const x of XUONGS){
-      setStatus(`⏳ Đang tải XN${x} (kế hoạch/ngày)…`);
+      setStatus(`⏳ Đang tải XN${x} (kế hoạch + theo giờ)…`);
       const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
       if(my!==REQ) return;
 
@@ -647,8 +653,8 @@ async function reload(){
         if(!existTo.has(to)){
           filtered.push({
             to_nhom:to, line_no:1, ma_hang:"",
-            lao_dong_thuc_te:0, dinh_muc_ngay:0, don_gia:0,
-            chuyen_doi_ngay:0, ghi_chu:"", hours:[]
+            so_luong_ke_hoach:0, dinh_muc_ngay:0, dinh_muc_gio:0, usd_quy_trinh:0,
+            don_gia:0, lao_dong_thuc_te:0, chuyen_doi_ngay:0, ghi_chu:"", hours:[]
           });
         }
       }
@@ -656,7 +662,7 @@ async function reload(){
       filtered.sort((a,b)=>Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
       dayRowsByXuong[x] = filtered;
 
-      // agg
+      // agg (để show trên tab)
       let usd=0, sp=0, dm=0;
       for(const r of filtered){
         const hours = Array.isArray(r.hours) ? r.hours : [];
@@ -669,9 +675,9 @@ async function reload(){
       dayAggByXuong[x] = { usd, sp, dm, hs, topReasons:[] };
     }
 
-    // 2) load hour raw + reasons
+    // 2) load getHourRange (reasons)
     for(const x of XUONGS){
-      setStatus(`⏳ Đang tải XN${x} (theo giờ/nguyên nhân)…`);
+      setStatus(`⏳ Đang tải XN${x} (nguyên nhân)…`);
       const hr = await apiPost({ action:"getHourRange", xuong:x, from:ngay, to:ngay });
       if(my!==REQ) return;
 
@@ -695,7 +701,6 @@ async function reload(){
       if(dayAggByXuong[x]) dayAggByXuong[x].topReasons = top;
     }
 
-    // render
     renderTabs();
     renderSelected();
     await loadTicker();
@@ -738,11 +743,9 @@ function renderTabs(){
     `;
   }).join("");
 
-  // bind click
   wrap.querySelectorAll(".tab").forEach(el=>{
     el.addEventListener("click", ()=>{
-      const x = Number(el.dataset.xuong||1);
-      activeXuong = x;
+      activeXuong = Number(el.dataset.xuong||1);
       renderTabs();
       renderSelected();
       loadTicker();
@@ -754,55 +757,77 @@ function renderSelected(){
   const xuong = activeXuong;
   const ngay = document.getElementById("date").value || todayISO();
 
-  document.getElementById("hourTitle").innerText = `⏱️ Theo giờ – XN${xuong}`;
+  document.getElementById("hourTitle").innerText = `⏱️ Năng suất theo giờ – XN${xuong}`;
   document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${xuong}`;
 
-  renderHourTable(xuong);
+  renderHourTkStyle(xuong, ngay);
   renderReasonTop(xuong);
   renderDayTable(xuong, ngay);
 }
 
-function renderHourTable(xuong){
+/* ✅ THEO GIỜ GIỐNG TK1 (cắt Lao động trở về sau) */
+function renderHourTkStyle(xuong, ngay){
   const hours = HOURS_BY_XUONG[xuong] || [];
-  const raw = hourRawByXuong[xuong] || [];
+  const rows = dayRowsByXuong[xuong] || [];
 
-  const byH = new Map();
-  hours.forEach(h=>byH.set(h,{kh:0,tt:0}));
+  // header hour row2
+  const head2 = document.getElementById("hourHeadRow2");
+  const headHours = document.getElementById("hourHeadHours");
+  headHours.setAttribute("colspan", String(hours.length));
 
-  for(const r of raw){
-    const h = String(r.khung_gio||"");
-    if(!byH.has(h)) continue;
-    byH.get(h).kh += toNum(r.ke_hoach_gio);
-    byH.get(h).tt += toNum(r.thuc_te);
-  }
+  // row2: giờ + (không thêm TT/SĐC vì GDC chỉ xem)
+  head2.innerHTML = `
+    <th colspan="7"></th>
+    ${hours.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}
+    <th colspan="3"></th>
+  `;
 
-  let sumKH=0,sumTT=0,sumDef=0;
-  const body = hours.map(h=>{
-    const o = byH.get(h) || {kh:0,tt:0};
-    const def = o.tt - o.kh;
-    const hs = o.kh>0 ? (o.tt/o.kh*100) : 0;
+  let spSum=0, usdSum=0, dmSum=0;
 
-    sumKH += o.kh; sumTT += o.tt; sumDef += def;
+  const body = rows.map(r=>{
+    const hArr = Array.isArray(r.hours) ? r.hours : Array(hours.length).fill(0);
+    const normHours = hours.map((_,i)=>toNum(hArr[i]||0));
+
+    const tongSP = normHours.reduce((a,b)=>a+b,0);
+    const dmNgay = toNum(r.dinh_muc_ngay);
+    const dg = toNum(r.don_gia);
+
+    const dmGio = r.dinh_muc_gio ? toNum(r.dinh_muc_gio) : (dmNgay ? dmNgay / (hours.length||1) : 0);
+    const usdQt = (dmNgay>0 && dg>0) ? (dmNgay*dg) : toNum(r.usd_quy_trinh||0);
+
+    const usdTh = tongSP * dg;
+    const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
+
+    spSum += tongSP;
+    usdSum += usdTh;
+    dmSum += dmNgay;
+
+    const ln = Number(r.line_no||1);
 
     return `
       <tr>
-        <td><b>${escapeHtml(h)}</b></td>
-        <td>${fmtInt(o.kh)}</td>
-        <td>${fmtInt(o.tt)}</td>
-        <td class="pct ${def<0?'bad':'good'}">${fmtInt(def)}</td>
+        <td><b>${escapeHtml(r.to_nhom)}</b></td>
+        <td><b>${ln}</b></td>
+        <td class="left" style="min-width:180px">${escapeHtml(r.ma_hang||"")}</td>
+        <td>${fmtInt(r.so_luong_ke_hoach||0)}</td>
+        <td>${fmtInt(dmNgay)}</td>
+        <td class="right">${fmtMoney(dmGio)}</td>
+        <td class="right">${fmtMoney(usdQt)}</td>
+        ${normHours.map(v=>`<td>${fmtInt(v)}</td>`).join("")}
+        <td class="right"><b>${fmtInt(tongSP)}</b></td>
+        <td class="right"><b>${fmtMoney(usdTh)}</b></td>
         <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="5" class="left">Chưa có dữ liệu giờ.</td></tr>`;
+  }).join("") || `<tr><td colspan="${7+hours.length+3}" class="left">Chưa có dữ liệu.</td></tr>`;
 
   document.getElementById("hourTbody").innerHTML = body;
 
-  const sumHS = sumKH>0 ? (sumTT/sumKH*100) : 0;
-  document.getElementById("hourSumKH").innerText = fmtInt(sumKH);
-  document.getElementById("hourSumTT").innerText = fmtInt(sumTT);
-  document.getElementById("hourSumDef").innerText = fmtInt(sumDef);
-  document.getElementById("hourSumHS").innerText = fmtPct1(sumHS) + "%";
-  document.getElementById("hourMeta").innerHTML = pillHS(sumHS);
+  const hsAll = dmSum>0 ? (spSum/dmSum*100) : 0;
+  document.getElementById("hourSumSp").innerText = fmtInt(spSum);
+  document.getElementById("hourSumUsd").innerText = fmtMoney(usdSum);
+  document.getElementById("hourSumHs").innerText = fmtPct1(hsAll) + "%";
+  document.getElementById("hourMeta").innerHTML = pillHS(hsAll);
 }
 
 function renderReasonTop(xuong){
@@ -813,7 +838,7 @@ function renderReasonTop(xuong){
     if(!reason) continue;
     counter.set(reason, (counter.get(reason)||0)+1);
   }
-  const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const top = [...counter.entries()].sort((a,b)=>b[1]-a[1]).slice(0,14);
 
   document.getElementById("reasonMeta").innerText = `XN${xuong} • ${top.length} mục`;
 
@@ -827,6 +852,7 @@ function renderReasonTop(xuong){
     : `<tr><td colspan="2" class="left">Chưa có nguyên nhân.</td></tr>`;
 }
 
+/* NĂNG SUẤT NGÀY (giữ nguyên như bản trước, nhưng đổi theo tab) */
 function renderDayTable(xuong, ngay){
   const rows = dayRowsByXuong[xuong] || [];
   let usdSum=0, dmSum=0, spSum=0, ldSum=0;
@@ -858,7 +884,7 @@ function renderDayTable(xuong, ngay){
         <td>${fmtInt(ld)}</td>
         <td>${fmtInt(dm)}</td>
         <td>${fmtInt(th)}</td>
-        <td class="right">${fmtMoney(dg)}</td>
+        <td class="right">${fmtDg(dg)}</td>
         <td class="right"><b>${fmtMoney(usd)}</b></td>
         <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
         <td class="right">${fmtMoney(usdPer)}</td>
@@ -866,7 +892,7 @@ function renderDayTable(xuong, ngay){
         <td class="left">${escapeHtml(r.ghi_chu||"")}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="12" class="left">Chưa có dữ liệu ngày.</td></tr>`;
+  }).join("") || `<tr><td colspan="12" class="left">Chưa có dữ liệu.</td></tr>`;
 
   document.getElementById("dayTbody").innerHTML = body;
 
@@ -913,9 +939,8 @@ async function saveDir(){
   }
 }
 
-/* ================== BOOTSTRAP (FIX “Chưa tải dữ liệu”) ================== */
+/* ================== BOOTSTRAP ================== */
 document.addEventListener("DOMContentLoaded", ()=>{
-  // bind buttons
   document.getElementById("btnLogout").addEventListener("click", logout);
   document.getElementById("btnReload").addEventListener("click", reload);
 
@@ -924,19 +949,16 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
   document.getElementById("btnDirSave").addEventListener("click", saveDir);
 
-  // close modal when tap outside
   document.getElementById("dirModal").addEventListener("click", (e)=>{
     if(e.target && e.target.id==="dirModal") closeDir();
   });
 
-  // set date
   document.getElementById("date").value = todayISO();
   document.getElementById("date").addEventListener("change", ()=>{
     reload();
     loadTicker();
   });
 
-  // auth
   S = mustLogin();
   if(!S) return;
 
@@ -949,7 +971,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
 
-  // start ticker + load
   startTicker();
   reload();
 });
