@@ -147,10 +147,23 @@
     </div>
 
     <div class="controls">
+      <!-- ✅ FIX: thêm MODE như TK1 -->
+      <div class="ctl">
+        <label>Chế độ</label>
+        <select id="mode">
+          <option value="day">Ngày</option>
+          <option value="week">Tuần</option>
+          <option value="month">Tháng</option>
+          <option value="quarter">Quý</option>
+          <option value="year">Năm</option>
+        </select>
+      </div>
+
       <div class="ctl">
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
+
       <button class="btn" onclick="reload()">Tải dữ liệu</button>
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -184,7 +197,7 @@
       <div class="sub">Cộng sản lượng các tổ</div>
     </div>
     <div class="card">
-      <div class="label">Hiệu suất TB (ngày)</div>
+      <div class="label">Hiệu suất TB</div>
       <div class="value" id="kpiHs">0.0%</div>
       <div class="sub">TB theo tổ (dựa ĐM ngày)</div>
     </div>
@@ -281,7 +294,7 @@
   <div class="grid3">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <b>🧾 Top nguyên nhân trong ngày</b>
+        <b>🧾 Top nguyên nhân</b>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input id="reasonSearch" class="input2" placeholder="Tìm nguyên nhân..." />
           <select id="reasonFilter" class="select2">
@@ -330,6 +343,8 @@
 
   <div class="small">
     <b>Ghi chú:</b> “Giờ đỏ” mặc định HS &lt; 80%. “Thiếu hụt” = TT - KH (âm là thiếu).
+    <br/>
+    <b>Lưu ý:</b> Bảng lớn vẫn hiển thị theo <b>Ngày</b> đang chọn. Khi chọn Tuần/Tháng/Quý/Năm thì phần “So sánh/Cảnh báo/Nguyên nhân” sẽ tính theo <b>khoảng</b>.
   </div>
 </div>
 
@@ -340,11 +355,7 @@ const XUONG = 1;
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
-/* ================== FORMAT (GIỐNG TK1) ==================
-   - Số nguyên: 10,000
-   - Tiền: 1,972.00 (2 decimals)
-   - Đơn giá: 2.4 / 2.22 (không grouping, tối đa 2 decimals)
-=========================================================== */
+/* ================== FORMAT (GIỐNG TK1) ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -357,7 +368,7 @@ function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
-  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping
+  s = s.replace(/\s+/g,"").replaceAll(",","");
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -400,6 +411,46 @@ function normReason(s){
   return s;
 }
 
+/* ================== RANGE (NEW) ================== */
+function getRange(mode, dateStr){
+  const d = new Date(dateStr+"T00:00:00");
+  const yyyy = d.getFullYear();
+  const mm = d.getMonth();
+  const dd = d.getDate();
+
+  const toISO = (x)=>{
+    const m=String(x.getMonth()+1).padStart(2,"0");
+    const da=String(x.getDate()).padStart(2,"0");
+    return `${x.getFullYear()}-${m}-${da}`;
+  };
+
+  if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
+
+  if(mode === "week"){
+    const day = (d.getDay()+6)%7; // Mon=0
+    const start = new Date(d); start.setDate(dd - day);
+    const end = new Date(start); end.setDate(start.getDate()+6);
+    return { from: toISO(start), to: toISO(end), label:`Tuần ${toISO(start)} → ${toISO(end)}` };
+  }
+
+  if(mode === "month"){
+    const start = new Date(yyyy, mm, 1);
+    const end = new Date(yyyy, mm+1, 0);
+    return { from: toISO(start), to: toISO(end), label:`Tháng ${yyyy}-${String(mm+1).padStart(2,"0")}` };
+  }
+
+  if(mode === "quarter"){
+    const q = Math.floor(mm/3);
+    const start = new Date(yyyy, q*3, 1);
+    const end = new Date(yyyy, q*3+3, 0);
+    return { from: toISO(start), to: toISO(end), label:`Quý ${q+1}/${yyyy}` };
+  }
+
+  const start = new Date(yyyy, 0, 1);
+  const end = new Date(yyyy, 12, 0);
+  return { from: toISO(start), to: toISO(end), label:`Năm ${yyyy}` };
+}
+
 /* ================== STATE ================== */
 let S = mustLogin();
 let dayHoursRaw = [];
@@ -418,24 +469,21 @@ function fmtTickerTime(iso){
   const d = new Date(iso);
   if(Number.isNaN(d.getTime())) return "";
   const hh = String(d.getHours()).padStart(2,"0");
-  const mm = String(d.getMinutes()).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
+  const mi = String(d.getMinutes()).padStart(2,"0");
+  const da = String(d.getDate()).padStart(2,"0");
   const mo = String(d.getMonth()+1).padStart(2,"0");
-  return `${dd}/${mo} ${hh}:${mm}`;
+  return `${da}/${mo} ${hh}:${mi}`;
 }
 
 async function callDirectorMessage(scopeOrXuong, ngay){
   const base = { action:"getDirectorMessage", token:S.token };
 
-  // kiểu mới: scope
   let r = await apiPost({ ...base, scope:String(scopeOrXuong), ngay });
   if(r && r.success) return r;
 
-  // kiểu cũ: xuong
   r = await apiPost({ ...base, xuong:scopeOrXuong });
   if(r && r.success) return r;
 
-  // fallback không có ngay
   r = await apiPost({ ...base, scope:String(scopeOrXuong) });
   if(r && r.success) return r;
 
@@ -475,7 +523,7 @@ async function loadGdcTicker(){
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
     textEl.style.animation = "none";
-    textEl.offsetHeight; // reflow
+    textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation = "gdc-marquee 22s linear infinite";
   }catch(e){
@@ -508,7 +556,7 @@ if(S){
   }
 }
 
-/* ================== LOAD ================== */
+/* ================== LOAD (FIX) ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
 
@@ -518,11 +566,15 @@ async function reload(){
     return;
   }
 
+  const mode = document.getElementById("mode").value;
   const ngay = document.getElementById("date").value;
-  setStatus("Đang tải dữ liệu ngày...");
 
+  const range = getRange(mode, ngay);
+
+  setStatus(`Đang tải... • ${range.label}`);
   loadGdcTicker();
 
+  // ✅ BẢNG CHI TIẾT: luôn theo NGÀY (ngày đang chọn)
   const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:XUONG });
   if(!res.success){
     setStatus("Lỗi: " + (res.msg||""));
@@ -535,18 +587,20 @@ async function reload(){
 
   const rows = res.rows || [];
   planMap = new Map(rows.map(r=>[Number(r.to_nhom), r]));
-
   renderDayRows(rows);
-  calcFooterAndKpi(rows);
 
-  const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:XUONG, from: ngay, to: ngay });
+  // ✅ COMPARE/ALERT/REASON: theo RANGE (day/week/month/quarter/year)
+  const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:XUONG, from: range.from, to: range.to });
   dayHoursRaw = hr.success ? (hr.data||[]) : [];
 
-  renderCompare(dayHoursRaw);
-  renderAlerts(dayHoursRaw);
-  renderReasonPanels(dayHoursRaw);
+  renderCompare(dayHoursRaw, range);
+  renderAlerts(dayHoursRaw, range);
+  renderReasonPanels(dayHoursRaw, range);
 
-  setStatus(`Đã tải • ${ngay} • XN${XUONG}`);
+  // ✅ KPI: nếu day -> lấy theo rows; nếu range -> lấy từ dayHoursRaw (KH/TT)
+  calcKpiSmart(rows, dayHoursRaw, mode);
+
+  setStatus(`✅ Đã tải • ${range.label} • (Bảng theo ngày ${ngay}) • XN${XUONG}`);
 }
 
 /* ================== TABLE ================== */
@@ -603,42 +657,82 @@ function renderDayRows(rows){
   }).join("");
 }
 
-function calcFooterAndKpi(rows){
-  let tongUsdNgay=0, tongSpAll=0, hsSum=0, hsCount=0;
-  const usdGio = Array(HOURS.length).fill(0);
+/* ===== KPI SMART =====
+   - mode=day: tính theo rows (đúng như cũ)
+   - mode!=day: tổng SP/KH/HS dựa dayHoursRaw để phản ánh đúng range
+*/
+function calcKpiSmart(rows, rawHours, mode){
+  // USD/giờ footer vẫn dựa theo "ngày" trong bảng detail (giữ nguyên behavior)
+  // (nếu bạn muốn footer theo range, nói mình đổi)
 
-  rows.forEach(r=>{
-    const hours = Array.isArray(r.hours)?r.hours:Array(HOURS.length).fill(0);
-    const tongSP = hours.reduce((a,b)=>a+toNum(b),0);
-    tongSpAll += tongSP;
+  // --- KPI cho thẻ trên ---
+  if(mode === "day"){
+    let tongUsdNgay=0, tongSpAll=0, hsSum=0, hsCount=0;
+    const usdGio = Array(HOURS.length).fill(0);
 
-    const dg = toNum(r.don_gia);
-    hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
+    rows.forEach(r=>{
+      const hours = Array.isArray(r.hours)?r.hours:Array(HOURS.length).fill(0);
+      const tongSP = hours.reduce((a,b)=>a+toNum(b),0);
+      tongSpAll += tongSP;
 
-    const usdTh = tongSP*dg;
-    tongUsdNgay += usdTh;
+      const dg = toNum(r.don_gia);
+      hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
 
-    const dmNgay = toNum(r.dinh_muc_ngay);
-    const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
-    hsSum += hs; hsCount++;
-  });
+      const usdTh = tongSP*dg;
+      tongUsdNgay += usdTh;
 
-  document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
+      const dmNgay = toNum(r.dinh_muc_ngay);
+      const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
+      hsSum += hs; hsCount++;
+    });
 
-  const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
-  const hsTb = hsCount ? (hsSum/hsCount) : 0;
+    document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
+    const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
+    const hsTb = hsCount ? (hsSum/hsCount) : 0;
 
-  document.getElementById("kpiUsd").innerText = fmtMoney(tongUsdNgay);
-  document.getElementById("kpiSp").innerText = fmtInt(tongSpAll);
-  document.getElementById("kpiHs").innerText = fmtPct1(hsTb) + "%";
-  document.getElementById("usdNgayTop").innerText = fmtMoney(tongUsdNgay);
-  document.getElementById("kpiMaxSub").innerText = fmtMoney(maxUsdGio);
+    document.getElementById("kpiUsd").innerText = fmtMoney(tongUsdNgay);
+    document.getElementById("kpiSp").innerText = fmtInt(tongSpAll);
+    document.getElementById("kpiHs").innerText = fmtPct1(hsTb) + "%";
+    document.getElementById("usdNgayTop").innerText = fmtMoney(tongUsdNgay);
+    document.getElementById("kpiMaxSub").innerText = fmtMoney(maxUsdGio);
+    return;
+  }
+
+  // mode range: tính từ rawHours
+  const byH = new Map();
+  HOURS.forEach(h=> byH.set(h, {kh:0, tt:0}));
+
+  for(const r of (rawHours||[])){
+    const h = String(r.khung_gio||"");
+    if(!byH.has(h)) continue;
+    byH.get(h).kh += toNum(r.ke_hoach_gio);
+    byH.get(h).tt += toNum(r.thuc_te);
+  }
+
+  let sumKH=0, sumTT=0;
+  for(const h of HOURS){
+    const o = byH.get(h);
+    sumKH += o.kh;
+    sumTT += o.tt;
+  }
+  const hs = sumKH>0 ? (sumTT/sumKH*100) : 0;
+
+  // USD range: không có dg theo giờ ở rawHours -> tạm giữ USD = 0 cho range
+  // (nếu muốn USD range: cần API trả dg hoặc join plan theo ngày; nói mình làm)
+  document.getElementById("kpiUsd").innerText = fmtMoney(0);
+  document.getElementById("kpiSp").innerText = fmtInt(sumTT);
+  document.getElementById("kpiHs").innerText = fmtPct1(hs) + "%";
+  document.getElementById("usdNgayTop").innerText = fmtMoney(0);
+
+  // max theo giờ dựa trên TT (không USD)
+  let maxTT=0;
+  for(const h of HOURS) maxTT = Math.max(maxTT, byH.get(h).tt);
+  document.getElementById("kpiMaxSub").innerText = fmtMoney(0);
 }
 
 /* ================== COMPARE BY HOUR ================== */
-function renderCompare(raw){
-  const ngay = document.getElementById("date").value;
-
+function renderCompare(raw, range){
+  const metaEl = document.getElementById("cmpMeta");
   const byH = new Map();
   HOURS.forEach(h=> byH.set(h, {kh:0, tt:0}));
 
@@ -675,8 +769,9 @@ function renderCompare(raw){
   document.getElementById("cmpSumDef").innerHTML = `<b>${fmtInt(sumDef)}</b>`;
   document.getElementById("cmpSumHS").innerHTML = `<b>${fmtPct1(sumHS)}%</b>`;
 
-  document.getElementById("cmpMeta").innerText =
-    `Ngày ${ngay} • Tổng KH=${fmtInt(sumKH)} • TT=${fmtInt(sumTT)} • HS=${fmtPct1(sumHS)}%`;
+  const label = range?.label ? range.label : `Ngày ${document.getElementById("date").value}`;
+  metaEl.innerText = `${label} • Tổng KH=${fmtInt(sumKH)} • TT=${fmtInt(sumTT)} • HS=${fmtPct1(sumHS)}%`;
+
   document.getElementById("kpiDeficit").innerText = fmtInt(sumDef);
 }
 
@@ -703,6 +798,7 @@ function renderAlerts(raw){
     byH.get(r.khung).kh += r.kh;
     byH.get(r.khung).tt += r.tt;
   });
+
   let worstH=null;
   for(const h of HOURS){
     const o=byH.get(h);
@@ -759,10 +855,9 @@ function renderAlerts(raw){
 }
 
 /* ================== REASONS ================== */
-function renderReasonPanels(rawOverride){
+function renderReasonPanels(rawOverride, range){
   const raw = Array.isArray(rawOverride) ? rawOverride : dayHoursRaw;
 
-  const ngay = document.getElementById("date").value;
   const filter = document.getElementById("reasonFilter")?.value || "all";
   const q = String(document.getElementById("reasonSearch")?.value||"").trim().toLowerCase();
 
@@ -786,8 +881,10 @@ function renderReasonPanels(rawOverride){
   if(q) rows = rows.filter(r => (r.reason||"").toLowerCase().includes(q));
 
   const badCount = rows.filter(r => r.hs < 80).length;
+  const label = range?.label ? range.label : `Ngày ${document.getElementById("date").value}`;
+
   document.getElementById("reasonMeta").innerText =
-    `Ngày ${ngay} • Bản ghi giờ: ${fmtInt(rows.length)} • Giờ đỏ (HS<80%): ${fmtInt(badCount)}`;
+    `${label} • Bản ghi giờ: ${fmtInt(rows.length)} • Giờ đỏ (HS<80%): ${fmtInt(badCount)}`;
 
   const counter = new Map();
   for(const r of rows){
@@ -829,9 +926,12 @@ function alertReason(to, ma, khung, reason){
   alert(`Tổ ${to} • ${ma?("Mã "+ma+" • "):""}Khung ${khung}\n\nNguyên nhân:\n${reason}`);
 }
 
-/* ================== EVENTS ================== */
+/* ================== EVENTS (FIX) ================== */
 document.getElementById("date").addEventListener("change", ()=>{
   loadGdcTicker();
+  reload();
+});
+document.getElementById("mode").addEventListener("change", ()=>{
   reload();
 });
 document.addEventListener("input",(e)=>{
