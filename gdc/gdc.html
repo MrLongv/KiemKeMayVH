@@ -28,7 +28,6 @@
                 var(--bg);
     color:var(--text);
   }
-  a{color:inherit}
   .topbar{
     position:sticky; top:0; z-index:50;
     background:linear-gradient(180deg, rgba(15,23,42,.96), rgba(11,18,32,.92));
@@ -82,7 +81,7 @@
   .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
   .wrap{padding:12px; max-width:1100px; margin:0 auto}
 
-  /* ===== ticker chỉ đạo (gọn) ===== */
+  /* ticker chỉ đạo */
   .ticker{
     display:none;
     margin:10px 0 0;
@@ -118,7 +117,7 @@
     to{ transform:translateX(-100%); }
   }
 
-  /* ===== tabs xưởng ===== */
+  /* tabs xưởng */
   .tabs{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -169,7 +168,7 @@
     line-height:1.35;
   }
 
-  /* ===== section cards ===== */
+  /* section cards */
   .grid2{
     display:grid;
     grid-template-columns:1fr;
@@ -194,7 +193,7 @@
   .card .head b{font-size:13px}
   .card .body{padding:10px 12px}
 
-  /* ===== table ===== */
+  /* table */
   .tableWrap{overflow:auto}
   table{width:max(860px,100%); border-collapse:collapse; font-size:12px}
   th,td{border:1px solid rgba(255,255,255,.10); padding:7px 8px; text-align:center; white-space:nowrap}
@@ -204,8 +203,9 @@
   .right{text-align:right}
   .pct{font-weight:1000}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
+  .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
 
-  /* ===== modal directive ===== */
+  /* modal directive */
   .fab{
     position:fixed;
     right:14px;
@@ -270,8 +270,6 @@
   }
   textarea{min-height:110px; resize:vertical; line-height:1.35}
   .sheet .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap}
-  .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
-
 </style>
 </head>
 <body>
@@ -288,17 +286,16 @@
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
-      <button class="btn primary" id="btnReload" onclick="reload()">Tải</button>
-      <button class="btn ghost" onclick="logout()">Đăng xuất</button>
+      <button class="btn primary" id="btnReload">Tải</button>
+      <button class="btn ghost" id="btnLogout">Đăng xuất</button>
     </div>
   </div>
 
   <div class="status">
     <span class="dot"></span>
-    <span id="status">Chưa tải dữ liệu</span>
+    <span id="status">Đang khởi tạo…</span>
   </div>
 
-  <!-- ticker chỉ đạo gọn -->
   <div class="ticker" id="ticker">
     <div class="tickerTop">
       <div><b>📣 Chỉ đạo GĐC</b> • <span id="tickerScope">—</span></div>
@@ -311,12 +308,9 @@
 </div>
 
 <div class="wrap">
-
-  <!-- 3 xưởng overview -->
   <div class="tabs" id="tabs"></div>
 
   <div class="grid2">
-    <!-- theo giờ -->
     <div class="card">
       <div class="head">
         <b id="hourTitle">⏱️ Theo giờ – XN1</b>
@@ -346,14 +340,12 @@
             </tfoot>
           </table>
         </div>
-
         <div class="hint">
-          * HS theo giờ lấy từ dữ liệu <b>getHourRange</b>. USD hiển thị ở thẻ xưởng phía trên (tính từ dữ liệu ngày).
+          * HS theo giờ lấy từ <b>getHourRange</b>. USD hiển thị ở thẻ xưởng phía trên (tính từ dữ liệu ngày).
         </div>
       </div>
     </div>
 
-    <!-- top reasons -->
     <div class="card">
       <div class="head">
         <b>🧾 Nguyên nhân nổi bật</b>
@@ -371,7 +363,6 @@
             <tbody id="reasonTopTbody"></tbody>
           </table>
         </div>
-
         <div class="hint">
           * Tính theo <b>tất cả giờ</b> của xưởng đang chọn trong ngày.
         </div>
@@ -379,7 +370,6 @@
     </div>
   </div>
 
-  <!-- Bảng năng suất ngày (giống hiện tại, gọn) -->
   <div class="card" style="margin-top:12px">
     <div class="head">
       <b id="dayTitle">📄 Năng suất ngày – XN1</b>
@@ -416,24 +406,20 @@
           </tfoot>
         </table>
       </div>
-
       <div class="hint" style="margin-top:10px">
-        ✅ Phần “nguyên nhân” đã tổng hợp ở khối bên trên. Bảng ngày giữ đúng nghiệp vụ: USD = TH * ĐG, %NS = TH/ĐM.
+        ✅ Bảng ngày giữ đúng nghiệp vụ: USD = TH * ĐG, %NS = TH/ĐM.
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- FAB open directive modal -->
-<div class="fab" title="Chỉ đạo" onclick="openDir()">✍️</div>
+<div class="fab" title="Chỉ đạo" id="fabDir">✍️</div>
 
-<!-- Modal / Bottom sheet directive -->
-<div class="modal" id="dirModal" onclick="closeDir(true)">
-  <div class="sheet" onclick="event.stopPropagation()">
+<div class="modal" id="dirModal">
+  <div class="sheet">
     <div class="titleRow">
       <b>📣 Chỉ đạo Giám đốc</b>
-      <button class="close" onclick="closeDir(false)">Đóng</button>
+      <button class="close" id="btnDirClose">Đóng</button>
     </div>
 
     <div class="formRow">
@@ -454,16 +440,16 @@
 
     <div class="field" style="margin-top:10px">
       <label>Nội dung</label>
-      <textarea id="dirText" placeholder="Nhập chỉ đạo... (vd: Ưu tiên line A, giảm lỗi, báo cáo trước 16h)"></textarea>
+      <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
     </div>
 
     <div class="actions">
-      <button class="btn ghost" onclick="fillScopeFromSelected()">Lấy xưởng đang xem</button>
-      <button class="btn primary" id="btnDirSave" onclick="saveDir()">Lưu chỉ đạo</button>
+      <button class="btn ghost" id="btnDirUseXuong">Lấy xưởng đang xem</button>
+      <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
     </div>
 
     <div class="hint">
-      * Sau khi lưu, TO/TK/GĐX sẽ thấy chỉ đạo (ALL + theo xưởng) đúng như worker.js đã ghép.
+      * TO/TK/GĐX sẽ thấy chỉ đạo (ALL + theo xưởng) đúng như worker.js đã ghép.
     </div>
   </div>
 </div>
@@ -473,11 +459,13 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
+
 const HOURS_BY_XUONG = {
   1:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
 };
+
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
   2:[11,13,15,17],
@@ -514,13 +502,24 @@ function toNum(v){
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
+function todayISO(){
+  const vn = new Date(Date.now() + 7*60*60*1000);
+  return vn.toISOString().slice(0,10);
+}
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
-function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
+function mustLogin(){
+  const s=sess();
+  if(!s || !s.token){
+    location.href="../login.html";
+    return null;
+  }
+  return s;
+}
 function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
 
-/* ================== API (no-cache + safe JSON) ================== */
+/* ================== API (no-store + safe json) ================== */
 async function apiPost(payload){
   const s = mustLogin(); if(!s) return {success:false,msg:"NO_SESSION"};
   payload = { ...payload, token:s.token, _ts: Date.now() };
@@ -535,39 +534,24 @@ async function apiPost(payload){
   catch{ return { success:false, msg:`API không trả JSON (HTTP ${r.status})`, raw:text.slice(0,240) }; }
 }
 
-/* ================== DATE (VN) ================== */
-function todayISO(){
-  const vn = new Date(Date.now() + 7*60*60*1000);
-  return vn.toISOString().slice(0,10);
-}
-
 /* ================== STATE ================== */
-let S = mustLogin();
+let S = null;
 let activeXuong = 1;
 
-let hourRawByXuong = {1:[],2:[],3:[]};      // getHourRange
-let dayRowsByXuong = {1:[],2:[],3:[]};      // getTkXuongDay (filtered)
-let dayAggByXuong  = {1:null,2:null,3:null}; // {usd, sp, dm, hs, topReasons[]}
+let hourRawByXuong = {1:[],2:[],3:[]};
+let dayRowsByXuong = {1:[],2:[],3:[]};
+let dayAggByXuong  = {1:null,2:null,3:null};
 
-/* ================== INIT ================== */
-document.getElementById("date").value = todayISO();
-
-if(S){
-  const ok = (S.role==="gdc");
-  document.getElementById("roleHint").innerText = ok
-    ? `✅ GĐC: ${S.username} • xem 3 xưởng`
-    : `⛔ Sai quyền: role=${S.role} (cần gdc)`;
-  if(ok){
-    reload();
-    startTicker();
-  }else{
-    setStatus("Không đúng quyền");
-  }
-}
-
+/* ================== UI helpers ================== */
 function setStatus(t){ document.getElementById("status").innerText = t; }
 
-/* ================== TICKER (director message) ================== */
+function pillHS(hs){
+  const cls = pctClass(hs);
+  const icon = cls==="good" ? "✅" : (cls==="warn" ? "⚠️" : "⛔");
+  return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
+}
+
+/* ================== TICKER ================== */
 let tickerTimer=null;
 
 function fmtTickerTime(iso){
@@ -582,16 +566,19 @@ function fmtTickerTime(iso){
 }
 
 async function loadTicker(){
+  if(!S?.token) return;
+
   const ngay = document.getElementById("date").value || todayISO();
+  let picked = null;
 
-  // ưu tiên ALL (vì GDC xem toàn công ty), nếu muốn ưu tiên theo xưởng đang chọn thì đổi thứ tự
+  // ưu tiên ALL
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
-  let picked = (resAll && resAll.success && String(resAll.message||"").trim()) ? resAll : null;
+  if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
-  // nếu ALL không có thì lấy theo xưởng đang xem
+  // nếu ALL trống thì lấy theo xưởng đang xem
   if(!picked){
     const resX = await apiPost({ action:"getDirectorMessage", scope:String(activeXuong), ngay });
-    if(resX && resX.success && String(resX.message||"").trim()) picked = resX;
+    if(resX?.success && String(resX.message||"").trim()) picked = resX;
   }
 
   const box = document.getElementById("ticker");
@@ -625,10 +612,11 @@ function stopTicker(){
 }
 window.addEventListener("beforeunload", stopTicker);
 
-/* ================== MAIN RELOAD ================== */
+/* ================== LOAD ================== */
 let REQ=0;
 
 async function reload(){
+  if(!S?.token) return;
   const my = ++REQ;
   const ngay = document.getElementById("date").value || todayISO();
   const btn = document.getElementById("btnReload");
@@ -636,16 +624,24 @@ async function reload(){
 
   setStatus("⏳ Đang tải dữ liệu...");
   try{
-    // 1) load day rows + agg USD/HS
+    // 1) load day rows + agg
     for(const x of XUONGS){
+      setStatus(`⏳ Đang tải XN${x} (kế hoạch/ngày)…`);
       const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
       if(my!==REQ) return;
 
-      const rows = res.success ? (res.rows||[]) : [];
+      if(!res.success){
+        setStatus(`⛔ Lỗi getTkXuongDay XN${x}: ${(res.msg||"")}${res.raw?(" • "+res.raw):""}`);
+        dayRowsByXuong[x] = [];
+        dayAggByXuong[x] = { usd:0, sp:0, dm:0, hs:0, topReasons:[] };
+        continue;
+      }
+
+      const rows = res.rows || [];
       const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
       let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-      // nếu thiếu tổ -> add placeholder để bảng đủ (đỡ trống)
+      // add placeholder nếu thiếu tổ
       const existTo = new Set(filtered.map(r=>Number(r.to_nhom)));
       for(const to of allowTos){
         if(!existTo.has(to)){
@@ -656,10 +652,11 @@ async function reload(){
           });
         }
       }
+
       filtered.sort((a,b)=>Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
       dayRowsByXuong[x] = filtered;
 
-      // compute agg from day rows
+      // agg
       let usd=0, sp=0, dm=0;
       for(const r of filtered){
         const hours = Array.isArray(r.hours) ? r.hours : [];
@@ -672,15 +669,22 @@ async function reload(){
       dayAggByXuong[x] = { usd, sp, dm, hs, topReasons:[] };
     }
 
-    // 2) load hour range -> reasons
+    // 2) load hour raw + reasons
     for(const x of XUONGS){
+      setStatus(`⏳ Đang tải XN${x} (theo giờ/nguyên nhân)…`);
       const hr = await apiPost({ action:"getHourRange", xuong:x, from:ngay, to:ngay });
       if(my!==REQ) return;
 
-      const raw = hr.success ? (hr.data||[]) : [];
+      if(!hr.success){
+        setStatus(`⛔ Lỗi getHourRange XN${x}: ${(hr.msg||"")}${hr.raw?(" • "+hr.raw):""}`);
+        hourRawByXuong[x] = [];
+        if(dayAggByXuong[x]) dayAggByXuong[x].topReasons = [];
+        continue;
+      }
+
+      const raw = hr.data || [];
       hourRawByXuong[x] = raw;
 
-      // top reasons
       const counter = new Map();
       for(const r of raw){
         const reason = normReason(r.nguyen_nhan||"");
@@ -691,13 +695,12 @@ async function reload(){
       if(dayAggByXuong[x]) dayAggByXuong[x].topReasons = top;
     }
 
-    // render overview + selected
+    // render
     renderTabs();
     renderSelected();
+    await loadTicker();
 
-    loadTicker();
-
-    setStatus(`✅ Đã tải • ${new Date().toLocaleTimeString("vi-VN")}`);
+    setStatus(`✅ Đã tải xong • ${new Date().toLocaleTimeString("vi-VN")}`);
   }catch(e){
     console.warn(e);
     setStatus("⛔ Lỗi tải dữ liệu: " + (e?.message || "unknown"));
@@ -706,26 +709,19 @@ async function reload(){
   }
 }
 
-/* ================== RENDER: TABS OVERVIEW ================== */
-function pillHS(hs){
-  const cls = pctClass(hs);
-  const icon = cls==="good" ? "✅" : (cls==="warn" ? "⚠️" : "⛔");
-  return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
-}
-
+/* ================== RENDER ================== */
 function renderTabs(){
-  const ngay = document.getElementById("date").value || todayISO();
   const wrap = document.getElementById("tabs");
 
   wrap.innerHTML = XUONGS.map(x=>{
-    const a = dayAggByXuong[x] || {usd:0,hs:0,sp:0};
+    const a = dayAggByXuong[x] || {usd:0,hs:0,sp:0,dm:0, topReasons:[]};
     const top = (a.topReasons||[]).slice(0,2);
     const reasons = top.length
       ? top.map(t=>`• ${escapeHtml(t.k)} (${fmtInt(t.c)})`).join("<br/>")
       : "• (Chưa có nguyên nhân)";
 
     return `
-      <div class="tab ${activeXuong===x?'active':''}" onclick="selectXuong(${x})">
+      <div class="tab ${activeXuong===x?'active':''}" data-xuong="${x}">
         <div class="t1">
           <div class="name">XN${x}</div>
           ${pillHS(a.hs)}
@@ -741,31 +737,35 @@ function renderTabs(){
       </div>
     `;
   }).join("");
+
+  // bind click
+  wrap.querySelectorAll(".tab").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const x = Number(el.dataset.xuong||1);
+      activeXuong = x;
+      renderTabs();
+      renderSelected();
+      loadTicker();
+    });
+  });
 }
 
-function selectXuong(x){
-  activeXuong = Number(x)||1;
-  renderTabs();
-  renderSelected();
-  loadTicker();
-}
-
-/* ================== RENDER: SELECTED DETAILS ================== */
 function renderSelected(){
+  const xuong = activeXuong;
   const ngay = document.getElementById("date").value || todayISO();
-  document.getElementById("hourTitle").innerText = `⏱️ Theo giờ – XN${activeXuong}`;
-  document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${activeXuong}`;
 
-  renderHourTable(activeXuong, ngay);
-  renderReasonTop(activeXuong, ngay);
-  renderDayTable(activeXuong, ngay);
+  document.getElementById("hourTitle").innerText = `⏱️ Theo giờ – XN${xuong}`;
+  document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${xuong}`;
+
+  renderHourTable(xuong);
+  renderReasonTop(xuong);
+  renderDayTable(xuong, ngay);
 }
 
-function renderHourTable(xuong, ngay){
+function renderHourTable(xuong){
   const hours = HOURS_BY_XUONG[xuong] || [];
   const raw = hourRawByXuong[xuong] || [];
 
-  // agg by khung
   const byH = new Map();
   hours.forEach(h=>byH.set(h,{kh:0,tt:0}));
 
@@ -802,12 +802,10 @@ function renderHourTable(xuong, ngay){
   document.getElementById("hourSumTT").innerText = fmtInt(sumTT);
   document.getElementById("hourSumDef").innerText = fmtInt(sumDef);
   document.getElementById("hourSumHS").innerText = fmtPct1(sumHS) + "%";
-
-  document.getElementById("hourMeta").innerHTML =
-    pillHS(sumHS).replace('class="pill','class="pill').replace("</span>","</span>");
+  document.getElementById("hourMeta").innerHTML = pillHS(sumHS);
 }
 
-function renderReasonTop(xuong, ngay){
+function renderReasonTop(xuong){
   const raw = hourRawByXuong[xuong] || [];
   const counter = new Map();
   for(const r of raw){
@@ -831,7 +829,6 @@ function renderReasonTop(xuong, ngay){
 
 function renderDayTable(xuong, ngay){
   const rows = dayRowsByXuong[xuong] || [];
-
   let usdSum=0, dmSum=0, spSum=0, ldSum=0;
 
   const body = rows.map(r=>{
@@ -881,7 +878,7 @@ function renderDayTable(xuong, ngay){
   document.getElementById("daySumUsdPer").innerText = fmtMoney(usdPerAll);
 
   document.getElementById("dayMeta").innerHTML =
-    `USD <b>${fmtMoney(usdSum)}</b> • HS <b>${fmtPct1(hsAll)}%</b> • SP <b>${fmtInt(spSum)}</b>`;
+    `Ngày ${ngay} • USD <b>${fmtMoney(usdSum)}</b> • HS <b>${fmtPct1(hsAll)}%</b> • SP <b>${fmtInt(spSum)}</b>`;
 }
 
 /* ================== DIRECTIVE MODAL ================== */
@@ -890,13 +887,8 @@ function openDir(){
   document.getElementById("dirDate").innerText = ngay;
   document.getElementById("dirModal").style.display="flex";
 }
-function closeDir(fromOverlay){
-  document.getElementById("dirModal").style.display="none";
-  if(fromOverlay) return;
-}
-function fillScopeFromSelected(){
-  document.getElementById("dirScope").value = String(activeXuong);
-}
+function closeDir(){ document.getElementById("dirModal").style.display="none"; }
+function fillScopeFromSelected(){ document.getElementById("dirScope").value = String(activeXuong); }
 
 async function saveDir(){
   const ngay = document.getElementById("date").value || todayISO();
@@ -909,22 +901,57 @@ async function saveDir(){
   try{
     const res = await apiPost({ action:"setDirectorMessage", ngay, scope, message });
     if(!res.success){
-      alert("Lỗi lưu chỉ đạo: " + (res.msg||""));
+      alert("Lỗi lưu chỉ đạo: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
       return;
     }
     document.getElementById("dirText").value = "";
-    closeDir(false);
-    loadTicker();
+    closeDir();
+    await loadTicker();
     alert("✅ Đã lưu chỉ đạo");
   }finally{
     btn.disabled = false;
   }
 }
 
-/* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", ()=>{
+/* ================== BOOTSTRAP (FIX “Chưa tải dữ liệu”) ================== */
+document.addEventListener("DOMContentLoaded", ()=>{
+  // bind buttons
+  document.getElementById("btnLogout").addEventListener("click", logout);
+  document.getElementById("btnReload").addEventListener("click", reload);
+
+  document.getElementById("fabDir").addEventListener("click", openDir);
+  document.getElementById("btnDirClose").addEventListener("click", closeDir);
+  document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
+  document.getElementById("btnDirSave").addEventListener("click", saveDir);
+
+  // close modal when tap outside
+  document.getElementById("dirModal").addEventListener("click", (e)=>{
+    if(e.target && e.target.id==="dirModal") closeDir();
+  });
+
+  // set date
+  document.getElementById("date").value = todayISO();
+  document.getElementById("date").addEventListener("change", ()=>{
+    reload();
+    loadTicker();
+  });
+
+  // auth
+  S = mustLogin();
+  if(!S) return;
+
+  if(S.role !== "gdc"){
+    document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc)`;
+    setStatus("⛔ Không đúng quyền để mở GDC");
+    return;
+  }
+
+  document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng`;
+  setStatus("⏳ Đang tải dữ liệu lần đầu…");
+
+  // start ticker + load
+  startTicker();
   reload();
-  loadTicker();
 });
 </script>
 
