@@ -205,6 +205,15 @@
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
   .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
 
+  /* ✅ CẮT NGẮN CỘT MÃ HÀNG TRONG BẢNG THEO GIỜ */
+  .mhShort{
+    max-width:140px;     /* bạn muốn ngắn hơn nữa thì giảm 140 */
+    width:140px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap !important;
+  }
+
   /* modal directive */
   .fab{
     position:fixed;
@@ -311,7 +320,6 @@
   <div class="tabs" id="tabs"></div>
 
   <div class="grid2">
-    <!-- ✅ THEO GIỜ (GIỐNG TK1, CẮT LAO ĐỘNG TRỞ VỀ SAU) -->
     <div class="card">
       <div class="head">
         <b id="hourTitle">⏱️ Năng suất theo giờ – XN1</b>
@@ -324,7 +332,7 @@
               <tr>
                 <th>TỔ</th>
                 <th>LINE</th>
-                <th class="left" style="min-width:180px">MÃ HÀNG</th>
+                <th class="left mhShort" title="MÃ HÀNG">MÃ HÀNG</th>
                 <th>SL KH</th>
                 <th>ĐM NGÀY</th>
                 <th>ĐM GIỜ</th>
@@ -338,8 +346,13 @@
             </thead>
             <tbody id="hourTbody"></tbody>
             <tfoot>
+              <!-- ✅ TỔNG: thêm tổng USD/QT -->
               <tr>
-                <th colspan="7" class="right">TỔNG</th>
+                <th colspan="4" class="right">TỔNG</th>
+                <th id="hourSumDm" class="right">0</th>
+                <th></th>
+                <th id="hourSumUsdQt" class="right">0.00</th>
+                <th colspan="9"></th>
                 <th id="hourSumSp" class="right">0</th>
                 <th id="hourSumUsd" class="right">0.00</th>
                 <th id="hourSumHs">0.0%</th>
@@ -353,7 +366,6 @@
       </div>
     </div>
 
-    <!-- TOP NGUYÊN NHÂN -->
     <div class="card">
       <div class="head">
         <b>🧾 Nguyên nhân nổi bật</b>
@@ -378,7 +390,6 @@
     </div>
   </div>
 
-  <!-- ✅ NĂNG SUẤT NGÀY (XN1/2/3 THEO TAB) -->
   <div class="card" style="margin-top:12px">
     <div class="head">
       <b id="dayTitle">📄 Năng suất ngày – XN1</b>
@@ -550,11 +561,10 @@ async function apiPost(payload){
 let S = null;
 let activeXuong = 1;
 
-let hourRawByXuong = {1:[],2:[],3:[]};     // reasons
-let dayRowsByXuong = {1:[],2:[],3:[]};     // rows from getTkXuongDay
+let hourRawByXuong = {1:[],2:[],3:[]};
+let dayRowsByXuong = {1:[],2:[],3:[]};
 let dayAggByXuong  = {1:null,2:null,3:null};
 
-/* ================== UI helpers ================== */
 function setStatus(t){ document.getElementById("status").innerText = t; }
 function pillHS(hs){
   const cls = pctClass(hs);
@@ -630,7 +640,6 @@ async function reload(){
 
   setStatus("⏳ Đang tải dữ liệu...");
   try{
-    // 1) load getTkXuongDay (rows)
     for(const x of XUONGS){
       setStatus(`⏳ Đang tải XN${x} (kế hoạch + theo giờ)…`);
       const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
@@ -647,7 +656,6 @@ async function reload(){
       const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
       let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-      // add placeholder nếu thiếu tổ
       const existTo = new Set(filtered.map(r=>Number(r.to_nhom)));
       for(const to of allowTos){
         if(!existTo.has(to)){
@@ -662,7 +670,6 @@ async function reload(){
       filtered.sort((a,b)=>Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
       dayRowsByXuong[x] = filtered;
 
-      // agg (để show trên tab)
       let usd=0, sp=0, dm=0;
       for(const r of filtered){
         const hours = Array.isArray(r.hours) ? r.hours : [];
@@ -675,7 +682,6 @@ async function reload(){
       dayAggByXuong[x] = { usd, sp, dm, hs, topReasons:[] };
     }
 
-    // 2) load getHourRange (reasons)
     for(const x of XUONGS){
       setStatus(`⏳ Đang tải XN${x} (nguyên nhân)…`);
       const hr = await apiPost({ action:"getHourRange", xuong:x, from:ngay, to:ngay });
@@ -765,24 +771,21 @@ function renderSelected(){
   renderDayTable(xuong, ngay);
 }
 
-/* ✅ THEO GIỜ GIỐNG TK1 (cắt Lao động trở về sau) */
 function renderHourTkStyle(xuong, ngay){
   const hours = HOURS_BY_XUONG[xuong] || [];
   const rows = dayRowsByXuong[xuong] || [];
 
-  // header hour row2
   const head2 = document.getElementById("hourHeadRow2");
   const headHours = document.getElementById("hourHeadHours");
   headHours.setAttribute("colspan", String(hours.length));
 
-  // row2: giờ + (không thêm TT/SĐC vì GDC chỉ xem)
   head2.innerHTML = `
     <th colspan="7"></th>
     ${hours.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}
     <th colspan="3"></th>
   `;
 
-  let spSum=0, usdSum=0, dmSum=0;
+  let spSum=0, usdSum=0, dmSum=0, usdQtSum=0;
 
   const body = rows.map(r=>{
     const hArr = Array.isArray(r.hours) ? r.hours : Array(hours.length).fill(0);
@@ -801,6 +804,7 @@ function renderHourTkStyle(xuong, ngay){
     spSum += tongSP;
     usdSum += usdTh;
     dmSum += dmNgay;
+    usdQtSum += usdQt;
 
     const ln = Number(r.line_no||1);
 
@@ -808,7 +812,7 @@ function renderHourTkStyle(xuong, ngay){
       <tr>
         <td><b>${escapeHtml(r.to_nhom)}</b></td>
         <td><b>${ln}</b></td>
-        <td class="left" style="min-width:180px">${escapeHtml(r.ma_hang||"")}</td>
+        <td class="left mhShort" title="${escapeHtml(r.ma_hang||"")}">${escapeHtml(r.ma_hang||"")}</td>
         <td>${fmtInt(r.so_luong_ke_hoach||0)}</td>
         <td>${fmtInt(dmNgay)}</td>
         <td class="right">${fmtMoney(dmGio)}</td>
@@ -824,6 +828,9 @@ function renderHourTkStyle(xuong, ngay){
   document.getElementById("hourTbody").innerHTML = body;
 
   const hsAll = dmSum>0 ? (spSum/dmSum*100) : 0;
+
+  document.getElementById("hourSumDm").innerText = fmtInt(dmSum);
+  document.getElementById("hourSumUsdQt").innerText = fmtMoney(usdQtSum);
   document.getElementById("hourSumSp").innerText = fmtInt(spSum);
   document.getElementById("hourSumUsd").innerText = fmtMoney(usdSum);
   document.getElementById("hourSumHs").innerText = fmtPct1(hsAll) + "%";
@@ -852,7 +859,6 @@ function renderReasonTop(xuong){
     : `<tr><td colspan="2" class="left">Chưa có nguyên nhân.</td></tr>`;
 }
 
-/* NĂNG SUẤT NGÀY (giữ nguyên như bản trước, nhưng đổi theo tab) */
 function renderDayTable(xuong, ngay){
   const rows = dayRowsByXuong[xuong] || [];
   let usdSum=0, dmSum=0, spSum=0, ldSum=0;
