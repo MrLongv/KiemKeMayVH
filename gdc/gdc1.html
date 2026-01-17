@@ -62,6 +62,18 @@
   }
   .bar > i{display:block;height:100%;background:#2563eb;width:0%}
 
+  /* ===== Hourly block (3 xuong) ===== */
+  .hourGrid{display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:10px;margin-bottom:12px}
+  @media(max-width:1100px){ .hourGrid{grid-template-columns:1fr} }
+  .hourTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .miniPill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#fff;font-size:12px;color:var(--muted)}
+  .miniPill b{color:var(--text)}
+  .hourTbl{width:max(760px,100%);border-collapse:collapse}
+  .hourTbl th{background:var(--head);font-weight:900}
+  .hourTbl td,.hourTbl th{border:1px solid var(--line);padding:6px}
+  .hourTbl td.left{white-space:normal}
+  .stickyHead thead th{position:sticky;top:0;z-index:3}
+
   .reasonGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:980px){ .reasonGrid{grid-template-columns:1fr} }
   .input2{padding:8px 10px;border:1px solid var(--line);border-radius:12px;outline:none;width:240px;background:#fff}
@@ -125,28 +137,82 @@
     </div>
   </div>
 
-  <!-- So sánh 3 xưởng -->
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <b>📌 Tổng hợp & so sánh 3 xưởng</b>
+  <!-- ✅ NEW: Năng suất giờ của 3 xưởng (đẩy lên thay vị trí compare cũ) -->
+  <div class="card" id="hour3Block" style="display:none">
+    <div class="hourTitle">
+      <b>⏱️ Năng suất theo giờ (XN1 • XN2 • XN3)</b>
       <span class="pill" id="rangeInfo">—</span>
     </div>
-    <div class="small" style="margin-top:6px" id="compareHint">—</div>
+    <div class="small" style="margin-top:6px">
+      Bảng này lấy từ <b>getHourRange</b> (tổng theo giờ của toàn xưởng). Các giờ đỏ là <b>HS &lt; 80%</b>.
+    </div>
 
-    <div style="margin-top:10px;overflow:auto">
-      <table style="width:max(860px,100%)">
-        <thead>
-          <tr>
-            <th>Xưởng</th>
-            <th>Tổng SP</th>
-            <th>Tổng ĐM</th>
-            <th>HS</th>
-            <th style="min-width:220px">Thanh so sánh HS</th>
-            <th>USD ước tính</th>
-          </tr>
-        </thead>
-        <tbody id="cmpTbody"></tbody>
-      </table>
+    <div class="hourGrid" style="margin-top:10px">
+      <!-- XN1 -->
+      <div class="card" style="box-shadow:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <b>XN1</b>
+          <span class="miniPill">Giờ đỏ: <b id="hBad1">0</b> • HS TB: <b id="hAvg1">0.0%</b></span>
+        </div>
+        <div class="tableWrap" style="margin-top:10px">
+          <table class="hourTbl stickyHead" style="width:max(760px,100%)">
+            <thead>
+              <tr>
+                <th>Khung</th>
+                <th>KH</th>
+                <th>TT</th>
+                <th>HS</th>
+                <th class="left" style="min-width:260px;text-align:left;padding-left:10px">Nguyên nhân (tổng hợp nhanh)</th>
+              </tr>
+            </thead>
+            <tbody id="hourTbody1"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- XN2 -->
+      <div class="card" style="box-shadow:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <b>XN2</b>
+          <span class="miniPill">Giờ đỏ: <b id="hBad2">0</b> • HS TB: <b id="hAvg2">0.0%</b></span>
+        </div>
+        <div class="tableWrap" style="margin-top:10px">
+          <table class="hourTbl stickyHead" style="width:max(760px,100%)">
+            <thead>
+              <tr>
+                <th>Khung</th>
+                <th>KH</th>
+                <th>TT</th>
+                <th>HS</th>
+                <th class="left" style="min-width:260px;text-align:left;padding-left:10px">Nguyên nhân (tổng hợp nhanh)</th>
+              </tr>
+            </thead>
+            <tbody id="hourTbody2"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- XN3 -->
+      <div class="card" style="box-shadow:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <b>XN3</b>
+          <span class="miniPill">Giờ đỏ: <b id="hBad3">0</b> • HS TB: <b id="hAvg3">0.0%</b></span>
+        </div>
+        <div class="tableWrap" style="margin-top:10px">
+          <table class="hourTbl stickyHead" style="width:max(760px,100%)">
+            <thead>
+              <tr>
+                <th>Khung</th>
+                <th>KH</th>
+                <th>TT</th>
+                <th>HS</th>
+                <th class="left" style="min-width:260px;text-align:left;padding-left:10px">Nguyên nhân (tổng hợp nhanh)</th>
+              </tr>
+            </thead>
+            <tbody id="hourTbody3"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -258,6 +324,31 @@
     </div>
   </div>
 
+  <!-- ✅ moved: So sánh 3 xưởng (đem xuống dưới) -->
+  <div class="card" id="compareBlock" style="margin-top:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <b>📌 Tổng hợp & so sánh 3 xưởng</b>
+      <span class="pill" id="rangeInfo2">—</span>
+    </div>
+    <div class="small" style="margin-top:6px" id="compareHint">—</div>
+
+    <div style="margin-top:10px;overflow:auto">
+      <table style="width:max(860px,100%)">
+        <thead>
+          <tr>
+            <th>Xưởng</th>
+            <th>Tổng SP</th>
+            <th>Tổng ĐM</th>
+            <th>HS</th>
+            <th style="min-width:220px">Thanh so sánh HS</th>
+            <th>USD ước tính</th>
+          </tr>
+        </thead>
+        <tbody id="cmpTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="small" style="margin-top:10px">
     <b>Ghi chú kỹ thuật:</b> Mode Tuần/Tháng/Quý/Năm dùng `summary_xuong_day`. Mode Ngày dùng `getTkXuongDay` + `getHourRange`.
   </div>
@@ -343,8 +434,9 @@ function getRange(mode, dateStr){
 /* ================== STATE ================== */
 let S = mustLogin();
 let activeTab = 1;
-let dayDetail = { 1:[], 2:[], 3:[] };   // ✅ giờ chứa NHIỀU line cho 1 tổ
-let dayHoursRaw = { 1:[], 2:[], 3:[] };
+let dayDetail = { 1:[], 2:[], 3:[] };   // chi tiết cuối ngày (line)
+let dayHoursRaw = { 1:[], 2:[], 3:[] }; // raw giờ (reason)
+let hourAggByXuong = { 1:[], 2:[], 3:[] }; // ✅ tổng theo giờ toàn xưởng
 
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
@@ -364,9 +456,9 @@ if(S){
 /* ================== TABS ================== */
 function setTab(x){
   activeTab = Number(x)||1;
-  document.getElementById("tab1").classList.toggle("active", activeTab===1);
-  document.getElementById("tab2").classList.toggle("active", activeTab===2);
-  document.getElementById("tab3").classList.toggle("active", activeTab===3);
+  document.getElementById("tab1")?.classList.toggle("active", activeTab===1);
+  document.getElementById("tab2")?.classList.toggle("active", activeTab===2);
+  document.getElementById("tab3")?.classList.toggle("active", activeTab===3);
 
   const date = document.getElementById("date").value;
   renderDayDetailForXuong(activeTab, date);
@@ -383,17 +475,30 @@ async function reload(){
   const range = getRange(mode, date);
 
   document.getElementById("rangeInfo").innerText = range.label;
+  document.getElementById("rangeInfo2").innerText = range.label;
+
   setStatus("Đang tải dữ liệu...");
 
   if(mode === "day"){
     document.getElementById("dayDetailBlock").style.display = "";
+    document.getElementById("hour3Block").style.display = "";
     await loadDayAllXuong(date);
+
+    // render 3 bảng giờ
+    renderHourAggAll();
+
+    // tab detail + reasons như cũ
     setTab(activeTab);
-    document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (tính qua tất cả line_no).";
+
+    document.getElementById("compareHint").innerText =
+      "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (tính qua tất cả line_no).";
   }else{
     document.getElementById("dayDetailBlock").style.display = "none";
+    document.getElementById("hour3Block").style.display = "none"; // chỉ có giờ khi mode=day
+
     await loadRangeAll(range.from, range.to);
-    document.getElementById("compareHint").innerText = "Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary_xuong_day (nhanh).";
+    document.getElementById("compareHint").innerText =
+      "Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary_xuong_day (nhanh).";
   }
 
   setStatus(`✅ Đã tải • ${range.label}`);
@@ -431,17 +536,15 @@ async function loadRangeAll(from, to){
 
 /* ================== LOAD: DAY (all xuong) ================== */
 async function loadDayAllXuong(ngay){
-  // ✅ lấy FULL rows của getTkXuongDay (đã có line_no) và KHÔNG ép 1 tổ 1 dòng
+  // ✅ getTkXuongDay (line)
   for(const x of XUONGS){
     const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
     const rows = res.success ? (res.rows||[]) : [];
 
     const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
-
-    // giữ các dòng thuộc danh sách tổ cho xưởng đó
     let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-    // nếu 1 tổ hoàn toàn chưa có plan line nào -> chèn placeholder line 1 để bảng đủ tổ (đỡ trống)
+    // placeholder nếu thiếu tổ
     const existingTo = new Set(filtered.map(r=>Number(r.to_nhom)));
     for(const to of allowTos){
       if(!existingTo.has(to)){
@@ -449,15 +552,17 @@ async function loadDayAllXuong(ngay){
       }
     }
 
-    // sort: to_nhom, line_no
     filtered.sort((a,b)=> Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
     dayDetail[x] = filtered;
   }
 
-  // reasons raw (production_hour) cho 3 xưởng
+  // ✅ getHourRange (raw giờ + nguyên nhân)
   for(const x of XUONGS){
     const hr = await apiPost({ action:"getHourRange", token:S.token, xuong:x, from:ngay, to:ngay });
     dayHoursRaw[x] = hr.success ? (hr.data||[]) : [];
+
+    // ✅ tổng hợp theo giờ toàn xưởng (không phụ thuộc tổ)
+    hourAggByXuong[x] = aggHourByKhung(dayHoursRaw[x]);
   }
 
   // compare + KPI (tính qua TẤT CẢ line)
@@ -485,6 +590,76 @@ async function loadDayAllXuong(ngay){
   const best = bestXuongLabel(agg);
 
   setKpi(usdAll, spAll, hsAll, best);
+}
+
+/* ================== NEW: AGG HOUR ================== */
+function aggHourByKhung(rows){
+  // rows: production_hour, thường có: khung_gio, ke_hoach_gio, thuc_te, hieu_suat, nguyen_nhan, ...
+  const map = new Map();
+
+  for(const r of (rows||[])){
+    const k = String(r.khung_gio || "").trim();
+    if(!k) continue;
+
+    const it = map.get(k) || { khung:k, kh:0, tt:0, reasons:new Map() };
+    it.kh += toNum(r.ke_hoach_gio);
+    it.tt += toNum(r.thuc_te);
+
+    const reason = normReason(r.nguyen_nhan);
+    if(reason){
+      it.reasons.set(reason, (it.reasons.get(reason)||0) + 1);
+    }
+
+    map.set(k, it);
+  }
+
+  // sort theo "7-8", "8-9"...
+  const list = [...map.values()].sort((a,b)=> (a.khung||"").localeCompare(b.khung||""));
+  return list.map(it=>{
+    const hs = it.kh>0 ? (it.tt/it.kh*100) : 0;
+    const topReasons = [...it.reasons.entries()].sort((a,b)=>b[1]-a[1]).slice(0,2);
+    const reasonText = topReasons.length
+      ? topReasons.map(([t,c])=>`${t} (${c})`).join(" • ")
+      : "";
+    return { khung: it.khung, kh: it.kh, tt: it.tt, hs, reasonText };
+  });
+}
+
+function renderHourAggAll(){
+  renderHourAggOne(1, hourAggByXuong[1]||[]);
+  renderHourAggOne(2, hourAggByXuong[2]||[]);
+  renderHourAggOne(3, hourAggByXuong[3]||[]);
+}
+
+function renderHourAggOne(x, list){
+  const tb = document.getElementById(`hourTbody${x}`);
+  if(!tb) return;
+
+  let bad=0, hsSum=0, hsCnt=0;
+
+  tb.innerHTML = (list.length ? list : []).map(r=>{
+    const hs = Number(r.hs||0);
+    if(hs < 80) bad++;
+    hsSum += hs; hsCnt++;
+
+    return `
+      <tr>
+        <td><b>${escapeHtml(r.khung)}</b></td>
+        <td>${fmt0(r.kh)}</td>
+        <td>${fmt0(r.tt)}</td>
+        <td class="pct ${pctClass(hs)}">${fmt1(hs)}%</td>
+        <td class="left" style="text-align:left;padding-left:10px;white-space:normal">${escapeHtml(r.reasonText||"")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  if(!list.length){
+    tb.innerHTML = `<tr><td colspan="5" class="left" style="text-align:left;padding-left:10px;color:var(--muted)">Chưa có dữ liệu giờ.</td></tr>`;
+  }
+
+  const hsAvg = hsCnt ? (hsSum/hsCnt) : 0;
+  document.getElementById(`hBad${x}`).innerText = String(bad);
+  document.getElementById(`hAvg${x}`).innerText = fmt1(hsAvg) + "%";
 }
 
 /* ================== RENDER: COMPARE TABLE ================== */
