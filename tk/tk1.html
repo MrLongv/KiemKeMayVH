@@ -138,6 +138,13 @@
   }
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
+
+  /* =========================
+     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG
+     - footer sticky cần nền + z-index riêng
+  ========================= */
+  tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
+  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 </style>
 </head>
 <body>
@@ -253,8 +260,15 @@
 
       <tfoot>
         <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
+        <!-- ✅ FIX: không dùng sticky + colspan lớn (gây che khi kéo ngang) -->
         <tr>
-          <td class="sticky1 left" colspan="6" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky2"></td>
+          <td class="sticky3"></td>
+
+          <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
+          <td colspan="3"></td>
+
           <td id="usdQtSum" class="right">0.00</td>
 
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
