@@ -30,15 +30,13 @@
 
   /* ============================
      ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
-     - giống kiểu GDC: 1 ticker mảnh
-     - sticky dưới topbar
   ============================ */
   .gdc-ticker{
     position:sticky;
-    top:64px; /* gần đúng chiều cao topbar */
+    top:64px;
     z-index:19;
     height:38px;
-    display:none; /* show khi có message */
+    display:none;
     align-items:center;
     overflow:hidden;
     background:#0e2552;
@@ -56,92 +54,133 @@
     background:#0b1b3a;
     border-right:1px solid rgba(255,255,255,.14);
   }
-  .gdc-ticker .track{
-    flex:1;
-    overflow:hidden;
-    white-space:nowrap;
-    position:relative;
-  }
+  .gdc-ticker .track{flex:1;overflow:hidden;white-space:nowrap;position:relative}
   .gdc-ticker .text{
     display:inline-block;
     padding-left:100%;
     font-weight:800;
     font-size:14px;
     line-height:38px;
-    animation: gdc-marquee 22s linear infinite;
-    will-change: transform;
+    animation:gdc-marquee 22s linear infinite;
+    will-change:transform;
   }
-  @keyframes gdc-marquee{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-100%); }
-  }
+  @keyframes gdc-marquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
   .gdc-ticker .meta{
-    flex:0 0 auto;
-    height:100%;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:0 12px;
-    font-size:12px;
-    opacity:.9;
+    flex:0 0 auto;height:100%;
+    display:flex;align-items:center;gap:8px;
+    padding:0 12px;font-size:12px;opacity:.9;
     border-left:1px solid rgba(255,255,255,.14);
     background:rgba(0,0,0,.08);
   }
-  .gdc-ticker .dot{
-    width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;
-    box-shadow:0 0 0 4px rgba(34,197,94,.14);
-  }
-  .gdc-ticker .time{
-    opacity:.9;
-    font-variant-numeric: tabular-nums;
+  .gdc-ticker .dot{width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;box-shadow:0 0 0 4px rgba(34,197,94,.14)}
+  .gdc-ticker .time{opacity:.9;font-variant-numeric:tabular-nums}
+
+  /* ===== Layout ===== */
+  .wrap{padding:10px}
+  .kpi{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:10px}
+  .card .label{font-size:12px;color:var(--muted)}
+  .card .value{font-size:18px;font-weight:900;margin-top:4px}
+  .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* =========================
+     ✅ TABLE COMPACT (FIX)
+  ========================= */
+  .tableWrap{
+    background:#fff;border:1px solid var(--line);
+    border-radius:14px;overflow:auto;box-shadow:var(--shadow)
   }
 
-  .wrap{padding:14px}
-  .kpi{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-bottom:12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
-  .card .label{font-size:12px;color:var(--muted)}
-  .card .value{font-size:20px;font-weight:900;margin-top:4px}
-  .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
-  .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
-  th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
+  table{
+    width:max(1500px,100%);
+    border-collapse:collapse;
+    font-size:11px;
+    line-height:1.15;
+  }
+
+  th,td{
+    border:1px solid var(--line);
+    padding:3px 4px;
+    text-align:center;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
-  thead th{position:sticky;top:0;z-index:5}
-  thead tr:nth-child(2) th{top:34px}
 
-  /* sticky cols (đã thu nhỏ LINE) */
+  thead th{position:sticky;top:0;z-index:5;padding:4px 4px}
+  thead tr:nth-child(2) th{top:28px}
+
+  /* sticky cols (compact) */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
-  .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
-  .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
+  .sticky2{position:sticky;left:40px;z-index:6;background:#fff}
+  .sticky3{position:sticky;left:100px;z-index:6;background:#fff}
+
   thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
   thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
+
+  /* width sticky cells */
+  #tbl th.sticky1,#tbl td.sticky1{min-width:40px;max-width:40px}
+  #tbl th.sticky2,#tbl td.sticky2{min-width:60px;max-width:60px}
+  #tbl th.sticky3,#tbl td.sticky3{min-width:110px;max-width:110px}
+
+  /* shrink other numeric columns */
+  #tbl th:not(.sticky1):not(.sticky2):not(.sticky3){min-width:62px}
+  #hourHead th{min-width:50px}
 
   tbody tr:nth-child(even) td{background:#fafafa}
   .calc{font-weight:900}
   .pct{font-weight:900}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
+
   tfoot td{background:#f1f5f9;font-weight:900}
   tfoot .strong{background:#0e2552;color:#fff}
+
   .small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
-  input.cell{width:100%;border:none;outline:none;background:transparent;text-align:center;font:inherit;padding:6px}
+
+  input.cell{
+    width:100%;
+    border:none;outline:none;background:transparent;
+    text-align:center;
+    font:inherit;
+    padding:3px 4px;
+    font-size:11px;
+    line-height:1.15;
+  }
   input.cell:focus{background:#fff7ed;box-shadow:inset 0 0 0 2px rgba(245,158,11,.35)}
   .ro{background:#f1f5f9 !important;color:#111827}
-  .saveMini{padding:6px 8px;border-radius:10px;font-size:12px}
+
+  .saveMini{padding:4px 6px;border-radius:9px;font-size:11px}
   .right{text-align:right}
   .left{text-align:left}
+
   .tagLine{
-    font-size:11px;font-weight:900;
+    font-size:10px;font-weight:900;
     display:inline-flex;align-items:center;justify-content:center;
-    min-width:26px;height:22px;padding:0 8px;border-radius:999px;
+    min-width:22px;height:18px;padding:0 6px;border-radius:999px;
     background:#0e2552;color:#fff;
   }
-  .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
+  .btnMini{
+    padding:4px 6px;border-radius:9px;
+    font-size:11px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff
+  }
   .btnMini.gray{background:#6b7280}
+
+  /* ellipsis for text fields */
+  td.sticky3 input.ma_hang,
+  td input.ghi_chu{
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  /* Ghi chú + thao tác gọn */
+  #tbl th.ghichuCol, #tbl td.ghichuCol{min-width:160px;max-width:160px}
+  #tbl th.actionCol, #tbl td.actionCol{min-width:120px;max-width:120px}
 
   /* =========================
      ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG
-     - footer sticky cần nền + z-index riêng
   ========================= */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
@@ -182,12 +221,6 @@
   </div>
 </div>
 
-<!-- ============================
-     ✅ CHỈ ĐẠO GĐC (TICKER)
-     - ưu tiên scope theo xưởng (1)
-     - fallback ALL
-     - refresh 30s, chạy mượt như GDC
-============================ -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track">
@@ -228,30 +261,30 @@
     <table id="tbl">
       <thead>
         <tr>
-          <th class="sticky1" rowspan="2" style="min-width:54px;">TỔ</th>
-          <th class="sticky2" rowspan="2" style="min-width:78px;">LINE</th>
-          <th class="sticky3" rowspan="2" style="min-width:130px;">MÃ HÀNG</th>
+          <th class="sticky1" rowspan="2">TỔ</th>
+          <th class="sticky2" rowspan="2">LINE</th>
+          <th class="sticky3" rowspan="2">MÃ HÀNG</th>
 
-          <th rowspan="2" style="min-width:90px;">SL KH</th>
-          <th rowspan="2" style="min-width:90px;">ĐM NGÀY</th>
-          <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
-          <th rowspan="2" style="min-width:95px;">USD/QT</th>
+          <th rowspan="2">SL KH</th>
+          <th rowspan="2">ĐM NGÀY</th>
+          <th rowspan="2">ĐM GIỜ</th>
+          <th rowspan="2">USD/QT</th>
 
           <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
 
-          <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
-          <th rowspan="2" style="min-width:110px;">USD/TH</th>
-          <th rowspan="2" style="min-width:105px;">HIỆU SUẤT</th>
+          <th rowspan="2">TỔNG SP</th>
+          <th rowspan="2">USD/TH</th>
+          <th rowspan="2">HIỆU SUẤT</th>
 
           <th colspan="2">LAO ĐỘNG</th>
 
-          <th rowspan="2" style="min-width:90px;">ĐG</th>
-          <th rowspan="2" style="min-width:90px;">TG/QT</th>
-          <th rowspan="2" style="min-width:110px;">USD 80%</th>
-          <th rowspan="2" style="min-width:110px;">USD 100%</th>
-          <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
-          <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
-          <th rowspan="2" style="min-width:150px;">THAO TÁC</th>
+          <th rowspan="2">ĐG</th>
+          <th rowspan="2">TG/QT</th>
+          <th rowspan="2">USD 80%</th>
+          <th rowspan="2">USD 100%</th>
+          <th rowspan="2">CHUYỂN ĐỔI/NGÀY</th>
+          <th class="ghichuCol" rowspan="2">GHI CHÚ</th>
+          <th class="actionCol" rowspan="2">THAO TÁC</th>
         </tr>
         <tr id="hourHead"></tr>
       </thead>
@@ -259,14 +292,11 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
-        <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
-        <!-- ✅ FIX: không dùng sticky + colspan lớn (gây che khi kéo ngang) -->
         <tr>
-          <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky1 left" style="padding-left:8px;">CỘNG USD</td>
           <td class="sticky2"></td>
           <td class="sticky3"></td>
 
-          <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
           <td colspan="3"></td>
 
           <td id="usdQtSum" class="right">0.00</td>
@@ -277,9 +307,8 @@
           <td colspan="11"></td>
         </tr>
 
-        <!-- ƯỚC TÍNH USD TRONG NGÀY -->
         <tr class="strong">
-          <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+          <td class="left" colspan="25" style="padding-left:8px;">ƯỚC TÍNH USD TRONG NGÀY</td>
           <td id="usdNgay" class="right">0.00</td>
           <td></td>
         </tr>
@@ -301,11 +330,7 @@ const TO_LIST = [1,3,5,7,9];
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
-/* ================== FORMAT (CHUẨN MỚI) ==================
-   - Số nguyên: 10,000 (group bằng dấu phẩy)
-   - Tiền: 1,972.00 (luôn 2 decimals, dấu chấm)
-   - Đơn giá: 2.4 / 2.22 (dấu chấm, không grouping)
-=========================================================== */
+/* ================== FORMAT (CHUẨN MỚI) ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -319,7 +344,7 @@ function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
-  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping theo chuẩn mới
+  s = s.replace(/\s+/g,"").replaceAll(",","");
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -354,17 +379,11 @@ function pctClass(hs){
 let S = mustLogin();
 let canEditPlan = false;
 
-/* =========================================================
-   ✅ CHỈ ĐẠO GĐC (TICKER) — CHỈ BỔ SUNG PHẦN NÀY
-   - ưu tiên scope theo xưởng (1)
-   - fallback ALL
-   - refresh 30s, chạy mượt như GDC
-========================================================= */
+/* ================== GDC TICKER ================== */
 let gdcTimer = null;
 
 function fmtTickerTime(iso){
   if(!iso) return "";
-  // iso: 2026-01-14T03:12:34.000Z
   const d = new Date(iso);
   if(Number.isNaN(d.getTime())) return "";
   const hh = String(d.getHours()).padStart(2,"0");
@@ -378,57 +397,34 @@ async function loadGdcTicker(){
   if(!S || !S.token) return;
 
   try{
-    // 1) scope xưởng
-    const resX = await apiPost({
-      action:"getDirectorMessage",
-      token:S.token,
-      xuong:XUONG
-    });
-
-    // 2) fallback ALL (để chắc chắn, dù worker đã tự fallback)
-    const resAll = await apiPost({
-      action:"getDirectorMessage",
-      token:S.token,
-      xuong:"ALL"
-    });
+    const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
+    const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
 
     let picked = null;
-
-    if(resX?.success && (resX.message||"").trim()){
-      picked = resX;
-    }else if(resAll?.success && (resAll.message||"").trim()){
-      picked = resAll;
-    }
+    if(resX?.success && (resX.message||"").trim()) picked = resX;
+    else if(resAll?.success && (resAll.message||"").trim()) picked = resAll;
 
     const box = document.getElementById("gdcTicker");
     const textEl = document.getElementById("gdcTickerText");
     const scopeEl = document.getElementById("gdcTickerScope");
     const timeEl = document.getElementById("gdcTickerTime");
 
-    if(!picked){
-      box.style.display = "none";
-      return;
-    }
+    if(!picked){ box.style.display = "none"; return; }
 
     const scope = String(picked.scope || "").toUpperCase();
     const msg = String(picked.message || "").trim();
-    if(!msg){
-      box.style.display = "none";
-      return;
-    }
+    if(!msg){ box.style.display = "none"; return; }
 
     box.style.display = "flex";
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
-    // reset animation để chạy lại mượt khi nội dung đổi
     textEl.style.animation = "none";
-    textEl.offsetHeight; // force reflow
+    textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation = "gdc-marquee 22s linear infinite";
   }catch(e){
     console.warn("GDC ticker error:", e);
-    // không làm gì để tránh phá UI
   }
 }
 
@@ -464,9 +460,7 @@ if(S){
   }
   document.getElementById("btnSaveAll").disabled = !canEditPlan;
 
-  // ✅ start ticker ngay khi login ok
   startGdcTicker();
-
   reload();
 }
 
@@ -611,11 +605,11 @@ function renderDayRows(rows){
       <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
         <td class="sticky1"><b>${r.to_nhom}</b></td>
 
-        <td class="sticky2 left" style="padding-left:8px;">
+        <td class="sticky2 left" style="padding-left:6px;">
           <span class="tagLine">L${r.line_no}</span>
           ${canEditPlan
-            ? `<button class="btnMini gray" style="margin-left:6px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>`
-            : `<span style="margin-left:6px;color:#6b7280;font-size:12px">—</span>`
+            ? `<button class="btnMini gray" style="margin-left:4px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>`
+            : `<span style="margin-left:4px;color:#6b7280;font-size:11px">—</span>`
           }
         </td>
 
@@ -646,21 +640,20 @@ function renderDayRows(rows){
 
         <td><input class="cell ${ro} chuyen_doi_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.chuyen_doi_ngay||0)}" /></td>
 
-        <td class="left" style="padding-left:6px;">
+        <td class="left ghichuCol" style="padding-left:4px;">
           <input class="cell ${ro} ghi_chu" ${canEditPlan?"":"readonly"} style="text-align:left" value="${escapeHtml(r.ghi_chu||"")}" />
         </td>
 
-        <td>
-  ${canEditPlan
-    ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-       ${Number(r.line_no) > 1
-         ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
-         : ``
-       }`
-    : "—"
-  }
-</td>
-
+        <td class="actionCol">
+          ${canEditPlan
+            ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+               ${Number(r.line_no) > 1
+                 ? `<button class="btn danger saveMini" style="margin-left:4px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+                 : ``
+               }`
+            : "—"
+          }
+        </td>
       </tr>
     `;
   }).join("");
@@ -733,9 +726,9 @@ function renderRowHtml(r){
   return `
     <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
       <td class="sticky1"><b>${r.to_nhom}</b></td>
-      <td class="sticky2 left" style="padding-left:8px;">
+      <td class="sticky2 left" style="padding-left:6px;">
         <span class="tagLine">L${r.line_no}</span>
-        <button class="btnMini gray" style="margin-left:6px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>
+        <button class="btnMini gray" style="margin-left:4px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>
       </td>
       <td class="sticky3"><input class="cell ma_hang" value="" /></td>
       <td><input class="cell so_luong_ke_hoach" inputmode="numeric" value="0" /></td>
@@ -753,10 +746,10 @@ function renderRowHtml(r){
       <td class="calc right">0.00</td>
       <td class="calc right">0.00</td>
       <td><input class="cell chuyen_doi_ngay" inputmode="numeric" value="0" /></td>
-      <td class="left" style="padding-left:6px;"><input class="cell ghi_chu" style="text-align:left" value="" /></td>
-      <td>
+      <td class="left ghichuCol" style="padding-left:4px;"><input class="cell ghi_chu" style="text-align:left" value="" /></td>
+      <td class="actionCol">
         <button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-        <button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>
+        <button class="btn danger saveMini" style="margin-left:4px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>
       </td>
     </tr>
   `;
