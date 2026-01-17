@@ -109,6 +109,25 @@
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
+/* ✅ sticky footer (CỘNG USD + ƯỚC TÍNH USD) */
+tfoot tr{
+  position: sticky;
+  bottom: 0;
+  z-index: 7;
+}
+tfoot tr.strong{
+  bottom: 34px; /* vì có 1 dòng CỘNG USD ở dưới */
+  z-index: 8;
+}
+
+/* giữ nền để không bị trong suốt khi đè lên */
+tfoot td{
+  background:#f1f5f9;
+}
+tfoot .strong td{
+  background:#0e2552;
+  color:#fff;
+}
 
    /* sticky cols (đã thu nhỏ LINE) */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
