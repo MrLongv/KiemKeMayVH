@@ -128,9 +128,16 @@ function routeByRole(sess){
     return;
   }
   if(sess.role === "gdc"){
-    location.href = `./gdc/gdc.html`;
-    return;
+  const u = String(sess.username || "").toLowerCase();
+
+  // gdc1 → gdc1.html, gdc2 → gdc2.html ...
+  if(u.startsWith("gdc")){
+    location.href = `./gdc/${u}.html`;
+  } else {
+    location.href = `./gdc/gdc1.html`; // fallback
   }
+  return;
+}
 
   document.getElementById("msg").innerText = "Role không hợp lệ: " + sess.role;
 }
