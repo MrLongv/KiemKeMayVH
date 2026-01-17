@@ -100,7 +100,16 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-    tbody tr:nth-child(even) td{background:#fafafa}
+  /* =========================
+     ✅ sticky cols (GIỐNG TK1/TK2)
+  ========================= */
+  .sticky1{position:sticky;left:0;z-index:6;background:#fff}
+  .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
+  .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
+  thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
+  thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
+
+  tbody tr:nth-child(even) td{background:#fafafa}
   .calc{font-weight:900}
   .pct{font-weight:900}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
@@ -121,6 +130,12 @@
   }
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
+
+  /* =========================
+     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG (GIỐNG TK1/TK2)
+  ========================= */
+  tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
+  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 </style>
 </head>
 <body>
@@ -200,8 +215,9 @@
       <thead>
         <tr>
           <th class="sticky1" rowspan="2" style="min-width:54px;">TỔ</th>
-          <th class="sticky2" rowspan="2" style="min-width:100px;">LINE</th>
-          <th class="sticky3" rowspan="2" style="min-width:170px;">MÃ HÀNG</th>
+          <!-- ✅ GIỐNG TK2/TK1: thu nhỏ LINE + MÃ HÀNG -->
+          <th class="sticky2" rowspan="2" style="min-width:78px;">LINE</th>
+          <th class="sticky3" rowspan="2" style="min-width:130px;">MÃ HÀNG</th>
 
           <th rowspan="2" style="min-width:90px;">SL KH</th>
           <th rowspan="2" style="min-width:90px;">ĐM NGÀY</th>
@@ -230,8 +246,15 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
+        <!-- ✅ GIỐNG TK1/TK2: tách 3 sticky cell + bù colspan để không che khi scroll ngang -->
         <tr>
-          <td class="sticky1 left" colspan="6" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky2"></td>
+          <td class="sticky3"></td>
+
+          <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
+          <td colspan="3"></td>
+
           <td id="usdQtSum" class="right">0.00</td>
 
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
@@ -526,7 +549,6 @@ function renderDayRows(rows){
     const dmNgay = toNum(r.dinh_muc_ngay);
     const dg = toNum(r.don_gia);
 
-    /* ✅ XN3 cũng là 9 khung giờ */
     const dmGio = (dmNgay ? dmNgay/9 : 0);
     const usdQt = (dmNgay>0 && dg>0) ? (dmNgay*dg) : 0;
 
@@ -581,17 +603,16 @@ function renderDayRows(rows){
           <input class="cell ${ro} ghi_chu" ${canEditPlan?"":"readonly"} style="text-align:left" value="${escapeHtml(r.ghi_chu||"")}" />
         </td>
 
-       <td>
-  ${canEditPlan
-    ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-       ${Number(r.line_no) > 1
-         ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
-         : ``
-       }`
-    : "—"
-  }
-</td>
-
+        <td>
+          ${canEditPlan
+            ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+               ${Number(r.line_no) > 1
+                 ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+                 : ``
+               }`
+            : "—"
+          }
+        </td>
       </tr>
     `;
   }).join("");
