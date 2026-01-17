@@ -29,7 +29,7 @@
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
 
   /* ============================
-     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
+     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY) — GIỐNG TK1
   ============================ */
   .gdc-ticker{
     position:sticky;
@@ -101,8 +101,7 @@
   thead tr:nth-child(2) th{top:34px}
 
   /* =========================
-     ✅ sticky cols (GIỐNG TK1)
-     - left offsets chuẩn: 0 / 45 / 85
+     ✅ sticky cols (GIỐNG TK1 — đã thu nhỏ LINE)
   ========================= */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
@@ -133,8 +132,7 @@
   .btnMini.gray{background:#6b7280}
 
   /* =========================
-     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG
-     - footer sticky cần nền + z-index riêng
+     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG (GIỐNG TK1)
   ========================= */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
@@ -217,8 +215,10 @@
       <thead>
         <tr>
           <th class="sticky1" rowspan="2" style="min-width:54px;">TỔ</th>
-          <th class="sticky2" rowspan="2" style="min-width:100px;">LINE</th>
-          <th class="sticky3" rowspan="2" style="min-width:170px;">MÃ HÀNG</th>
+          <!-- ✅ GIỐNG TK1: LINE min-width 78 -->
+          <th class="sticky2" rowspan="2" style="min-width:78px;">LINE</th>
+          <!-- ✅ GIỐNG TK1: MÃ HÀNG min-width 130 -->
+          <th class="sticky3" rowspan="2" style="min-width:130px;">MÃ HÀNG</th>
 
           <th rowspan="2" style="min-width:90px;">SL KH</th>
           <th rowspan="2" style="min-width:90px;">ĐM NGÀY</th>
@@ -248,7 +248,7 @@
 
       <tfoot>
         <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
-        <!-- ✅ FIX: không dùng sticky + colspan lớn (gây che khi kéo ngang) -->
+        <!-- ✅ GIỐNG TK1: tách 3 sticky cell + bù colspan -->
         <tr>
           <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
           <td class="sticky2"></td>
@@ -265,9 +265,9 @@
           <td colspan="11"></td>
         </tr>
 
+        <!-- ✅ GIỐNG TK1: giữ nguyên strong row như bản TK1 của bạn -->
         <tr class="strong">
-          <td class="sticky1 left" style="padding-left:10px;" colspan="3">ƯỚC TÍNH USD TRONG NGÀY</td>
-          <td colspan="22"></td>
+          <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
           <td id="usdNgay" class="right">0.00</td>
           <td></td>
         </tr>
@@ -605,16 +605,15 @@ function renderDayRows(rows){
         </td>
 
         <td>
-  ${canEditPlan
-    ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-       ${Number(r.line_no) > 1
-         ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
-         : ``
-       }`
-    : "—"
-  }
-</td>
-
+          ${canEditPlan
+            ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+               ${Number(r.line_no) > 1
+                 ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+                 : ``
+               }`
+            : "—"
+          }
+        </td>
       </tr>
     `;
   }).join("");
