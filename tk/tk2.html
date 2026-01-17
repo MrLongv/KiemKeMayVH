@@ -100,8 +100,16 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-  /* sticky cols */
-  
+  /* =========================
+     ✅ sticky cols (GIỐNG TK1)
+     - left offsets chuẩn: 0 / 45 / 85
+  ========================= */
+  .sticky1{position:sticky;left:0;z-index:6;background:#fff}
+  .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
+  .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
+  thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
+  thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
+
   tbody tr:nth-child(even) td{background:#fafafa}
   .calc{font-weight:900}
   .pct{font-weight:900}
@@ -123,6 +131,13 @@
   }
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
+
+  /* =========================
+     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG
+     - footer sticky cần nền + z-index riêng
+  ========================= */
+  tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
+  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 </style>
 </head>
 <body>
@@ -232,8 +247,16 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
+        <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
+        <!-- ✅ FIX: không dùng sticky + colspan lớn (gây che khi kéo ngang) -->
         <tr>
-          <td class="sticky1 left" colspan="6" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
+          <td class="sticky2"></td>
+          <td class="sticky3"></td>
+
+          <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
+          <td colspan="3"></td>
+
           <td id="usdQtSum" class="right">0.00</td>
 
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
@@ -243,7 +266,8 @@
         </tr>
 
         <tr class="strong">
-          <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+          <td class="sticky1 left" style="padding-left:10px;" colspan="3">ƯỚC TÍNH USD TRONG NGÀY</td>
+          <td colspan="22"></td>
           <td id="usdNgay" class="right">0.00</td>
           <td></td>
         </tr>
@@ -386,7 +410,7 @@ if(S){
     document.getElementById("roleHint").innerText = "✅ TK2: được nhập & lưu kế hoạch theo LINE (XN2)";
   } else if(S.role === "gdx" && Number(S.xuong) === XUONG){
     canEditPlan = false;
-    document.getElementById("roleHint").innerText = "👀 GĐX1: chỉ xem (XN2)";
+    document.getElementById("roleHint").innerText = "👀 GĐX2: chỉ xem (XN2)";
   } else if(S.role === "gdc"){
     canEditPlan = false;
     document.getElementById("roleHint").innerText = "👀 GĐC: đang xem XN2";
