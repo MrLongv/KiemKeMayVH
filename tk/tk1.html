@@ -18,8 +18,16 @@
   .brand span{font-size:12px;opacity:.85}
   .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .ctl{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);padding:6px 8px;border-radius:12px}
-  .ctl label{font-size:12px;opacity:.9}
-  .ctl input,.ctl select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:6px 8px;border-radius:10px;outline:none;font-size:12px}
+  .ctl label{font-size:12px;opacity:.9;white-space:nowrap}
+  .ctl input,.ctl select{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;
+    padding:6px 8px;
+    border-radius:10px;
+    outline:none;
+    font-size:12px;
+  }
   .ctl select option{color:#111}
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
@@ -29,7 +37,7 @@
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
 
   /* ============================
-     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
+     ✅ CHỈ ĐẠO GĐC (TICKER)
   ============================ */
   .gdc-ticker{
     position:sticky;
@@ -76,94 +84,96 @@
   .gdc-ticker .time{opacity:.9;font-variant-numeric:tabular-nums}
 
   /* ===== Layout ===== */
-  .wrap{padding:10px}
-  .kpi{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+  .wrap{padding:8px}
+  .kpi{display:grid;grid-template-columns:repeat(4,minmax(145px,1fr));gap:8px;margin-bottom:8px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:10px}
   .card .label{font-size:12px;color:var(--muted)}
   .card .value{font-size:18px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
   /* =========================
-     ✅ TABLE COMPACT (FIX)
+     ✅ TABLE WRAP + AUTO-FIT
+     - auto-fit dùng zoom (ổn sticky trên Chrome)
   ========================= */
   .tableWrap{
     background:#fff;border:1px solid var(--line);
-    border-radius:14px;overflow:auto;box-shadow:var(--shadow)
+    border-radius:14px;overflow:auto;box-shadow:var(--shadow);
+  }
+  /* container bên trong để apply zoom */
+  .fitStage{
+    transform-origin: top left;
+    /* zoom set bằng JS: style.zoom */
   }
 
+  /* =========================
+     ✅ ULTRA COMPACT TABLE
+  ========================= */
   table{
-    width:max(1500px,100%);
+    width:max(1200px,100%);
     border-collapse:collapse;
-    font-size:11px;
-    line-height:1.15;
+    font-size:10px;
+    line-height:1.05;
   }
-
   th,td{
+    padding:2px 3px;
     border:1px solid var(--line);
-    padding:3px 4px;
     text-align:center;
     white-space:nowrap;
     font-variant-numeric:tabular-nums;
   }
-
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
+  thead th{position:sticky;top:0;z-index:5;padding:3px 3px}
+  thead tr:nth-child(2) th{top:24px}
 
-  thead th{position:sticky;top:0;z-index:5;padding:4px 4px}
-  thead tr:nth-child(2) th{top:28px}
-
-  /* sticky cols (compact) */
+  /* Sticky columns (siêu gọn) */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
-  .sticky2{position:sticky;left:40px;z-index:6;background:#fff}
-  .sticky3{position:sticky;left:100px;z-index:6;background:#fff}
+  .sticky2{position:sticky;left:34px;z-index:6;background:#fff}
+  .sticky3{position:sticky;left:86px;z-index:6;background:#fff} /* 34+52 */
+
+  #tbl th.sticky1,#tbl td.sticky1{min-width:34px;max-width:34px}
+  #tbl th.sticky2,#tbl td.sticky2{min-width:52px;max-width:52px}
+  #tbl th.sticky3,#tbl td.sticky3{min-width:92px;max-width:92px}
 
   thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
   thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
 
-  /* width sticky cells */
-  #tbl th.sticky1,#tbl td.sticky1{min-width:40px;max-width:40px}
-  #tbl th.sticky2,#tbl td.sticky2{min-width:60px;max-width:60px}
-  #tbl th.sticky3,#tbl td.sticky3{min-width:110px;max-width:110px}
-
-  /* shrink other numeric columns */
-  #tbl th:not(.sticky1):not(.sticky2):not(.sticky3){min-width:62px}
-  #hourHead th{min-width:50px}
+  /* shrink numeric columns */
+  #tbl th:not(.sticky1):not(.sticky2):not(.sticky3){min-width:54px}
+  #hourHead th{min-width:40px}
 
   tbody tr:nth-child(even) td{background:#fafafa}
   .calc{font-weight:900}
   .pct{font-weight:900}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
-
   tfoot td{background:#f1f5f9;font-weight:900}
   tfoot .strong{background:#0e2552;color:#fff}
-
-  .small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
 
   input.cell{
     width:100%;
     border:none;outline:none;background:transparent;
     text-align:center;
     font:inherit;
-    padding:3px 4px;
-    font-size:11px;
-    line-height:1.15;
+    padding:2px 3px;
+    font-size:10px;
+    line-height:1.05;
   }
   input.cell:focus{background:#fff7ed;box-shadow:inset 0 0 0 2px rgba(245,158,11,.35)}
   .ro{background:#f1f5f9 !important;color:#111827}
 
-  .saveMini{padding:4px 6px;border-radius:9px;font-size:11px}
+  .saveMini{padding:3px 5px;border-radius:8px;font-size:10px}
   .right{text-align:right}
   .left{text-align:left}
 
   .tagLine{
-    font-size:10px;font-weight:900;
+    font-size:9px;font-weight:900;
     display:inline-flex;align-items:center;justify-content:center;
-    min-width:22px;height:18px;padding:0 6px;border-radius:999px;
+    min-width:18px;height:16px;padding:0 5px;border-radius:999px;
     background:#0e2552;color:#fff;
   }
   .btnMini{
-    padding:4px 6px;border-radius:9px;
-    font-size:11px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff
+    padding:3px 5px;border-radius:8px;
+    font-size:10px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff
   }
   .btnMini.gray{background:#6b7280}
 
@@ -176,8 +186,10 @@
   }
 
   /* Ghi chú + thao tác gọn */
-  #tbl th.ghichuCol, #tbl td.ghichuCol{min-width:160px;max-width:160px}
-  #tbl th.actionCol, #tbl td.actionCol{min-width:120px;max-width:120px}
+  #tbl th.ghichuCol, #tbl td.ghichuCol{min-width:130px;max-width:130px}
+  #tbl th.actionCol, #tbl td.actionCol{min-width:96px;max-width:96px}
+
+  .small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
 
   /* =========================
      ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG
@@ -210,6 +222,15 @@
       <div class="ctl">
         <label>Ngày</label>
         <input type="date" id="date" />
+      </div>
+
+      <!-- ✅ Auto-fit -->
+      <div class="ctl" title="Tự co bảng vừa màn hình (Chrome/Edge). OFF để giữ kích thước thật.">
+        <label>Auto-fit</label>
+        <select id="fitMode">
+          <option value="on">ON</option>
+          <option value="off">OFF</option>
+        </select>
       </div>
 
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
@@ -257,63 +278,65 @@
     </div>
   </div>
 
-  <div class="tableWrap">
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th class="sticky1" rowspan="2">TỔ</th>
-          <th class="sticky2" rowspan="2">LINE</th>
-          <th class="sticky3" rowspan="2">MÃ HÀNG</th>
+  <div class="tableWrap" id="tableWrap">
+    <div class="fitStage" id="fitStage">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th class="sticky1" rowspan="2">TỔ</th>
+            <th class="sticky2" rowspan="2">LINE</th>
+            <th class="sticky3" rowspan="2">MÃ HÀNG</th>
 
-          <th rowspan="2">SL KH</th>
-          <th rowspan="2">ĐM NGÀY</th>
-          <th rowspan="2">ĐM GIỜ</th>
-          <th rowspan="2">USD/QT</th>
+            <th rowspan="2">SL KH</th>
+            <th rowspan="2">ĐM NGÀY</th>
+            <th rowspan="2">ĐM GIỜ</th>
+            <th rowspan="2">USD/QT</th>
 
-          <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+            <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
 
-          <th rowspan="2">TỔNG SP</th>
-          <th rowspan="2">USD/TH</th>
-          <th rowspan="2">HIỆU SUẤT</th>
+            <th rowspan="2">TỔNG SP</th>
+            <th rowspan="2">USD/TH</th>
+            <th rowspan="2">HIỆU SUẤT</th>
 
-          <th colspan="2">LAO ĐỘNG</th>
+            <th colspan="2">LAO ĐỘNG</th>
 
-          <th rowspan="2">ĐG</th>
-          <th rowspan="2">TG/QT</th>
-          <th rowspan="2">USD 80%</th>
-          <th rowspan="2">USD 100%</th>
-          <th rowspan="2">CHUYỂN ĐỔI/NGÀY</th>
-          <th class="ghichuCol" rowspan="2">GHI CHÚ</th>
-          <th class="actionCol" rowspan="2">THAO TÁC</th>
-        </tr>
-        <tr id="hourHead"></tr>
-      </thead>
+            <th rowspan="2">ĐG</th>
+            <th rowspan="2">TG/QT</th>
+            <th rowspan="2">USD 80%</th>
+            <th rowspan="2">USD 100%</th>
+            <th rowspan="2">CHUYỂN ĐỔI/NGÀY</th>
+            <th class="ghichuCol" rowspan="2">GHI CHÚ</th>
+            <th class="actionCol" rowspan="2">THAO TÁC</th>
+          </tr>
+          <tr id="hourHead"></tr>
+        </thead>
 
-      <tbody id="tbody"></tbody>
+        <tbody id="tbody"></tbody>
 
-      <tfoot>
-        <tr>
-          <td class="sticky1 left" style="padding-left:8px;">CỘNG USD</td>
-          <td class="sticky2"></td>
-          <td class="sticky3"></td>
+        <tfoot>
+          <tr>
+            <td class="sticky1 left" style="padding-left:6px;">CỘNG USD</td>
+            <td class="sticky2"></td>
+            <td class="sticky3"></td>
 
-          <td colspan="3"></td>
+            <td colspan="3"></td>
 
-          <td id="usdQtSum" class="right">0.00</td>
+            <td id="usdQtSum" class="right">0.00</td>
 
-          <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
-          <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
+            <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
+            <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
-          <td colspan="11"></td>
-        </tr>
+            <td colspan="11"></td>
+          </tr>
 
-        <tr class="strong">
-          <td class="left" colspan="25" style="padding-left:8px;">ƯỚC TÍNH USD TRONG NGÀY</td>
-          <td id="usdNgay" class="right">0.00</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
+          <tr class="strong">
+            <td class="left" colspan="25" style="padding-left:6px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+            <td id="usdNgay" class="right">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   </div>
 
   <div class="small" id="rangeInfo"></div>
@@ -330,6 +353,9 @@ const TO_LIST = [1,3,5,7,9];
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
+/* Auto-fit setting */
+const FIT_KEY = "TK1_FIT_MODE"; // "on" | "off"
+
 /* ================== FORMAT (CHUẨN MỚI) ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -340,7 +366,6 @@ function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 
-/* parse số: chấp nhận dạng người dùng nhập có dấu phẩy group */
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
@@ -373,6 +398,47 @@ function pctClass(hs){
   if(hs>=95) return "good";
   if(hs>=80) return "warn";
   return "bad";
+}
+
+/* ================== AUTO-FIT (ZOOM) ==================
+   - Dùng zoom để giữ sticky hoạt động tốt trên Chrome/Edge
+   - Tính zoom = min(1, wrapWidth / stageScrollWidth)
+===================================================== */
+function getFitMode(){
+  return localStorage.getItem(FIT_KEY) || "on";
+}
+function setFitMode(v){
+  localStorage.setItem(FIT_KEY, v);
+  document.getElementById("fitMode").value = v;
+  applyAutoFit();
+}
+function applyAutoFit(){
+  const mode = getFitMode();
+  const wrap = document.getElementById("tableWrap");
+  const stage = document.getElementById("fitStage");
+  if(!wrap || !stage) return;
+
+  if(mode !== "on"){
+    stage.style.zoom = "1";
+    return;
+  }
+
+  // available width: trừ chút padding/scrollbar
+  const wrapW = wrap.clientWidth - 8;
+  // stage scrollWidth là width thật của bảng
+  const stageW = stage.scrollWidth || wrapW;
+
+  let z = wrapW / stageW;
+  if(!Number.isFinite(z) || z <= 0) z = 1;
+
+  // giới hạn để khỏi quá nhỏ (bạn chỉnh nếu muốn)
+  z = Math.min(1, z);
+  z = Math.max(0.72, z); // không nhỏ quá khó nhìn
+
+  // round để tránh “nhảy” liên tục
+  z = Math.round(z * 100) / 100;
+
+  stage.style.zoom = String(z);
 }
 
 /* ================== STATE ================== */
@@ -443,6 +509,10 @@ window.addEventListener("beforeunload", stopGdcTicker);
 document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
+
+document.getElementById("fitMode").value = getFitMode();
+document.getElementById("fitMode").addEventListener("change", (e)=> setFitMode(e.target.value));
+window.addEventListener("resize", ()=> applyAutoFit());
 
 if(S){
   if(S.role === "tk" && Number(S.xuong) === XUONG){
@@ -534,6 +604,7 @@ function clearAll(){
   document.getElementById("usdQtSum").innerText = "0.00";
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
   setKpi(0,0,0,0);
+  requestAnimationFrame(applyAutoFit);
 }
 
 function setKpi(usd, sp, hs, max){
@@ -570,6 +641,8 @@ async function loadDayDetail(ngay){
   calcFooterAndKpi(rows);
 
   setStatus(`Đã tải • ${ngay} • XN${XUONG} • ${canEditPlan ? "TK nhập KH" : "Chỉ xem"}`);
+
+  requestAnimationFrame(applyAutoFit);
 }
 
 function normalizeRow(to, r){
@@ -605,11 +678,11 @@ function renderDayRows(rows){
       <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
         <td class="sticky1"><b>${r.to_nhom}</b></td>
 
-        <td class="sticky2 left" style="padding-left:6px;">
+        <td class="sticky2 left" style="padding-left:4px;">
           <span class="tagLine">L${r.line_no}</span>
           ${canEditPlan
-            ? `<button class="btnMini gray" style="margin-left:4px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>`
-            : `<span style="margin-left:4px;color:#6b7280;font-size:11px">—</span>`
+            ? `<button class="btnMini gray" style="margin-left:3px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>`
+            : `<span style="margin-left:3px;color:#6b7280;font-size:10px">—</span>`
           }
         </td>
 
@@ -640,7 +713,7 @@ function renderDayRows(rows){
 
         <td><input class="cell ${ro} chuyen_doi_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.chuyen_doi_ngay||0)}" /></td>
 
-        <td class="left ghichuCol" style="padding-left:4px;">
+        <td class="left ghichuCol" style="padding-left:3px;">
           <input class="cell ${ro} ghi_chu" ${canEditPlan?"":"readonly"} style="text-align:left" value="${escapeHtml(r.ghi_chu||"")}" />
         </td>
 
@@ -648,7 +721,7 @@ function renderDayRows(rows){
           ${canEditPlan
             ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
                ${Number(r.line_no) > 1
-                 ? `<button class="btn danger saveMini" style="margin-left:4px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+                 ? `<button class="btn danger saveMini" style="margin-left:3px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
                  : ``
                }`
             : "—"
@@ -719,6 +792,8 @@ function addLine(to){
 
   if(last && last.nextSibling) tbody.insertBefore(newTr, last.nextSibling);
   else tbody.appendChild(newTr);
+
+  requestAnimationFrame(applyAutoFit);
 }
 
 function renderRowHtml(r){
@@ -726,9 +801,9 @@ function renderRowHtml(r){
   return `
     <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
       <td class="sticky1"><b>${r.to_nhom}</b></td>
-      <td class="sticky2 left" style="padding-left:6px;">
+      <td class="sticky2 left" style="padding-left:4px;">
         <span class="tagLine">L${r.line_no}</span>
-        <button class="btnMini gray" style="margin-left:4px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>
+        <button class="btnMini gray" style="margin-left:3px" title="Thêm line" onclick="addLine(${r.to_nhom})">+</button>
       </td>
       <td class="sticky3"><input class="cell ma_hang" value="" /></td>
       <td><input class="cell so_luong_ke_hoach" inputmode="numeric" value="0" /></td>
@@ -746,10 +821,10 @@ function renderRowHtml(r){
       <td class="calc right">0.00</td>
       <td class="calc right">0.00</td>
       <td><input class="cell chuyen_doi_ngay" inputmode="numeric" value="0" /></td>
-      <td class="left ghichuCol" style="padding-left:4px;"><input class="cell ghi_chu" style="text-align:left" value="" /></td>
+      <td class="left ghichuCol" style="padding-left:3px;"><input class="cell ghi_chu" style="text-align:left" value="" /></td>
       <td class="actionCol">
         <button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-        <button class="btn danger saveMini" style="margin-left:4px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>
+        <button class="btn danger saveMini" style="margin-left:3px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>
       </td>
     </tr>
   `;
@@ -878,6 +953,8 @@ async function loadRangeSummary(from, to){
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
 
   setStatus(`Đã tải tổng hợp • ${from} → ${to} • XN${XUONG}`);
+
+  requestAnimationFrame(applyAutoFit);
 }
 
 /* ================== EVENTS ================== */
@@ -909,6 +986,9 @@ document.addEventListener("input",(e)=>{
     }
   }
 });
+
+/* chạy fit lần đầu */
+requestAnimationFrame(applyAutoFit);
 </script>
 </body>
 </html>
