@@ -29,14 +29,16 @@
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
 
   /* ============================
-     ✅ CHỈ ĐẠO GĐC (ticker)
+     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
+     - giống kiểu GDC: 1 ticker mảnh
+     - sticky dưới topbar
   ============================ */
   .gdc-ticker{
     position:sticky;
-    top:64px;
+    top:64px; /* gần đúng chiều cao topbar */
     z-index:19;
     height:38px;
-    display:none;
+    display:none; /* show khi có message */
     align-items:center;
     overflow:hidden;
     background:#0e2552;
@@ -100,7 +102,6 @@
   .card .label{font-size:12px;color:var(--muted)}
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
-
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
   table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
@@ -109,10 +110,10 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-  /* sticky cols */
+  /* sticky cols (đã thu nhỏ LINE) */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
-  .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
-  .sticky3{position:sticky;left:60px;z-index:6;background:#fff}
+  .sticky2{position:sticky;left:44px;z-index:6;background:#fff}
+  .sticky3{position:sticky;left:74px;z-index:6;background:#fff}
   thead .sticky1, thead .sticky2, thead .sticky3{z-index:10;background:var(--head)}
   thead tr:nth-child(2) .sticky1, thead tr:nth-child(2) .sticky2, thead tr:nth-child(2) .sticky3{background:var(--head2)}
 
@@ -138,15 +139,12 @@
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
 
-  /* ✅ FIX: footer sticky cells nền đúng + z-index đủ cao (tránh bị đè/che) */
-  tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{
-    background:#f1f5f9;
-    z-index:8;
-  }
-  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{
-    background:#0e2552;
-    color:#fff;
-  }
+  /* ✅ FIX LỖI CHE DÒNG "CỘNG USD":
+     - KHÔNG dùng sticky + colspan lớn (sẽ che dài khi scroll ngang)
+     - footer sticky giữ nền đúng + z-index đủ cao
+  */
+  tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9;z-index:8}
+  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff}
 </style>
 </head>
 <body>
@@ -184,7 +182,12 @@
   </div>
 </div>
 
-<!-- ✅ CHỈ ĐẠO GĐC (TICKER) -->
+<!-- ============================
+     ✅ CHỈ ĐẠO GĐC (TICKER)
+     - ưu tiên scope theo xưởng (1)
+     - fallback ALL
+     - refresh 30s, chạy mượt như GDC
+============================ -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track">
@@ -256,27 +259,24 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
-        <!-- ✅ FIX LỖI CHE: KHÔNG sticky + colspan=6 (sẽ che dài). Tách 3 ô sticky đúng 3 cột trái -->
-        <tr class="sumRow">
-          <!-- 3 cột sticky -->
-          <td class="sticky1 left" style="padding-left:10px;"><b>CỘNG USD</b></td>
+        <!-- ✅ FIX: tách "CỘNG USD" thành 3 ô sticky + bù colspan nhỏ (tránh sticky+colspan=6 che dài) -->
+        <tr>
+          <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
           <td class="sticky2"></td>
           <td class="sticky3"></td>
 
-          <!-- bù đủ 6 cột đầu -->
+          <!-- bù 3 cột còn lại trong 6 cột đầu: SL KH, ĐM NGÀY, ĐM GIỜ -->
           <td colspan="3"></td>
 
-          <!-- USD/QT -->
           <td id="usdQtSum" class="right">0.00</td>
 
-          <!-- 9 cột USD giờ -->
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
           <td colspan="11"></td>
         </tr>
 
-        <!-- ƯỚC TÍNH USD TRONG NGÀY -->
+        <!-- ✅ (tuỳ chọn) cho đẹp khi scroll ngang: cũng tách 3 sticky như trên -->
         <tr class="strong">
           <td class="sticky1 left" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
           <td class="sticky2"></td>
@@ -304,7 +304,11 @@ const TO_LIST = [1,3,5,7,9];
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
-/* ================== FORMAT (CHUẨN MỚI) ================== */
+/* ================== FORMAT (CHUẨN MỚI) ==================
+   - Số nguyên: 10,000 (group bằng dấu phẩy)
+   - Tiền: 1,972.00 (luôn 2 decimals, dấu chấm)
+   - Đơn giá: 2.4 / 2.22 (dấu chấm, không grouping)
+=========================================================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -318,7 +322,7 @@ function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
-  s = s.replace(/\s+/g,"").replaceAll(",","");
+  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping theo chuẩn mới
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -353,11 +357,17 @@ function pctClass(hs){
 let S = mustLogin();
 let canEditPlan = false;
 
-/* ================== GDC TICKER ================== */
+/* =========================================================
+   ✅ CHỈ ĐẠO GĐC (TICKER) — CHỈ BỔ SUNG PHẦN NÀY
+   - ưu tiên scope theo xưởng (1)
+   - fallback ALL
+   - refresh 30s, chạy mượt như GDC
+========================================================= */
 let gdcTimer = null;
 
 function fmtTickerTime(iso){
   if(!iso) return "";
+  // iso: 2026-01-14T03:12:34.000Z
   const d = new Date(iso);
   if(Number.isNaN(d.getTime())) return "";
   const hh = String(d.getHours()).padStart(2,"0");
@@ -371,12 +381,27 @@ async function loadGdcTicker(){
   if(!S || !S.token) return;
 
   try{
-    const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
-    const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
+    // 1) scope xưởng
+    const resX = await apiPost({
+      action:"getDirectorMessage",
+      token:S.token,
+      xuong:XUONG
+    });
+
+    // 2) fallback ALL (để chắc chắn, dù worker đã tự fallback)
+    const resAll = await apiPost({
+      action:"getDirectorMessage",
+      token:S.token,
+      xuong:"ALL"
+    });
 
     let picked = null;
-    if(resX?.success && (resX.message||"").trim()) picked = resX;
-    else if(resAll?.success && (resAll.message||"").trim()) picked = resAll;
+
+    if(resX?.success && (resX.message||"").trim()){
+      picked = resX;
+    }else if(resAll?.success && (resAll.message||"").trim()){
+      picked = resAll;
+    }
 
     const box = document.getElementById("gdcTicker");
     const textEl = document.getElementById("gdcTickerText");
@@ -399,13 +424,14 @@ async function loadGdcTicker(){
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
-    // reset animation cho mượt khi nội dung đổi
+    // reset animation để chạy lại mượt khi nội dung đổi
     textEl.style.animation = "none";
-    textEl.offsetHeight;
+    textEl.offsetHeight; // force reflow
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation = "gdc-marquee 22s linear infinite";
   }catch(e){
     console.warn("GDC ticker error:", e);
+    // không làm gì để tránh phá UI
   }
 }
 
@@ -441,7 +467,9 @@ if(S){
   }
   document.getElementById("btnSaveAll").disabled = !canEditPlan;
 
+  // ✅ start ticker ngay khi login ok
   startGdcTicker();
+
   reload();
 }
 
@@ -635,6 +663,7 @@ function renderDayRows(rows){
             : "—"
           }
         </td>
+
       </tr>
     `;
   }).join("");
