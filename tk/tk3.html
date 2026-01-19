@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>TK3 – Thống kê năng suất giờ (XN3) • line_no</title>
+
+<!-- ✅ html2canvas: load sớm để bấm nút là dùng được -->
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -26,10 +30,10 @@
   .btn.warn{background:#f59e0b}
   .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
+  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
   /* ============================
-     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
+     ✅ CHỈ ĐẠO GĐC (TICKER)
   ============================ */
   .gdc-ticker{
     position:sticky;
@@ -44,39 +48,22 @@
     box-shadow:0 8px 18px rgba(0,0,0,.16);
   }
   .gdc-ticker .label{
-    flex:0 0 auto;
-    height:100%;
-    display:flex;
-    align-items:center;
-    padding:0 14px;
-    font-weight:900;
-    font-size:13px;
-    background:#0b1b3a;
-    border-right:1px solid rgba(255,255,255,.14);
+    flex:0 0 auto;height:100%;
+    display:flex;align-items:center;
+    padding:0 14px;font-weight:900;font-size:13px;
+    background:#0b1b3a;border-right:1px solid rgba(255,255,255,.14);
   }
   .gdc-ticker .track{flex:1;overflow:hidden;white-space:nowrap;position:relative}
   .gdc-ticker .text{
-    display:inline-block;
-    padding-left:100%;
-    font-weight:800;
-    font-size:14px;
-    line-height:38px;
-    animation:gdc-marquee 22s linear infinite;
-    will-change:transform;
+    display:inline-block;padding-left:100%;
+    font-weight:800;font-size:14px;line-height:38px;
+    animation:gdc-marquee 22s linear infinite;will-change:transform;
   }
-  @keyframes gdc-marquee{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-100%); }
-  }
+  @keyframes gdc-marquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
   .gdc-ticker .meta{
-    flex:0 0 auto;
-    height:100%;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:0 12px;
-    font-size:12px;
-    opacity:.9;
+    flex:0 0 auto;height:100%;
+    display:flex;align-items:center;gap:8px;
+    padding:0 12px;font-size:12px;opacity:.9;
     border-left:1px solid rgba(255,255,255,.14);
     background:rgba(0,0,0,.08);
   }
@@ -92,17 +79,16 @@
   .card .label{font-size:12px;color:var(--muted)}
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
+  table{width:max(1900px,100%);border-collapse:collapse;font-size:13.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-  /* =========================
-     ✅ sticky cols (GIỐNG TK1/TK2)
-  ========================= */
+  /* sticky cols */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
   .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
@@ -113,15 +99,18 @@
   .calc{font-weight:900}
   .pct{font-weight:900}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
+
   tfoot td{background:#f1f5f9;font-weight:900}
-  tfoot .strong{background:#0e2552;color:#fff}
   .small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
+
   input.cell{width:100%;border:none;outline:none;background:transparent;text-align:center;font:inherit;padding:6px}
   input.cell:focus{background:#fff7ed;box-shadow:inset 0 0 0 2px rgba(245,158,11,.35)}
   .ro{background:#f1f5f9 !important;color:#111827}
+
   .saveMini{padding:6px 8px;border-radius:10px;font-size:12px}
   .right{text-align:right}
   .left{text-align:left}
+
   .tagLine{
     font-size:11px;font-weight:900;
     display:inline-flex;align-items:center;justify-content:center;
@@ -131,13 +120,26 @@
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
 
-  /* =========================
-     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG (GIỐNG TK1/TK2)
-  ========================= */
+  /* FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
-  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
+
+  .hour-date{
+    margin-left:8px;
+    font-size:12px;
+    font-weight:900;
+    color:#0e2552;
+    background:#dbeafe;
+    border:1px solid #bfdbfe;
+    padding:2px 8px;
+    border-radius:999px;
+    display:inline-block;
+    vertical-align:middle;
+  }
+
+  .btn.capture{ background:#16a34a; }
 </style>
 </head>
+
 <body>
 
 <div class="topbar">
@@ -166,6 +168,9 @@
 
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <button class="btn" onclick="reload()">Tải dữ liệu</button>
+
+      <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
+
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -173,7 +178,6 @@
   </div>
 </div>
 
-<!-- ✅ CHỈ ĐẠO GĐC (TICKER) -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track">
@@ -215,7 +219,6 @@
       <thead>
         <tr>
           <th class="sticky1" rowspan="2" style="min-width:54px;">TỔ</th>
-          <!-- ✅ GIỐNG TK2/TK1: thu nhỏ LINE + MÃ HÀNG -->
           <th class="sticky2" rowspan="2" style="min-width:78px;">LINE</th>
           <th class="sticky3" rowspan="2" style="min-width:130px;">MÃ HÀNG</th>
 
@@ -224,7 +227,10 @@
           <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
           <th rowspan="2" style="min-width:95px;">USD/QT</th>
 
-          <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+          <th colspan="9">
+            SẢN LƯỢNG THEO GIỜ
+            <span class="hour-date" id="hourDateBadge">—</span>
+          </th>
 
           <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
           <th rowspan="2" style="min-width:110px;">USD/TH</th>
@@ -246,13 +252,11 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
-        <!-- ✅ GIỐNG TK1/TK2: tách 3 sticky cell + bù colspan để không che khi scroll ngang -->
         <tr>
           <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
           <td class="sticky2"></td>
           <td class="sticky3"></td>
 
-          <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
           <td colspan="3"></td>
 
           <td id="usdQtSum" class="right">0.00</td>
@@ -261,12 +265,6 @@
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
           <td colspan="11"></td>
-        </tr>
-
-        <tr class="strong">
-          <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
-          <td id="usdNgay" class="right">0.00</td>
-          <td></td>
         </tr>
       </tfoot>
     </table>
@@ -282,13 +280,11 @@
 /* ================== CONFIG (TK3 cố định XN3) ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const XUONG = 3;
-/* ✅ XN3: tổ 19,21,23,25,27 */
 const TO_LIST = [19,21,23,25,27];
-/* ✅ khung giờ XN3 */
 const HOURS = ["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
-/* ================== FORMAT (CHUẨN MỚI) ================== */
+/* ================== FORMAT ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -306,6 +302,22 @@ function toNum(v){
   return Number.isFinite(n) ? n : 0;
 }
 
+/* ================== DATE LABEL HELPERS ================== */
+function toISO(d){
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+function ddmmyyyy(iso){
+  if(!iso) return "";
+  const d = new Date(iso+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return iso;
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  const yy = d.getFullYear();
+  return `${dd}/${mo}/${yy}`;
+}
+
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
 function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
@@ -317,10 +329,7 @@ async function apiPost(payload){
   return await r.json();
 }
 function setStatus(t){ document.getElementById("status").innerText = t; }
-function todayISO(){
-  const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
+function todayISO(){ const d=new Date(); return toISO(d); }
 function escapeHtml(s){
   return String(s??"")
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
@@ -338,7 +347,6 @@ let canEditPlan = false;
 
 /* ================== GĐC TICKER ================== */
 let gdcTimer = null;
-
 function fmtTickerTime(iso){
   if(!iso) return "";
   const d = new Date(iso);
@@ -349,10 +357,8 @@ function fmtTickerTime(iso){
   const mo = String(d.getMonth()+1).padStart(2,"0");
   return `${dd}/${mo} ${hh}:${mm}`;
 }
-
 async function loadGdcTicker(){
   if(!S || !S.token) return;
-
   try{
     const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
     const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
@@ -367,60 +373,29 @@ async function loadGdcTicker(){
     const timeEl = document.getElementById("gdcTickerTime");
 
     if(!picked){ box.style.display="none"; return; }
-
     const scope = String(picked.scope || "").toUpperCase();
     const msg = String(picked.message || "").trim();
     if(!msg){ box.style.display="none"; return; }
 
-    box.style.display = "flex";
+    box.style.display="flex";
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
-    textEl.style.animation = "none";
-    textEl.offsetHeight;
+    textEl.style.animation="none"; textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
-    textEl.style.animation = "gdc-marquee 22s linear infinite";
+    textEl.style.animation="gdc-marquee 22s linear infinite";
   }catch(e){
     console.warn("GDC ticker error:", e);
   }
 }
-
-function startGdcTicker(){
-  stopGdcTicker();
-  loadGdcTicker();
-  gdcTimer = setInterval(loadGdcTicker, 30000);
-}
-function stopGdcTicker(){
-  if(gdcTimer) clearInterval(gdcTimer);
-  gdcTimer = null;
-}
+function startGdcTicker(){ stopGdcTicker(); loadGdcTicker(); gdcTimer=setInterval(loadGdcTicker,30000); }
+function stopGdcTicker(){ if(gdcTimer) clearInterval(gdcTimer); gdcTimer=null; }
 window.addEventListener("beforeunload", stopGdcTicker);
 
 /* ================== INIT UI ================== */
 document.getElementById("date").value = todayISO();
-/* giữ nguyên structure: 9 giờ + TT/SĐC */
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
-
-if(S){
-  if(S.role === "tk" && Number(S.xuong) === XUONG){
-    canEditPlan = true;
-    document.getElementById("roleHint").innerText = "✅ TK3: được nhập & lưu kế hoạch theo LINE (XN3)";
-  } else if(S.role === "gdx" && Number(S.xuong) === XUONG){
-    canEditPlan = false;
-    document.getElementById("roleHint").innerText = "👀 GĐX3: chỉ xem (XN3)";
-  } else if(S.role === "gdc"){
-    canEditPlan = false;
-    document.getElementById("roleHint").innerText = "👀 GĐC: đang xem XN3";
-  } else {
-    canEditPlan = false;
-    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
-  }
-  document.getElementById("btnSaveAll").disabled = !canEditPlan;
-
-  startGdcTicker();
-  reload();
-}
 
 /* ================== RANGE ================== */
 function getRange(mode, dateStr){
@@ -428,11 +403,6 @@ function getRange(mode, dateStr){
   const yyyy = d.getFullYear();
   const mm = d.getMonth();
   const dd = d.getDate();
-  const toISO = (x)=>{
-    const m=String(x.getMonth()+1).padStart(2,"0");
-    const da=String(x.getDate()).padStart(2,"0");
-    return `${x.getFullYear()}-${m}-${da}`;
-  };
 
   if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
   if(mode === "week"){
@@ -457,6 +427,44 @@ function getRange(mode, dateStr){
   return { from: toISO(start), to: toISO(end), label:`Năm ${yyyy}` };
 }
 
+function updateHourDateBadge(){
+  const mode = document.getElementById("mode").value;
+  const date = document.getElementById("date").value || todayISO();
+  const range = getRange(mode, date);
+
+  const badge = document.getElementById("hourDateBadge");
+  if(!badge) return;
+
+  if(mode === "day"){
+    badge.textContent = ddmmyyyy(range.from);
+    badge.title = `Ngày ${range.from}`;
+  }else{
+    badge.textContent = `${ddmmyyyy(range.from)} → ${ddmmyyyy(range.to)}`;
+    badge.title = `Khoảng ${range.from} → ${range.to}`;
+  }
+}
+
+if(S){
+  if(S.role === "tk" && Number(S.xuong) === XUONG){
+    canEditPlan = true;
+    document.getElementById("roleHint").innerText = "✅ TK3: được nhập & lưu kế hoạch theo LINE (XN3)";
+  } else if(S.role === "gdx" && Number(S.xuong) === XUONG){
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "👀 GĐX3: chỉ xem (XN3)";
+  } else if(S.role === "gdc"){
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "👀 GĐC: đang xem XN3";
+  } else {
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
+  }
+  document.getElementById("btnSaveAll").disabled = !canEditPlan;
+
+  startGdcTicker();
+  updateHourDateBadge();
+  reload();
+}
+
 /* ================== MAIN LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
@@ -474,11 +482,11 @@ async function reload(){
   }
 
   const mode = document.getElementById("mode").value;
-  const date = document.getElementById("date").value;
+  const date = document.getElementById("date").value || todayISO();
   const range = getRange(mode, date);
 
-  document.getElementById("rangeInfo").innerText =
-    `Bộ lọc: ${range.label} • Xưởng: XN${XUONG} • TK3: Tổ ${TO_LIST.join(", ")} • Giờ: ${HOURS.join(", ")}`;
+  updateHourDateBadge();
+  document.getElementById("rangeInfo").innerText = `Bộ lọc: ${range.label} • Xưởng: XN${XUONG}`;
 
   if(mode === "day"){
     await loadDayDetail(date);
@@ -489,7 +497,6 @@ async function reload(){
 
 function clearAll(){
   document.getElementById("tbody").innerHTML = "";
-  document.getElementById("usdNgay").innerText = "0.00";
   document.getElementById("usdQtSum").innerText = "0.00";
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
   setKpi(0,0,0,0);
@@ -518,11 +525,8 @@ async function loadDayDetail(ngay){
   for(const to of TO_LIST){
     const list = got.filter(r => Number(r.to_nhom)===Number(to))
                     .sort((a,b)=>Number(a.line_no||1)-Number(b.line_no||1));
-    if(list.length){
-      rows.push(...list.map(x=>normalizeRow(to, x)));
-    }else{
-      rows.push(normalizeRow(to, { to_nhom:to, line_no:1, hours:Array(HOURS.length).fill(0) }));
-    }
+    if(list.length) rows.push(...list.map(x=>normalizeRow(to, x)));
+    else rows.push(normalizeRow(to, { to_nhom:to, line_no:1, hours:Array(HOURS.length).fill(0) }));
   }
 
   renderDayRows(rows);
@@ -645,7 +649,6 @@ function calcFooterAndKpi(rows){
 
   document.getElementById("usdQtSum").innerText = fmtMoney(tongUsdQt);
   document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
-  document.getElementById("usdNgay").innerText = fmtMoney(tongUsdNgay);
 
   const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
   const hsTb = hsCount ? (hsSum/hsCount) : 0;
@@ -718,7 +721,7 @@ function renderRowHtml(r){
 async function savePlanRow(to_nhom, line_no){
   if(!canEditPlan){ setStatus("Bạn không có quyền lưu kế hoạch"); return; }
 
-  const ngay = document.getElementById("date").value;
+  const ngay = document.getElementById("date").value || todayISO();
   const tr = document.querySelector(`tr[data-to="${to_nhom}"][data-line="${line_no}"]`);
   if(!tr){ setStatus(`Không tìm thấy dòng tổ ${to_nhom} line ${line_no}`); return; }
 
@@ -751,7 +754,7 @@ async function savePlanRow(to_nhom, line_no){
 
 async function saveAll(){
   if(!canEditPlan){ setStatus("Bạn không có quyền lưu kế hoạch"); return; }
-  const ngay = document.getElementById("date").value;
+  const ngay = document.getElementById("date").value || todayISO();
 
   setStatus("Đang lưu tất cả kế hoạch...");
   const trs = [...document.querySelectorAll("#tbody tr")];
@@ -790,12 +793,11 @@ async function saveAll(){
   await reload();
 }
 
-/* ================== DELETE LINE ================== */
 async function deleteLine(to_nhom, line_no){
   if(!canEditPlan) return;
   if(!confirm(`Xóa kế hoạch Tổ ${to_nhom} • Line ${line_no} ?`)) return;
 
-  const ngay = document.getElementById("date").value;
+  const ngay = document.getElementById("date").value || todayISO();
   setStatus(`Đang xóa tổ ${to_nhom} line ${line_no}...`);
 
   const res = await apiPost({
@@ -804,11 +806,7 @@ async function deleteLine(to_nhom, line_no){
     ngay, xuong:XUONG, to_nhom:Number(to_nhom), line_no:Number(line_no)
   });
 
-  if(!res.success){
-    setStatus("Lỗi xóa: " + (res.msg||""));
-    return;
-  }
-
+  if(!res.success){ setStatus("Lỗi xóa: " + (res.msg||"")); return; }
   setStatus(`✅ Đã xóa tổ ${to_nhom} line ${line_no}`);
   await reload();
 }
@@ -832,7 +830,6 @@ async function loadRangeSummary(from, to){
   setKpi(0, tongSp, hs, 0);
 
   document.getElementById("tbody").innerHTML = "";
-  document.getElementById("usdNgay").innerText = "0.00";
   document.getElementById("usdQtSum").innerText = "0.00";
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
 
@@ -840,8 +837,8 @@ async function loadRangeSummary(from, to){
 }
 
 /* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", reload);
-document.getElementById("mode").addEventListener("change", reload);
+document.getElementById("date").addEventListener("change", ()=>{ updateHourDateBadge(); reload(); });
+document.getElementById("mode").addEventListener("change", ()=>{ updateHourDateBadge(); reload(); });
 
 /* auto-calc dm_gio & usd_qt khi TK sửa dm_ngay/don_gia */
 document.addEventListener("input",(e)=>{
@@ -868,6 +865,133 @@ document.addEventListener("input",(e)=>{
     }
   }
 });
+
+/* =========================
+   📸 CHỤP FULL BẢNG (HD)
+========================= */
+async function captureTable(){
+  const btn = document.getElementById("btnCapture");
+  const status = document.getElementById("status");
+  const table = document.getElementById("tbl");
+  if(!table) return;
+
+  try{
+    btn.disabled = true;
+    const oldStatus = status.innerText;
+    status.innerText = "📸 Đang chụp full bảng (HD, đủ footer)...";
+
+    if(typeof window.html2canvas !== "function"){
+      status.innerText = "❌ html2canvas chưa tải (CDN chậm hoặc bị chặn).";
+      return;
+    }
+
+    if(document.fonts && document.fonts.ready){
+      try{ await document.fonts.ready; }catch{}
+    }
+
+    const off = document.createElement("div");
+    off.style.position = "fixed";
+    off.style.left = "-100000px";
+    off.style.top = "0";
+    off.style.background = "#fff";
+    off.style.padding = "16px";
+    off.style.zIndex = "999999";
+
+    const clone = table.cloneNode(true);
+    clone.id = "tbl_capture";
+
+    const w = Math.ceil(table.scrollWidth);
+    clone.style.width = w + "px";
+    clone.style.borderCollapse = "collapse";
+
+    clone.querySelectorAll("thead th").forEach(th=>{
+      th.style.position = "static";
+      th.style.top = "auto";
+    });
+    clone.querySelectorAll(".sticky1,.sticky2,.sticky3").forEach(td=>{
+      td.style.position = "static";
+      td.style.left = "auto";
+    });
+
+    const tfoot = clone.querySelector("tfoot");
+    if(tfoot) tfoot.style.display = "table-footer-group";
+
+    clone.querySelectorAll("input.cell").forEach(inp=>{
+      const span = document.createElement("span");
+      span.textContent = inp.value ?? "";
+
+      const cs = window.getComputedStyle(inp);
+      span.style.display = "block";
+      span.style.width = "100%";
+      span.style.boxSizing = "border-box";
+      span.style.font = cs.font;
+      span.style.fontSize = cs.fontSize;
+      span.style.fontWeight = cs.fontWeight;
+      span.style.color = cs.color;
+      span.style.textAlign = cs.textAlign;
+      span.style.whiteSpace = "nowrap";
+      span.style.paddingLeft = cs.paddingLeft;
+      span.style.paddingRight = cs.paddingRight;
+      span.style.background = cs.backgroundColor;
+
+      span.style.lineHeight = "1.35";
+      span.style.paddingTop = "8px";
+      span.style.paddingBottom = "8px";
+
+      inp.replaceWith(span);
+    });
+
+    clone.querySelectorAll("th, td").forEach(el=>{
+      el.style.lineHeight = "1.35";
+      el.style.paddingTop = "8px";
+      el.style.paddingBottom = "8px";
+    });
+
+    off.appendChild(clone);
+    document.body.appendChild(off);
+
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const canvas = await html2canvas(off, {
+      backgroundColor: "#ffffff",
+      scale: 4,
+      useCORS: true,
+      allowTaint: false,
+      letterRendering: true
+    });
+
+    off.remove();
+
+    const mode = document.getElementById("mode")?.value || "day";
+    const date = document.getElementById("date")?.value || "";
+    const fileName = `TK3_XN3_${mode}_${date || "capture"}_HD.png`;
+
+    await new Promise((resolve, reject)=>{
+      canvas.toBlob((blob)=>{
+        if(!blob){ reject(new Error("toBlob failed")); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        resolve();
+      }, "image/png");
+    });
+
+    status.innerText = "✅ Đã chụp đủ dòng CỘNG USD: " + fileName;
+    setTimeout(()=>{ status.innerText = oldStatus; }, 2500);
+
+  }catch(err){
+    console.error(err);
+    status.innerText = "❌ Chụp ảnh thất bại (xem console).";
+  }finally{
+    btn.disabled = false;
+  }
+}
 </script>
+
 </body>
 </html>
