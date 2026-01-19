@@ -30,10 +30,10 @@
   .btn.warn{background:#f59e0b}
   .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:420px}
+  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
   /* ============================
-     ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
+     ✅ CHỈ ĐẠO GĐC (TICKER)
   ============================ */
   .gdc-ticker{
     position:sticky;
@@ -79,6 +79,7 @@
   .card .label{font-size:12px;color:var(--muted)}
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
   table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
@@ -98,15 +99,18 @@
   .calc{font-weight:900}
   .pct{font-weight:900}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
+
   tfoot td{background:#f1f5f9;font-weight:900}
-  tfoot .strong{background:#0e2552;color:#fff}
   .small{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
+
   input.cell{width:100%;border:none;outline:none;background:transparent;text-align:center;font:inherit;padding:6px}
   input.cell:focus{background:#fff7ed;box-shadow:inset 0 0 0 2px rgba(245,158,11,.35)}
   .ro{background:#f1f5f9 !important;color:#111827}
+
   .saveMini{padding:6px 8px;border-radius:10px;font-size:12px}
   .right{text-align:right}
   .left{text-align:left}
+
   .tagLine{
     font-size:11px;font-weight:900;
     display:inline-flex;align-items:center;justify-content:center;
@@ -118,10 +122,11 @@
 
   /* FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
-  tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
   /* =========================
-     📸 CAPTURE FULL TABLE - QUALITY FIX
+     📸 CAPTURE: FIX MẤT NÉT CHỮ
+     - khi chụp: bỏ sticky + overflow
+     - tăng line-height/padding để không cắt baseline
   ========================= */
   body.capturing .tableWrap{ overflow: visible !important; }
   body.capturing thead th{ position: static !important; top:auto !important; }
@@ -129,20 +134,11 @@
   body.capturing .sticky2,
   body.capturing .sticky3{ position: static !important; left:auto !important; }
 
-  /* ép chữ nét + tránh bị cắt baseline */
-  body.capturing table#tbl{
-    transform:none !important;
-    filter:none !important;
-    zoom:1 !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: geometricPrecision;
-  }
   body.capturing #tbl th,
   body.capturing #tbl td{
-    line-height:1.25 !important;
-    padding-top:7px !important;
-    padding-bottom:7px !important;
+    line-height: 1.35 !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
   }
 
   .btn.capture{ background:#16a34a; }
@@ -178,7 +174,7 @@
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <button class="btn" onclick="reload()">Tải dữ liệu</button>
 
-      <!-- ✅ NÚT CHỤP FULL BẢNG (HD) -->
+      <!-- ✅ NÚT CHỤP FULL BẢNG -->
       <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
 
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
@@ -259,11 +255,14 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
+        <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
         <tr>
           <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
           <td class="sticky2"></td>
           <td class="sticky3"></td>
+
           <td colspan="3"></td>
+
           <td id="usdQtSum" class="right">0.00</td>
 
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
@@ -272,11 +271,7 @@
           <td colspan="11"></td>
         </tr>
 
-        <tr class="strong">
-          <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
-          <td id="usdNgay" class="right">0.00</td>
-          <td></td>
-        </tr>
+        <!-- ✅ ĐÃ XÓA DÒNG “ƯỚC TÍNH USD TRONG NGÀY” (bị dư, không dữ liệu) -->
       </tfoot>
     </table>
   </div>
@@ -360,6 +355,7 @@ async function loadGdcTicker(){
   try{
     const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
     const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
+
     let picked = null;
     if(resX?.success && (resX.message||"").trim()) picked = resX;
     else if(resAll?.success && (resAll.message||"").trim()) picked = resAll;
@@ -377,10 +373,13 @@ async function loadGdcTicker(){
     box.style.display="flex";
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
+
     textEl.style.animation="none"; textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation="gdc-marquee 22s linear infinite";
-  }catch(e){ console.warn("GDC ticker error:", e); }
+  }catch(e){
+    console.warn("GDC ticker error:", e);
+  }
 }
 function startGdcTicker(){ stopGdcTicker(); loadGdcTicker(); gdcTimer=setInterval(loadGdcTicker,30000); }
 function stopGdcTicker(){ if(gdcTimer) clearInterval(gdcTimer); gdcTimer=null; }
@@ -406,6 +405,7 @@ if(S){
     document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
   }
   document.getElementById("btnSaveAll").disabled = !canEditPlan;
+
   startGdcTicker();
   reload();
 }
@@ -476,7 +476,6 @@ async function reload(){
 
 function clearAll(){
   document.getElementById("tbody").innerHTML = "";
-  document.getElementById("usdNgay").innerText = "0.00";
   document.getElementById("usdQtSum").innerText = "0.00";
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
   setKpi(0,0,0,0);
@@ -629,7 +628,6 @@ function calcFooterAndKpi(rows){
 
   document.getElementById("usdQtSum").innerText = fmtMoney(tongUsdQt);
   document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
-  document.getElementById("usdNgay").innerText = fmtMoney(tongUsdNgay);
 
   const maxUsdGio = usdGio.length ? Math.max(...usdGio) : 0;
   const hsTb = hsCount ? (hsSum/hsCount) : 0;
@@ -811,7 +809,6 @@ async function loadRangeSummary(from, to){
   setKpi(0, tongSp, hs, 0);
 
   document.getElementById("tbody").innerHTML = "";
-  document.getElementById("usdNgay").innerText = "0.00";
   document.getElementById("usdQtSum").innerText = "0.00";
   document.querySelectorAll(".usdGio").forEach(td=> td.innerText="0.00");
 
@@ -849,7 +846,8 @@ document.addEventListener("input",(e)=>{
 });
 
 /* =========================
-   📸 CHỤP FULL NỘI DUNG BẢNG -> PNG (HD, không rụng chữ)
+   📸 CHỤP FULL BẢNG (HD) — FIX MẤT NÉT CHỮ
+   - Dứt điểm: đổi input.cell -> span text trong bản clone
 ========================= */
 async function captureTable(){
   const btn = document.getElementById("btnCapture");
@@ -861,7 +859,7 @@ async function captureTable(){
   try{
     btn.disabled = true;
     const oldStatus = status.innerText;
-    status.innerText = "📸 Đang chụp full bảng (HD)...";
+    status.innerText = "📸 Đang chụp full bảng (HD, chữ không rụng)...";
 
     if(typeof window.html2canvas !== "function"){
       status.innerText = "❌ html2canvas chưa tải (CDN chậm hoặc bị chặn).";
@@ -874,18 +872,14 @@ async function captureTable(){
     document.body.classList.add("capturing");
     wrap.scrollLeft = 0;
     wrap.scrollTop  = 0;
-
-    await new Promise(r=>setTimeout(r, 140));
+    await new Promise(r=>setTimeout(r, 160));
 
     const w = Math.ceil(table.scrollWidth);
     const h = Math.ceil(table.scrollHeight);
 
-    const dpr = window.devicePixelRatio || 1;
-    const scale = Math.min(4, Math.max(2.5, dpr * 2)); // thường 3-4 => nét
-
     const canvas = await html2canvas(table, {
       backgroundColor: "#ffffff",
-      scale,
+      scale: 4,                 // ✅ scale cao + số nguyên -> chữ sắc hơn
       width: w,
       height: h,
       windowWidth: w,
@@ -895,19 +889,55 @@ async function captureTable(){
       useCORS: true,
       allowTaint: false,
       letterRendering: true,
+
       onclone: (doc) => {
         doc.body.classList.add("capturing");
 
-        const t = doc.getElementById("tbl");
-        if(t){
-          t.style.transform = "none";
-          t.style.filter = "none";
-        }
+        const wrapClone = doc.querySelector(".tableWrap");
+        if(wrapClone) wrapClone.style.overflow = "visible";
 
+        // bỏ sticky trong clone
+        doc.querySelectorAll("thead th").forEach(th=>{
+          th.style.position = "static";
+          th.style.top = "auto";
+        });
+        doc.querySelectorAll(".sticky1,.sticky2,.sticky3").forEach(td=>{
+          td.style.position = "static";
+          td.style.left = "auto";
+        });
+
+        // ✅ FIX CHÍNH: input.cell -> span text
+        const inputs = doc.querySelectorAll("input.cell");
+        inputs.forEach(inp=>{
+          const span = doc.createElement("span");
+          span.textContent = inp.value ?? "";
+
+          const cs = doc.defaultView.getComputedStyle(inp);
+          span.style.display = "block";
+          span.style.width = "100%";
+          span.style.boxSizing = "border-box";
+          span.style.font = cs.font;
+          span.style.fontSize = cs.fontSize;
+          span.style.fontWeight = cs.fontWeight;
+          span.style.color = cs.color;
+          span.style.textAlign = cs.textAlign;
+          span.style.whiteSpace = "nowrap";
+          span.style.paddingLeft = cs.paddingLeft;
+          span.style.paddingRight = cs.paddingRight;
+          span.style.background = cs.backgroundColor;
+
+          span.style.lineHeight = "1.35";
+          span.style.paddingTop = "8px";
+          span.style.paddingBottom = "8px";
+
+          inp.replaceWith(span);
+        });
+
+        // ép line-height/padding cho cell
         doc.querySelectorAll("#tbl th, #tbl td").forEach(el=>{
-          el.style.lineHeight = "1.25";
-          el.style.paddingTop = "7px";
-          el.style.paddingBottom = "7px";
+          el.style.lineHeight = "1.35";
+          el.style.paddingTop = "8px";
+          el.style.paddingBottom = "8px";
         });
       }
     });
