@@ -123,10 +123,22 @@
   /* FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
 
+  /* ✅ nhãn ngày sau "SẢN LƯỢNG THEO GIỜ" */
+  .hour-date{
+    margin-left:8px;
+    font-size:12px;
+    font-weight:900;
+    color:#0e2552;
+    background:#dbeafe;
+    border:1px solid #bfdbfe;
+    padding:2px 8px;
+    border-radius:999px;
+    display:inline-block;
+    vertical-align:middle;
+  }
+
   /* =========================
      📸 CAPTURE: FIX MẤT NÉT CHỮ
-     - khi chụp: bỏ sticky + overflow
-     - tăng line-height/padding để không cắt baseline
   ========================= */
   body.capturing .tableWrap{ overflow: visible !important; }
   body.capturing thead th{ position: static !important; top:auto !important; }
@@ -233,7 +245,11 @@
           <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
           <th rowspan="2" style="min-width:95px;">USD/QT</th>
 
-          <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+          <!-- ✅ BỔ SUNG NGÀY NGAY SAU "SẢN LƯỢNG THEO GIỜ" -->
+          <th colspan="9">
+            SẢN LƯỢNG THEO GIỜ
+            <span class="hour-date" id="hourDateBadge">—</span>
+          </th>
 
           <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
           <th rowspan="2" style="min-width:110px;">USD/TH</th>
@@ -270,8 +286,6 @@
 
           <td colspan="11"></td>
         </tr>
-
-        <!-- ✅ ĐÃ XÓA DÒNG “ƯỚC TÍNH USD TRONG NGÀY” (bị dư, không dữ liệu) -->
       </tfoot>
     </table>
   </div>
@@ -308,6 +322,22 @@ function toNum(v){
   return Number.isFinite(n) ? n : 0;
 }
 
+/* ================== DATE LABEL HELPERS ================== */
+function toISO(d){
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+function ddmmyyyy(iso){
+  if(!iso) return "";
+  const d = new Date(iso+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return iso;
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  const yy = d.getFullYear();
+  return `${dd}/${mo}/${yy}`;
+}
+
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
 function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
@@ -320,8 +350,7 @@ async function apiPost(payload){
 }
 function setStatus(t){ document.getElementById("status").innerText = t; }
 function todayISO(){
-  const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,"0"); const dd=String(d.getDate()).padStart(2,"0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
+  const d=new Date(); return toISO(d);
 }
 function escapeHtml(s){
   return String(s??"")
@@ -390,37 +419,12 @@ document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
-if(S){
-  if(S.role === "tk" && Number(S.xuong) === XUONG){
-    canEditPlan = true;
-    document.getElementById("roleHint").innerText = "✅ TK1: được nhập & lưu kế hoạch theo LINE (XN1)";
-  } else if(S.role === "gdx" && Number(S.xuong) === XUONG){
-    canEditPlan = false;
-    document.getElementById("roleHint").innerText = "👀 GĐX1: chỉ xem (XN1)";
-  } else if(S.role === "gdc"){
-    canEditPlan = false;
-    document.getElementById("roleHint").innerText = "👀 GĐC: đang xem XN1";
-  } else {
-    canEditPlan = false;
-    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
-  }
-  document.getElementById("btnSaveAll").disabled = !canEditPlan;
-
-  startGdcTicker();
-  reload();
-}
-
 /* ================== RANGE ================== */
 function getRange(mode, dateStr){
   const d = new Date(dateStr+"T00:00:00");
   const yyyy = d.getFullYear();
   const mm = d.getMonth();
   const dd = d.getDate();
-  const toISO = (x)=>{
-    const m=String(x.getMonth()+1).padStart(2,"0");
-    const da=String(x.getDate()).padStart(2,"0");
-    return `${x.getFullYear()}-${m}-${da}`;
-  };
 
   if(mode === "day") return { from: dateStr, to: dateStr, label:`Ngày ${dateStr}` };
   if(mode === "week"){
@@ -445,6 +449,45 @@ function getRange(mode, dateStr){
   return { from: toISO(start), to: toISO(end), label:`Năm ${yyyy}` };
 }
 
+/* ✅ cập nhật badge ngày sau "SẢN LƯỢNG THEO GIỜ" */
+function updateHourDateBadge(){
+  const mode = document.getElementById("mode").value;
+  const date = document.getElementById("date").value || todayISO();
+  const range = getRange(mode, date);
+
+  const badge = document.getElementById("hourDateBadge");
+  if(!badge) return;
+
+  if(mode === "day"){
+    badge.textContent = ddmmyyyy(range.from);
+    badge.title = `Ngày ${range.from}`;
+  }else{
+    badge.textContent = `${ddmmyyyy(range.from)} → ${ddmmyyyy(range.to)}`;
+    badge.title = `Khoảng ${range.from} → ${range.to}`;
+  }
+}
+
+if(S){
+  if(S.role === "tk" && Number(S.xuong) === XUONG){
+    canEditPlan = true;
+    document.getElementById("roleHint").innerText = "✅ TK1: được nhập & lưu kế hoạch theo LINE (XN1)";
+  } else if(S.role === "gdx" && Number(S.xuong) === XUONG){
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "👀 GĐX1: chỉ xem (XN1)";
+  } else if(S.role === "gdc"){
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "👀 GĐC: đang xem XN1";
+  } else {
+    canEditPlan = false;
+    document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
+  }
+  document.getElementById("btnSaveAll").disabled = !canEditPlan;
+
+  startGdcTicker();
+  updateHourDateBadge();
+  reload();
+}
+
 /* ================== MAIN LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
@@ -462,9 +505,10 @@ async function reload(){
   }
 
   const mode = document.getElementById("mode").value;
-  const date = document.getElementById("date").value;
+  const date = document.getElementById("date").value || todayISO();
   const range = getRange(mode, date);
 
+  updateHourDateBadge();
   document.getElementById("rangeInfo").innerText = `Bộ lọc: ${range.label} • Xưởng: XN${XUONG}`;
 
   if(mode === "day"){
@@ -700,7 +744,7 @@ function renderRowHtml(r){
 async function savePlanRow(to_nhom, line_no){
   if(!canEditPlan){ setStatus("Bạn không có quyền lưu kế hoạch"); return; }
 
-  const ngay = document.getElementById("date").value;
+  const ngay = document.getElementById("date").value || todayISO();
   const tr = document.querySelector(`tr[data-to="${to_nhom}"][data-line="${line_no}"]`);
   if(!tr){ setStatus(`Không tìm thấy dòng tổ ${to_nhom} line ${line_no}`); return; }
 
@@ -733,7 +777,7 @@ async function savePlanRow(to_nhom, line_no){
 
 async function saveAll(){
   if(!canEditPlan){ setStatus("Bạn không có quyền lưu kế hoạch"); return; }
-  const ngay = document.getElementById("date").value;
+  const ngay = document.getElementById("date").value || todayISO();
 
   setStatus("Đang lưu tất cả kế hoạch...");
   const trs = [...document.querySelectorAll("#tbody tr")];
@@ -776,7 +820,7 @@ async function deleteLine(to_nhom, line_no){
   if(!canEditPlan) return;
   if(!confirm(`Xóa kế hoạch Tổ ${to_nhom} • Line ${line_no} ?`)) return;
 
-  const ngay = document.getElementById("date").value;
+  const ngay = document.getElementById("date").value || todayISO();
   setStatus(`Đang xóa tổ ${to_nhom} line ${line_no}...`);
 
   const res = await apiPost({
@@ -816,8 +860,8 @@ async function loadRangeSummary(from, to){
 }
 
 /* ================== EVENTS ================== */
-document.getElementById("date").addEventListener("change", reload);
-document.getElementById("mode").addEventListener("change", reload);
+document.getElementById("date").addEventListener("change", ()=>{ updateHourDateBadge(); reload(); });
+document.getElementById("mode").addEventListener("change", ()=>{ updateHourDateBadge(); reload(); });
 
 /* auto-calc dm_gio & usd_qt khi TK sửa dm_ngay/don_gia */
 document.addEventListener("input",(e)=>{
@@ -865,14 +909,10 @@ async function captureTable(){
       return;
     }
 
-    // ✅ Đợi font load xong để tránh lệch/cắt chữ
     if(document.fonts && document.fonts.ready){
       try{ await document.fonts.ready; }catch{}
     }
 
-    // =========================
-    // 1) Tạo bản clone OFFSCREEN
-    // =========================
     const off = document.createElement("div");
     off.style.position = "fixed";
     off.style.left = "-100000px";
@@ -881,16 +921,13 @@ async function captureTable(){
     off.style.padding = "16px";
     off.style.zIndex = "999999";
 
-    // clone table
     const clone = table.cloneNode(true);
     clone.id = "tbl_capture";
 
-    // ép width theo full nội dung thật (để không bị co)
     const w = Math.ceil(table.scrollWidth);
     clone.style.width = w + "px";
     clone.style.borderCollapse = "collapse";
 
-    // ✅ bỏ sticky trong clone (thead + sticky cols)
     clone.querySelectorAll("thead th").forEach(th=>{
       th.style.position = "static";
       th.style.top = "auto";
@@ -900,11 +937,9 @@ async function captureTable(){
       td.style.left = "auto";
     });
 
-    // ✅ đảm bảo footer luôn render đúng
     const tfoot = clone.querySelector("tfoot");
     if(tfoot) tfoot.style.display = "table-footer-group";
 
-    // ✅ FIX MẤT NÉT CHỮ: input.cell -> span text (trong clone)
     clone.querySelectorAll("input.cell").forEach(inp=>{
       const span = document.createElement("span");
       span.textContent = inp.value ?? "";
@@ -923,7 +958,6 @@ async function captureTable(){
       span.style.paddingRight = cs.paddingRight;
       span.style.background = cs.backgroundColor;
 
-      // chống rụng baseline
       span.style.lineHeight = "1.35";
       span.style.paddingTop = "8px";
       span.style.paddingBottom = "8px";
@@ -931,7 +965,6 @@ async function captureTable(){
       inp.replaceWith(span);
     });
 
-    // ép lại cell để không bị rụng nét
     clone.querySelectorAll("th, td").forEach(el=>{
       el.style.lineHeight = "1.35";
       el.style.paddingTop = "8px";
@@ -941,26 +974,18 @@ async function captureTable(){
     off.appendChild(clone);
     document.body.appendChild(off);
 
-    // đợi DOM ổn định
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 
-    // =========================
-    // 2) Chụp OFFSCREEN container
-    // =========================
     const canvas = await html2canvas(off, {
       backgroundColor: "#ffffff",
-      scale: 4,               // ✅ nét mạnh
+      scale: 4,
       useCORS: true,
       allowTaint: false,
       letterRendering: true
     });
 
-    // dọn clone
     off.remove();
 
-    // =========================
-    // 3) Save file PNG
-    // =========================
     const mode = document.getElementById("mode")?.value || "day";
     const date = document.getElementById("date")?.value || "";
     const fileName = `TK1_XN1_${mode}_${date || "capture"}_HD.png`;
@@ -990,8 +1015,6 @@ async function captureTable(){
     btn.disabled = false;
   }
 }
-
-
 </script>
 
 </body>
