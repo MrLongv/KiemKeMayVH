@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>TK1 – Thống kê năng suất giờ (XN1) • line_no</title>
+
+<!-- ✅ html2canvas: load sớm để bấm nút là dùng được -->
+<script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -30,15 +34,13 @@
 
   /* ============================
      ✅ CHỈ ĐẠO GĐC (GỌN + CHẠY)
-     - giống kiểu GDC: 1 ticker mảnh
-     - sticky dưới topbar
   ============================ */
   .gdc-ticker{
     position:sticky;
-    top:64px; /* gần đúng chiều cao topbar */
+    top:64px;
     z-index:19;
     height:38px;
-    display:none; /* show khi có message */
+    display:none;
     align-items:center;
     overflow:hidden;
     background:#0e2552;
@@ -46,44 +48,22 @@
     box-shadow:0 8px 18px rgba(0,0,0,.16);
   }
   .gdc-ticker .label{
-    flex:0 0 auto;
-    height:100%;
-    display:flex;
-    align-items:center;
-    padding:0 14px;
-    font-weight:900;
-    font-size:13px;
-    background:#0b1b3a;
-    border-right:1px solid rgba(255,255,255,.14);
+    flex:0 0 auto;height:100%;
+    display:flex;align-items:center;
+    padding:0 14px;font-weight:900;font-size:13px;
+    background:#0b1b3a;border-right:1px solid rgba(255,255,255,.14);
   }
-  .gdc-ticker .track{
-    flex:1;
-    overflow:hidden;
-    white-space:nowrap;
-    position:relative;
-  }
+  .gdc-ticker .track{flex:1;overflow:hidden;white-space:nowrap;position:relative}
   .gdc-ticker .text{
-    display:inline-block;
-    padding-left:100%;
-    font-weight:800;
-    font-size:14px;
-    line-height:38px;
-    animation: gdc-marquee 22s linear infinite;
-    will-change: transform;
+    display:inline-block;padding-left:100%;
+    font-weight:800;font-size:14px;line-height:38px;
+    animation:gdc-marquee 22s linear infinite;will-change:transform;
   }
-  @keyframes gdc-marquee{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-100%); }
-  }
+  @keyframes gdc-marquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
   .gdc-ticker .meta{
-    flex:0 0 auto;
-    height:100%;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:0 12px;
-    font-size:12px;
-    opacity:.9;
+    flex:0 0 auto;height:100%;
+    display:flex;align-items:center;gap:8px;
+    padding:0 12px;font-size:12px;opacity:.9;
     border-left:1px solid rgba(255,255,255,.14);
     background:rgba(0,0,0,.08);
   }
@@ -91,10 +71,7 @@
     width:7px;height:7px;border-radius:999px;background:#22c55e;display:inline-block;
     box-shadow:0 0 0 4px rgba(34,197,94,.14);
   }
-  .gdc-ticker .time{
-    opacity:.9;
-    font-variant-numeric: tabular-nums;
-  }
+  .gdc-ticker .time{opacity:.9;font-variant-numeric:tabular-nums}
 
   .wrap{padding:14px}
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-bottom:12px}
@@ -110,7 +87,7 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-  /* sticky cols (đã thu nhỏ LINE) */
+  /* sticky cols */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
   .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
@@ -139,16 +116,12 @@
   .btnMini{padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;border:none;cursor:pointer;background:#111827;color:#fff}
   .btnMini.gray{background:#6b7280}
 
-  /* =========================
-     ✅ FIX LỖI CỘNG USD CHE KHI KÉO NGANG
-     - footer sticky cần nền + z-index riêng
-  ========================= */
+  /* FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
   /* =========================
-     📸 CAPTURE FULL TABLE
-     - Khi chụp: tắt sticky + bỏ overflow để render full nội dung bảng
+     📸 CAPTURE FULL TABLE - QUALITY FIX
   ========================= */
   body.capturing .tableWrap{ overflow: visible !important; }
   body.capturing thead th{ position: static !important; top:auto !important; }
@@ -156,9 +129,26 @@
   body.capturing .sticky2,
   body.capturing .sticky3{ position: static !important; left:auto !important; }
 
+  /* ép chữ nét + tránh bị cắt baseline */
+  body.capturing table#tbl{
+    transform:none !important;
+    filter:none !important;
+    zoom:1 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+  }
+  body.capturing #tbl th,
+  body.capturing #tbl td{
+    line-height:1.25 !important;
+    padding-top:7px !important;
+    padding-bottom:7px !important;
+  }
+
   .btn.capture{ background:#16a34a; }
 </style>
 </head>
+
 <body>
 
 <div class="topbar">
@@ -188,8 +178,8 @@
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <button class="btn" onclick="reload()">Tải dữ liệu</button>
 
-      <!-- ✅ NÚT CHỤP FULL BẢNG -->
-      <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng</button>
+      <!-- ✅ NÚT CHỤP FULL BẢNG (HD) -->
+      <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
 
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
@@ -198,9 +188,6 @@
   </div>
 </div>
 
-<!-- ============================
-     ✅ CHỈ ĐẠO GĐC (TICKER)
-============================ -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track">
@@ -276,9 +263,7 @@
           <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
           <td class="sticky2"></td>
           <td class="sticky3"></td>
-
           <td colspan="3"></td>
-
           <td id="usdQtSum" class="right">0.00</td>
 
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
@@ -310,11 +295,7 @@ const TO_LIST = [1,3,5,7,9];
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
-/* ================== FORMAT (CHUẨN MỚI) ==================
-   - Số nguyên: 10,000 (group bằng dấu phẩy)
-   - Tiền: 1,972.00 (luôn 2 decimals, dấu chấm)
-   - Đơn giá: 2.4 / 2.22 (dấu chấm, không grouping)
-=========================================================== */
+/* ================== FORMAT ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -324,7 +305,6 @@ function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 
-/* parse số: chấp nhận dạng người dùng nhập có dấu phẩy group */
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
@@ -363,11 +343,8 @@ function pctClass(hs){
 let S = mustLogin();
 let canEditPlan = false;
 
-/* =========================================================
-   ✅ CHỈ ĐẠO GĐC (TICKER)
-========================================================= */
+/* ================== GĐC TICKER ================== */
 let gdcTimer = null;
-
 function fmtTickerTime(iso){
   if(!iso) return "";
   const d = new Date(iso);
@@ -378,70 +355,35 @@ function fmtTickerTime(iso){
   const mo = String(d.getMonth()+1).padStart(2,"0");
   return `${dd}/${mo} ${hh}:${mm}`;
 }
-
 async function loadGdcTicker(){
   if(!S || !S.token) return;
-
   try{
-    const resX = await apiPost({
-      action:"getDirectorMessage",
-      token:S.token,
-      xuong:XUONG
-    });
-
-    const resAll = await apiPost({
-      action:"getDirectorMessage",
-      token:S.token,
-      xuong:"ALL"
-    });
-
+    const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:XUONG });
+    const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
     let picked = null;
-
-    if(resX?.success && (resX.message||"").trim()){
-      picked = resX;
-    }else if(resAll?.success && (resAll.message||"").trim()){
-      picked = resAll;
-    }
+    if(resX?.success && (resX.message||"").trim()) picked = resX;
+    else if(resAll?.success && (resAll.message||"").trim()) picked = resAll;
 
     const box = document.getElementById("gdcTicker");
     const textEl = document.getElementById("gdcTickerText");
     const scopeEl = document.getElementById("gdcTickerScope");
     const timeEl = document.getElementById("gdcTickerTime");
 
-    if(!picked){
-      box.style.display = "none";
-      return;
-    }
-
+    if(!picked){ box.style.display="none"; return; }
     const scope = String(picked.scope || "").toUpperCase();
     const msg = String(picked.message || "").trim();
-    if(!msg){
-      box.style.display = "none";
-      return;
-    }
+    if(!msg){ box.style.display="none"; return; }
 
-    box.style.display = "flex";
+    box.style.display="flex";
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
-
-    textEl.style.animation = "none";
-    textEl.offsetHeight;
+    textEl.style.animation="none"; textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
-    textEl.style.animation = "gdc-marquee 22s linear infinite";
-  }catch(e){
-    console.warn("GDC ticker error:", e);
-  }
+    textEl.style.animation="gdc-marquee 22s linear infinite";
+  }catch(e){ console.warn("GDC ticker error:", e); }
 }
-
-function startGdcTicker(){
-  stopGdcTicker();
-  loadGdcTicker();
-  gdcTimer = setInterval(loadGdcTicker, 30000);
-}
-function stopGdcTicker(){
-  if(gdcTimer) clearInterval(gdcTimer);
-  gdcTimer = null;
-}
+function startGdcTicker(){ stopGdcTicker(); loadGdcTicker(); gdcTimer=setInterval(loadGdcTicker,30000); }
+function stopGdcTicker(){ if(gdcTimer) clearInterval(gdcTimer); gdcTimer=null; }
 window.addEventListener("beforeunload", stopGdcTicker);
 
 /* ================== INIT UI ================== */
@@ -464,7 +406,6 @@ if(S){
     document.getElementById("roleHint").innerText = "⛔ Không đúng quyền / sai xưởng";
   }
   document.getElementById("btnSaveAll").disabled = !canEditPlan;
-
   startGdcTicker();
   reload();
 }
@@ -564,11 +505,8 @@ async function loadDayDetail(ngay){
   for(const to of TO_LIST){
     const list = got.filter(r => Number(r.to_nhom)===Number(to))
                     .sort((a,b)=>Number(a.line_no||1)-Number(b.line_no||1));
-    if(list.length){
-      rows.push(...list.map(x=>normalizeRow(to, x)));
-    }else{
-      rows.push(normalizeRow(to, { to_nhom:to, line_no:1, hours:Array(HOURS.length).fill(0) }));
-    }
+    if(list.length) rows.push(...list.map(x=>normalizeRow(to, x)));
+    else rows.push(normalizeRow(to, { to_nhom:to, line_no:1, hours:Array(HOURS.length).fill(0) }));
   }
 
   renderDayRows(rows);
@@ -836,7 +774,6 @@ async function saveAll(){
   await reload();
 }
 
-/* ================== DELETE LINE ================== */
 async function deleteLine(to_nhom, line_no){
   if(!canEditPlan) return;
   if(!confirm(`Xóa kế hoạch Tổ ${to_nhom} • Line ${line_no} ?`)) return;
@@ -850,11 +787,7 @@ async function deleteLine(to_nhom, line_no){
     ngay, xuong:XUONG, to_nhom:Number(to_nhom), line_no:Number(line_no)
   });
 
-  if(!res.success){
-    setStatus("Lỗi xóa: " + (res.msg||""));
-    return;
-  }
-
+  if(!res.success){ setStatus("Lỗi xóa: " + (res.msg||"")); return; }
   setStatus(`✅ Đã xóa tổ ${to_nhom} line ${line_no}`);
   await reload();
 }
@@ -916,7 +849,7 @@ document.addEventListener("input",(e)=>{
 });
 
 /* =========================
-   📸 CHỤP FULL NỘI DUNG BẢNG -> PNG
+   📸 CHỤP FULL NỘI DUNG BẢNG -> PNG (HD, không rụng chữ)
 ========================= */
 async function captureTable(){
   const btn = document.getElementById("btnCapture");
@@ -928,7 +861,12 @@ async function captureTable(){
   try{
     btn.disabled = true;
     const oldStatus = status.innerText;
-    status.innerText = "📸 Đang chụp full bảng...";
+    status.innerText = "📸 Đang chụp full bảng (HD)...";
+
+    if(typeof window.html2canvas !== "function"){
+      status.innerText = "❌ html2canvas chưa tải (CDN chậm hoặc bị chặn).";
+      return;
+    }
 
     const oldScrollLeft = wrap.scrollLeft;
     const oldScrollTop  = wrap.scrollTop;
@@ -937,39 +875,67 @@ async function captureTable(){
     wrap.scrollLeft = 0;
     wrap.scrollTop  = 0;
 
-    await new Promise(r=>setTimeout(r, 80));
+    await new Promise(r=>setTimeout(r, 140));
 
-    const w = table.scrollWidth;
-    const h = table.scrollHeight;
+    const w = Math.ceil(table.scrollWidth);
+    const h = Math.ceil(table.scrollHeight);
+
+    const dpr = window.devicePixelRatio || 1;
+    const scale = Math.min(4, Math.max(2.5, dpr * 2)); // thường 3-4 => nét
 
     const canvas = await html2canvas(table, {
       backgroundColor: "#ffffff",
-      scale: Math.min(2, window.devicePixelRatio || 1.5),
+      scale,
       width: w,
       height: h,
       windowWidth: w,
       windowHeight: h,
       scrollX: 0,
       scrollY: 0,
-      useCORS: true
+      useCORS: true,
+      allowTaint: false,
+      letterRendering: true,
+      onclone: (doc) => {
+        doc.body.classList.add("capturing");
+
+        const t = doc.getElementById("tbl");
+        if(t){
+          t.style.transform = "none";
+          t.style.filter = "none";
+        }
+
+        doc.querySelectorAll("#tbl th, #tbl td").forEach(el=>{
+          el.style.lineHeight = "1.25";
+          el.style.paddingTop = "7px";
+          el.style.paddingBottom = "7px";
+        });
+      }
     });
 
     const mode = document.getElementById("mode")?.value || "day";
     const date = document.getElementById("date")?.value || "";
-    const fileName = `TK1_XN1_${mode}_${date || "capture"}.png`;
+    const fileName = `TK1_XN1_${mode}_${date || "capture"}_HD.png`;
 
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    await new Promise((resolve, reject)=>{
+      canvas.toBlob((blob)=>{
+        if(!blob){ reject(new Error("toBlob failed")); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        resolve();
+      }, "image/png");
+    });
 
     document.body.classList.remove("capturing");
     wrap.scrollLeft = oldScrollLeft;
     wrap.scrollTop  = oldScrollTop;
 
-    status.innerText = "✅ Đã chụp và tải ảnh: " + fileName;
+    status.innerText = "✅ Đã chụp ảnh HD: " + fileName;
     setTimeout(()=>{ status.innerText = oldStatus; }, 2500);
   }catch(err){
     console.error(err);
@@ -980,9 +946,6 @@ async function captureTable(){
   }
 }
 </script>
-
-<!-- ✅ html2canvas (phải đặt sau code, hoặc trước cũng được; để đây cho rõ ràng) -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 </body>
 </html>
