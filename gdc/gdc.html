@@ -6,7 +6,7 @@
 <title>GDC Mobile – Dashboard Năng suất</title>
 <style>
   :root{
-    --bg:#0e1a33;   /* nhạt hơn */
+    --bg:#0e1a33;
     --card:#111a2e;
     --card2:#0f172a;
     --line:rgba(255,255,255,.10);
@@ -72,9 +72,8 @@
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
   }
-  /* ✅ nút xóa */
   .btn.danger{
-    background:linear-gradient(180deg, rgba(239,68,68,.40), rgba(239,68,68,.18));
+    background:linear-gradient(180deg, rgba(239,68,68,.30), rgba(239,68,68,.14));
     border:1px solid rgba(239,68,68,.45);
   }
 
@@ -211,7 +210,7 @@
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
   .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
 
-  /* ✅ CẮT NGẮN CỘT MÃ HÀNG TRONG BẢNG THEO GIỜ */
+  /* cắt ngắn mã hàng */
   .mhShort{
     max-width:140px;
     width:140px;
@@ -285,6 +284,13 @@
   }
   textarea{min-height:110px; resize:vertical; line-height:1.35}
   .sheet .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap}
+
+  /* ===== BẢNG CHUYỂN ĐỔI: tô vàng giống mẫu ===== */
+  #convTbl td:nth-child(10),
+  #convTbl td:nth-child(11),
+  #convTbl td:nth-child(12){
+    background:rgba(250,204,21,.18);
+  }
 </style>
 </head>
 <body>
@@ -301,6 +307,8 @@
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
+
+      <button class="btn" id="btnConv">📊 Chuyển đổi (ngày)</button>
       <button class="btn primary" id="btnReload">Tải</button>
       <button class="btn ghost" id="btnLogout">Đăng xuất</button>
     </div>
@@ -434,6 +442,7 @@
 
 <div class="fab" title="Chỉ đạo" id="fabDir">✍️</div>
 
+<!-- ================== MODAL: CHỈ ĐẠO ================== -->
 <div class="modal" id="dirModal">
   <div class="sheet">
     <div class="titleRow">
@@ -462,6 +471,7 @@
       <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
     </div>
 
+    <!-- ✅ ĐỔI THỨ TỰ NÚT: LƯU -> XÓA -> LẤY XƯỞNG ĐANG CHỌN -->
     <div class="actions">
       <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
       <button class="btn danger" id="btnDirClearDay">🗑️ Xóa chỉ đạo (trong ngày)</button>
@@ -470,6 +480,56 @@
 
     <div class="hint">
       * TO/TK/GĐX sẽ thấy chỉ đạo (ALL + theo xưởng) đúng như worker.js đã ghép.
+    </div>
+  </div>
+</div>
+
+<!-- ================== MODAL: CHUYỂN ĐỔI NGÀY ================== -->
+<div class="modal" id="convModal">
+  <div class="sheet" style="max-height:92vh">
+    <div class="titleRow">
+      <b>📊 THEO DÕI NĂNG SUẤT – CHUYỂN ĐỔI (NGÀY)</b>
+      <button class="close" id="btnConvClose">Đóng</button>
+    </div>
+
+    <div class="hint" style="margin-top:-2px">
+      * TGCT = TG/QT (giây) lấy từ kế hoạch (TK). Thực hiện = tổng SP theo giờ trong ngày.
+      * Lũy kế tháng & Số ngày SX để “—” (nếu muốn tính chuẩn mình sẽ thêm API trong worker).
+    </div>
+
+    <div class="tableWrap" style="margin-top:10px">
+      <table id="convTbl" style="width:max(1250px,100%)">
+        <thead>
+          <tr>
+            <th class="left" style="min-width:120px">XƯỞNG</th>
+            <th style="min-width:55px">TỔ</th>
+            <th class="left" style="min-width:160px">MÃ HÀNG</th>
+            <th style="min-width:70px">ĐƠN GIÁ</th>
+            <th style="min-width:70px">TGCT</th>
+            <th style="min-width:70px">NĐSX</th>
+            <th style="min-width:70px">LĐTT</th>
+            <th style="min-width:70px">SĐC</th>
+            <th style="min-width:90px">ĐỊNH MỨC</th>
+            <th style="min-width:90px">THỰC HIỆN</th>
+            <th style="min-width:90px">USD NGÀY</th>
+            <th style="min-width:120px">LŨY KẾ USD THÁNG</th>
+            <th style="min-width:90px">%NS ĐẠT</th>
+            <th style="min-width:90px">SỐ NGÀY SX</th>
+            <th class="left" style="min-width:180px">GHI CHÚ</th>
+          </tr>
+        </thead>
+        <tbody id="convTbody"></tbody>
+        <tfoot>
+          <tr>
+            <th colspan="10" class="right">CỘNG</th>
+            <th id="convSumUsd" class="right">0.00</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
 </div>
@@ -485,7 +545,6 @@ const HOURS_BY_XUONG = {
   2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
 };
-
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
   2:[11,13,15,17],
@@ -592,7 +651,6 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   let picked = null;
 
-  // ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
   if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
@@ -663,7 +721,8 @@ async function reload(){
           filtered.push({
             to_nhom:to, line_no:1, ma_hang:"",
             so_luong_ke_hoach:0, dinh_muc_ngay:0, dinh_muc_gio:0, usd_quy_trinh:0,
-            don_gia:0, lao_dong_thuc_te:0, chuyen_doi_ngay:0, ghi_chu:"", hours:[]
+            don_gia:0, lao_dong_thuc_te:0, lao_dong_chuyen:0, thoi_gian_giay:0,
+            chuyen_doi_ngay:0, ghi_chu:"", hours:[]
           });
         }
       }
@@ -946,36 +1005,167 @@ async function saveDir(){
   }
 }
 
-/* ✅ XÓA CHỈ ĐẠO TRONG NGÀY: ALL + XN1/2/3 */
-async function clearDirInDay(){
+/* ✅ XÓA CHỈ ĐẠO TRONG NGÀY (theo scope đang chọn trong modal) */
+async function clearDirByDay(){
   const ngay = document.getElementById("date").value || todayISO();
+  const scope = document.getElementById("dirScope").value;
 
-  const ok = confirm(
-    `XÓA TOÀN BỘ chỉ đạo của ngày ${ngay}?\n\n` +
-    `Sẽ xóa:\n- ALL\n- XN1\n- XN2\n- XN3\n\n` +
-    `Hành động không thể hoàn tác.`
-  );
-  if(!ok) return;
+  if(!confirm(`Xóa TOÀN BỘ chỉ đạo trong ngày ${ngay} cho phạm vi "${scope}"?`)) return;
 
   const btn = document.getElementById("btnDirClearDay");
   btn.disabled = true;
-
   try{
-    const scopes = ["ALL","1","2","3"];
-    for(const scope of scopes){
-      const res = await apiPost({ action:"clearDirectorMessage", ngay, scope });
-      if(!res?.success){
-        alert("Lỗi xóa chỉ đạo ("+scope+"): " + (res?.msg||"") + (res?.raw ? ("\n"+res.raw) : ""));
-        return;
-      }
+    // dùng action trong worker.js bạn gửi: deleteDirectorMessagesByDay
+    const res = await apiPost({ action:"deleteDirectorMessagesByDay", ngay, scope });
+    if(!res.success){
+      alert("Lỗi xóa chỉ đạo: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
+      return;
     }
     document.getElementById("dirText").value = "";
-    closeDir();
     await loadTicker();
     alert("✅ Đã xóa chỉ đạo trong ngày");
-  } finally{
+  }finally{
     btn.disabled = false;
   }
+}
+
+/* ================== MODAL: CHUYỂN ĐỔI NGÀY ================== */
+function openConv(){
+  renderConvertTable();
+  document.getElementById("convModal").style.display = "flex";
+}
+function closeConv(){
+  document.getElementById("convModal").style.display = "none";
+}
+
+// Gom theo TỔ trong từng xưởng: cộng nhiều line nếu có
+function buildConvertRowsForXuong(xuong){
+  const rows = dayRowsByXuong[xuong] || [];
+  const map = new Map(); // key=to
+
+  const hoursLen = (HOURS_BY_XUONG[xuong] || []).length || 9;
+
+  for(const r of rows){
+    const to = Number(r.to_nhom||0);
+    if(!to) continue;
+
+    const hours = Array.isArray(r.hours) ? r.hours : [];
+    const thucHien = hours.reduce((a,b)=>a + toNum(b), 0);
+
+    const dmNgay = toNum(r.dinh_muc_ngay);
+    const dg = toNum(r.don_gia);
+
+    // TGCT = thoi_gian_giay
+    const tgct = toNum(r.thoi_gian_giay);
+
+    const usdNgay = thucHien * dg;
+
+    // NĐSX: tạm dùng định mức giờ tham chiếu
+    const ndsx = dmNgay ? (dmNgay / hoursLen) : 0;
+
+    if(!map.has(to)){
+      map.set(to,{
+        xuong,
+        to,
+        ma_hang: String(r.ma_hang||"").trim(),
+        don_gia: dg,
+        tgct,
+        ndsx,
+        ldtt: toNum(r.lao_dong_thuc_te),
+        sdc: toNum(r.lao_dong_chuyen),
+        dinh_muc: dmNgay,
+        thuc_hien: thucHien,
+        usd_ngay: usdNgay,
+        ghi_chu: String(r.ghi_chu||"").trim()
+      });
+      continue;
+    }
+
+    const cur = map.get(to);
+
+    const mh = String(r.ma_hang||"").trim();
+    if(mh && cur.ma_hang && cur.ma_hang !== mh) cur.ma_hang = cur.ma_hang + " / " + mh;
+    else if(mh && !cur.ma_hang) cur.ma_hang = mh;
+
+    cur.dinh_muc += dmNgay;
+    cur.thuc_hien += thucHien;
+    cur.usd_ngay += usdNgay;
+
+    // chọn MAX để tránh cộng đôi khi nhiều line
+    cur.ldtt = Math.max(cur.ldtt, toNum(r.lao_dong_thuc_te));
+    cur.sdc  = Math.max(cur.sdc,  toNum(r.lao_dong_chuyen));
+
+    // nếu nhiều line khác đơn giá/TGCT thì hiển thị —
+    if(cur.don_gia !== dg) cur.don_gia = 0;
+    if(cur.tgct !== tgct) cur.tgct = 0;
+
+    const nd = dmNgay ? (dmNgay / hoursLen) : 0;
+    if(cur.ndsx !== nd) cur.ndsx = 0;
+
+    const gc = String(r.ghi_chu||"").trim();
+    if(gc && cur.ghi_chu !== gc){
+      cur.ghi_chu = (cur.ghi_chu ? (cur.ghi_chu + " • ") : "") + gc;
+    }
+  }
+
+  return [...map.values()].sort((a,b)=>a.to-b.to);
+}
+
+function renderConvertTable(){
+  const tb = document.getElementById("convTbody");
+  if(!tb) return;
+
+  let sumUsd = 0;
+  const out = [];
+
+  for(const xuong of [1,2,3]){
+    const items = buildConvertRowsForXuong(xuong);
+
+    out.push(`
+      <tr>
+        <td class="left"><b>XÍ NGHIỆP ${xuong}</b></td>
+        <td colspan="14"></td>
+      </tr>
+    `);
+
+    if(items.length === 0){
+      out.push(`
+        <tr>
+          <td class="left">XN${xuong}</td>
+          <td colspan="14" class="left" style="color:rgba(229,231,235,.72)">— Chưa có dữ liệu —</td>
+        </tr>
+      `);
+      continue;
+    }
+
+    for(const r of items){
+      const hs = r.dinh_muc > 0 ? (r.thuc_hien / r.dinh_muc * 100) : 0;
+      sumUsd += r.usd_ngay;
+
+      out.push(`
+        <tr>
+          <td class="left">XN${xuong}</td>
+          <td><b>${fmtInt(r.to)}</b></td>
+          <td class="left">${escapeHtml(r.ma_hang || "")}</td>
+          <td class="right">${r.don_gia ? fmtDg(r.don_gia) : "—"}</td>
+          <td class="right">${r.tgct ? fmtInt(r.tgct) : "—"}</td>
+          <td class="right">${r.ndsx ? fmtInt(r.ndsx) : "—"}</td>
+          <td>${fmtInt(r.ldtt)}</td>
+          <td>${fmtInt(r.sdc)}</td>
+          <td class="right"><b>${fmtInt(r.dinh_muc)}</b></td>
+          <td class="right"><b>${fmtInt(r.thuc_hien)}</b></td>
+          <td class="right"><b>${fmtMoney(r.usd_ngay)}</b></td>
+          <td class="right">—</td>
+          <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
+          <td>—</td>
+          <td class="left">${escapeHtml(r.ghi_chu || "")}</td>
+        </tr>
+      `);
+    }
+  }
+
+  tb.innerHTML = out.join("");
+  document.getElementById("convSumUsd").innerText = fmtMoney(sumUsd);
 }
 
 /* ================== BOOTSTRAP ================== */
@@ -983,11 +1173,19 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnLogout").addEventListener("click", logout);
   document.getElementById("btnReload").addEventListener("click", reload);
 
+  // mở bảng chuyển đổi
+  document.getElementById("btnConv").addEventListener("click", openConv);
+  document.getElementById("btnConvClose").addEventListener("click", closeConv);
+  document.getElementById("convModal").addEventListener("click", (e)=>{
+    if(e.target && e.target.id==="convModal") closeConv();
+  });
+
+  // modal chỉ đạo
   document.getElementById("fabDir").addEventListener("click", openDir);
   document.getElementById("btnDirClose").addEventListener("click", closeDir);
   document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
   document.getElementById("btnDirSave").addEventListener("click", saveDir);
-  document.getElementById("btnDirClearDay").addEventListener("click", clearDirInDay);
+  document.getElementById("btnDirClearDay").addEventListener("click", clearDirByDay);
 
   document.getElementById("dirModal").addEventListener("click", (e)=>{
     if(e.target && e.target.id==="dirModal") closeDir();
