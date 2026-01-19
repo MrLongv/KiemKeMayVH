@@ -859,7 +859,7 @@ async function captureTable(){
   try{
     btn.disabled = true;
     const oldStatus = status.innerText;
-    status.innerText = "📸 Đang chụp full bảng (HD, chữ không rụng)...";
+    status.innerText = "📸 Đang chụp full bảng (HD, đủ footer)...";
 
     if(typeof window.html2canvas !== "function"){
       status.innerText = "❌ html2canvas chưa tải (CDN chậm hoặc bị chặn).";
@@ -872,18 +872,20 @@ async function captureTable(){
     document.body.classList.add("capturing");
     wrap.scrollLeft = 0;
     wrap.scrollTop  = 0;
-    await new Promise(r=>setTimeout(r, 160));
+    await new Promise(r=>setTimeout(r, 180));
 
+    // ✅ đo thật và cộng thêm đệm đáy để tránh bị crop footer
     const w = Math.ceil(table.scrollWidth);
     const h = Math.ceil(table.scrollHeight);
+    const EXTRA_BOTTOM = 120; // tăng 80~160 nếu bảng rất dài
 
     const canvas = await html2canvas(table, {
       backgroundColor: "#ffffff",
-      scale: 4,                 // ✅ scale cao + số nguyên -> chữ sắc hơn
+      scale: 4,
       width: w,
-      height: h,
+      height: h + EXTRA_BOTTOM,
       windowWidth: w,
-      windowHeight: h,
+      windowHeight: h + EXTRA_BOTTOM,
       scrollX: 0,
       scrollY: 0,
       useCORS: true,
@@ -894,7 +896,10 @@ async function captureTable(){
         doc.body.classList.add("capturing");
 
         const wrapClone = doc.querySelector(".tableWrap");
-        if(wrapClone) wrapClone.style.overflow = "visible";
+        if(wrapClone){
+          wrapClone.style.overflow = "visible";
+          wrapClone.style.paddingBottom = EXTRA_BOTTOM + "px"; // ✅ đệm đáy trong clone
+        }
 
         // bỏ sticky trong clone
         doc.querySelectorAll("thead th").forEach(th=>{
@@ -906,7 +911,11 @@ async function captureTable(){
           td.style.left = "auto";
         });
 
-        // ✅ FIX CHÍNH: input.cell -> span text
+        // ✅ đảm bảo tfoot luôn render đúng (không bị browser tối ưu “cắt”)
+        const tfoot = doc.querySelector("#tbl tfoot");
+        if(tfoot) tfoot.style.display = "table-footer-group";
+
+        // ✅ FIX CHỮ: input.cell -> span
         const inputs = doc.querySelectorAll("input.cell");
         inputs.forEach(inp=>{
           const span = doc.createElement("span");
@@ -925,7 +934,6 @@ async function captureTable(){
           span.style.paddingLeft = cs.paddingLeft;
           span.style.paddingRight = cs.paddingRight;
           span.style.background = cs.backgroundColor;
-
           span.style.lineHeight = "1.35";
           span.style.paddingTop = "8px";
           span.style.paddingBottom = "8px";
@@ -933,12 +941,16 @@ async function captureTable(){
           inp.replaceWith(span);
         });
 
-        // ép line-height/padding cho cell
+        // ép cell padding/lineheight tránh rụng nét
         doc.querySelectorAll("#tbl th, #tbl td").forEach(el=>{
           el.style.lineHeight = "1.35";
           el.style.paddingTop = "8px";
           el.style.paddingBottom = "8px";
         });
+
+        // ✅ thêm khoảng trống cuối bảng để chắc chắn không bị cắt đáy
+        const t = doc.getElementById("tbl");
+        if(t) t.style.marginBottom = EXTRA_BOTTOM + "px";
       }
     });
 
@@ -965,8 +977,9 @@ async function captureTable(){
     wrap.scrollLeft = oldScrollLeft;
     wrap.scrollTop  = oldScrollTop;
 
-    status.innerText = "✅ Đã chụp ảnh HD: " + fileName;
+    status.innerText = "✅ Đã chụp đủ footer: " + fileName;
     setTimeout(()=>{ status.innerText = oldStatus; }, 2500);
+
   }catch(err){
     console.error(err);
     document.body.classList.remove("capturing");
@@ -975,6 +988,7 @@ async function captureTable(){
     btn.disabled = false;
   }
 }
+
 </script>
 
 </body>
