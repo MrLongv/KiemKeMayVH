@@ -72,6 +72,12 @@
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
   }
+  /* ✅ nút xóa */
+  .btn.danger{
+    background:linear-gradient(180deg, rgba(239,68,68,.40), rgba(239,68,68,.18));
+    border:1px solid rgba(239,68,68,.45);
+  }
+
   .status{
     margin-top:8px;
     font-size:12px;
@@ -207,7 +213,7 @@
 
   /* ✅ CẮT NGẮN CỘT MÃ HÀNG TRONG BẢNG THEO GIỜ */
   .mhShort{
-    max-width:140px;     /* bạn muốn ngắn hơn nữa thì giảm 140 */
+    max-width:140px;
     width:140px;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -346,7 +352,6 @@
             </thead>
             <tbody id="hourTbody"></tbody>
             <tfoot>
-              <!-- ✅ TỔNG: thêm tổng USD/QT -->
               <tr>
                 <th colspan="4" class="right">TỔNG</th>
                 <th id="hourSumDm" class="right">0</th>
@@ -360,7 +365,6 @@
             </tfoot>
           </table>
         </div>
-        
       </div>
     </div>
 
@@ -381,7 +385,6 @@
             <tbody id="reasonTopTbody"></tbody>
           </table>
         </div>
-        
       </div>
     </div>
   </div>
@@ -461,6 +464,7 @@
 
     <div class="actions">
       <button class="btn ghost" id="btnDirUseXuong">Lấy xưởng đang xem</button>
+      <button class="btn danger" id="btnDirClearDay">🗑️ Xóa chỉ đạo (trong ngày)</button>
       <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
     </div>
 
@@ -588,6 +592,7 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   let picked = null;
 
+  // ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
   if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
@@ -941,6 +946,38 @@ async function saveDir(){
   }
 }
 
+/* ✅ XÓA CHỈ ĐẠO TRONG NGÀY: ALL + XN1/2/3 */
+async function clearDirInDay(){
+  const ngay = document.getElementById("date").value || todayISO();
+
+  const ok = confirm(
+    `XÓA TOÀN BỘ chỉ đạo của ngày ${ngay}?\n\n` +
+    `Sẽ xóa:\n- ALL\n- XN1\n- XN2\n- XN3\n\n` +
+    `Hành động không thể hoàn tác.`
+  );
+  if(!ok) return;
+
+  const btn = document.getElementById("btnDirClearDay");
+  btn.disabled = true;
+
+  try{
+    const scopes = ["ALL","1","2","3"];
+    for(const scope of scopes){
+      const res = await apiPost({ action:"clearDirectorMessage", ngay, scope });
+      if(!res?.success){
+        alert("Lỗi xóa chỉ đạo ("+scope+"): " + (res?.msg||"") + (res?.raw ? ("\n"+res.raw) : ""));
+        return;
+      }
+    }
+    document.getElementById("dirText").value = "";
+    closeDir();
+    await loadTicker();
+    alert("✅ Đã xóa chỉ đạo trong ngày");
+  } finally{
+    btn.disabled = false;
+  }
+}
+
 /* ================== BOOTSTRAP ================== */
 document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnLogout").addEventListener("click", logout);
@@ -950,6 +987,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnDirClose").addEventListener("click", closeDir);
   document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
   document.getElementById("btnDirSave").addEventListener("click", saveDir);
+  document.getElementById("btnDirClearDay").addEventListener("click", clearDirInDay);
 
   document.getElementById("dirModal").addEventListener("click", (e)=>{
     if(e.target && e.target.id==="dirModal") closeDir();
