@@ -73,10 +73,9 @@
     border:1px solid var(--line);
   }
   .btn.danger{
-    background:linear-gradient(180deg, rgba(239,68,68,.30), rgba(239,68,68,.14));
+    background:linear-gradient(180deg, rgba(239,68,68,.40), rgba(239,68,68,.18));
     border:1px solid rgba(239,68,68,.45);
   }
-
   .status{
     margin-top:8px;
     font-size:12px;
@@ -210,7 +209,7 @@
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
   .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
 
-  /* cắt ngắn mã hàng */
+  /* ✅ CẮT NGẮN CỘT MÃ HÀNG TRONG BẢNG THEO GIỜ */
   .mhShort{
     max-width:140px;
     width:140px;
@@ -219,12 +218,18 @@
     white-space:nowrap !important;
   }
 
-  /* modal directive */
-  .fab{
+  /* modal directive + convert */
+  .fabRow{
     position:fixed;
     right:14px;
     bottom:14px;
     z-index:80;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    align-items:flex-end;
+  }
+  .fab{
     width:54px; height:54px;
     border-radius:16px;
     border:1px solid rgba(96,165,250,.45);
@@ -233,6 +238,14 @@
     display:flex; align-items:center; justify-content:center;
     font-size:20px;
     cursor:pointer;
+    user-select:none;
+  }
+  .fab.smallFab{
+    width:auto; height:auto;
+    padding:10px 12px;
+    font-size:12px;
+    font-weight:1000;
+    border-radius:14px;
   }
   .modal{
     position:fixed; inset:0;
@@ -285,12 +298,23 @@
   textarea{min-height:110px; resize:vertical; line-height:1.35}
   .sheet .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap}
 
-  /* ===== BẢNG CHUYỂN ĐỔI: tô vàng giống mẫu ===== */
-  #convTbl td:nth-child(10),
-  #convTbl td:nth-child(11),
-  #convTbl td:nth-child(12){
-    background:rgba(250,204,21,.18);
+  /* convert table (giống ảnh) */
+  .convertTitle{
+    font-weight:1000;
+    font-size:13px;
+    margin:2px 0 8px;
   }
+  .xnSectionRow td{
+    background:rgba(255,255,255,.06) !important;
+    font-weight:1000;
+    text-align:left;
+  }
+  .hl{background:rgba(245,158,11,.16) !important;}
+  .sumRow td{
+    background:rgba(96,165,250,.12) !important;
+    font-weight:1000;
+  }
+  .muted{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -307,8 +331,6 @@
         <label>Ngày</label>
         <input type="date" id="date" />
       </div>
-
-      <button class="btn" id="btnConv">📊 Chuyển đổi (ngày)</button>
       <button class="btn primary" id="btnReload">Tải</button>
       <button class="btn ghost" id="btnLogout">Đăng xuất</button>
     </div>
@@ -440,9 +462,13 @@
   </div>
 </div>
 
-<div class="fab" title="Chỉ đạo" id="fabDir">✍️</div>
+<!-- Floating buttons -->
+<div class="fabRow">
+  <div class="fab smallFab" id="fabConvert" title="Theo dõi năng suất - chuyển đổi">📊 Chuyển đổi</div>
+  <div class="fab" title="Chỉ đạo" id="fabDir">✍️</div>
+</div>
 
-<!-- ================== MODAL: CHỈ ĐẠO ================== -->
+<!-- Modal: Directive -->
 <div class="modal" id="dirModal">
   <div class="sheet">
     <div class="titleRow">
@@ -471,7 +497,7 @@
       <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
     </div>
 
-    <!-- ✅ ĐỔI THỨ TỰ NÚT: LƯU -> XÓA -> LẤY XƯỞNG ĐANG CHỌN -->
+    <!-- ✅ Thứ tự nút theo yêu cầu: Lưu -> Xóa -> Lấy xưởng đang chọn -->
     <div class="actions">
       <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
       <button class="btn danger" id="btnDirClearDay">🗑️ Xóa chỉ đạo (trong ngày)</button>
@@ -484,52 +510,57 @@
   </div>
 </div>
 
-<!-- ================== MODAL: CHUYỂN ĐỔI NGÀY ================== -->
-<div class="modal" id="convModal">
-  <div class="sheet" style="max-height:92vh">
+<!-- Modal: Convert (Theo dõi năng suất - chuyển đổi) -->
+<div class="modal" id="convertModal">
+  <div class="sheet">
     <div class="titleRow">
-      <b>📊 THEO DÕI NĂNG SUẤT – CHUYỂN ĐỔI (NGÀY)</b>
-      <button class="close" id="btnConvClose">Đóng</button>
+      <b>📊 THEO DÕI NĂNG SUẤT – CHUYỂN ĐỔI</b>
+      <button class="close" id="btnConvertClose">Đóng</button>
     </div>
 
-    <div class="hint" style="margin-top:-2px">
-      * TGCT = TG/QT (giây) lấy từ kế hoạch (TK). Thực hiện = tổng SP theo giờ trong ngày.
-      * Lũy kế tháng & Số ngày SX để “—” (nếu muốn tính chuẩn mình sẽ thêm API trong worker).
+    <div class="field" style="margin-bottom:10px">
+      <div class="convertTitle">
+        Ngày báo cáo: <span id="convertDate" style="font-weight:1000"></span>
+        <span class="muted">• Lũy kế USD tháng = từ ngày 01 đến ngày đang xem</span>
+      </div>
+      <div class="muted" id="convertProgress">—</div>
     </div>
 
-    <div class="tableWrap" style="margin-top:10px">
-      <table id="convTbl" style="width:max(1250px,100%)">
+    <div class="tableWrap">
+      <table style="width:max(1120px,100%)">
         <thead>
           <tr>
-            <th class="left" style="min-width:120px">XƯỞNG</th>
-            <th style="min-width:55px">TỔ</th>
-            <th class="left" style="min-width:160px">MÃ HÀNG</th>
+            <th style="min-width:50px">TỔ</th>
+            <th class="left" style="min-width:150px">MÃ HÀNG</th>
             <th style="min-width:70px">ĐƠN GIÁ</th>
-            <th style="min-width:70px">TGCT</th>
+            <th style="min-width:80px">TGCT</th>
             <th style="min-width:70px">NĐSX</th>
-            <th style="min-width:70px">LĐTT</th>
-            <th style="min-width:70px">SĐC</th>
-            <th style="min-width:90px">ĐỊNH MỨC</th>
-            <th style="min-width:90px">THỰC HIỆN</th>
-            <th style="min-width:90px">USD NGÀY</th>
-            <th style="min-width:120px">LŨY KẾ USD THÁNG</th>
-            <th style="min-width:90px">%NS ĐẠT</th>
-            <th style="min-width:90px">SỐ NGÀY SX</th>
+            <th style="min-width:90px">LĐ TT</th>
+            <th style="min-width:90px">SĐC</th>
+            <th style="min-width:95px">ĐỊNH MỨC<br/>LĐ TT</th>
+            <th class="hl" style="min-width:90px">THỰC HIỆN</th>
+            <th class="hl" style="min-width:90px">USD NGÀY</th>
+            <th class="hl" style="min-width:120px">LŨY KẾ USD<br/>THÁNG</th>
+            <th style="min-width:95px">% NĂNG SUẤT<br/>ĐẠT</th>
+            <th style="min-width:80px">SỐ NGÀY<br/>SX</th>
             <th class="left" style="min-width:180px">GHI CHÚ</th>
           </tr>
         </thead>
-        <tbody id="convTbody"></tbody>
+        <tbody id="convertTbody"></tbody>
         <tfoot>
-          <tr>
-            <th colspan="10" class="right">CỘNG</th>
-            <th id="convSumUsd" class="right">0.00</th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
+          <tr class="sumRow">
+            <td colspan="9" class="right">CỘNG</td>
+            <td id="convertSumUsdDay" class="right">0.00</td>
+            <td id="convertSumUsdMonth" class="right">0.00</td>
+            <td colspan="3"></td>
           </tr>
         </tfoot>
       </table>
+    </div>
+
+    <div class="hint" style="margin-top:10px">
+      ✅ TGCT lấy từ <b>TG/QT</b> (thoi_gian_giay) bên thống kê xưởng nhập.<br/>
+      ✅ Số ngày SX lấy từ <b>Số ngày chuyển đổi</b> (chuyen_doi_ngay) bên thống kê xưởng nhập.
     </div>
   </div>
 </div>
@@ -545,6 +576,7 @@ const HOURS_BY_XUONG = {
   2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
 };
+
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
   2:[11,13,15,17],
@@ -560,6 +592,7 @@ function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
 function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
+
 function pctClass(hs){
   hs=Number(hs)||0;
   if(hs>=95) return "good";
@@ -588,6 +621,23 @@ function todayISO(){
   const vn = new Date(Date.now() + 7*60*60*1000);
   return vn.toISOString().slice(0,10);
 }
+function ymOf(iso){ return String(iso||"").slice(0,7); }
+function firstDayOfMonthISO(iso){
+  const y = String(iso||"").slice(0,4);
+  const m = String(iso||"").slice(5,7);
+  return `${y}-${m}-01`;
+}
+function daysInMonth(y, m){ // m=1..12
+  return new Date(y, m, 0).getDate();
+}
+function addDaysISO(iso, delta){
+  const d = new Date(iso+"T00:00:00");
+  d.setDate(d.getDate()+delta);
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${yy}-${mm}-${dd}`;
+}
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
@@ -601,7 +651,7 @@ function mustLogin(){
 }
 function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
 
-/* ================== API (no-store + safe json) ================== */
+/* ================== API ================== */
 async function apiPost(payload){
   const s = mustLogin(); if(!s) return {success:false,msg:"NO_SESSION"};
   payload = { ...payload, token:s.token, _ts: Date.now() };
@@ -651,6 +701,7 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   let picked = null;
 
+  // Ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
   if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
@@ -699,6 +750,7 @@ async function reload(){
 
   setStatus("⏳ Đang tải dữ liệu...");
   try{
+    // 1) getTkXuongDay cho 3 xưởng (để có kế hoạch + giờ + TG/QT + CD/NGÀY)
     for(const x of XUONGS){
       setStatus(`⏳ Đang tải XN${x} (kế hoạch + theo giờ)…`);
       const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
@@ -715,14 +767,15 @@ async function reload(){
       const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
       let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
+      // bù tổ thiếu (để UI luôn đủ tổ)
       const existTo = new Set(filtered.map(r=>Number(r.to_nhom)));
       for(const to of allowTos){
         if(!existTo.has(to)){
           filtered.push({
             to_nhom:to, line_no:1, ma_hang:"",
             so_luong_ke_hoach:0, dinh_muc_ngay:0, dinh_muc_gio:0, usd_quy_trinh:0,
-            don_gia:0, lao_dong_thuc_te:0, lao_dong_chuyen:0, thoi_gian_giay:0,
-            chuyen_doi_ngay:0, ghi_chu:"", hours:[]
+            don_gia:0, lao_dong_thuc_te:0, lao_dong_chuyen:0,
+            thoi_gian_giay:0, chuyen_doi_ngay:0, ghi_chu:"", hours:[]
           });
         }
       }
@@ -730,6 +783,7 @@ async function reload(){
       filtered.sort((a,b)=>Number(a.to_nhom)-Number(b.to_nhom) || Number(a.line_no||1)-Number(b.line_no||1));
       dayRowsByXuong[x] = filtered;
 
+      // agg theo xưởng (ngày)
       let usd=0, sp=0, dm=0;
       for(const r of filtered){
         const hours = Array.isArray(r.hours) ? r.hours : [];
@@ -742,6 +796,7 @@ async function reload(){
       dayAggByXuong[x] = { usd, sp, dm, hs, topReasons:[] };
     }
 
+    // 2) getHourRange để gom “nguyên nhân nổi bật”
     for(const x of XUONGS){
       setStatus(`⏳ Đang tải XN${x} (nguyên nhân)…`);
       const hr = await apiPost({ action:"getHourRange", xuong:x, from:ngay, to:ngay });
@@ -1005,23 +1060,30 @@ async function saveDir(){
   }
 }
 
-/* ✅ XÓA CHỈ ĐẠO TRONG NGÀY (theo scope đang chọn trong modal) */
-async function clearDirByDay(){
+async function clearDirInDay(){
   const ngay = document.getElementById("date").value || todayISO();
-  const scope = document.getElementById("dirScope").value;
 
-  if(!confirm(`Xóa TOÀN BỘ chỉ đạo trong ngày ${ngay} cho phạm vi "${scope}"?`)) return;
+  const ok = confirm(
+    `XÓA TOÀN BỘ chỉ đạo của ngày ${ngay}?\n\n` +
+    `Sẽ xóa:\n- ALL\n- XN1\n- XN2\n- XN3\n\n` +
+    `Hành động không thể hoàn tác.`
+  );
+  if(!ok) return;
 
   const btn = document.getElementById("btnDirClearDay");
   btn.disabled = true;
+
   try{
-    // dùng action trong worker.js bạn gửi: deleteDirectorMessagesByDay
-    const res = await apiPost({ action:"deleteDirectorMessagesByDay", ngay, scope });
-    if(!res.success){
-      alert("Lỗi xóa chỉ đạo: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
-      return;
+    const scopes = ["ALL","1","2","3"];
+    for(const scope of scopes){
+      const res = await apiPost({ action:"clearDirectorMessage", ngay, scope });
+      if(!res?.success){
+        alert("Lỗi xóa chỉ đạo ("+scope+"): " + (res?.msg||"") + (res?.raw ? ("\n"+res.raw) : ""));
+        return;
+      }
     }
     document.getElementById("dirText").value = "";
+    closeDir();
     await loadTicker();
     alert("✅ Đã xóa chỉ đạo trong ngày");
   }finally{
@@ -1029,172 +1091,260 @@ async function clearDirByDay(){
   }
 }
 
-/* ================== MODAL: CHUYỂN ĐỔI NGÀY ================== */
-function openConv(){
-  renderConvertTable();
-  document.getElementById("convModal").style.display = "flex";
+/* ================== CONVERT (CHUYỂN ĐỔI) ==================
+   - TGCT = thoi_gian_giay (TG/QT) từ kế hoạch
+   - Số ngày SX = chuyen_doi_ngay từ kế hoạch
+   - Lũy kế USD tháng = sum USD ngày từ 01 -> ngày đang xem
+=========================================================== */
+
+// cache theo (xưởng, YYYY-MM) để không tải lại nhiều lần
+// monthUsdCache[x][ym] = { byTo: Map(to->usd), total:number, computedToDate: 'YYYY-MM-DD' }
+const monthUsdCache = { 1:{}, 2:{}, 3:{} };
+
+function openConvert(){
+  const ngay = document.getElementById("date").value || todayISO();
+  document.getElementById("convertDate").innerText = ngay;
+  document.getElementById("convertModal").style.display="flex";
+  renderConvertTable(); // render ngay, nếu thiếu lũy kế sẽ tự load
 }
-function closeConv(){
-  document.getElementById("convModal").style.display = "none";
+function closeConvert(){ document.getElementById("convertModal").style.display="none"; }
+
+function convertProgress(text){
+  const el = document.getElementById("convertProgress");
+  if(el) el.innerText = text || "—";
 }
 
-// Gom theo TỔ trong từng xưởng: cộng nhiều line nếu có
-function buildConvertRowsForXuong(xuong){
-  const rows = dayRowsByXuong[xuong] || [];
-  const map = new Map(); // key=to
+function groupPlanByXuongTo(rows, xuong){
+  // gom theo tổ, ưu tiên lấy thông tin “đại diện” (mã hàng, đơn giá, tgct, ndsx, ld...)
+  // nếu 1 tổ có nhiều line => USD/TH, TH, ĐM... sẽ cộng dồn; còn TGCT/ĐG/MÃ HÀNG lấy “line có TH lớn nhất” cho giống báo cáo nhìn trực quan.
+  const hoursLen = (HOURS_BY_XUONG[xuong]||[]).length;
 
-  const hoursLen = (HOURS_BY_XUONG[xuong] || []).length || 9;
-
+  const map = new Map(); // to -> agg
   for(const r of rows){
-    const to = Number(r.to_nhom||0);
-    if(!to) continue;
+    const to = Number(r.to_nhom);
+    if(!map.has(to)){
+      map.set(to, {
+        to,
+        bestLine:null,
+        bestTh:0,
+
+        ma_hang:"",
+        don_gia:0,
+        tgct:0,     // thoi_gian_giay
+        ndsx:0,     // NĐSX bạn đang hiển thị (mình map tạm = lao_dong_chuyen nếu có, không thì 0)
+        ldtt:0,     // lao_dong_thuc_te (sum)
+        sdc:0,      // lao_dong_chuyen (sum)
+        dm_ldtt:0,  // dinh_muc_ngay (sum)
+        th:0,       // thực hiện (sum)
+        usd:0,      // usd ngày (sum)
+        so_ngay_sx:0, // chuyen_doi_ngay (max)
+        ghi_chu:""
+      });
+    }
+    const a = map.get(to);
 
     const hours = Array.isArray(r.hours) ? r.hours : [];
-    const thucHien = hours.reduce((a,b)=>a + toNum(b), 0);
+    const th = hours.reduce((s,v)=>s+toNum(v),0);
 
-    const dmNgay = toNum(r.dinh_muc_ngay);
     const dg = toNum(r.don_gia);
+    const usd = th * dg;
 
-    // TGCT = thoi_gian_giay
-    const tgct = toNum(r.thoi_gian_giay);
-
-    const usdNgay = thucHien * dg;
-
-    // NĐSX: tạm dùng định mức giờ tham chiếu
-    const ndsx = dmNgay ? (dmNgay / hoursLen) : 0;
-
-    if(!map.has(to)){
-      map.set(to,{
-        xuong,
-        to,
-        ma_hang: String(r.ma_hang||"").trim(),
-        don_gia: dg,
-        tgct,
-        ndsx,
-        ldtt: toNum(r.lao_dong_thuc_te),
-        sdc: toNum(r.lao_dong_chuyen),
-        dinh_muc: dmNgay,
-        thuc_hien: thucHien,
-        usd_ngay: usdNgay,
-        ghi_chu: String(r.ghi_chu||"").trim()
-      });
-      continue;
+    a.ldtt += toNum(r.lao_dong_thuc_te);
+    a.sdc  += toNum(r.lao_dong_chuyen);
+    a.dm_ldtt += toNum(r.dinh_muc_ngay);
+    a.th += th;
+    a.usd += usd;
+    a.so_ngay_sx = Math.max(a.so_ngay_sx, toNum(r.chuyen_doi_ngay));
+    if(String(r.ghi_chu||"").trim()){
+      // ưu tiên ghi chú line có TH lớn nhất
+      if(th >= a.bestTh) a.ghi_chu = String(r.ghi_chu||"").trim();
     }
 
-    const cur = map.get(to);
+    // chọn “best line” để lấy mã hàng/đơn giá/tgct/ndsx
+    if(th > a.bestTh){
+      a.bestTh = th;
+      a.bestLine = r;
+      a.ma_hang = String(r.ma_hang||"");
+      a.don_gia = dg;
+      a.tgct = toNum(r.thoi_gian_giay); // TG/QT
+      a.ndsx = toNum(r.laо_dong_chuyen || r.lao_dong_chuyen || 0); // nếu bạn muốn cột NĐSX là field khác, nói mình đổi
+    }
+  }
+  return map;
+}
 
-    const mh = String(r.ma_hang||"").trim();
-    if(mh && cur.ma_hang && cur.ma_hang !== mh) cur.ma_hang = cur.ma_hang + " / " + mh;
-    else if(mh && !cur.ma_hang) cur.ma_hang = mh;
+async function ensureMonthUsdToDate(xuong, ngay){
+  const ym = ymOf(ngay);
+  const cache = monthUsdCache[xuong][ym];
 
-    cur.dinh_muc += dmNgay;
-    cur.thuc_hien += thucHien;
-    cur.usd_ngay += usdNgay;
+  // nếu đã tính tới >= ngay thì dùng luôn
+  if(cache && cache.computedToDate && cache.computedToDate >= ngay){
+    return cache;
+  }
 
-    // chọn MAX để tránh cộng đôi khi nhiều line
-    cur.ldtt = Math.max(cur.ldtt, toNum(r.lao_dong_thuc_te));
-    cur.sdc  = Math.max(cur.sdc,  toNum(r.lao_dong_chuyen));
+  // build mới hoặc tính tiếp
+  let byTo = cache?.byTo ? new Map(cache.byTo) : new Map();
+  let total = cache?.total || 0;
 
-    // nếu nhiều line khác đơn giá/TGCT thì hiển thị —
-    if(cur.don_gia !== dg) cur.don_gia = 0;
-    if(cur.tgct !== tgct) cur.tgct = 0;
+  const from = firstDayOfMonthISO(ngay);
+  const startDate = cache?.computedToDate ? addDaysISO(cache.computedToDate, 1) : from;
 
-    const nd = dmNgay ? (dmNgay / hoursLen) : 0;
-    if(cur.ndsx !== nd) cur.ndsx = 0;
+  // nếu startDate > ngay => nothing
+  if(startDate > ngay){
+    monthUsdCache[xuong][ym] = { byTo, total, computedToDate: (cache?.computedToDate||ngay) };
+    return monthUsdCache[xuong][ym];
+  }
 
-    const gc = String(r.ghi_chu||"").trim();
-    if(gc && cur.ghi_chu !== gc){
-      cur.ghi_chu = (cur.ghi_chu ? (cur.ghi_chu + " • ") : "") + gc;
+  const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
+
+  // duyệt ngày từ startDate -> ngay
+  const y = Number(ym.slice(0,4));
+  const m = Number(ym.slice(5,7));
+  const maxDay = daysInMonth(y, m);
+
+  const startD = Number(startDate.slice(8,10));
+  const endD = Number(ngay.slice(8,10));
+
+  // tải từng ngày (1 call / ngày / xưởng) — ổn vì 1 tháng tối đa 31 call khi mở lần đầu
+  for(let d = startD; d <= endD; d++){
+    const iso = `${ym}-${String(d).padStart(2,"0")}`;
+    convertProgress(`⏳ Đang tính lũy kế USD tháng… XN${xuong} • ${iso}`);
+
+    const res = await apiPost({ action:"getTkXuongDay", ngay: iso, xuong });
+    if(!res?.success){
+      // bỏ qua ngày lỗi nhưng vẫn báo
+      console.warn("Month load fail", xuong, iso, res);
+      continue;
+    }
+    const rows = (res.rows || []).filter(r => allowTos.has(Number(r.to_nhom)));
+
+    for(const r of rows){
+      const to = Number(r.to_nhom);
+      const hours = Array.isArray(r.hours) ? r.hours : [];
+      const th = hours.reduce((s,v)=>s+toNum(v),0);
+      const usd = th * toNum(r.don_gia);
+
+      if(usd !== 0){
+        byTo.set(to, (byTo.get(to)||0) + usd);
+        total += usd;
+      }
     }
   }
 
-  return [...map.values()].sort((a,b)=>a.to-b.to);
+  const out = { byTo, total, computedToDate: ngay };
+  monthUsdCache[xuong][ym] = out;
+  return out;
 }
 
-function renderConvertTable(){
-  const tb = document.getElementById("convTbody");
-  if(!tb) return;
+async function renderConvertTable(){
+  const ngay = document.getElementById("date").value || todayISO();
+  document.getElementById("convertDate").innerText = ngay;
 
-  let sumUsd = 0;
-  const out = [];
+  const tbody = document.getElementById("convertTbody");
+  if(!tbody) return;
 
-  for(const xuong of [1,2,3]){
-    const items = buildConvertRowsForXuong(xuong);
+  convertProgress("⏳ Đang chuẩn bị dữ liệu…");
 
-    out.push(`
-      <tr>
-        <td class="left"><b>XÍ NGHIỆP ${xuong}</b></td>
-        <td colspan="14"></td>
-      </tr>
-    `);
+  // dữ liệu ngày hiện tại đã có sẵn trong dayRowsByXuong (do reload)
+  // nếu user mở modal trước khi reload xong: fallback gọi reload
+  if(!dayRowsByXuong[1] || !dayRowsByXuong[2] || !dayRowsByXuong[3]){
+    await reload();
+  }
 
-    if(items.length === 0){
-      out.push(`
+  let html = "";
+  let sumUsdDayAll = 0;
+  let sumUsdMonthAll = 0;
+
+  for(const xuong of XUONGS){
+    const rows = dayRowsByXuong[xuong] || [];
+    const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
+    const filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
+
+    // gom theo tổ cho ngày hiện tại
+    const byToToday = groupPlanByXuongTo(filtered, xuong);
+
+    // load lũy kế tháng đến ngày hiện tại
+    const mtd = await ensureMonthUsdToDate(xuong, ngay);
+
+    // section header
+    html += `
+      <tr class="xnSectionRow"><td colspan="14">XÍ NGHIỆP ${xuong}</td></tr>
+    `;
+
+    const tos = (TO_BY_XUONG[xuong]||[]).map(Number);
+    for(const to of tos){
+      const a = byToToday.get(to) || {
+        to, ma_hang:"", don_gia:0, tgct:0, ndsx:0, ldtt:0, sdc:0, dm_ldtt:0, th:0, usd:0, so_ngay_sx:0, ghi_chu:""
+      };
+
+      const hs = a.dm_ldtt > 0 ? (a.th / a.dm_ldtt * 100) : 0;
+      const usdMonth = (mtd?.byTo?.get(to) || 0);
+
+      sumUsdDayAll += a.usd;
+      sumUsdMonthAll += usdMonth;
+
+      html += `
         <tr>
-          <td class="left">XN${xuong}</td>
-          <td colspan="14" class="left" style="color:rgba(229,231,235,.72)">— Chưa có dữ liệu —</td>
-        </tr>
-      `);
-      continue;
-    }
+          <td><b>${to}</b></td>
+          <td class="left">${escapeHtml(a.ma_hang||"")}</td>
+          <td>${fmtDg(a.don_gia)}</td>
+          <td>${fmtInt(a.tgct)}</td>
+          <td>${fmtInt(a.ndsx)}</td>
+          <td>${fmtInt(a.ldtt)}</td>
+          <td>${fmtInt(a.sdc)}</td>
+          <td>${fmtInt(a.dm_ldtt)}</td>
 
-    for(const r of items){
-      const hs = r.dinh_muc > 0 ? (r.thuc_hien / r.dinh_muc * 100) : 0;
-      sumUsd += r.usd_ngay;
+          <td class="hl"><b>${fmtInt(a.th)}</b></td>
+          <td class="hl right"><b>${fmtMoney(a.usd)}</b></td>
+          <td class="hl right"><b>${fmtMoney(usdMonth)}</b></td>
 
-      out.push(`
-        <tr>
-          <td class="left">XN${xuong}</td>
-          <td><b>${fmtInt(r.to)}</b></td>
-          <td class="left">${escapeHtml(r.ma_hang || "")}</td>
-          <td class="right">${r.don_gia ? fmtDg(r.don_gia) : "—"}</td>
-          <td class="right">${r.tgct ? fmtInt(r.tgct) : "—"}</td>
-          <td class="right">${r.ndsx ? fmtInt(r.ndsx) : "—"}</td>
-          <td>${fmtInt(r.ldtt)}</td>
-          <td>${fmtInt(r.sdc)}</td>
-          <td class="right"><b>${fmtInt(r.dinh_muc)}</b></td>
-          <td class="right"><b>${fmtInt(r.thuc_hien)}</b></td>
-          <td class="right"><b>${fmtMoney(r.usd_ngay)}</b></td>
-          <td class="right">—</td>
           <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
-          <td>—</td>
-          <td class="left">${escapeHtml(r.ghi_chu || "")}</td>
+          <td>${fmtInt(a.so_ngay_sx)}</td>
+          <td class="left">${escapeHtml(a.ghi_chu||"")}</td>
         </tr>
-      `);
+      `;
     }
   }
 
-  tb.innerHTML = out.join("");
-  document.getElementById("convSumUsd").innerText = fmtMoney(sumUsd);
+  tbody.innerHTML = html || `<tr><td colspan="14" class="left">Chưa có dữ liệu.</td></tr>`;
+  document.getElementById("convertSumUsdDay").innerText = fmtMoney(sumUsdDayAll);
+  document.getElementById("convertSumUsdMonth").innerText = fmtMoney(sumUsdMonthAll);
+
+  convertProgress(`✅ Xong • Lũy kế tháng tính từ ${firstDayOfMonthISO(ngay)} → ${ngay}`);
 }
 
-/* ================== BOOTSTRAP ================== */
+/* ================== EVENTS / BOOTSTRAP ================== */
 document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnLogout").addEventListener("click", logout);
   document.getElementById("btnReload").addEventListener("click", reload);
 
-  // mở bảng chuyển đổi
-  document.getElementById("btnConv").addEventListener("click", openConv);
-  document.getElementById("btnConvClose").addEventListener("click", closeConv);
-  document.getElementById("convModal").addEventListener("click", (e)=>{
-    if(e.target && e.target.id==="convModal") closeConv();
-  });
-
-  // modal chỉ đạo
+  // directive
   document.getElementById("fabDir").addEventListener("click", openDir);
   document.getElementById("btnDirClose").addEventListener("click", closeDir);
   document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
   document.getElementById("btnDirSave").addEventListener("click", saveDir);
-  document.getElementById("btnDirClearDay").addEventListener("click", clearDirByDay);
+  document.getElementById("btnDirClearDay").addEventListener("click", clearDirInDay);
 
   document.getElementById("dirModal").addEventListener("click", (e)=>{
     if(e.target && e.target.id==="dirModal") closeDir();
   });
 
+  // convert
+  document.getElementById("fabConvert").addEventListener("click", openConvert);
+  document.getElementById("btnConvertClose").addEventListener("click", closeConvert);
+  document.getElementById("convertModal").addEventListener("click", (e)=>{
+    if(e.target && e.target.id==="convertModal") closeConvert();
+  });
+
+  // date
   document.getElementById("date").value = todayISO();
-  document.getElementById("date").addEventListener("change", ()=>{
-    reload();
-    loadTicker();
+  document.getElementById("date").addEventListener("change", async ()=>{
+    await reload();
+    await loadTicker();
+    // nếu modal chuyển đổi đang mở thì refresh luôn
+    if(document.getElementById("convertModal").style.display === "flex"){
+      renderConvertTable();
+    }
   });
 
   S = mustLogin();
