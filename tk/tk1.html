@@ -853,8 +853,7 @@ async function captureTable(){
   const btn = document.getElementById("btnCapture");
   const status = document.getElementById("status");
   const table = document.getElementById("tbl");
-  const wrap = document.querySelector(".tableWrap");
-  if(!table || !wrap) return;
+  if(!table) return;
 
   try{
     btn.disabled = true;
@@ -866,94 +865,102 @@ async function captureTable(){
       return;
     }
 
-    const oldScrollLeft = wrap.scrollLeft;
-    const oldScrollTop  = wrap.scrollTop;
+    // ✅ Đợi font load xong để tránh lệch/cắt chữ
+    if(document.fonts && document.fonts.ready){
+      try{ await document.fonts.ready; }catch{}
+    }
 
-    document.body.classList.add("capturing");
-    wrap.scrollLeft = 0;
-    wrap.scrollTop  = 0;
-    await new Promise(r=>setTimeout(r, 180));
+    // =========================
+    // 1) Tạo bản clone OFFSCREEN
+    // =========================
+    const off = document.createElement("div");
+    off.style.position = "fixed";
+    off.style.left = "-100000px";
+    off.style.top = "0";
+    off.style.background = "#fff";
+    off.style.padding = "16px";
+    off.style.zIndex = "999999";
 
-    // ✅ đo thật và cộng thêm đệm đáy để tránh bị crop footer
+    // clone table
+    const clone = table.cloneNode(true);
+    clone.id = "tbl_capture";
+
+    // ép width theo full nội dung thật (để không bị co)
     const w = Math.ceil(table.scrollWidth);
-    const h = Math.ceil(table.scrollHeight);
-    const EXTRA_BOTTOM = 120; // tăng 80~160 nếu bảng rất dài
+    clone.style.width = w + "px";
+    clone.style.borderCollapse = "collapse";
 
-    const canvas = await html2canvas(table, {
-      backgroundColor: "#ffffff",
-      scale: 4,
-      width: w,
-      height: h + EXTRA_BOTTOM,
-      windowWidth: w,
-      windowHeight: h + EXTRA_BOTTOM,
-      scrollX: 0,
-      scrollY: 0,
-      useCORS: true,
-      allowTaint: false,
-      letterRendering: true,
-
-      onclone: (doc) => {
-        doc.body.classList.add("capturing");
-
-        const wrapClone = doc.querySelector(".tableWrap");
-        if(wrapClone){
-          wrapClone.style.overflow = "visible";
-          wrapClone.style.paddingBottom = EXTRA_BOTTOM + "px"; // ✅ đệm đáy trong clone
-        }
-
-        // bỏ sticky trong clone
-        doc.querySelectorAll("thead th").forEach(th=>{
-          th.style.position = "static";
-          th.style.top = "auto";
-        });
-        doc.querySelectorAll(".sticky1,.sticky2,.sticky3").forEach(td=>{
-          td.style.position = "static";
-          td.style.left = "auto";
-        });
-
-        // ✅ đảm bảo tfoot luôn render đúng (không bị browser tối ưu “cắt”)
-        const tfoot = doc.querySelector("#tbl tfoot");
-        if(tfoot) tfoot.style.display = "table-footer-group";
-
-        // ✅ FIX CHỮ: input.cell -> span
-        const inputs = doc.querySelectorAll("input.cell");
-        inputs.forEach(inp=>{
-          const span = doc.createElement("span");
-          span.textContent = inp.value ?? "";
-
-          const cs = doc.defaultView.getComputedStyle(inp);
-          span.style.display = "block";
-          span.style.width = "100%";
-          span.style.boxSizing = "border-box";
-          span.style.font = cs.font;
-          span.style.fontSize = cs.fontSize;
-          span.style.fontWeight = cs.fontWeight;
-          span.style.color = cs.color;
-          span.style.textAlign = cs.textAlign;
-          span.style.whiteSpace = "nowrap";
-          span.style.paddingLeft = cs.paddingLeft;
-          span.style.paddingRight = cs.paddingRight;
-          span.style.background = cs.backgroundColor;
-          span.style.lineHeight = "1.35";
-          span.style.paddingTop = "8px";
-          span.style.paddingBottom = "8px";
-
-          inp.replaceWith(span);
-        });
-
-        // ép cell padding/lineheight tránh rụng nét
-        doc.querySelectorAll("#tbl th, #tbl td").forEach(el=>{
-          el.style.lineHeight = "1.35";
-          el.style.paddingTop = "8px";
-          el.style.paddingBottom = "8px";
-        });
-
-        // ✅ thêm khoảng trống cuối bảng để chắc chắn không bị cắt đáy
-        const t = doc.getElementById("tbl");
-        if(t) t.style.marginBottom = EXTRA_BOTTOM + "px";
-      }
+    // ✅ bỏ sticky trong clone (thead + sticky cols)
+    clone.querySelectorAll("thead th").forEach(th=>{
+      th.style.position = "static";
+      th.style.top = "auto";
+    });
+    clone.querySelectorAll(".sticky1,.sticky2,.sticky3").forEach(td=>{
+      td.style.position = "static";
+      td.style.left = "auto";
     });
 
+    // ✅ đảm bảo footer luôn render đúng
+    const tfoot = clone.querySelector("tfoot");
+    if(tfoot) tfoot.style.display = "table-footer-group";
+
+    // ✅ FIX MẤT NÉT CHỮ: input.cell -> span text (trong clone)
+    clone.querySelectorAll("input.cell").forEach(inp=>{
+      const span = document.createElement("span");
+      span.textContent = inp.value ?? "";
+
+      const cs = window.getComputedStyle(inp);
+      span.style.display = "block";
+      span.style.width = "100%";
+      span.style.boxSizing = "border-box";
+      span.style.font = cs.font;
+      span.style.fontSize = cs.fontSize;
+      span.style.fontWeight = cs.fontWeight;
+      span.style.color = cs.color;
+      span.style.textAlign = cs.textAlign;
+      span.style.whiteSpace = "nowrap";
+      span.style.paddingLeft = cs.paddingLeft;
+      span.style.paddingRight = cs.paddingRight;
+      span.style.background = cs.backgroundColor;
+
+      // chống rụng baseline
+      span.style.lineHeight = "1.35";
+      span.style.paddingTop = "8px";
+      span.style.paddingBottom = "8px";
+
+      inp.replaceWith(span);
+    });
+
+    // ép lại cell để không bị rụng nét
+    clone.querySelectorAll("th, td").forEach(el=>{
+      el.style.lineHeight = "1.35";
+      el.style.paddingTop = "8px";
+      el.style.paddingBottom = "8px";
+    });
+
+    off.appendChild(clone);
+    document.body.appendChild(off);
+
+    // đợi DOM ổn định
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    // =========================
+    // 2) Chụp OFFSCREEN container
+    // =========================
+    const canvas = await html2canvas(off, {
+      backgroundColor: "#ffffff",
+      scale: 4,               // ✅ nét mạnh
+      useCORS: true,
+      allowTaint: false,
+      letterRendering: true
+    });
+
+    // dọn clone
+    off.remove();
+
+    // =========================
+    // 3) Save file PNG
+    // =========================
     const mode = document.getElementById("mode")?.value || "day";
     const date = document.getElementById("date")?.value || "";
     const fileName = `TK1_XN1_${mode}_${date || "capture"}_HD.png`;
@@ -973,21 +980,17 @@ async function captureTable(){
       }, "image/png");
     });
 
-    document.body.classList.remove("capturing");
-    wrap.scrollLeft = oldScrollLeft;
-    wrap.scrollTop  = oldScrollTop;
-
-    status.innerText = "✅ Đã chụp đủ footer: " + fileName;
+    status.innerText = "✅ Đã chụp đủ dòng CỘNG USD: " + fileName;
     setTimeout(()=>{ status.innerText = oldStatus; }, 2500);
 
   }catch(err){
     console.error(err);
-    document.body.classList.remove("capturing");
     status.innerText = "❌ Chụp ảnh thất bại (xem console).";
   }finally{
     btn.disabled = false;
   }
 }
+
 
 </script>
 
