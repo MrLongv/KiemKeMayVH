@@ -145,6 +145,18 @@
   ========================= */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
+
+  /* =========================
+     📸 CAPTURE FULL TABLE
+     - Khi chụp: tắt sticky + bỏ overflow để render full nội dung bảng
+  ========================= */
+  body.capturing .tableWrap{ overflow: visible !important; }
+  body.capturing thead th{ position: static !important; top:auto !important; }
+  body.capturing .sticky1,
+  body.capturing .sticky2,
+  body.capturing .sticky3{ position: static !important; left:auto !important; }
+
+  .btn.capture{ background:#16a34a; }
 </style>
 </head>
 <body>
@@ -175,6 +187,10 @@
 
       <button class="btn ghost" onclick="logout()">Đăng xuất</button>
       <button class="btn" onclick="reload()">Tải dữ liệu</button>
+
+      <!-- ✅ NÚT CHỤP FULL BẢNG -->
+      <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng</button>
+
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -184,9 +200,6 @@
 
 <!-- ============================
      ✅ CHỈ ĐẠO GĐC (TICKER)
-     - ưu tiên scope theo xưởng (1)
-     - fallback ALL
-     - refresh 30s, chạy mượt như GDC
 ============================ -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
@@ -259,14 +272,11 @@
       <tbody id="tbody"></tbody>
 
       <tfoot>
-        <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
-        <!-- ✅ FIX: không dùng sticky + colspan lớn (gây che khi kéo ngang) -->
         <tr>
           <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
           <td class="sticky2"></td>
           <td class="sticky3"></td>
 
-          <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
           <td colspan="3"></td>
 
           <td id="usdQtSum" class="right">0.00</td>
@@ -277,7 +287,6 @@
           <td colspan="11"></td>
         </tr>
 
-        <!-- ƯỚC TÍNH USD TRONG NGÀY -->
         <tr class="strong">
           <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
           <td id="usdNgay" class="right">0.00</td>
@@ -319,7 +328,7 @@ function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
 function toNum(v){
   let s = String(v ?? "").trim();
   if(!s) return 0;
-  s = s.replace(/\s+/g,"").replaceAll(",",""); // bỏ grouping theo chuẩn mới
+  s = s.replace(/\s+/g,"").replaceAll(",","");
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -355,16 +364,12 @@ let S = mustLogin();
 let canEditPlan = false;
 
 /* =========================================================
-   ✅ CHỈ ĐẠO GĐC (TICKER) — CHỈ BỔ SUNG PHẦN NÀY
-   - ưu tiên scope theo xưởng (1)
-   - fallback ALL
-   - refresh 30s, chạy mượt như GDC
+   ✅ CHỈ ĐẠO GĐC (TICKER)
 ========================================================= */
 let gdcTimer = null;
 
 function fmtTickerTime(iso){
   if(!iso) return "";
-  // iso: 2026-01-14T03:12:34.000Z
   const d = new Date(iso);
   if(Number.isNaN(d.getTime())) return "";
   const hh = String(d.getHours()).padStart(2,"0");
@@ -378,14 +383,12 @@ async function loadGdcTicker(){
   if(!S || !S.token) return;
 
   try{
-    // 1) scope xưởng
     const resX = await apiPost({
       action:"getDirectorMessage",
       token:S.token,
       xuong:XUONG
     });
 
-    // 2) fallback ALL (để chắc chắn, dù worker đã tự fallback)
     const resAll = await apiPost({
       action:"getDirectorMessage",
       token:S.token,
@@ -421,14 +424,12 @@ async function loadGdcTicker(){
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
-    // reset animation để chạy lại mượt khi nội dung đổi
     textEl.style.animation = "none";
-    textEl.offsetHeight; // force reflow
+    textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation = "gdc-marquee 22s linear infinite";
   }catch(e){
     console.warn("GDC ticker error:", e);
-    // không làm gì để tránh phá UI
   }
 }
 
@@ -464,9 +465,7 @@ if(S){
   }
   document.getElementById("btnSaveAll").disabled = !canEditPlan;
 
-  // ✅ start ticker ngay khi login ok
   startGdcTicker();
-
   reload();
 }
 
@@ -651,16 +650,15 @@ function renderDayRows(rows){
         </td>
 
         <td>
-  ${canEditPlan
-    ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
-       ${Number(r.line_no) > 1
-         ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
-         : ``
-       }`
-    : "—"
-  }
-</td>
-
+          ${canEditPlan
+            ? `<button class="btn saveMini" onclick="savePlanRow(${r.to_nhom},${r.line_no})">Lưu</button>
+               ${Number(r.line_no) > 1
+                 ? `<button class="btn danger saveMini" style="margin-left:6px" onclick="deleteLine(${r.to_nhom},${r.line_no})">Xóa</button>`
+                 : ``
+               }`
+            : "—"
+          }
+        </td>
       </tr>
     `;
   }).join("");
@@ -916,6 +914,75 @@ document.addEventListener("input",(e)=>{
     }
   }
 });
+
+/* =========================
+   📸 CHỤP FULL NỘI DUNG BẢNG -> PNG
+========================= */
+async function captureTable(){
+  const btn = document.getElementById("btnCapture");
+  const status = document.getElementById("status");
+  const table = document.getElementById("tbl");
+  const wrap = document.querySelector(".tableWrap");
+  if(!table || !wrap) return;
+
+  try{
+    btn.disabled = true;
+    const oldStatus = status.innerText;
+    status.innerText = "📸 Đang chụp full bảng...";
+
+    const oldScrollLeft = wrap.scrollLeft;
+    const oldScrollTop  = wrap.scrollTop;
+
+    document.body.classList.add("capturing");
+    wrap.scrollLeft = 0;
+    wrap.scrollTop  = 0;
+
+    await new Promise(r=>setTimeout(r, 80));
+
+    const w = table.scrollWidth;
+    const h = table.scrollHeight;
+
+    const canvas = await html2canvas(table, {
+      backgroundColor: "#ffffff",
+      scale: Math.min(2, window.devicePixelRatio || 1.5),
+      width: w,
+      height: h,
+      windowWidth: w,
+      windowHeight: h,
+      scrollX: 0,
+      scrollY: 0,
+      useCORS: true
+    });
+
+    const mode = document.getElementById("mode")?.value || "day";
+    const date = document.getElementById("date")?.value || "";
+    const fileName = `TK1_XN1_${mode}_${date || "capture"}.png`;
+
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    document.body.classList.remove("capturing");
+    wrap.scrollLeft = oldScrollLeft;
+    wrap.scrollTop  = oldScrollTop;
+
+    status.innerText = "✅ Đã chụp và tải ảnh: " + fileName;
+    setTimeout(()=>{ status.innerText = oldStatus; }, 2500);
+  }catch(err){
+    console.error(err);
+    document.body.classList.remove("capturing");
+    status.innerText = "❌ Chụp ảnh thất bại (xem console).";
+  }finally{
+    btn.disabled = false;
+  }
+}
 </script>
+
+<!-- ✅ html2canvas (phải đặt sau code, hoặc trước cũng được; để đây cho rõ ràng) -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 </body>
 </html>
