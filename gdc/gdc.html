@@ -497,10 +497,57 @@
       <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
     </div>
 
+    <!-- ✅ Thứ tự nút theo yêu cầu: Lưu -> Xóa -> Lấy xưởng đang chọn -> Lịch sử -->
     <div class="actions">
       <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
       <button class="btn danger" id="btnDirClearDay">🗑️ Xóa chỉ đạo (trong ngày)</button>
       <button class="btn ghost" id="btnDirUseXuong">Lấy xưởng đang xem</button>
+      <button class="btn ghost" id="btnDirHistory">📜 Lịch sử</button>
+    </div>
+
+    <!-- ✅ LỊCH SỬ CHỈ ĐẠO -->
+    <div class="field" id="dirHistoryBox" style="margin-top:12px; display:none;">
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <span>📜 Lịch sử chỉ đạo</span>
+        <span class="muted" id="dirHistoryMeta">—</span>
+      </label>
+
+      <div class="formRow" style="margin-top:8px;">
+        <div class="field" style="padding:10px;">
+          <label>Chọn ngày</label>
+          <input type="date" id="dirHistDate" style="width:100%;padding:6px 0;background:transparent;border:none;color:var(--text);" />
+        </div>
+        <div class="field" style="padding:10px;">
+          <label>Phạm vi</label>
+          <select id="dirHistScope">
+            <option value="ALL4">TẤT CẢ (ALL + XN1 + XN2 + XN3)</option>
+            <option value="ALL">ALL</option>
+            <option value="1">XN1</option>
+            <option value="2">XN2</option>
+            <option value="3">XN3</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tableWrap" style="margin-top:10px;">
+        <table style="width:100%; min-width:760px;">
+          <thead>
+            <tr>
+              <th style="width:92px">Phạm vi</th>
+              <th style="width:120px">Cập nhật</th>
+              <th class="left">Nội dung</th>
+              <th style="width:90px">Xóa</th>
+            </tr>
+          </thead>
+          <tbody id="dirHistTbody">
+            <tr><td colspan="4" class="left">Chưa tải.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="hint" style="margin-top:8px;">
+        * “TẤT CẢ” sẽ gọi 4 scope và ghép lại theo thời gian (mới nhất lên trên).
+      </div>
     </div>
 
     <div class="hint">
@@ -570,13 +617,12 @@ const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
 
-/* ✅ SỬA LỖI KHUNG GIỜ THEO YÊU CẦU
-   - XN1, XN2: KHÔNG có 11-12
-   - XN3: KHÔNG có 12-13
-*/
+// ✅ FIX khung giờ:
+// - XN1, XN2: KHÔNG có 11-12
+// - XN3: KHÔNG có 12-13
 const HOURS_BY_XUONG = {
-  1:["7-8","8-9","9-10","10-11","13-14","14-15","15-16","16-17"],
-  2:["7-8","8-9","9-10","10-11","13-14","14-15","15-16","16-17"],
+  1:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
+  2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
 };
 
@@ -702,6 +748,7 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   let picked = null;
 
+  // Ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
   if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
@@ -767,7 +814,7 @@ async function reload(){
       const allowTos = new Set((TO_BY_XUONG[x]||[]).map(Number));
       let filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-      // bù tổ thiếu (để UI luôn đủ tổ)
+      // bù tổ thiếu
       const existTo = new Set(filtered.map(r=>Number(r.to_nhom)));
       for(const to of allowTos){
         if(!existTo.has(to)){
@@ -881,7 +928,7 @@ function renderSelected(){
   document.getElementById("hourTitle").innerText = `⏱️ Năng suất theo giờ – XN${xuong}`;
   document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${xuong}`;
 
-  renderHourTkStyle(xuong);
+  renderHourTkStyle(xuong, ngay);
   renderReasonTop(xuong);
   renderDayTable(xuong, ngay);
 }
@@ -899,12 +946,6 @@ function renderHourTkStyle(xuong){
     ${hours.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}
     <th colspan="3"></th>
   `;
-
-  // ✅ đồng bộ colspan footer theo số khung giờ
-  const hourTbl = document.getElementById("hourTbl");
-  const footRow = hourTbl?.querySelector("tfoot tr");
-  const footGap = footRow?.querySelector("th[colspan='9']");
-  if(footGap) footGap.setAttribute("colspan", String(hours.length));
 
   let spSum=0, usdSum=0, dmSum=0, usdQtSum=0;
 
@@ -1038,6 +1079,13 @@ function renderDayTable(xuong, ngay){
 function openDir(){
   const ngay = document.getElementById("date").value || todayISO();
   document.getElementById("dirDate").innerText = ngay;
+
+  // reset history
+  const box = document.getElementById("dirHistoryBox");
+  if(box) box.style.display="none";
+  const d = document.getElementById("dirHistDate");
+  if(d) d.value = ngay;
+
   document.getElementById("dirModal").style.display="flex";
 }
 function closeDir(){ document.getElementById("dirModal").style.display="none"; }
@@ -1097,12 +1145,124 @@ async function clearDirInDay(){
   }
 }
 
-/* ================== CONVERT (CHUYỂN ĐỔI) ==================
-   - TGCT = thoi_gian_giay (TG/QT) từ kế hoạch
-   - Số ngày SX = chuyen_doi_ngay từ kế hoạch
-   - Lũy kế USD tháng = sum USD ngày từ 01 -> ngày đang xem
-=========================================================== */
+/* ================== DIRECTIVE HISTORY ================== */
+function scopeLabel(sc){
+  sc = String(sc||"").toUpperCase();
+  if(sc==="ALL") return "ALL";
+  if(sc==="1") return "XN1";
+  if(sc==="2") return "XN2";
+  if(sc==="3") return "XN3";
+  return sc;
+}
+function fmtTimeHM(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mi = String(d.getMinutes()).padStart(2,"0");
+  return `${hh}:${mi}`;
+}
+async function loadDirHistory(){
+  const ngay = document.getElementById("dirHistDate").value || (document.getElementById("date").value || todayISO());
+  const pick = document.getElementById("dirHistScope").value || "ALL4";
+  const tbody = document.getElementById("dirHistTbody");
+  const meta = document.getElementById("dirHistoryMeta");
 
+  meta.innerText = "⏳ Đang tải...";
+  tbody.innerHTML = `<tr><td colspan="4" class="left">Đang tải...</td></tr>`;
+
+  const scopes = (pick === "ALL4") ? ["ALL","1","2","3"] : [pick];
+
+  let items = [];
+  for(const sc of scopes){
+    const res = await apiPost({ action:"listDirectorMessages", ngay, scope: sc });
+    if(!res?.success){
+      console.warn("listDirectorMessages fail", sc, res);
+      continue;
+    }
+    const arr = Array.isArray(res.items) ? res.items : [];
+    for(const it of arr){
+      items.push({
+        id: it.id,
+        ngay: it.ngay || ngay,
+        scope: it.scope || sc,
+        message: it.message || "",
+        updated_at: it.updated_at || "",
+        updated_by: it.updated_by || ""
+      });
+    }
+  }
+
+  items.sort((a,b)=>{
+    const ta = Date.parse(a.updated_at||"") || 0;
+    const tb = Date.parse(b.updated_at||"") || 0;
+    return tb - ta;
+  });
+
+  meta.innerText = `Ngày ${ngay} • ${items.length} dòng`;
+
+  if(!items.length){
+    tbody.innerHTML = `<tr><td colspan="4" class="left">Không có chỉ đạo trong ngày này.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(it=>{
+    const sc = scopeLabel(it.scope);
+    const time = fmtTimeHM(it.updated_at);
+    const msg = escapeHtml(String(it.message||"").trim());
+    const by  = escapeHtml(String(it.updated_by||"").trim());
+
+    return `
+      <tr data-id="${escapeHtml(it.id)}" data-scope="${escapeHtml(it.scope)}" data-ngay="${escapeHtml(it.ngay)}">
+        <td><b>${sc}</b></td>
+        <td>${escapeHtml(time)}<div class="muted" style="font-size:11px">${by||""}</div></td>
+        <td class="left" style="white-space:normal; line-height:1.35;">${msg}</td>
+        <td>
+          <button class="btn danger" style="padding:8px 10px;border-radius:12px" data-del="1">Xóa</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.querySelectorAll('button[data-del="1"]').forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      const tr = e.target.closest("tr");
+      const id = tr?.dataset?.id;
+      const scope = tr?.dataset?.scope;
+      const ngayRow = tr?.dataset?.ngay || ngay;
+      if(!id || !scope) return;
+
+      const ok = confirm(`Xóa chỉ đạo này?\n- Ngày: ${ngayRow}\n- Phạm vi: ${scopeLabel(scope)}\n\nKhông thể hoàn tác.`);
+      if(!ok) return;
+
+      e.target.disabled = true;
+      try{
+        const res = await apiPost({ action:"deleteDirectorMessage", id, ngay: ngayRow, scope });
+        if(!res?.success){
+          alert("Lỗi xóa: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
+          return;
+        }
+        await loadDirHistory();
+        await loadTicker();
+      }finally{
+        e.target.disabled = false;
+      }
+    });
+  });
+}
+function toggleDirHistory(){
+  const box = document.getElementById("dirHistoryBox");
+  const isOpen = box.style.display !== "none";
+  box.style.display = isOpen ? "none" : "block";
+
+  const ngay = document.getElementById("date").value || todayISO();
+  const dateEl = document.getElementById("dirHistDate");
+  if(!dateEl.value) dateEl.value = ngay;
+
+  if(!isOpen) loadDirHistory();
+}
+
+/* ================== CONVERT (CHUYỂN ĐỔI) ================== */
 const monthUsdCache = { 1:{}, 2:{}, 3:{} };
 
 function openConvert(){
@@ -1112,32 +1272,23 @@ function openConvert(){
   renderConvertTable();
 }
 function closeConvert(){ document.getElementById("convertModal").style.display="none"; }
-
 function convertProgress(text){
   const el = document.getElementById("convertProgress");
   if(el) el.innerText = text || "—";
 }
 
 function groupPlanByXuongTo(rows, xuong){
-  const map = new Map(); // to -> agg
+  const map = new Map();
   for(const r of rows){
     const to = Number(r.to_nhom);
     if(!map.has(to)){
       map.set(to, {
-        to,
-        bestLine:null,
-        bestTh:0,
-
-        ma_hang:"",
-        don_gia:0,
-        tgct:0,     // thoi_gian_giay
-        ndsx:0,     // bạn đang dùng tạm = lao_dong_chuyen
-        ldtt:0,     // lao_dong_thuc_te (sum)
-        sdc:0,      // lao_dong_chuyen (sum)
-        dm_ldtt:0,  // dinh_muc_ngay (sum)
-        th:0,       // thực hiện (sum)
-        usd:0,      // usd ngày (sum)
-        so_ngay_sx:0, // chuyen_doi_ngay (max)
+        to, bestLine:null, bestTh:0,
+        ma_hang:"", don_gia:0, tgct:0,
+        ndsx:0,
+        ldtt:0, sdc:0, dm_ldtt:0,
+        th:0, usd:0,
+        so_ngay_sx:0,
         ghi_chu:""
       });
     }
@@ -1155,7 +1306,6 @@ function groupPlanByXuongTo(rows, xuong){
     a.th += th;
     a.usd += usd;
     a.so_ngay_sx = Math.max(a.so_ngay_sx, toNum(r.chuyen_doi_ngay));
-
     if(String(r.ghi_chu||"").trim()){
       if(th >= a.bestTh) a.ghi_chu = String(r.ghi_chu||"").trim();
     }
@@ -1166,7 +1316,7 @@ function groupPlanByXuongTo(rows, xuong){
       a.ma_hang = String(r.ma_hang||"");
       a.don_gia = dg;
       a.tgct = toNum(r.thoi_gian_giay); // TG/QT
-      a.ndsx = toNum(r.lao_dong_chuyen || 0);
+      a.ndsx = toNum(r.lao_dong_chuyen || 0); // bạn cần field khác thì nói mình đổi
     }
   }
   return map;
@@ -1192,15 +1342,14 @@ async function ensureMonthUsdToDate(xuong, ngay){
   }
 
   const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
-
   const y = Number(ym.slice(0,4));
   const m = Number(ym.slice(5,7));
-  const maxDay = daysInMonth(y, m);
-
   const startD = Number(startDate.slice(8,10));
   const endD = Number(ngay.slice(8,10));
+  const maxDay = daysInMonth(y, m);
+  const endSafe = Math.min(endD, maxDay);
 
-  for(let d = startD; d <= endD && d <= maxDay; d++){
+  for(let d = startD; d <= endSafe; d++){
     const iso = `${ym}-${String(d).padStart(2,"0")}`;
     convertProgress(`⏳ Đang tính lũy kế USD tháng… XN${xuong} • ${iso}`);
 
@@ -1238,7 +1387,6 @@ async function renderConvertTable(){
 
   convertProgress("⏳ Đang chuẩn bị dữ liệu…");
 
-  // nếu user mở modal quá sớm (reload chưa xong) thì gọi reload
   if(!dayRowsByXuong[1] || !dayRowsByXuong[2] || !dayRowsByXuong[3]){
     await reload();
   }
@@ -1260,8 +1408,7 @@ async function renderConvertTable(){
     const tos = (TO_BY_XUONG[xuong]||[]).map(Number);
     for(const to of tos){
       const a = byToToday.get(to) || {
-        to, ma_hang:"", don_gia:0, tgct:0, ndsx:0, ldtt:0, sdc:0,
-        dm_ldtt:0, th:0, usd:0, so_ngay_sx:0, ghi_chu:""
+        to, ma_hang:"", don_gia:0, tgct:0, ndsx:0, ldtt:0, sdc:0, dm_ldtt:0, th:0, usd:0, so_ngay_sx:0, ghi_chu:""
       };
 
       const hs = a.dm_ldtt > 0 ? (a.th / a.dm_ldtt * 100) : 0;
@@ -1311,6 +1458,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
   document.getElementById("btnDirSave").addEventListener("click", saveDir);
   document.getElementById("btnDirClearDay").addEventListener("click", clearDirInDay);
+
+  // ✅ history events
+  document.getElementById("btnDirHistory").addEventListener("click", toggleDirHistory);
+  document.getElementById("dirHistDate").addEventListener("change", loadDirHistory);
+  document.getElementById("dirHistScope").addEventListener("change", loadDirHistory);
 
   document.getElementById("dirModal").addEventListener("click", (e)=>{
     if(e.target && e.target.id==="dirModal") closeDir();
