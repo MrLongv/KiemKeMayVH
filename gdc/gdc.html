@@ -497,7 +497,6 @@
       <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
     </div>
 
-    <!-- ✅ Thứ tự nút theo yêu cầu: Lưu -> Xóa -> Lấy xưởng đang chọn -->
     <div class="actions">
       <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
       <button class="btn danger" id="btnDirClearDay">🗑️ Xóa chỉ đạo (trong ngày)</button>
@@ -571,9 +570,13 @@ const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
 
+/* ✅ SỬA LỖI KHUNG GIỜ THEO YÊU CẦU
+   - XN1, XN2: KHÔNG có 11-12
+   - XN3: KHÔNG có 12-13
+*/
 const HOURS_BY_XUONG = {
-  1:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
-  2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
+  1:["7-8","8-9","9-10","10-11","13-14","14-15","15-16","16-17"],
+  2:["7-8","8-9","9-10","10-11","13-14","14-15","15-16","16-17"],
   3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
 };
 
@@ -627,9 +630,7 @@ function firstDayOfMonthISO(iso){
   const m = String(iso||"").slice(5,7);
   return `${y}-${m}-01`;
 }
-function daysInMonth(y, m){ // m=1..12
-  return new Date(y, m, 0).getDate();
-}
+function daysInMonth(y, m){ return new Date(y, m, 0).getDate(); }
 function addDaysISO(iso, delta){
   const d = new Date(iso+"T00:00:00");
   d.setDate(d.getDate()+delta);
@@ -701,7 +702,6 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   let picked = null;
 
-  // Ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
   const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
   if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
 
@@ -750,7 +750,7 @@ async function reload(){
 
   setStatus("⏳ Đang tải dữ liệu...");
   try{
-    // 1) getTkXuongDay cho 3 xưởng (để có kế hoạch + giờ + TG/QT + CD/NGÀY)
+    // 1) getTkXuongDay cho 3 xưởng
     for(const x of XUONGS){
       setStatus(`⏳ Đang tải XN${x} (kế hoạch + theo giờ)…`);
       const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
@@ -881,12 +881,12 @@ function renderSelected(){
   document.getElementById("hourTitle").innerText = `⏱️ Năng suất theo giờ – XN${xuong}`;
   document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${xuong}`;
 
-  renderHourTkStyle(xuong, ngay);
+  renderHourTkStyle(xuong);
   renderReasonTop(xuong);
   renderDayTable(xuong, ngay);
 }
 
-function renderHourTkStyle(xuong, ngay){
+function renderHourTkStyle(xuong){
   const hours = HOURS_BY_XUONG[xuong] || [];
   const rows = dayRowsByXuong[xuong] || [];
 
@@ -899,6 +899,12 @@ function renderHourTkStyle(xuong, ngay){
     ${hours.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}
     <th colspan="3"></th>
   `;
+
+  // ✅ đồng bộ colspan footer theo số khung giờ
+  const hourTbl = document.getElementById("hourTbl");
+  const footRow = hourTbl?.querySelector("tfoot tr");
+  const footGap = footRow?.querySelector("th[colspan='9']");
+  if(footGap) footGap.setAttribute("colspan", String(hours.length));
 
   let spSum=0, usdSum=0, dmSum=0, usdQtSum=0;
 
@@ -1097,15 +1103,13 @@ async function clearDirInDay(){
    - Lũy kế USD tháng = sum USD ngày từ 01 -> ngày đang xem
 =========================================================== */
 
-// cache theo (xưởng, YYYY-MM) để không tải lại nhiều lần
-// monthUsdCache[x][ym] = { byTo: Map(to->usd), total:number, computedToDate: 'YYYY-MM-DD' }
 const monthUsdCache = { 1:{}, 2:{}, 3:{} };
 
 function openConvert(){
   const ngay = document.getElementById("date").value || todayISO();
   document.getElementById("convertDate").innerText = ngay;
   document.getElementById("convertModal").style.display="flex";
-  renderConvertTable(); // render ngay, nếu thiếu lũy kế sẽ tự load
+  renderConvertTable();
 }
 function closeConvert(){ document.getElementById("convertModal").style.display="none"; }
 
@@ -1115,10 +1119,6 @@ function convertProgress(text){
 }
 
 function groupPlanByXuongTo(rows, xuong){
-  // gom theo tổ, ưu tiên lấy thông tin “đại diện” (mã hàng, đơn giá, tgct, ndsx, ld...)
-  // nếu 1 tổ có nhiều line => USD/TH, TH, ĐM... sẽ cộng dồn; còn TGCT/ĐG/MÃ HÀNG lấy “line có TH lớn nhất” cho giống báo cáo nhìn trực quan.
-  const hoursLen = (HOURS_BY_XUONG[xuong]||[]).length;
-
   const map = new Map(); // to -> agg
   for(const r of rows){
     const to = Number(r.to_nhom);
@@ -1131,7 +1131,7 @@ function groupPlanByXuongTo(rows, xuong){
         ma_hang:"",
         don_gia:0,
         tgct:0,     // thoi_gian_giay
-        ndsx:0,     // NĐSX bạn đang hiển thị (mình map tạm = lao_dong_chuyen nếu có, không thì 0)
+        ndsx:0,     // bạn đang dùng tạm = lao_dong_chuyen
         ldtt:0,     // lao_dong_thuc_te (sum)
         sdc:0,      // lao_dong_chuyen (sum)
         dm_ldtt:0,  // dinh_muc_ngay (sum)
@@ -1155,19 +1155,18 @@ function groupPlanByXuongTo(rows, xuong){
     a.th += th;
     a.usd += usd;
     a.so_ngay_sx = Math.max(a.so_ngay_sx, toNum(r.chuyen_doi_ngay));
+
     if(String(r.ghi_chu||"").trim()){
-      // ưu tiên ghi chú line có TH lớn nhất
       if(th >= a.bestTh) a.ghi_chu = String(r.ghi_chu||"").trim();
     }
 
-    // chọn “best line” để lấy mã hàng/đơn giá/tgct/ndsx
     if(th > a.bestTh){
       a.bestTh = th;
       a.bestLine = r;
       a.ma_hang = String(r.ma_hang||"");
       a.don_gia = dg;
       a.tgct = toNum(r.thoi_gian_giay); // TG/QT
-      a.ndsx = toNum(r.laо_dong_chuyen || r.lao_dong_chuyen || 0); // nếu bạn muốn cột NĐSX là field khác, nói mình đổi
+      a.ndsx = toNum(r.lao_dong_chuyen || 0);
     }
   }
   return map;
@@ -1177,19 +1176,16 @@ async function ensureMonthUsdToDate(xuong, ngay){
   const ym = ymOf(ngay);
   const cache = monthUsdCache[xuong][ym];
 
-  // nếu đã tính tới >= ngay thì dùng luôn
   if(cache && cache.computedToDate && cache.computedToDate >= ngay){
     return cache;
   }
 
-  // build mới hoặc tính tiếp
   let byTo = cache?.byTo ? new Map(cache.byTo) : new Map();
   let total = cache?.total || 0;
 
   const from = firstDayOfMonthISO(ngay);
   const startDate = cache?.computedToDate ? addDaysISO(cache.computedToDate, 1) : from;
 
-  // nếu startDate > ngay => nothing
   if(startDate > ngay){
     monthUsdCache[xuong][ym] = { byTo, total, computedToDate: (cache?.computedToDate||ngay) };
     return monthUsdCache[xuong][ym];
@@ -1197,7 +1193,6 @@ async function ensureMonthUsdToDate(xuong, ngay){
 
   const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
 
-  // duyệt ngày từ startDate -> ngay
   const y = Number(ym.slice(0,4));
   const m = Number(ym.slice(5,7));
   const maxDay = daysInMonth(y, m);
@@ -1205,14 +1200,12 @@ async function ensureMonthUsdToDate(xuong, ngay){
   const startD = Number(startDate.slice(8,10));
   const endD = Number(ngay.slice(8,10));
 
-  // tải từng ngày (1 call / ngày / xưởng) — ổn vì 1 tháng tối đa 31 call khi mở lần đầu
-  for(let d = startD; d <= endD; d++){
+  for(let d = startD; d <= endD && d <= maxDay; d++){
     const iso = `${ym}-${String(d).padStart(2,"0")}`;
     convertProgress(`⏳ Đang tính lũy kế USD tháng… XN${xuong} • ${iso}`);
 
     const res = await apiPost({ action:"getTkXuongDay", ngay: iso, xuong });
     if(!res?.success){
-      // bỏ qua ngày lỗi nhưng vẫn báo
       console.warn("Month load fail", xuong, iso, res);
       continue;
     }
@@ -1245,8 +1238,7 @@ async function renderConvertTable(){
 
   convertProgress("⏳ Đang chuẩn bị dữ liệu…");
 
-  // dữ liệu ngày hiện tại đã có sẵn trong dayRowsByXuong (do reload)
-  // nếu user mở modal trước khi reload xong: fallback gọi reload
+  // nếu user mở modal quá sớm (reload chưa xong) thì gọi reload
   if(!dayRowsByXuong[1] || !dayRowsByXuong[2] || !dayRowsByXuong[3]){
     await reload();
   }
@@ -1260,21 +1252,16 @@ async function renderConvertTable(){
     const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
     const filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-    // gom theo tổ cho ngày hiện tại
     const byToToday = groupPlanByXuongTo(filtered, xuong);
-
-    // load lũy kế tháng đến ngày hiện tại
     const mtd = await ensureMonthUsdToDate(xuong, ngay);
 
-    // section header
-    html += `
-      <tr class="xnSectionRow"><td colspan="14">XÍ NGHIỆP ${xuong}</td></tr>
-    `;
+    html += `<tr class="xnSectionRow"><td colspan="14">XÍ NGHIỆP ${xuong}</td></tr>`;
 
     const tos = (TO_BY_XUONG[xuong]||[]).map(Number);
     for(const to of tos){
       const a = byToToday.get(to) || {
-        to, ma_hang:"", don_gia:0, tgct:0, ndsx:0, ldtt:0, sdc:0, dm_ldtt:0, th:0, usd:0, so_ngay_sx:0, ghi_chu:""
+        to, ma_hang:"", don_gia:0, tgct:0, ndsx:0, ldtt:0, sdc:0,
+        dm_ldtt:0, th:0, usd:0, so_ngay_sx:0, ghi_chu:""
       };
 
       const hs = a.dm_ldtt > 0 ? (a.th / a.dm_ldtt * 100) : 0;
@@ -1341,7 +1328,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("date").addEventListener("change", async ()=>{
     await reload();
     await loadTicker();
-    // nếu modal chuyển đổi đang mở thì refresh luôn
     if(document.getElementById("convertModal").style.display === "flex"){
       renderConvertTable();
     }
