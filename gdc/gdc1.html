@@ -78,6 +78,52 @@
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
+  /* ✅ PANEL nguyên nhân giống GDC (không nhét vào bảng) */
+  .reasonPanel{
+    display:none;
+    margin-bottom:12px;
+  }
+  .reasonBox{
+    display:flex;align-items:flex-start;gap:10px;
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:linear-gradient(180deg,#ffffff,#f8fafc);
+    box-shadow:var(--shadow);
+    padding:12px;
+  }
+  .reasonIcon{
+    flex:0 0 auto;
+    width:34px;height:34px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:#0e2552;color:#fff;font-weight:900;
+    box-shadow:0 10px 24px rgba(14,37,82,.18);
+  }
+  .reasonMain{min-width:0}
+  .reasonTitle{font-weight:900}
+  .reasonSub{font-size:12px;color:var(--muted);margin-top:2px}
+  .reasonText{
+    margin-top:8px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px dashed rgba(37,99,235,.35);
+    background:rgba(37,99,235,.06);
+    white-space:pre-wrap;
+    line-height:1.45;
+  }
+  .reasonMeta{
+    margin-top:8px;
+    display:flex;flex-wrap:wrap;gap:8px;
+    font-size:12px;color:var(--muted);
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:999px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-weight:800;
+  }
+  .chip b{color:#0e2552}
+
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
   .tab{
     padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;
@@ -86,7 +132,7 @@
   .tab.active{background:#0e2552;color:#fff;border-color:#0e2552}
 
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(2050px,100%);border-collapse:collapse;font-size:12.5px}
+  table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
@@ -196,6 +242,22 @@
     </div>
   </div>
 
+  <!-- ✅ NGUYÊN NHÂN (giống kiểu GDC: 1 panel riêng) -->
+  <div class="reasonPanel" id="reasonPanel">
+    <div class="reasonBox">
+      <div class="reasonIcon">⚠️</div>
+      <div class="reasonMain">
+        <div class="reasonTitle">Nguyên nhân làm chậm năng suất (XN<span id="reasonXuong">1</span>)</div>
+        <div class="reasonSub">Hiển thị theo xưởng đang xem • lấy từ chỉ đạo/nhập nguyên nhân (nếu có)</div>
+        <div class="reasonText" id="reasonText">—</div>
+        <div class="reasonMeta">
+          <span class="chip">Phạm vi: <b id="reasonScope">—</b></span>
+          <span class="chip">Cập nhật: <b id="reasonTime">—</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ✅ BẢNG GIỜ THEO TK1 (bấm tab chọn XN) -->
   <div class="card" id="dayBlock" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -236,9 +298,6 @@
             <th rowspan="2" style="min-width:110px;">USD 100%</th>
             <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
             <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
-
-            <!-- ✅ THÊM: NGUYÊN NHÂN -->
-            <th rowspan="2" style="min-width:260px;">NGUYÊN NHÂN LÀM CHẬM NS</th>
           </tr>
           <tr id="hourHead"></tr>
         </thead>
@@ -252,7 +311,6 @@
             <td class="sticky2"></td>
             <td class="sticky3"></td>
 
-            <!-- bù đủ 3 cột: SL KH, ĐM NGÀY, ĐM GIỜ -->
             <td colspan="3"></td>
 
             <td id="usdQtSum" class="right">0.00</td>
@@ -260,14 +318,14 @@
             <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
             <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
-            <!-- còn lại sau 9 cột giờ: 12 cột -->
-            <td colspan="12"></td>
+            <td colspan="10"></td>
           </tr>
 
           <!-- ƯỚC TÍNH USD TRONG NGÀY -->
           <tr class="strong">
-            <td class="left" colspan="27" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+            <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
             <td id="usdNgay" class="right">0.00</td>
+            <td></td>
           </tr>
         </tfoot>
       </table>
@@ -278,7 +336,7 @@
     </div>
   </div>
 
-  <!-- ✅ SO SÁNH 3 XƯỞNG (đưa xuống dưới) -->
+  <!-- ✅ SO SÁNH 3 XƯỞNG -->
   <div class="card" id="compareBlock" style="margin-top:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b>📌 Tổng hợp & so sánh 3 xưởng</b>
@@ -454,6 +512,48 @@ function startGdcTicker(){
 }
 window.addEventListener("beforeunload", ()=>{ if(gdcTimer) clearInterval(gdcTimer); });
 
+/* ================== NGUYÊN NHÂN (panel riêng, giống GDC) ==================
+   ✅ Backend của bạn có thể đặt action/field khác nhau.
+   - Ưu tiên thử action:getSlowReason (XN & ALL)
+   - Nếu không có, tự ẩn panel.
+*/
+function setReasonPanel({scope, text, updated_at}){
+  const panel = document.getElementById("reasonPanel");
+  const t = String(text||"").trim();
+  if(!t){
+    panel.style.display = "none";
+    return;
+  }
+  panel.style.display = "";
+  document.getElementById("reasonXuong").innerText = String(activeXuong);
+  document.getElementById("reasonText").innerText = t;
+
+  const sc = String(scope||"").toUpperCase();
+  document.getElementById("reasonScope").innerText = sc === "ALL" ? "ALL" : `XN${sc || activeXuong}`;
+  document.getElementById("reasonTime").innerText = fmtTickerTime(updated_at) || "—";
+}
+
+async function loadSlowReason(){
+  if(!S || !S.token) return;
+  try{
+    // thử theo xưởng đang xem
+    const rx = await apiPost({ action:"getSlowReason", token:S.token, xuong:activeXuong });
+    const ra = await apiPost({ action:"getSlowReason", token:S.token, xuong:"ALL" });
+
+    let picked = null;
+    // chấp nhận nhiều kiểu payload
+    const pickIf = (r)=> (r?.success && String(r.reason||r.message||r.text||"").trim());
+    if(pickIf(rx)) picked = { scope: rx.scope||activeXuong, text: (rx.reason||rx.message||rx.text), updated_at: rx.updated_at };
+    else if(pickIf(ra)) picked = { scope: "ALL", text: (ra.reason||ra.message||ra.text), updated_at: ra.updated_at };
+
+    if(!picked){ setReasonPanel({text:""}); return; }
+    setReasonPanel(picked);
+  }catch(e){
+    // không có action -> ẩn panel
+    setReasonPanel({text:""});
+  }
+}
+
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
@@ -480,7 +580,9 @@ function setTab(x){
   document.getElementById("tab2").classList.toggle("active", activeXuong===2);
   document.getElementById("tab3").classList.toggle("active", activeXuong===3);
   document.getElementById("dayTitle").innerText = `📊 NĂNG SUẤT GIỜ – XN${activeXuong}`;
-  loadGdcTicker(); // đổi scope ticker theo xưởng đang xem
+
+  loadGdcTicker();   // đổi scope ticker theo xưởng đang xem
+  loadSlowReason();  // ✅ đổi nguyên nhân theo xưởng đang xem
 
   // nếu đang mode day thì render theo xưởng đang chọn
   const mode = document.getElementById("mode").value;
@@ -499,6 +601,9 @@ async function reload(){
   document.getElementById("rangeInfo").innerText = range.label;
   document.getElementById("rangeInfo2").innerText = range.label;
 
+  // ✅ load panel nguyên nhân khi reload
+  await loadSlowReason();
+
   if(mode === "day"){
     document.getElementById("dayBlock").style.display = "";
     setStatus("Đang tải dữ liệu ngày...");
@@ -516,7 +621,6 @@ async function reload(){
 let dayRowsByXuong = {1:[],2:[],3:[]};
 
 async function reloadDayAll(ngay){
-  // load each xuong rows (TK view)
   for(const x of XUONGS){
     const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
     const got = (res.success && Array.isArray(res.rows)) ? res.rows : [];
@@ -535,10 +639,8 @@ async function reloadDayAll(ngay){
     dayRowsByXuong[x] = rows;
   }
 
-  // render table for active xuong
   renderDayTable(dayRowsByXuong[activeXuong] || []);
 
-  // compare + KPI ALL (tính qua tất cả line)
   const agg = {};
   const usdGioAll = Array(HOURS.length).fill(0);
   let usdAll=0, spAll=0, dmAll=0;
@@ -563,26 +665,22 @@ async function reloadDayAll(ngay){
     const hs = dm>0 ? (sp/dm*100) : 0;
     agg[x] = { sp, dm, usd, hs };
 
-    // add ALL
     usdAll += usd;
     spAll += sp;
     dmAll += dm;
     for(let i=0;i<HOURS.length;i++) usdGioAll[i] += usdGio[i];
   }
 
-  // KPI ALL
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
   const maxUsdGioAll = usdGioAll.length ? Math.max(...usdGioAll) : 0;
   setKpi(usdAll, spAll, hsAll, maxUsdGioAll);
 
-  // compare
   renderCompare(agg);
   document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (qua tất cả line_no).";
 }
 
 async function reloadDayOnly(){
   const ngay = document.getElementById("date").value;
-  // nếu chưa có cache thì tải lại
   if(!dayRowsByXuong[activeXuong] || !dayRowsByXuong[activeXuong].length){
     await reloadDayAll(ngay);
     return;
@@ -590,7 +688,7 @@ async function reloadDayOnly(){
   renderDayTable(dayRowsByXuong[activeXuong] || []);
 }
 
-/* ================== NORMALIZE/RENDER table (y chang TK1 nhưng read-only) ================== */
+/* ================== NORMALIZE/RENDER table (read-only) ================== */
 function normalizeRow(to, r){
   const out = { ...r };
   out.to_nhom = Number(to);
@@ -617,9 +715,6 @@ function renderDayTable(rows){
 
     const usd100 = dmNgay * dg;
     const usd80 = usd100 * 0.8;
-
-    // ✅ nguyên nhân: ưu tiên field nguyen_nhan, fallback sang reason nếu backend đặt khác
-    const reason = (r.nguyen_nhan ?? r.reason ?? r.ly_do ?? "");
 
     return `
       <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
@@ -655,9 +750,6 @@ function renderDayTable(rows){
         <td>${fmtInt(r.chuyen_doi_ngay||0)}</td>
 
         <td class="left" style="padding-left:6px;white-space:normal">${escapeHtml(r.ghi_chu||"")}</td>
-
-        <!-- ✅ THÊM: NGUYÊN NHÂN -->
-        <td class="left" style="padding-left:6px;white-space:normal">${escapeHtml(reason)}</td>
       </tr>
     `;
   }).join("");
@@ -680,7 +772,6 @@ function calcFooterForActive(rows){
     tongUsdQt += usdQt;
 
     hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
-
     tongUsdNgay += tongSP*dg;
   });
 
@@ -716,7 +807,6 @@ async function loadRangeAll(from, to){
   const dmAll = XUONGS.reduce((s,x)=>s+agg[x].dm,0);
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
 
-  // range mode: không có usd/day theo đơn giá -> để 0
   setKpi(0, spAll, hsAll, 0);
   document.getElementById("compareHint").innerText = "Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary (getDayRangeAll).";
 }
