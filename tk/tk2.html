@@ -81,7 +81,7 @@
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1900px,100%);border-collapse:collapse;font-size:13.5px}
+  table{width:max(1850px,100%);border-collapse:collapse;font-size:13.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
@@ -258,8 +258,10 @@
 
           <th rowspan="2" style="min-width:90px;">ĐG</th>
           <th rowspan="2" style="min-width:90px;">TG/QT</th>
-          <th rowspan="2" style="min-width:110px;">USD 80%</th>
+
+          <!-- ✅ ĐÃ BỎ USD 80% -->
           <th rowspan="2" style="min-width:110px;">USD 100%</th>
+
           <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
           <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
           <th rowspan="2" style="min-width:150px;">THAO TÁC</th>
@@ -282,7 +284,8 @@
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
           <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
-          <td colspan="11"></td>
+          <!-- ✅ Rà cột: bỏ 1 cột => 11 -> 10 -->
+          <td colspan="10"></td>
         </tr>
       </tfoot>
     </table>
@@ -298,7 +301,7 @@
 /* ================== CONFIG (TK2 cố định XN2) ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const XUONG = 2;                         // ✅ XN2
-const TO_LIST = [11,13,15,17];              // ✅ nếu XN2 khác tổ thì sửa mảng này
+const TO_LIST = [11,13,15,17];            // ✅ nếu XN2 khác tổ thì sửa mảng này
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 const KEY="NS_SESSION";
 
@@ -580,8 +583,8 @@ function renderDayRows(rows){
     const usdTh = tongSP * dg;
     const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
 
+    // ✅ ĐÃ BỎ USD 80% — chỉ giữ USD 100%
     const usd100 = dmNgay * dg;
-    const usd80 = usd100 * 0.8;
 
     const ro = canEditPlan ? "" : "ro";
 
@@ -619,7 +622,6 @@ function renderDayRows(rows){
         <td><input class="cell ${ro} right don_gia" ${canEditPlan?"":"readonly"} inputmode="decimal" value="${fmtDg(dg)}" /></td>
         <td><input class="cell ${ro} right thoi_gian_giay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.thoi_gian_giay||0)}" /></td>
 
-        <td class="calc right">${fmtMoney(usd80)}</td>
         <td class="calc right">${fmtMoney(usd100)}</td>
 
         <td><input class="cell ${ro} chuyen_doi_ngay" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.chuyen_doi_ngay||0)}" /></td>
@@ -726,8 +728,10 @@ function renderRowHtml(r){
       <td><input class="cell lao_dong_chuyen" inputmode="numeric" value="0" /></td>
       <td><input class="cell right don_gia" inputmode="decimal" value="0" /></td>
       <td><input class="cell right thoi_gian_giay" inputmode="numeric" value="0" /></td>
+
+      <!-- ✅ ĐÃ BỎ USD 80% — chỉ giữ USD 100% -->
       <td class="calc right">0.00</td>
-      <td class="calc right">0.00</td>
+
       <td><input class="cell chuyen_doi_ngay" inputmode="numeric" value="0" /></td>
       <td class="left" style="padding-left:6px;"><input class="cell ghi_chu" style="text-align:left" value="" /></td>
       <td>
