@@ -145,35 +145,52 @@
   </div>
 
   <!-- 2) NHẬP NĂNG SUẤT -->
-  <div class="card">
-    <h3>✍️ Nhập năng suất giờ</h3>
+<div class="card">
+  <h3>✍️ Nhập năng suất giờ</h3>
 
-    <div class="grid3">
-      <div>
-        <label>Khung giờ</label>
-        <select id="khung"></select>
-      </div>
-      <div>
-        <label>Thực tế (SP)</label>
-        <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
-      </div>
-      <div style="display:flex;align-items:end">
-        <button class="btn primary" id="btnSave" style="width:100%" onclick="save()">Lưu</button>
-      </div>
-    </div>
-
-    <div style="margin-top:10px">
-      <label>Nguyên nhân / ghi chú</label>
-      <textarea id="nguyen_nhan" placeholder="vd: Thiếu hàng, máy hư, đổi mã, thiếu người..."></textarea>
-    </div>
-
-    <div class="hint">
-      • Nhấn <b>Ctrl + Enter</b> (hoặc <b>Cmd + Enter</b>) để lưu nhanh.<br/>
-      • Chỉ chặn trùng: <b>cùng khung + cùng line</b>.
-    </div>
-
-    <div id="warnBox" class="danger"></div>
+  <!-- Khung giờ -->
+  <div>
+    <label>Khung giờ</label>
+    <select id="khung"></select>
   </div>
+
+  <!-- Thực tế -->
+  <div style="margin-top:10px">
+    <label>Thực tế (SP)</label>
+    <input id="thuc_te" inputmode="numeric" placeholder="vd: 120" />
+  </div>
+
+  <!-- Nguyên nhân -->
+  <div style="margin-top:10px">
+    <label>Nguyên nhân / ghi chú</label>
+    <textarea id="nguyen_nhan"
+      placeholder="vd: Thiếu hàng, máy hư, đổi mã, thiếu người..."></textarea>
+  </div>
+
+  <!-- Nút lưu đặt DƯỚI -->
+  <button
+    class="btn primary"
+    id="btnSave"
+    style="
+      width:100%;
+      margin-top:14px;
+      padding:14px 0;
+      font-size:15px;
+      border-radius:999px;
+    "
+    onclick="save()"
+  >
+    💾 LƯU NĂNG SUẤT
+  </button>
+
+  <div class="hint">
+    • Ctrl + Enter (hoặc Cmd + Enter) để lưu nhanh.<br/>
+    • Chỉ chặn trùng: <b>cùng khung + cùng line</b>.
+  </div>
+
+  <div id="warnBox" class="danger"></div>
+</div>
+
 
   <!-- 3) BẢNG DƯỚI CÙNG: DỮ LIỆU TRONG NGÀY -->
   <div class="card">
