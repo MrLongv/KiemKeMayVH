@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC1 – Năng suất giờ (3 xưởng) • theo chuẩn TK1</title>
+<title>GDC1 – Theo dõi sát năng suất giờ (3 xưởng) • chuẩn TK1</title>
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -12,7 +12,7 @@
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
-  .topbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0b1b3a,#0e2552);color:#fff;padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+  .topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0b1b3a,#0e2552);color:#fff;padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .topbar .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
   .brand b{display:block}
   .brand span{font-size:12px;opacity:.85}
@@ -21,14 +21,14 @@
   .ctl label{font-size:12px;opacity:.9}
   .ctl input,.ctl select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;padding:6px 8px;border-radius:10px;outline:none;font-size:12px}
   .ctl select option{color:#111}
-  .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
+  .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
+  .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:560px}
 
-  /* ====== GDC ticker ====== */
+  /* ====== ticker chỉ đạo GDC ====== */
   .gdc-ticker{
-    position:sticky; top:64px; z-index:19;
+    position:sticky; top:64px; z-index:25;
     height:38px; display:none; align-items:center; overflow:hidden;
     background:#0e2552; color:#fff; box-shadow:0 8px 18px rgba(0,0,0,.16);
   }
@@ -60,8 +60,8 @@
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
-  /* ✅ PANEL NGUYÊN NHÂN (chỉ gdc1/gdch) */
-  .reasonPanel{display:none;margin-bottom:12px}
+  /* ✅ PANEL NGUYÊN NHÂN (chỉ GDC1/GDCH) */
+  .reasonPanel{margin-bottom:12px}
   .reasonBox{
     display:flex;gap:12px;align-items:flex-start;
     border:1px solid var(--line);border-radius:16px;
@@ -88,12 +88,12 @@
   .reasonText{
     margin-top:10px;padding:10px 12px;border-radius:12px;
     border:1px dashed rgba(37,99,235,.35);background:rgba(37,99,235,.06);
-    white-space:pre-wrap;line-height:1.45;max-height:220px;overflow:auto;
+    white-space:pre-wrap;line-height:1.45;max-height:240px;overflow:auto;
   }
   .reasonEmpty{
     margin-top:10px;padding:10px 12px;border-radius:12px;
-    border:1px dashed rgba(245,158,11,.35);background:rgba(245,158,11,.08);
-    color:#92400e;font-weight:900;
+    border:1px dashed rgba(22,163,74,.35);background:rgba(22,163,74,.06);
+    color:#065f46;font-weight:900;
   }
 
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
@@ -111,6 +111,7 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
+  /* sticky cols giống TK1 */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
   .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
@@ -127,13 +128,17 @@
   .right{text-align:right}
   .left{text-align:left}
   .tagLine{
-    font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;
-    min-width:26px;height:22px;padding:0 8px;border-radius:999px;background:#0e2552;color:#fff;
+    font-size:11px;font-weight:900;
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:26px;height:22px;padding:0 8px;border-radius:999px;
+    background:#0e2552;color:#fff;
   }
 
+  /* ✅ FIX footer sticky (y chang TK1 fix) */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
+  /* compare table */
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#fff}
   .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb}
   .bar>i{display:block;height:100%;background:#2563eb;width:0%}
@@ -144,7 +149,7 @@
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>🏢 GDC1 – THEO DÕI SÁT NĂNG SUẤT GIỜ (3 XƯỞNG)</b>
+      <b>🧭 GDC1 – THEO DÕI SÁT NĂNG SUẤT GIỜ (3 XƯỞNG)</b>
       <span id="roleHint">—</span>
     </div>
 
@@ -173,6 +178,7 @@
   </div>
 </div>
 
+<!-- ✅ TICKER CHỈ ĐẠO GIÁM ĐỐC CÔNG TY -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track"><div class="text" id="gdcTickerText">—</div></div>
@@ -184,6 +190,7 @@
 </div>
 
 <div class="wrap">
+  <!-- KPI -->
   <div class="kpi">
     <div class="card">
       <div class="label">Tổng USD (ước tính)</div>
@@ -207,14 +214,14 @@
     </div>
   </div>
 
-  <!-- ✅ PANEL NGUYÊN NHÂN -->
-  <div class="reasonPanel" id="reasonPanel">
+  <!-- ✅ PANEL NGUYÊN NHÂN (luôn hiển thị cho role hợp lệ) -->
+  <div class="card reasonPanel" id="reasonPanel">
     <div class="reasonBox">
       <div class="reasonIcon">🛠</div>
       <div class="reasonMain">
         <div class="reasonTitle">Nguyên nhân chậm trễ / không đạt hiệu suất (XN<span id="rx">1</span>)</div>
         <div class="reasonSub">
-          Tổng hợp từ các dòng có <b>HS thấp</b> + <b>GHI CHÚ</b>. Nếu thiếu ghi chú sẽ nhắc để bổ sung.
+          Tự tổng hợp các dòng <b>HS thấp</b> theo ngưỡng + lấy nội dung <b>GHI CHÚ</b>. Dòng nào thiếu ghi chú sẽ nhắc “Chưa ghi chú”.
         </div>
 
         <div class="reasonFilters">
@@ -238,6 +245,7 @@
     </div>
   </div>
 
+  <!-- BẢNG NGÀY -->
   <div class="card" id="dayBlock" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b id="dayTitle">📊 NĂNG SUẤT GIỜ – XN1</b>
@@ -288,6 +296,7 @@
             <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
             <td class="sticky2"></td>
             <td class="sticky3"></td>
+
             <td colspan="3"></td>
             <td id="usdQtSum" class="right">0.00</td>
 
@@ -296,6 +305,7 @@
 
             <td colspan="10"></td>
           </tr>
+
           <tr class="strong">
             <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
             <td id="usdNgay" class="right">0.00</td>
@@ -304,8 +314,13 @@
         </tfoot>
       </table>
     </div>
+
+    <div class="small">
+      <b>Ghi chú:</b> Trang GDC1 chỉ xem (không nhập). Panel “Nguyên nhân” dựa trên HS + nội dung ghi chú để xử lý nhanh trong ngày.
+    </div>
   </div>
 
+  <!-- SO SÁNH -->
   <div class="card" id="compareBlock" style="margin-top:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b>📌 Tổng hợp & so sánh 3 xưởng</b>
@@ -329,6 +344,10 @@
       </table>
     </div>
   </div>
+
+  <div class="small" style="margin-top:10px">
+    <b>Kỹ thuật:</b> Mode Ngày dùng <code>getTkXuongDay</code>. Mode Tuần/Tháng/Quý/Năm dùng <code>getDayRangeAll</code>.
+  </div>
 </div>
 
 <script>
@@ -336,26 +355,41 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 
-/* ✅ CHỈ 2 role này mới thấy panel */
-const REASON_ROLES = ["gdc1","gdch"];
-/* ✅ role được xem trang */
-const VIEW_ROLES = ["gdc","gdc1","gdch"];
+/* ✅ Trang này CHỈ dành cho gdc1 / gdch (bạn có thể thêm alias nếu cần) */
+const VIEW_ROLES = ["gdc1","gdch","gd_dieu_hanh","gddh"];
 
+/* ================== DATA ================== */
 const XUONGS = [1,2,3];
 const TO_BY_XUONG = { 1:[1,3,5,7,9], 2:[11,13,15,17], 3:[19,21,23,25,27] };
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 
 /* ================== FORMAT ================== */
-const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
-const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
-const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
+const NF_INT   = new Intl.NumberFormat("en-US",{useGrouping:true,minimumFractionDigits:0,maximumFractionDigits:0});
+const NF_MONEY = new Intl.NumberFormat("en-US",{useGrouping:true,minimumFractionDigits:2,maximumFractionDigits:2});
+const NF_DG    = new Intl.NumberFormat("en-US",{useGrouping:false,minimumFractionDigits:0,maximumFractionDigits:2});
 function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
 function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
-function toNum(v){ let s=String(v??"").trim(); if(!s) return 0; s=s.replace(/\s+/g,"").replaceAll(",",""); const n=Number(s); return Number.isFinite(n)?n:0; }
-function escapeHtml(s){ return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
-function pctClass(hs){ if(hs>=95) return "good"; if(hs>=80) return "warn"; return "bad"; }
+
+function toNum(v){
+  let s=String(v??"").trim();
+  if(!s) return 0;
+  s=s.replace(/\s+/g,"").replaceAll(",","");
+  const n=Number(s);
+  return Number.isFinite(n)?n:0;
+}
+function escapeHtml(s){
+  return String(s??"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function pctClass(hs){
+  if(hs>=95) return "good";
+  if(hs>=80) return "warn";
+  return "bad";
+}
+function norm(s){ return String(s||"").trim().toLowerCase(); }
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
@@ -373,6 +407,7 @@ function getRange(mode, dateStr){
   const d = new Date(dateStr+"T00:00:00");
   const yyyy=d.getFullYear(), mm=d.getMonth(), dd=d.getDate();
   const toISO=(x)=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+
   if(mode==="day") return { from:dateStr, to:dateStr, label:`Ngày ${dateStr}` };
   if(mode==="week"){
     const day=(d.getDay()+6)%7;
@@ -399,52 +434,35 @@ function getRange(mode, dateStr){
 /* ================== STATE ================== */
 let S = mustLogin();
 let activeXuong = 1;
-let canSeeReason = false;
+let gdcTimer=null;
 
 document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
-/* ✅ normalize role để tránh sai do chữ hoa/khoảng trắng */
-function normRole(r){ return String(r||"").trim().toLowerCase(); }
+/* ================== AUTH GATE (QUAN TRỌNG) ================== */
+function gateRole(){
+  if(!S) return false;
+  const role = norm(S.role);
+  const username = String(S.username||"—");
 
-function showReasonPanelShell(){
-  const p = document.getElementById("reasonPanel");
-  p.style.display = "";
-  document.getElementById("reasonText").style.display="none";
-  document.getElementById("reasonEmpty").style.display="";
-  document.getElementById("reasonCount").innerText="0";
-  document.getElementById("reasonWithNote").innerText="0";
-  document.getElementById("rx").innerText = String(activeXuong);
-}
-function hideReasonPanel(){
-  document.getElementById("reasonPanel").style.display = "none";
-}
+  const ok = VIEW_ROLES.includes(role);
+  document.getElementById("roleHint").innerText = ok
+    ? `✅ Role=${role} • ${username} • GDC1 dashboard`
+    : `⛔ Role=${role} • ${username} • Không đúng quyền (chuyển về gdc.html)`;
 
-/* ================== role check ================== */
-function setRoleHint(){
-  const roleRaw = S?.role;
-  const role = normRole(roleRaw);
-  const name = S?.username || "—";
-
-  const okView = VIEW_ROLES.includes(role);
-  canSeeReason = REASON_ROLES.includes(role);
-
-  document.getElementById("roleHint").innerText = okView
-    ? `✅ Role=${role} • ${name}` + (canSeeReason ? " • panel nguyên nhân: ON" : " • panel nguyên nhân: OFF")
-    : `⛔ Không đúng quyền: role=${role} (cần gdc/gdc1/gdch)`;
-
-  if(canSeeReason) showReasonPanelShell();
-  else hideReasonPanel();
-
-  return okView;
+  if(!ok){
+    // đẩy về dashboard GDC tổng thể
+    setTimeout(()=>{ location.href="../gdc.html"; }, 400);
+    return false;
+  }
+  return true;
 }
 
-/* ===== ticker ===== */
-let gdcTimer=null;
+/* ================== TICKER ================== */
 function fmtTickerTime(iso){
   if(!iso) return "";
-  const d = new Date(iso);
+  const d=new Date(iso);
   if(Number.isNaN(d.getTime())) return "";
   return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
@@ -453,6 +471,7 @@ async function loadGdcTicker(){
   try{
     const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:activeXuong });
     const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
+
     let picked=null;
     if(resX?.success && (resX.message||"").trim()) picked=resX;
     else if(resAll?.success && (resAll.message||"").trim()) picked=resAll;
@@ -463,6 +482,7 @@ async function loadGdcTicker(){
     const timeEl=document.getElementById("gdcTickerTime");
 
     if(!picked){ box.style.display="none"; return; }
+
     const scope=String(picked.scope||"").toUpperCase();
     const msg=String(picked.message||"").trim();
     if(!msg){ box.style.display="none"; return; }
@@ -474,7 +494,7 @@ async function loadGdcTicker(){
     textEl.style.animation="none"; textEl.offsetHeight;
     textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
     textEl.style.animation="gdc-marquee 22s linear infinite";
-  }catch(e){ console.warn(e); }
+  }catch(e){ console.warn("ticker error:", e); }
 }
 function startGdcTicker(){
   if(gdcTimer) clearInterval(gdcTimer);
@@ -483,14 +503,7 @@ function startGdcTicker(){
 }
 window.addEventListener("beforeunload", ()=>{ if(gdcTimer) clearInterval(gdcTimer); });
 
-/* ================== INIT RUN ================== */
-if(S){
-  const ok=setRoleHint();
-  if(!ok) setStatus("Không đúng quyền");
-  else { startGdcTicker(); reload(); }
-}
-
-/* ================== Tabs ================== */
+/* ================== UI: Tabs ================== */
 function setTab(x){
   activeXuong = Number(x)||1;
   document.getElementById("tab1").classList.toggle("active", activeXuong===1);
@@ -503,15 +516,14 @@ function setTab(x){
 
   const mode=document.getElementById("mode").value;
   if(mode==="day") reloadDayOnly();
-  else if(canSeeReason) showReasonPanelShell();
 }
 
-/* ================== LOAD ================== */
+/* ================== MAIN LOAD ================== */
+let dayRowsByXuong={1:[],2:[],3:[]};
+
 async function reload(){
-  S=mustLogin(); if(!S) return;
-  const role = normRole(S.role);
-  if(!VIEW_ROLES.includes(role)){ setStatus("⛔ Không đúng quyền"); return; }
-  canSeeReason = REASON_ROLES.includes(role);
+  S = mustLogin(); if(!S) return;
+  if(!gateRole()){ setStatus("Không đúng quyền"); return; }
 
   const mode=document.getElementById("mode").value;
   const date=document.getElementById("date").value;
@@ -519,9 +531,6 @@ async function reload(){
 
   document.getElementById("rangeInfo").innerText=range.label;
   document.getElementById("rangeInfo2").innerText=range.label;
-
-  if(canSeeReason) showReasonPanelShell();
-  else hideReasonPanel();
 
   if(mode==="day"){
     document.getElementById("dayBlock").style.display="";
@@ -533,11 +542,10 @@ async function reload(){
     setStatus("Đang tải tổng hợp khoảng...");
     await loadRangeAll(range.from, range.to);
     setStatus(`✅ Đã tải • ${range.label}`);
-    if(canSeeReason) showReasonPanelShell();
+    // range mode: không có bảng chi tiết => panel nhắc
+    showReasonHint(`ℹ️ Panel nguyên nhân chỉ tổng hợp ở chế độ <b>Ngày</b>.`);
   }
 }
-
-let dayRowsByXuong={1:[],2:[],3:[]};
 
 async function reloadDayAll(ngay){
   for(const x of XUONGS){
@@ -547,7 +555,8 @@ async function reloadDayAll(ngay){
 
     const rows=[];
     for(const to of toList){
-      const list=got.filter(r=>Number(r.to_nhom)===Number(to)).sort((a,b)=>Number(a.line_no||1)-Number(b.line_no||1));
+      const list=got.filter(r=>Number(r.to_nhom)===Number(to))
+                    .sort((a,b)=>Number(a.line_no||1)-Number(b.line_no||1));
       if(list.length) rows.push(...list.map(r=>normalizeRow(to,r)));
       else rows.push(normalizeRow(to,{ to_nhom:to, line_no:1, hours:Array(HOURS.length).fill(0) }));
     }
@@ -555,11 +564,11 @@ async function reloadDayAll(ngay){
   }
 
   renderDayTable(dayRowsByXuong[activeXuong]||[]);
-  if(canSeeReason) buildReasonFromRows(dayRowsByXuong[activeXuong]||[]);
-  else hideReasonPanel();
+  buildReasonFromRows(dayRowsByXuong[activeXuong]||[]);
 
   // KPI + compare
-  const agg={}; const usdGioAll=Array(HOURS.length).fill(0);
+  const agg={};
+  const usdGioAll=Array(HOURS.length).fill(0);
   let usdAll=0, spAll=0, dmAll=0;
 
   for(const x of XUONGS){
@@ -577,6 +586,7 @@ async function reloadDayAll(ngay){
       usd += tongSP*dg;
       hours.forEach((v,i)=> usdGio[i]+=toNum(v)*dg);
     }
+
     const hs = dm>0 ? (sp/dm*100) : 0;
     agg[x]={sp,dm,usd,hs};
 
@@ -599,10 +609,10 @@ async function reloadDayOnly(){
     return;
   }
   renderDayTable(dayRowsByXuong[activeXuong]||[]);
-  if(canSeeReason) buildReasonFromRows(dayRowsByXuong[activeXuong]||[]);
-  else hideReasonPanel();
+  buildReasonFromRows(dayRowsByXuong[activeXuong]||[]);
 }
 
+/* ================== TABLE ================== */
 function normalizeRow(to,r){
   const out={...r};
   out.to_nhom=Number(to);
@@ -623,6 +633,7 @@ function renderDayTable(rows){
 
     const dmGio=(dmNgay?dmNgay/9:0);
     const usdQt=(dmNgay>0 && dg>0) ? (dmNgay*dg) : 0;
+
     const usdTh=tongSP*dg;
     const hs=dmNgay ? (tongSP/dmNgay*100) : 0;
 
@@ -637,6 +648,7 @@ function renderDayTable(rows){
 
         <td>${fmtInt(r.so_luong_ke_hoach||0)}</td>
         <td>${fmtInt(dmNgay)}</td>
+
         <td class="right">${fmtMoney(dmGio)}</td>
         <td class="right">${fmtMoney(usdQt)}</td>
 
@@ -656,6 +668,7 @@ function renderDayTable(rows){
         <td class="calc right">${fmtMoney(usd100)}</td>
 
         <td>${fmtInt(r.chuyen_doi_ngay||0)}</td>
+
         <td class="left" style="padding-left:6px;white-space:normal">${escapeHtml(r.ghi_chu||"")}</td>
       </tr>
     `;
@@ -676,6 +689,7 @@ function calcFooterForActive(rows){
 
     const usdQt=(dmNgay>0 && dg>0) ? (dmNgay*dg) : 0;
     tongUsdQt += usdQt;
+
     hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
     tongUsdNgay += tongSP*dg;
   });
@@ -685,11 +699,22 @@ function calcFooterForActive(rows){
   document.getElementById("usdNgay").innerText=fmtMoney(tongUsdNgay);
 }
 
-/* ✅ build reason */
+/* ================== REASON PANEL ================== */
+function showReasonHint(html){
+  document.getElementById("reasonText").style.display="none";
+  const e=document.getElementById("reasonEmpty");
+  e.style.display="";
+  e.innerHTML = html;
+  document.getElementById("reasonCount").innerText="0";
+  document.getElementById("reasonWithNote").innerText="0";
+}
+
 function buildReasonFromRows(rows){
-  const panel=document.getElementById("reasonPanel");
-  panel.style.display = canSeeReason ? "" : "none";
-  if(!canSeeReason) return;
+  const mode=document.getElementById("mode").value;
+  if(mode!=="day"){
+    showReasonHint(`ℹ️ Panel nguyên nhân chỉ tổng hợp ở chế độ <b>Ngày</b>.`);
+    return;
+  }
 
   const thr=Number(document.getElementById("hsThreshold").value||95);
   const lines=[];
@@ -742,12 +767,10 @@ function copyReasons(){
 }
 
 document.getElementById("hsThreshold").addEventListener("change", ()=>{
-  if(document.getElementById("mode").value!=="day") return;
-  if(!canSeeReason) return;
   buildReasonFromRows(dayRowsByXuong[activeXuong]||[]);
 });
 
-/* range */
+/* ================== RANGE (compare only) ================== */
 async function loadRangeAll(from,to){
   const res=await apiPost({ action:"getDayRangeAll", token:S.token, from, to });
   if(!res.success){
@@ -769,18 +792,25 @@ async function loadRangeAll(from,to){
   }
 
   renderCompare(agg);
+
   const spAll=XUONGS.reduce((s,x)=>s+agg[x].sp,0);
   const dmAll=XUONGS.reduce((s,x)=>s+agg[x].dm,0);
   const hsAll=dmAll>0 ? (spAll/dmAll*100) : 0;
+
   setKpi(0, spAll, hsAll, 0);
   document.getElementById("compareHint").innerText="Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary (getDayRangeAll).";
 }
 
+/* ================== COMPARE UI ================== */
 function renderCompare(agg){
   const tb=document.getElementById("cmpTbody");
   const hsMax=Math.max(...XUONGS.map(x=>Number(agg[x]?.hs||0)),0)||1;
+
   tb.innerHTML=XUONGS.map(x=>{
-    const sp=agg[x]?.sp||0, dm=agg[x]?.dm||0, hs=agg[x]?.hs||0, usd=agg[x]?.usd||0;
+    const sp=agg[x]?.sp||0;
+    const dm=agg[x]?.dm||0;
+    const hs=agg[x]?.hs||0;
+    const usd=agg[x]?.usd||0;
     const w=Math.max(0,Math.min(100,(hs/hsMax)*100));
     return `
       <tr>
@@ -795,6 +825,7 @@ function renderCompare(agg){
   }).join("");
 }
 
+/* ================== KPI ================== */
 function setKpi(usd, sp, hs, max){
   document.getElementById("kpiUsd").innerText=fmtMoney(usd);
   document.getElementById("kpiSp").innerText=fmtInt(sp);
@@ -802,9 +833,17 @@ function setKpi(usd, sp, hs, max){
   document.getElementById("kpiMax").innerText=fmtMoney(max);
 }
 
-/* events */
+/* ================== EVENTS ================== */
 document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
+
+/* ================== BOOT ================== */
+if(S && gateRole()){
+  startGdcTicker();
+  reload();
+}else{
+  setStatus("Không đúng quyền hoặc chưa đăng nhập");
+}
 </script>
 </body>
 </html>
