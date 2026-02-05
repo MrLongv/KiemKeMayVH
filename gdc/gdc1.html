@@ -86,7 +86,7 @@
   .tab.active{background:#0e2552;color:#fff;border-color:#0e2552}
 
   .tableWrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:var(--shadow)}
-  table{width:max(1900px,100%);border-collapse:collapse;font-size:12.5px}
+  table{width:max(2050px,100%);border-collapse:collapse;font-size:12.5px}
   th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}
   thead tr:nth-child(1) th{background:var(--head);font-weight:900}
   thead tr:nth-child(2) th{background:var(--head2);font-weight:800}
@@ -236,7 +236,9 @@
             <th rowspan="2" style="min-width:110px;">USD 100%</th>
             <th rowspan="2" style="min-width:140px;">CHUYỂN ĐỔI/NGÀY</th>
             <th rowspan="2" style="min-width:220px;">GHI CHÚ</th>
-            <th rowspan="2" style="min-width:150px;">THAO TÁC</th>
+
+            <!-- ✅ THÊM: NGUYÊN NHÂN -->
+            <th rowspan="2" style="min-width:260px;">NGUYÊN NHÂN LÀM CHẬM NS</th>
           </tr>
           <tr id="hourHead"></tr>
         </thead>
@@ -245,13 +247,12 @@
 
         <tfoot>
           <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
-          <!-- ✅ FIX: không dùng sticky + colspan lớn -->
           <tr>
             <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
             <td class="sticky2"></td>
             <td class="sticky3"></td>
 
-            <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
+            <!-- bù đủ 3 cột: SL KH, ĐM NGÀY, ĐM GIỜ -->
             <td colspan="3"></td>
 
             <td id="usdQtSum" class="right">0.00</td>
@@ -259,14 +260,14 @@
             <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
             <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
-            <td colspan="11"></td>
+            <!-- còn lại sau 9 cột giờ: 12 cột -->
+            <td colspan="12"></td>
           </tr>
 
           <!-- ƯỚC TÍNH USD TRONG NGÀY -->
           <tr class="strong">
-            <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+            <td class="left" colspan="27" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
             <td id="usdNgay" class="right">0.00</td>
-            <td></td>
           </tr>
         </tfoot>
       </table>
@@ -617,6 +618,9 @@ function renderDayTable(rows){
     const usd100 = dmNgay * dg;
     const usd80 = usd100 * 0.8;
 
+    // ✅ nguyên nhân: ưu tiên field nguyen_nhan, fallback sang reason nếu backend đặt khác
+    const reason = (r.nguyen_nhan ?? r.reason ?? r.ly_do ?? "");
+
     return `
       <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
         <td class="sticky1"><b>${r.to_nhom}</b></td>
@@ -652,7 +656,8 @@ function renderDayTable(rows){
 
         <td class="left" style="padding-left:6px;white-space:normal">${escapeHtml(r.ghi_chu||"")}</td>
 
-        <td>—</td>
+        <!-- ✅ THÊM: NGUYÊN NHÂN -->
+        <td class="left" style="padding-left:6px;white-space:normal">${escapeHtml(reason)}</td>
       </tr>
     `;
   }).join("");
