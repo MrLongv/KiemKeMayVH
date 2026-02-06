@@ -194,7 +194,42 @@
     <div class="card">
       <div class="label">Tổng SĐC (ALL)</div>
       <div class="value" id="kpiSdc">0</div>
-      <div class="sub">Cộng SĐC (chuyển đổi/ngày)</div>
+      <div class="sub">Cộng chuyển đổi/ngày</div>
+    </div>
+  </div>
+
+  <!-- ✅ CHUYỂN ĐỔI (GIỐNG GDC) -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="reasonTop">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <b>🔁 Chuyển đổi</b>
+        <span class="pill" id="convertRange">—</span>
+      </div>
+      <div class="hint" id="convertMeta">—</div>
+    </div>
+
+    <div style="margin-top:10px;overflow:auto">
+      <table style="width:max(860px,100%);border-collapse:collapse;font-size:12.5px">
+        <thead>
+          <tr>
+            <th style="background:var(--head);border:1px solid var(--line);padding:8px">Xưởng</th>
+            <th style="background:var(--head);border:1px solid var(--line);padding:8px">Số ngày SX</th>
+            <th style="background:var(--head);border:1px solid var(--line);padding:8px">Tổng SĐC</th>
+            <th style="background:var(--head);border:1px solid var(--line);padding:8px">SĐC TB/line</th>
+            <th style="background:var(--head);border:1px solid var(--line);padding:8px">TG/QT TB (giây)</th>
+            <th style="background:var(--head);border:1px solid var(--line);padding:8px">Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody id="convertTbody">
+          <tr>
+            <td colspan="6" style="border:1px solid var(--line);padding:10px">Chưa tải.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="hint" style="margin-top:8px">
+      * Mode Ngày: tính từ <b>getTkXuongDay</b> (chi tiết line). Mode Tuần/Tháng/Quý/Năm: cần thêm API range có chuyển đổi như GDC.
     </div>
   </div>
 
@@ -294,18 +329,24 @@
             <!-- TT + SĐC (không cộng USD theo giờ) -->
             <td></td><td></td>
 
-            <!-- còn lại sau nhóm giờ -->
+            <!-- còn lại -->
             <td colspan="12"></td>
           </tr>
 
           <tr class="strong">
-            <td class="left" colspan="28" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+            <td class="sticky1 left" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+            <td class="sticky2"></td>
+            <td class="sticky3"></td>
+            <td colspan="25"></td>
             <td id="usdNgay" class="right">0.00</td>
             <td></td>
           </tr>
 
           <tr>
-            <td class="left" colspan="28" style="padding-left:10px;">TỔNG SĐC (CHUYỂN ĐỔI/NGÀY)</td>
+            <td class="sticky1 left" style="padding-left:10px;">TỔNG SĐC (CHUYỂN ĐỔI/NGÀY)</td>
+            <td class="sticky2"></td>
+            <td class="sticky3"></td>
+            <td colspan="25"></td>
             <td id="sdcSum" class="right">0</td>
             <td></td>
           </tr>
@@ -546,6 +587,7 @@ function setTab(x){
   if(mode === "day") reloadDayOnly();
 
   updateReasonHeader();
+  renderConvertPanel();
 }
 
 /* ================== REASONS (GIỐNG GDC) ================== */
@@ -633,6 +675,69 @@ async function copyReasons(){
   }
 }
 
+/* ================== CONVERT (GIỐNG GDC) ================== */
+function computeConvertByXuong(rows){
+  let sumSdc = 0;
+  let sumTg = 0, cntTg = 0;
+
+  const lineHas = new Set();
+
+  for(const r of (rows||[])){
+    const sdc = toNum(r.chuyen_doi_ngay);
+    if(sdc > 0) lineHas.add(String(r.to_nhom)+"|"+String(r.line_no));
+    sumSdc += sdc;
+
+    const tg = toNum(r.thoi_gian_giay);
+    if(tg > 0){ sumTg += tg; cntTg++; }
+  }
+
+  const lines = Math.max(1, lineHas.size || (rows||[]).length || 1);
+  const sdcPerLine = sumSdc / lines;
+  const tgAvg = cntTg ? (sumTg / cntTg) : 0;
+
+  return { sumSdc, lines, sdcPerLine, tgAvg };
+}
+
+function renderConvertPanel(){
+  const mode = document.getElementById("mode").value;
+  const date = document.getElementById("date").value;
+  const range = getRange(mode, date);
+
+  document.getElementById("convertRange").innerText = range.label;
+
+  const tb = document.getElementById("convertTbody");
+  const meta = document.getElementById("convertMeta");
+
+  if(mode !== "day"){
+    meta.innerText = "Mode Tuần/Tháng/Quý/Năm: API summary chưa có chuyển đổi (cần thêm action range có SĐC/TGQT/Số ngày SX như GDC).";
+    tb.innerHTML = `<tr><td colspan="6" style="border:1px solid var(--line);padding:10px">Chuyển sang <b>Mode Ngày</b> để xem chuyển đổi.</td></tr>`;
+    return;
+  }
+
+  const soNgaySX = 1;
+
+  const c1 = computeConvertByXuong(dayRowsByXuong[1] || []);
+  const c2 = computeConvertByXuong(dayRowsByXuong[2] || []);
+  const c3 = computeConvertByXuong(dayRowsByXuong[3] || []);
+
+  const allSdc = c1.sumSdc + c2.sumSdc + c3.sumSdc;
+
+  meta.innerText = `Tổng SĐC (ALL): ${fmtInt(allSdc)} • (tính từ chuyen_doi_ngay)`;
+
+  const rowHtml = (x, c)=>`
+    <tr>
+      <td style="border:1px solid var(--line);padding:8px"><b>XN${x}</b></td>
+      <td style="border:1px solid var(--line);padding:8px">${fmtInt(soNgaySX)}</td>
+      <td style="border:1px solid var(--line);padding:8px"><b>${fmtInt(c.sumSdc)}</b></td>
+      <td style="border:1px solid var(--line);padding:8px">${fmtMoney(c.sdcPerLine)}</td>
+      <td style="border:1px solid var(--line);padding:8px">${fmtMoney(c.tgAvg)}</td>
+      <td style="border:1px solid var(--line);padding:8px">SĐC/line = Tổng SĐC / số line có dữ liệu</td>
+    </tr>
+  `;
+
+  tb.innerHTML = rowHtml(1,c1) + rowHtml(2,c2) + rowHtml(3,c3);
+}
+
 /* ================== MAIN LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
@@ -645,6 +750,7 @@ async function reload(){
   document.getElementById("rangeInfo").innerText = range.label;
   document.getElementById("rangeInfo2").innerText = range.label;
   updateReasonHeader();
+  document.getElementById("convertRange").innerText = range.label;
 
   if(mode === "day"){
     document.getElementById("dayBlock").style.display = "";
@@ -659,6 +765,8 @@ async function reload(){
     setStatus("Đang tải nguyên nhân (getHourRange)...");
     await loadReasonsRange(range.from, range.to);
     renderReasonsSimple();
+
+    renderConvertPanel();
 
     setStatus(`✅ Đã tải • ${range.label}`);
   }
@@ -687,6 +795,7 @@ async function reloadDayAll(ngay){
   renderReasonsSimple();
 
   renderDayTable(dayRowsByXuong[activeXuong] || []);
+  renderConvertPanel();
 
   const agg = {};
   const usdGioAll = Array(HOURS.length).fill(0);
@@ -706,7 +815,6 @@ async function reloadDayAll(ngay){
       dm += dmNgay;
       usd += tongSP * dg;
 
-      /* ✅ SĐC lấy từ API */
       sdc += toNum(r.chuyen_doi_ngay);
 
       hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
@@ -726,10 +834,9 @@ async function reloadDayAll(ngay){
   const maxUsdGioAll = usdGioAll.length ? Math.max(...usdGioAll) : 0;
 
   setKpi(usdAll, spAll, hsAll, maxUsdGioAll, sdcAll);
-  renderCompare(agg);
 
-  document.getElementById("compareHint").innerText =
-    "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (qua tất cả line_no).";
+  renderCompare(agg);
+  document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (qua tất cả line_no).";
 }
 
 async function reloadDayOnly(){
@@ -739,6 +846,7 @@ async function reloadDayOnly(){
     return;
   }
   renderDayTable(dayRowsByXuong[activeXuong] || []);
+  renderConvertPanel();
 }
 
 /* ================== NORMALIZE/RENDER table ================== */
@@ -769,9 +877,8 @@ function renderDayTable(rows){
     const usd100 = dmNgay * dg;
     const usd80 = usd100 * 0.8;
 
-    /* ✅ Chuẩn TK1: TT + SĐC */
-    const tt = tongSP;
-    const sdc = toNum(r.chuyen_doi_ngay);
+    const tt = tongSP;                 // ✅ TT
+    const sdc = toNum(r.chuyen_doi_ngay); // ✅ SĐC
 
     return `
       <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
@@ -791,7 +898,6 @@ function renderDayTable(rows){
 
         ${hours.map(v=>`<td>${fmtInt(v||0)}</td>`).join("")}
 
-        <!-- ✅ TT + SĐC sau 9 khung -->
         <td class="calc">${fmtInt(tt)}</td>
         <td class="calc">${fmtInt(sdc)}</td>
 
@@ -845,9 +951,6 @@ function calcFooterForActive(rows){
   document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
   document.getElementById("usdNgay").innerText = fmtMoney(tongUsdNgay);
   document.getElementById("sdcSum").innerText = fmtInt(tongSdc);
-
-  /* ✅ cập nhật KPI SĐC theo xưởng đang xem (để đỡ “lệch cảm giác”) */
-  // KPI ALL vẫn set ở reloadDayAll; nhưng nếu bạn đổi tab mà không reload ALL thì giữ lại ALL.
 }
 
 /* ================== RANGE: compare only ================== */
