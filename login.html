@@ -65,7 +65,7 @@
 
     <div class="pill">
       <span>📁 Cấu trúc:</span>
-      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> · <span>gdc/gdc</span>
+      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> · <span>gdc/gdc</span> · <span>gdh/gdc1..2</span>
     </div>
 
     <div class="small">
@@ -77,7 +77,7 @@
     <h2>Đăng nhập</h2>
 
     <label>Tài khoản</label>
-    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc ..." />
+    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc1 / gdc2 ..." />
 
     <label>Mật khẩu</label>
     <input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••" />
@@ -108,36 +108,53 @@ function clearSession(){
   renderInfo();
 }
 
+/* ========= PATH BASE (GH Pages safe) =========
+   Ví dụ: /KiemKeMayVH
+   - Nếu chạy ở localhost hoặc domain riêng không có repo prefix, base sẽ là "".
+*/
+function getBasePath(){
+  const parts = location.pathname.split("/").filter(Boolean);
+  // GitHub Pages kiểu: /<repo>/...
+  // Nếu không có parts thì base=""
+  if(!parts.length) return "";
+  // nếu đang ở root domain mà không phải GH pages repo, vẫn ok (base = "")
+  // nhưng với mrlongv.github.io/<repo>/... thì base luôn là "/<repo>"
+  return "/" + parts[0];
+}
+const BASE = getBasePath();
+
 /* ========= ROUTE ========= */
 function routeByRole(sess){
-  // sess: { token, username, role, xuong, to_nhom }
   if(!sess || !sess.role) return;
 
   const x = Number(sess.xuong || 0);
+  const role = String(sess.role || "").toLowerCase();
 
-  if(sess.role === "tk"){
-    location.href = `./tk/tk${x}.html`;
+  if(role === "tk"){
+    location.href = `${BASE}/tk/tk${x}.html`;
     return;
   }
-  if(sess.role === "to"){
-    location.href = `./to/to${x}.html`;
+  if(role === "to"){
+    location.href = `${BASE}/to/to${x}.html`;
     return;
   }
-  if(sess.role === "gdx"){
-    location.href = `./gdx/gdx${x}.html`;
+  if(role === "gdx"){
+    location.href = `${BASE}/gdx/gdx${x}.html`;
     return;
   }
-  if(sess.role === "gdc"){
-  const u = String(sess.username || "").toLowerCase();
 
-  // gdc1 → gdc1.html, gdc2 → gdc2.html ...
-  if(u.startsWith("gdc")){
-    location.href = `./gdc/${u}.html`;
-  } else {
-    location.href = `./gdh/gdc1.html`; // fallback
+  // ✅ GĐC: chuyển sang thư mục /gdh (gdc1.html, gdc2.html)
+  if(role === "gdc"){
+    const u = String(sess.username || "").toLowerCase().trim();
+
+    // gdc1 → /gdh/gdc1.html, gdc2 → /gdh/gdc2.html
+    if(u.startsWith("gdc")){
+      location.href = `${BASE}/gdh/${u}.html`;
+    }else{
+      location.href = `${BASE}/gdh/gdc1.html`; // fallback
+    }
+    return;
   }
-  return;
-}
 
   document.getElementById("msg").innerText = "Role không hợp lệ: " + sess.role;
 }
@@ -184,7 +201,6 @@ async function login(){
       msg.innerText = res.msg || "Sai tài khoản";
       return;
     }
-    // res includes token + username + role + xuong + to_nhom
     setSession(res);
     renderInfo();
     routeByRole(res);
