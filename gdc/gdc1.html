@@ -60,7 +60,7 @@
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
-  /* ✅ PANEL NGUYÊN NHÂN (chỉ GDC1/GDCH) */
+  /* ✅ PANEL NGUYÊN NHÂN (LUÔN ON TRÊN GDC1.HTML) */
   .reasonPanel{margin-bottom:12px}
   .reasonBox{
     display:flex;gap:12px;align-items:flex-start;
@@ -92,8 +92,8 @@
   }
   .reasonEmpty{
     margin-top:10px;padding:10px 12px;border-radius:12px;
-    border:1px dashed rgba(22,163,74,.35);background:rgba(22,163,74,.06);
-    color:#065f46;font-weight:900;
+    border:1px dashed rgba(245,158,11,.35);background:rgba(245,158,11,.10);
+    color:#92400e;font-weight:900;
   }
 
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
@@ -134,11 +134,11 @@
     background:#0e2552;color:#fff;
   }
 
-  /* ✅ FIX footer sticky (y chang TK1 fix) */
+  /* ✅ FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
-  /* compare table */
+  /* compare */
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#fff}
   .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb}
   .bar>i{display:block;height:100%;background:#2563eb;width:0%}
@@ -178,7 +178,6 @@
   </div>
 </div>
 
-<!-- ✅ TICKER CHỈ ĐẠO GIÁM ĐỐC CÔNG TY -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track"><div class="text" id="gdcTickerText">—</div></div>
@@ -190,7 +189,6 @@
 </div>
 
 <div class="wrap">
-  <!-- KPI -->
   <div class="kpi">
     <div class="card">
       <div class="label">Tổng USD (ước tính)</div>
@@ -214,14 +212,14 @@
     </div>
   </div>
 
-  <!-- ✅ PANEL NGUYÊN NHÂN (luôn hiển thị cho role hợp lệ) -->
+  <!-- ✅ PANEL LUÔN ON -->
   <div class="card reasonPanel" id="reasonPanel">
     <div class="reasonBox">
       <div class="reasonIcon">🛠</div>
       <div class="reasonMain">
         <div class="reasonTitle">Nguyên nhân chậm trễ / không đạt hiệu suất (XN<span id="rx">1</span>)</div>
         <div class="reasonSub">
-          Tự tổng hợp các dòng <b>HS thấp</b> theo ngưỡng + lấy nội dung <b>GHI CHÚ</b>. Dòng nào thiếu ghi chú sẽ nhắc “Chưa ghi chú”.
+          Tự tổng hợp các dòng <b>HS thấp</b> theo ngưỡng + lấy nội dung <b>GHI CHÚ</b>. Dòng nào thiếu ghi chú sẽ nhắc “Chưa ghi chú nguyên nhân”.
         </div>
 
         <div class="reasonFilters">
@@ -245,7 +243,6 @@
     </div>
   </div>
 
-  <!-- BẢNG NGÀY -->
   <div class="card" id="dayBlock" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b id="dayTitle">📊 NĂNG SUẤT GIỜ – XN1</b>
@@ -320,7 +317,6 @@
     </div>
   </div>
 
-  <!-- SO SÁNH -->
   <div class="card" id="compareBlock" style="margin-top:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b>📌 Tổng hợp & so sánh 3 xưởng</b>
@@ -355,8 +351,11 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 
-/* ✅ Trang này CHỈ dành cho gdc1 / gdch (bạn có thể thêm alias nếu cần) */
+/* ✅ Trang này CHỈ dành cho gdc1 / gdch (bạn thêm alias nếu cần) */
 const VIEW_ROLES = ["gdc1","gdch","gd_dieu_hanh","gddh"];
+
+/* ✅ Panel nguyên nhân: luôn ON trong gdc1.html */
+const PANEL_ALWAYS_ON = true;
 
 /* ================== DATA ================== */
 const XUONGS = [1,2,3];
@@ -440,22 +439,27 @@ document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
-/* ================== AUTH GATE (QUAN TRỌNG) ================== */
+/* ================== AUTH GATE ================== */
 function gateRole(){
   if(!S) return false;
   const role = norm(S.role);
   const username = String(S.username||"—");
-
   const ok = VIEW_ROLES.includes(role);
+
   document.getElementById("roleHint").innerText = ok
-    ? `✅ Role=${role} • ${username} • GDC1 dashboard`
+    ? `✅ Role=${role} • ${username} • GDC1 dashboard • panel nguyên nhân: ON`
     : `⛔ Role=${role} • ${username} • Không đúng quyền (chuyển về gdc.html)`;
 
   if(!ok){
-    // đẩy về dashboard GDC tổng thể
     setTimeout(()=>{ location.href="../gdc.html"; }, 400);
     return false;
   }
+
+  // ✅ panel luôn on
+  if(PANEL_ALWAYS_ON){
+    document.getElementById("reasonPanel").style.display = "";
+  }
+
   return true;
 }
 
@@ -516,6 +520,7 @@ function setTab(x){
 
   const mode=document.getElementById("mode").value;
   if(mode==="day") reloadDayOnly();
+  else showReasonHint(`ℹ️ Panel nguyên nhân chỉ tổng hợp ở chế độ <b>Ngày</b>.`);
 }
 
 /* ================== MAIN LOAD ================== */
@@ -524,6 +529,11 @@ let dayRowsByXuong={1:[],2:[],3:[]};
 async function reload(){
   S = mustLogin(); if(!S) return;
   if(!gateRole()){ setStatus("Không đúng quyền"); return; }
+
+  // ✅ panel luôn on (kể cả khi chưa load xong)
+  if(PANEL_ALWAYS_ON){
+    document.getElementById("reasonPanel").style.display = "";
+  }
 
   const mode=document.getElementById("mode").value;
   const date=document.getElementById("date").value;
@@ -542,7 +552,6 @@ async function reload(){
     setStatus("Đang tải tổng hợp khoảng...");
     await loadRangeAll(range.from, range.to);
     setStatus(`✅ Đã tải • ${range.label}`);
-    // range mode: không có bảng chi tiết => panel nhắc
     showReasonHint(`ℹ️ Panel nguyên nhân chỉ tổng hợp ở chế độ <b>Ngày</b>.`);
   }
 }
