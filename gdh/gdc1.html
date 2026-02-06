@@ -23,7 +23,6 @@
   .ctl select option{color:#111}
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
-  .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
@@ -117,7 +116,7 @@
     background:#0e2552;color:#fff;
   }
 
-  /* ✅ FIX footer sticky (y chang TK1 fix) */
+  /* ✅ FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
@@ -126,40 +125,58 @@
   .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb}
   .bar>i{display:block;height:100%;background:#2563eb;width:0%}
 
-  /* ===== Panel Nguyên nhân ===== */
-  .reasonGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;align-items:start}
-  .reasonBox{
-    border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;
-  }
+  /* ===== Panel Nguyên nhân (tổng hợp) ===== */
   .reasonTop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .reasonTop b{font-size:14px}
-  .reasonMeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .reasonTools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .hint{font-size:12px;color:var(--muted)}
-  .ta{
-    width:100%;min-height:120px;resize:vertical;
-    border:1px solid var(--line);border-radius:12px;padding:10px;
-    outline:none;font-size:13px;line-height:1.35;
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);
+    background:#fff;font-size:12px;font-weight:900;cursor:pointer;user-select:none;
   }
-  .reasonActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .miniBtn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 10px;font-weight:900;font-size:12px;cursor:pointer}
-  .miniBtn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-  .miniBtn.danger{background:#fee2e2;border-color:#fecaca;color:#991b1b}
-  .history{
-    border:1px dashed var(--line);border-radius:14px;padding:10px;background:#f8fafc;
-    display:none;
+  .chip.active{background:#0e2552;color:#fff;border-color:#0e2552}
+  .search{
+    min-width:240px;max-width:360px;width:100%;
+    border:1px solid var(--line);border-radius:12px;padding:8px 10px;outline:none;font-size:13px;
   }
-  .histItem{
-    background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px;
+  .reasonGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+  .reasonStats{
+    display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:8px
   }
-  .histItem .hTop{display:flex;justify-content:space-between;gap:8px;align-items:center}
-  .histItem .hKey{font-weight:900;font-size:12px}
-  .histItem .hTime{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .histItem .hTxt{margin-top:6px;font-size:13px;white-space:pre-wrap;line-height:1.35}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:900}
-  .chip .dot{width:7px;height:7px;border-radius:999px;background:#0e2552}
+  .stat{
+    border:1px solid var(--line);border-radius:14px;background:#fff;padding:10px;
+  }
+  .stat .k{font-size:12px;color:var(--muted)}
+  .stat .v{font-size:16px;font-weight:900;margin-top:2px}
+  .list{
+    border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden
+  }
+  .listHead{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 12px;border-bottom:1px solid var(--line);background:#f8fafc
+  }
+  .listHead b{font-size:13px}
+  .items{max-height:360px;overflow:auto}
+  .item{
+    padding:10px 12px;border-bottom:1px solid var(--line);
+  }
+  .item:last-child{border-bottom:none}
+  .itemTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .meta{font-size:12px;color:var(--muted)}
+  .badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:900;
+  }
+  .b-npl{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.10)}
+  .b-may{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.08)}
+  .b-kt{border-color:rgba(37,99,235,.35);background:rgba(37,99,235,.08)}
+  .b-qc{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.08)}
+  .b-ns{border-color:rgba(99,102,241,.35);background:rgba(99,102,241,.08)}
+  .txt{margin-top:6px;white-space:pre-wrap;line-height:1.35;font-size:13px}
   @media (max-width: 980px){
     .kpi{grid-template-columns:repeat(2,minmax(160px,1fr))}
-    .reasonGrid{grid-template-columns:1fr}
+    .reasonStats{grid-template-columns:repeat(2,minmax(120px,1fr))}
+    .search{min-width:160px}
   }
 </style>
 </head>
@@ -197,7 +214,6 @@
   </div>
 </div>
 
-<!-- ✅ TICKER CHỈ ĐẠO GĐC -->
 <div class="gdc-ticker" id="gdcTicker">
   <div class="label">📣 CHỈ ĐẠO CỦA GIÁM ĐỐC CÔNG TY</div>
   <div class="track"><div class="text" id="gdcTickerText">—</div></div>
@@ -209,7 +225,7 @@
 </div>
 
 <div class="wrap">
-  <!-- KPI tổng ALL -->
+  <!-- KPI -->
   <div class="kpi">
     <div class="card">
       <div class="label">Tổng USD (ước tính)</div>
@@ -233,50 +249,45 @@
     </div>
   </div>
 
-  <!-- ✅ PANEL NGUYÊN NHÂN (mới) -->
+  <!-- ✅ PANEL NGUYÊN NHÂN (TỔNG HỢP - READ ONLY) -->
   <div class="card" id="reasonBlock" style="margin-bottom:12px">
     <div class="reasonTop">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <b>🧾 Panel Nguyên nhân</b>
-        <span class="chip" title="Scope đang nhập/đọc nguyên nhân">
-          <span class="dot"></span>
-          <span id="reasonScope">XN1</span>
-        </span>
+        <b>🧾 Nguyên nhân (tổng hợp từ Tổ trưởng)</b>
         <span class="pill" id="reasonRange">—</span>
       </div>
 
-      <div class="reasonMeta">
-        <span class="hint" id="reasonSavedHint">Chưa có nội dung</span>
-        <button class="miniBtn" id="btnToggleHist" onclick="toggleHistory()">📚 Lịch sử</button>
+      <div class="reasonTools">
+        <span class="hint" id="reasonHint">—</span>
+        <input class="search" id="reasonSearch" placeholder="Tìm nguyên nhân... (vd: thiếu npl, máy hư, đổi mã)" />
       </div>
     </div>
 
-    <div class="reasonGrid" style="margin-top:10px">
-      <div class="reasonBox">
-        <div class="hint" style="margin-bottom:6px">
-          Nhập nguyên nhân ảnh hưởng năng suất (máy, chuyền, NPL, kỹ thuật, QC, nhân sự…). Nội dung lưu theo <b>Xưởng + khoảng thời gian</b>.
-        </div>
-        <textarea class="ta" id="reasonText" placeholder="Ví dụ:
-- Thiếu NPL (chỉ dây kéo) 2 giờ
-- Đổi mã hàng, set up chuyền
-- Máy 1 kim lỗi, chờ bảo trì
-- LĐ thiếu do nghỉ đột xuất..."></textarea>
+    <div class="tabs" style="margin-top:10px">
+      <span class="chip active" id="rxAll" onclick="setReasonXuong('ALL')">ALL</span>
+      <span class="chip" id="rx1" onclick="setReasonXuong(1)">XN1</span>
+      <span class="chip" id="rx2" onclick="setReasonXuong(2)">XN2</span>
+      <span class="chip" id="rx3" onclick="setReasonXuong(3)">XN3</span>
+    </div>
 
-        <div class="reasonActions">
-          <button class="miniBtn primary" onclick="saveReason()">💾 Lưu nguyên nhân</button>
-          <button class="miniBtn danger" onclick="clearReason()">🗑️ Xóa nội dung</button>
-          <button class="miniBtn" onclick="copyReason()">📋 Copy</button>
+    <div class="reasonGrid">
+      <div class="reasonStats" id="reasonStats"></div>
+
+      <div class="list">
+        <div class="listHead">
+          <b id="reasonTitle">Danh sách nguyên nhân</b>
+          <span class="hint" id="reasonCount">0 mục</span>
         </div>
+        <div class="items" id="reasonList"></div>
       </div>
 
-      <div class="history" id="reasonHistory">
-        <div class="hint"><b>Lịch sử</b> (lọc theo Xưởng đang chọn)</div>
-        <div id="histList"></div>
+      <div class="small" style="margin-top:8px">
+        <b>Ghi chú:</b> Panel này đọc dữ liệu nguyên nhân do Tổ trưởng báo. Nếu backend chưa có API riêng, hệ thống sẽ fallback lấy từ cột <b>GHI CHÚ</b> trong dữ liệu ngày.
       </div>
     </div>
   </div>
 
-  <!-- ✅ BẢNG GIỜ THEO TK1 (bấm tab chọn XN) -->
+  <!-- BẢNG GIỜ -->
   <div class="card" id="dayBlock" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b id="dayTitle">📊 NĂNG SUẤT GIỜ – XN1</b>
@@ -349,11 +360,11 @@
     </div>
 
     <div class="small">
-      <b>Ghi chú:</b> Trang GDC chỉ xem (không nhập). Khi tổ đổi mã trong ngày, TK thêm line_no ở trang TKx.
+      <b>Ghi chú:</b> Trang GDC chỉ xem (không nhập).
     </div>
   </div>
 
-  <!-- ✅ SO SÁNH 3 XƯỞNG -->
+  <!-- SO SÁNH -->
   <div class="card" id="compareBlock" style="margin-top:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b>📌 Tổng hợp & so sánh 3 xưởng</b>
@@ -388,9 +399,6 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 
-/* panel nguyên nhân */
-const REASON_KEY = "GDC1_REASONS_V1";
-
 const XUONGS = [1,2,3];
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
@@ -399,7 +407,7 @@ const TO_BY_XUONG = {
 };
 const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
 
-/* ================== FORMAT (y chang TK1) ================== */
+/* ================== FORMAT ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
 const NF_MONEY = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2 });
 const NF_DG    = new Intl.NumberFormat("en-US", { useGrouping:false, minimumFractionDigits:0, maximumFractionDigits:2 });
@@ -437,8 +445,9 @@ async function apiPost(payload){
   const r = await fetch(API_URL,{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) });
   return await r.json();
 }
-function setStatus(t){ document.getElementById("status").innerText = t; }
+function setStatus(t){ document.getElementById("status").innerText = t || ""; }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
+
 function getRange(mode, dateStr){
   const d = new Date(dateStr+"T00:00:00");
   const yyyy = d.getFullYear();
@@ -530,138 +539,182 @@ function startGdcTicker(){
 }
 window.addEventListener("beforeunload", ()=>{ if(gdcTimer) clearInterval(gdcTimer); });
 
-/* ================== PANEL NGUYÊN NHÂN (localStorage) ================== */
-function readReasons(){
-  try{ return JSON.parse(localStorage.getItem(REASON_KEY) || "{}"); }
-  catch{ return {}; }
+/* ================== REASONS (TỔNG HỢP) ================== */
+let reasonXuong = "ALL";
+let reasonsAll = []; // [{xuong,to,line,ma,text,tag,source}]
+function setReasonXuong(x){
+  reasonXuong = x;
+  document.getElementById("rxAll").classList.toggle("active", x==="ALL");
+  document.getElementById("rx1").classList.toggle("active", x===1);
+  document.getElementById("rx2").classList.toggle("active", x===2);
+  document.getElementById("rx3").classList.toggle("active", x===3);
+  renderReasons();
 }
-function writeReasons(obj){
-  localStorage.setItem(REASON_KEY, JSON.stringify(obj || {}));
+function classifyReason(t){
+  const s = String(t||"").toLowerCase();
+  if(/npl|nguyên phụ liệu|phụ liệu|thiếu/.test(s)) return { key:"NPL", cls:"b-npl" };
+  if(/máy|kim|vắt sổ|cắt|hư|lỗi máy|bảo trì|điện/.test(s)) return { key:"MÁY", cls:"b-may" };
+  if(/kỹ thuật|kt|rập|may mẫu|set up|setup|đổi mã|chuyển mã/.test(s)) return { key:"KỸ THUẬT", cls:"b-kt" };
+  if(/qc|kcs|lỗi|kiểm|hàng lỗi|sửa lỗi/.test(s)) return { key:"QC", cls:"b-qc" };
+  if(/nhân sự|thiếu người|vắng|nghỉ|đào tạo|tăng ca|lao động/.test(s)) return { key:"NHÂN SỰ", cls:"b-ns" };
+  return { key:"KHÁC", cls:"" };
 }
-function nowISO(){
-  const d=new Date();
-  const yyyy=d.getFullYear();
-  const mm=String(d.getMonth()+1).padStart(2,"0");
-  const dd=String(d.getDate()).padStart(2,"0");
-  const hh=String(d.getHours()).padStart(2,"0");
-  const mi=String(d.getMinutes()).padStart(2,"0");
-  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-}
-function getReasonKey(){
-  const mode = document.getElementById("mode").value;
-  const date = document.getElementById("date").value;
-  const range = getRange(mode, date);
-  // key theo khoảng để nhất quán
+function normalizeReasonItem(xuong, r){
+  const text = String(r.text ?? r.nguyen_nhan ?? r.ghi_chu ?? "").trim();
+  if(!text) return null;
+  const tag = classifyReason(text);
   return {
-    scope: `XN${activeXuong}`,
-    key: `${mode}|${range.from}|${range.to}`,
-    label: range.label
-  };
-}
-function updateReasonHeader(){
-  const { scope, label } = getReasonKey();
-  document.getElementById("reasonScope").innerText = scope;
-  document.getElementById("reasonRange").innerText = label;
-}
-function loadReasonToUI(){
-  updateReasonHeader();
-  const { scope, key } = getReasonKey();
-  const data = readReasons();
-  const item = data?.[scope]?.[key] || null;
-
-  const ta = document.getElementById("reasonText");
-  const hint = document.getElementById("reasonSavedHint");
-  ta.value = item?.text || "";
-
-  if(item?.text){
-    hint.innerText = `Đã lưu • ${item.updated_at || "—"}`;
-  }else{
-    hint.innerText = "Chưa có nội dung";
-  }
-
-  // nếu history đang mở -> refresh list
-  if(document.getElementById("reasonHistory").style.display === "block"){
-    renderHistory();
-  }
-}
-function saveReason(){
-  const { scope, key } = getReasonKey();
-  const text = (document.getElementById("reasonText").value || "").trim();
-
-  const data = readReasons();
-  if(!data[scope]) data[scope] = {};
-
-  if(!text){
-    // nếu rỗng thì coi như xóa
-    delete data[scope][key];
-    writeReasons(data);
-    loadReasonToUI();
-    return;
-  }
-
-  data[scope][key] = {
+    xuong: Number(xuong)||0,
+    to: Number(r.to_nhom ?? r.to ?? 0) || 0,
+    line: Number(r.line_no ?? r.line ?? 0) || 0,
+    ma: String(r.ma_hang ?? r.ma ?? "").trim(),
     text,
-    updated_at: nowISO()
+    tag: tag.key,
+    cls: tag.cls,
+    source: r.source || "data"
   };
-  writeReasons(data);
-  loadReasonToUI();
 }
-function clearReason(){
-  document.getElementById("reasonText").value = "";
-}
-async function copyReason(){
-  const t = document.getElementById("reasonText").value || "";
-  try{
-    await navigator.clipboard.writeText(t);
-    setStatus("✅ Đã copy nguyên nhân");
-    setTimeout(()=>setStatus(""), 1200);
-  }catch{
-    // fallback
-    const ta = document.getElementById("reasonText");
-    ta.focus(); ta.select();
-    document.execCommand("copy");
-    setStatus("✅ Đã copy nguyên nhân");
-    setTimeout(()=>setStatus(""), 1200);
-  }
-}
-function toggleHistory(){
-  const box = document.getElementById("reasonHistory");
-  const btn = document.getElementById("btnToggleHist");
-  const open = box.style.display === "block";
-  box.style.display = open ? "none" : "block";
-  btn.innerText = open ? "📚 Lịch sử" : "📕 Đóng lịch sử";
-  if(!open) renderHistory();
-}
-function renderHistory(){
-  const list = document.getElementById("histList");
-  const { scope } = getReasonKey();
-  const data = readReasons();
-  const items = Object.entries(data?.[scope] || {})
-    .map(([k,v])=>({ k, v }))
-    .sort((a,b)=> (String(b.v?.updated_at||"").localeCompare(String(a.v?.updated_at||""))));
 
-  if(!items.length){
-    list.innerHTML = `<div class="hint" style="margin-top:8px">Chưa có lịch sử cho ${scope}.</div>`;
+/* Fallback: lấy nguyên nhân từ GHI CHÚ trong getTkXuongDay */
+function extractReasonsFromDayRows(){
+  const out = [];
+  for(const x of XUONGS){
+    const rows = dayRowsByXuong[x] || [];
+    for(const r of rows){
+      const t = String(r.nguyen_nhan ?? r.ghi_chu ?? "").trim();
+      if(!t) continue;
+      const item = normalizeReasonItem(x, { ...r, text:t, source:"ghi_chu" });
+      if(item) out.push(item);
+    }
+  }
+  return out;
+}
+
+/* Try API action (nếu backend có) */
+async function tryLoadReasonsFromAPI(mode, range){
+  // 1) range
+  if(mode !== "day"){
+    try{
+      const res = await apiPost({ action:"getReasonsRangeAll", token:S.token, from:range.from, to:range.to });
+      if(res?.success){
+        const rows = Array.isArray(res.rows) ? res.rows : (Array.isArray(res.data) ? res.data : []);
+        const out = [];
+        for(const it of rows){
+          const x = Number(it.xuong ?? it.x ?? it.scope ?? 0);
+          const item = normalizeReasonItem(x, { ...it, source:"api" });
+          if(item) out.push(item);
+        }
+        return { ok:true, items:out, source:"api" };
+      }
+    }catch(e){ /* ignore */ }
+    return { ok:false };
+  }
+
+  // 2) day
+  try{
+    const res = await apiPost({ action:"getReasonsDayAll", token:S.token, ngay:range.from });
+    if(res?.success){
+      const rows = Array.isArray(res.rows) ? res.rows : (Array.isArray(res.data) ? res.data : []);
+      const out = [];
+      for(const it of rows){
+        const x = Number(it.xuong ?? it.x ?? it.scope ?? 0);
+        const item = normalizeReasonItem(x, { ...it, source:"api" });
+        if(item) out.push(item);
+      }
+      return { ok:true, items:out, source:"api" };
+    }
+  }catch(e){ /* ignore */ }
+  return { ok:false };
+}
+
+function buildReasonStats(list){
+  const byTag = { "NPL":0, "MÁY":0, "KỸ THUẬT":0, "QC":0, "NHÂN SỰ":0, "KHÁC":0 };
+  for(const it of list){
+    byTag[it.tag] = (byTag[it.tag]||0) + 1;
+  }
+  const keys = ["NPL","MÁY","KỸ THUẬT","QC","NHÂN SỰ","KHÁC"];
+  document.getElementById("reasonStats").innerHTML = keys.map(k=>`
+    <div class="stat">
+      <div class="k">${k}</div>
+      <div class="v">${fmtInt(byTag[k]||0)}</div>
+    </div>
+  `).join("");
+}
+
+function renderReasons(){
+  const q = String(document.getElementById("reasonSearch").value||"").trim().toLowerCase();
+
+  let list = reasonsAll.slice();
+  if(reasonXuong !== "ALL") list = list.filter(x=>x.xuong === reasonXuong);
+  if(q) list = list.filter(x=>{
+    const s = `${x.text} ${x.ma} ${x.to} ${x.line} xn${x.xuong}`.toLowerCase();
+    return s.includes(q);
+  });
+
+  buildReasonStats(list);
+
+  document.getElementById("reasonTitle").innerText =
+    reasonXuong === "ALL" ? "Danh sách nguyên nhân (ALL)" : `Danh sách nguyên nhân (XN${reasonXuong})`;
+  document.getElementById("reasonCount").innerText = `${fmtInt(list.length)} mục`;
+
+  const box = document.getElementById("reasonList");
+  if(!list.length){
+    box.innerHTML = `<div class="item"><div class="meta">Chưa có nguyên nhân trong phạm vi đang chọn.</div></div>`;
     return;
   }
 
-  list.innerHTML = items.slice(0, 25).map(({k,v})=>{
-    const parts = String(k).split("|");
-    const mode = parts[0] || "—";
-    const from = parts[1] || "—";
-    const to = parts[2] || "—";
-    const label = (mode==="day") ? `Ngày ${from}` : `${mode.toUpperCase()} ${from} → ${to}`;
+  // sort: XN -> Tổ -> Line
+  list.sort((a,b)=>
+    (a.xuong-b.xuong) || (a.to-b.to) || (a.line-b.line) || (a.tag.localeCompare(b.tag))
+  );
 
-    return `
-      <div class="histItem">
-        <div class="hTop">
-          <div class="hKey">${escapeHtml(label)}</div>
-          <div class="hTime">${escapeHtml(v?.updated_at || "")}</div>
+  box.innerHTML = list.map(it=>`
+    <div class="item">
+      <div class="itemTop">
+        <div>
+          <div class="meta">
+            <b>XN${it.xuong}</b> • Tổ <b>${it.to||"—"}</b> • Line <b>${it.line||"—"}</b>${it.ma?` • Mã <b>${escapeHtml(it.ma)}</b>`:""}
+          </div>
+          <div class="txt">${escapeHtml(it.text)}</div>
         </div>
-        <div class="hTxt">${escapeHtml(v?.text || "")}</div>
+        <div style="text-align:right">
+          <span class="badge ${it.cls}">${escapeHtml(it.tag)}</span><br>
+          <span class="meta" style="display:inline-block;margin-top:6px">${it.source==="api"?"API":"GHI_CHÚ"}</span>
+        </div>
       </div>
-    `;
-  }).join("");
+    </div>
+  `).join("");
+}
+
+async function loadReasonsForRange(mode, range){
+  document.getElementById("reasonRange").innerText = range.label;
+  document.getElementById("reasonHint").innerText = "Đang tải nguyên nhân...";
+  reasonsAll = [];
+  renderReasons();
+
+  // try API first
+  const apiTry = await tryLoadReasonsFromAPI(mode, range);
+  if(apiTry.ok){
+    reasonsAll = apiTry.items;
+    document.getElementById("reasonHint").innerText = `✅ Nguồn: API • ${fmtInt(reasonsAll.length)} mục`;
+    renderReasons();
+    return;
+  }
+
+  // fallback
+  if(mode === "day"){
+    reasonsAll = extractReasonsFromDayRows();
+    document.getElementById("reasonHint").innerText =
+      `⚠️ Nguồn: GHI_CHÚ (fallback) • ${fmtInt(reasonsAll.length)} mục`;
+    renderReasons();
+    return;
+  }
+
+  // range fallback (chưa có data)
+  reasonsAll = [];
+  document.getElementById("reasonHint").innerText =
+    `⚠️ Chưa có API tổng hợp nguyên nhân theo ${range.label}.`;
+  renderReasons();
 }
 
 /* ================== INIT ================== */
@@ -679,12 +732,11 @@ if(S){
     setStatus("Không đúng quyền");
   }else{
     startGdcTicker();
-    loadReasonToUI();
     reload();
   }
 }
 
-/* ================== UI: Tabs ================== */
+/* ================== UI: Tabs (BẢNG) ================== */
 function setTab(x){
   activeXuong = Number(x)||1;
   document.getElementById("tab1").classList.toggle("active", activeXuong===1);
@@ -692,9 +744,6 @@ function setTab(x){
   document.getElementById("tab3").classList.toggle("active", activeXuong===3);
   document.getElementById("dayTitle").innerText = `📊 NĂNG SUẤT GIỜ – XN${activeXuong}`;
   loadGdcTicker();
-
-  // update nguyên nhân theo XN
-  loadReasonToUI();
 
   const mode = document.getElementById("mode").value;
   if(mode === "day") reloadDayOnly();
@@ -712,9 +761,6 @@ async function reload(){
   document.getElementById("rangeInfo").innerText = range.label;
   document.getElementById("rangeInfo2").innerText = range.label;
 
-  // update panel nguyên nhân theo khoảng mới
-  loadReasonToUI();
-
   if(mode === "day"){
     document.getElementById("dayBlock").style.display = "";
     setStatus("Đang tải dữ liệu ngày...");
@@ -726,9 +772,12 @@ async function reload(){
     await loadRangeAll(range.from, range.to);
     setStatus(`✅ Đã tải • ${range.label}`);
   }
+
+  // luôn load panel nguyên nhân theo mode/range
+  await loadReasonsForRange(mode, range);
 }
 
-/* ================== DAY: load all 3, render compare + KPI; render table for active tab ================== */
+/* ================== DAY ================== */
 let dayRowsByXuong = {1:[],2:[],3:[]};
 
 async function reloadDayAll(ngay){
@@ -960,10 +1009,7 @@ function setKpi(usd, sp, hs, max){
 /* ================== EVENTS ================== */
 document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
-
-/* cập nhật panel nguyên nhân “mượt” khi người dùng sửa mode/date */
-document.getElementById("date").addEventListener("change", loadReasonToUI);
-document.getElementById("mode").addEventListener("change", loadReasonToUI);
+document.getElementById("reasonSearch").addEventListener("input", renderReasons);
 </script>
 </body>
 </html>
