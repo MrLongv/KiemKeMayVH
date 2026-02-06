@@ -23,8 +23,23 @@
   .ctl select option{color:#111}
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
+  .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:560px}
+
+  /* banner cảnh báo role */
+  .gateBanner{
+    margin:14px;
+    border-radius:16px;
+    border:1px solid rgba(220,38,38,.28);
+    background:linear-gradient(180deg,#fff,#fef2f2);
+    box-shadow:var(--shadow);
+    padding:12px;
+    display:none;
+  }
+  .gateBanner .title{font-weight:1000;color:#991b1b}
+  .gateBanner .sub{font-size:12px;color:#7f1d1d;margin-top:4px;line-height:1.45}
+  .gateBanner .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 
   /* ====== ticker chỉ đạo GDC ====== */
   .gdc-ticker{
@@ -132,7 +147,6 @@
     min-width:26px;height:22px;padding:0 8px;border-radius:999px;
     background:#0e2552;color:#fff;
   }
-
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
@@ -172,6 +186,17 @@
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
     </div>
+  </div>
+</div>
+
+<!-- ✅ Banner cảnh báo role (KHÔNG tự đá qua gdc.html nữa) -->
+<div class="gateBanner" id="gateBanner">
+  <div class="title">⚠ Sai role cho trang GDC1</div>
+  <div class="sub" id="gateText">—</div>
+  <div class="actions">
+    <button class="btn" onclick="openByRole()">Mở đúng trang theo role</button>
+    <button class="btn ghost" onclick="goLogin()">Về Login</button>
+    <button class="btn danger" onclick="clearSession()">Xóa session & về Login</button>
   </div>
 </div>
 
@@ -343,29 +368,20 @@
 </div>
 
 <script>
-/* ================== PATH FIX THEO CẤU TRÚC gdc/ ==================
-   - Trang hiện tại: .../gdc/gdc1.html
-   - Login:          .../login.html   (thường ở root)
-   - GDC:            .../gdc/gdc.html
-   - GDC1:           .../gdc/gdc1.html
-   Nếu login.html của bạn đang nằm ở root, dùng ROOT + "login.html".
-   Còn gdc.html/gdc1.html nằm trong folder gdc/.
-*/
-const HERE = new URL(window.location.href);
-const PATH = HERE.pathname;                      // ví dụ: /gdc/gdc1.html
-const ROOT = HERE.origin + PATH.replace(/\/gdc\/[^\/]+$/, "/"); // => https://domain.com/
-const URL_LOGIN = ROOT + "login.html";           // => /login.html
-const URL_GDC   = ROOT + "gdc/gdc.html";         // => /gdc/gdc.html
-const URL_GDC1  = ROOT + "gdc/gdc1.html";        // => /gdc/gdc1.html
+/* ================== PATH ĐÚNG CẤU TRÚC ROOT + /gdc/... ================== */
+const ORIGIN = window.location.origin;         // https://domain.com
+const URL_LOGIN = ORIGIN + "/login.html";      // root/login.html
+const URL_GDC   = ORIGIN + "/gdc/gdc.html";    // root/gdc/gdc.html
+const URL_GDC1  = ORIGIN + "/gdc/gdc1.html";   // root/gdc/gdc1.html
 
 /* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 
 /* ✅ gdc1.html chỉ dành cho gdc1/gdch (thêm alias nếu bạn dùng) */
-const VIEW_ROLES = ["gdc1","gdch","gd_dieu_hanh","gddh","gdc1_role"];
+const VIEW_ROLES = ["gdc1","gdch","gddh","gd_dieu_hanh","pho_gdc","pgd","gdc_1"];
 
-/* ✅ Panel nguyên nhân: luôn ON */
+/* ✅ Panel nguyên nhân luôn ON */
 const PANEL_ALWAYS_ON = true;
 
 /* ================== DATA ================== */
@@ -410,6 +426,19 @@ function mustLogin(){
 function logout(){
   localStorage.removeItem(KEY);
   window.location.href=URL_LOGIN;
+}
+function clearSession(){
+  localStorage.removeItem(KEY);
+  window.location.href=URL_LOGIN;
+}
+function goLogin(){ window.location.href=URL_LOGIN; }
+
+/* ✅ mở đúng trang theo role (không tự đá nữa để khỏi nhầm) */
+function openByRole(){
+  const s=sess();
+  const role=norm(s?.role);
+  if(VIEW_ROLES.includes(role)) window.location.href=URL_GDC1;
+  else window.location.href=URL_GDC;
 }
 
 /* ================== UTIL ================== */
@@ -456,8 +485,8 @@ document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
-/* ================== AUTH GATE ================== */
-function gateRole(){
+/* ================== ROLE CHECK (KHÔNG redirect nữa) ================== */
+function applyGateUI(){
   if(!S) return false;
   const role = norm(S.role);
   const username = String(S.username||"—");
@@ -465,11 +494,19 @@ function gateRole(){
 
   document.getElementById("roleHint").innerText = ok
     ? `✅ Role=${role} • ${username} • panel nguyên nhân: ON`
-    : `⛔ Role=${role} • ${username} • Không đúng quyền (chuyển về gdc.html)`;
+    : `⚠ Role=${role} • ${username} • Trang này dành cho gdc1/gdch`;
 
+  // panel luôn on nhưng nếu role sai thì show banner + khóa load
+  const banner=document.getElementById("gateBanner");
   if(!ok){
-    setTimeout(()=>{ window.location.href = URL_GDC; }, 300);
+    banner.style.display="";
+    document.getElementById("gateText").innerHTML =
+      `Bạn đang ở <b>/gdc/gdc1.html</b> nhưng session hiện tại là <b>${role||"—"}</b>.<br>
+       Vì vậy trước đây bạn bị đá về <b>gdc.html</b>. Bây giờ mình không tự đá nữa để bạn nhìn rõ nguyên nhân.<br>
+       Hãy bấm <b>Xóa session</b> rồi đăng nhập đúng tài khoản gdc1/gdch, hoặc bấm <b>Mở đúng trang theo role</b>.`;
     return false;
+  }else{
+    banner.style.display="none";
   }
 
   if(PANEL_ALWAYS_ON){
@@ -501,7 +538,6 @@ async function loadGdcTicker(){
     const timeEl=document.getElementById("gdcTickerTime");
 
     if(!picked){ box.style.display="none"; return; }
-
     const scope=String(picked.scope||"").toUpperCase();
     const msg=String(picked.message||"").trim();
     if(!msg){ box.style.display="none"; return; }
@@ -540,11 +576,7 @@ function setTab(x){
 /* ================== MAIN LOAD ================== */
 async function reload(){
   S = mustLogin(); if(!S) return;
-  if(!gateRole()){ setStatus("Không đúng quyền"); return; }
-
-  if(PANEL_ALWAYS_ON){
-    document.getElementById("reasonPanel").style.display = "";
-  }
+  if(!applyGateUI()){ setStatus("⛔ Sai role hoặc session đang là tài khoản khác"); return; }
 
   const mode=document.getElementById("mode").value;
   const date=document.getElementById("date").value;
@@ -568,7 +600,7 @@ async function reload(){
 }
 
 async function reloadDayAll(ngay){
-  for(const x of XUONGS){
+  for(const x of [1,2,3]){
     const res=await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
     const got=(res.success && Array.isArray(res.rows)) ? res.rows : [];
     const toList=TO_BY_XUONG[x]||[];
@@ -591,7 +623,7 @@ async function reloadDayAll(ngay){
   const usdGioAll=Array(HOURS.length).fill(0);
   let usdAll=0, spAll=0, dmAll=0;
 
-  for(const x of XUONGS){
+  for(const x of [1,2,3]){
     let sp=0, dm=0, usd=0;
     const usdGio=Array(HOURS.length).fill(0);
 
@@ -672,7 +704,7 @@ function renderDayTable(rows){
         <td class="right">${fmtMoney(dmGio)}</td>
         <td class="right">${fmtMoney(usdQt)}</td>
 
-        ${hours.map(v=>`<td>${fmtInt(v||0)}</td>`).join("")}
+        ${(r.hours||Array(HOURS.length).fill(0)).map(v=>`<td>${fmtInt(v||0)}</td>`).join("")}
 
         <td class="calc">${fmtInt(tongSP)}</td>
         <td class="calc right">${fmtMoney(usdTh)}</td>
@@ -807,14 +839,14 @@ async function loadRangeAll(from,to){
     agg[x].sp += toNum(r.tong_sp);
     agg[x].dm += toNum(r.tong_ke_hoach);
   }
-  for(const x of XUONGS){
+  for(const x of [1,2,3]){
     agg[x].hs = agg[x].dm>0 ? (agg[x].sp/agg[x].dm*100) : 0;
   }
 
   renderCompare(agg);
 
-  const spAll=XUONGS.reduce((s,x)=>s+agg[x].sp,0);
-  const dmAll=XUONGS.reduce((s,x)=>s+agg[x].dm,0);
+  const spAll=[1,2,3].reduce((s,x)=>s+agg[x].sp,0);
+  const dmAll=[1,2,3].reduce((s,x)=>s+agg[x].dm,0);
   const hsAll=dmAll>0 ? (spAll/dmAll*100) : 0;
 
   setKpi(0, spAll, hsAll, 0);
@@ -824,9 +856,9 @@ async function loadRangeAll(from,to){
 /* ================== COMPARE UI ================== */
 function renderCompare(agg){
   const tb=document.getElementById("cmpTbody");
-  const hsMax=Math.max(...XUONGS.map(x=>Number(agg[x]?.hs||0)),0)||1;
+  const hsMax=Math.max(...[1,2,3].map(x=>Number(agg[x]?.hs||0)),0)||1;
 
-  tb.innerHTML=XUONGS.map(x=>{
+  tb.innerHTML=[1,2,3].map(x=>{
     const sp=agg[x]?.sp||0;
     const dm=agg[x]?.dm||0;
     const hs=agg[x]?.hs||0;
@@ -858,11 +890,11 @@ document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
 
 /* ================== BOOT ================== */
-if(S && gateRole()){
+if(S && applyGateUI()){
   startGdcTicker();
   reload();
 }else{
-  setStatus("Không đúng quyền hoặc chưa đăng nhập");
+  setStatus("⚠ Đang dùng session role khác. Bấm 'Xóa session' rồi login lại gdc1/gdch.");
 }
 </script>
 </body>
