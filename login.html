@@ -25,7 +25,7 @@
   .hero .pill{
     display:inline-flex;gap:8px;align-items:center;margin-top:10px;
     padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
-    background:rgba(255,255,255,.10);font-size:12px
+    background:rgba(255,255,255,.10);font-size:12px;flex-wrap:wrap
   }
 
   .card{
@@ -60,13 +60,13 @@
       • <b>TK</b>: nhập kế hoạch/ngày theo tổ<br>
       • <b>Tổ trưởng</b>: nhập thực tế theo giờ + nguyên nhân<br>
       • <b>GĐX</b>: chỉ xem theo xưởng<br>
-      • <b>GĐC</b>: theo dõi chung tất cả
+      • <b>GDC</b>: theo dõi chung tất cả (gdc/gdc.html)<br>
+      • <b>GDH</b>: các màn tổng hợp (gdh/gdc1.html, gdh/gdc2.html, gdh/gs1.html ...)
     </p>
 
     <div class="pill">
       <span>📁 Cấu trúc:</span>
-      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> ·
-      <span>gdc/gdc</span> · <span>gdh/gdc1..</span>
+      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> · <span>gdc/gdc</span> · <span>gdh/gdc1..2 + gs1</span>
     </div>
 
     <div class="small">
@@ -78,7 +78,7 @@
     <h2>Đăng nhập</h2>
 
     <label>Tài khoản</label>
-    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc / gdc1 ..." />
+    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc / gdc1 / gs1 ..." />
 
     <label>Mật khẩu</label>
     <input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••" />
@@ -97,7 +97,7 @@
 
 <script>
 /* ========= CONFIG ========= */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
 
 /* ========= SESSION ========= */
 const KEY = "NS_SESSION";
@@ -109,54 +109,60 @@ function clearSession(){
   renderInfo();
 }
 
-/* ========= URL helper (GH Pages safe) =========
-   Dùng new URL để đảm bảo:
-   - đang ở /KiemKeMayVH/login.html -> nhảy đúng /KiemKeMayVH/gdc/gdc.html
-   - không bị ảnh hưởng bởi folder hiện tại
+/* ========= PATH BASE (GH Pages safe) =========
+   Ví dụ: /KiemKeMayVH
 */
-function goto(relPath){
-  location.href = new URL(relPath, location.href).toString();
+function getBasePath(){
+  const parts = location.pathname.split("/").filter(Boolean);
+  if(!parts.length) return "";
+  return "/" + parts[0];
 }
+const BASE = getBasePath();
 
-/* ========= ROUTE (đúng theo bạn chốt) ========= */
+/* ========= ROUTE =========
+  ✅ Rule bạn chốt:
+  - gdc  -> /gdc/gdc.html
+  - gdc1,gdc2.. -> /gdh/gdc1.html, /gdh/gdc2.html
+  - gs1 -> /gdh/gs1.html
+  - tk/to/gdx -> theo xuong
+*/
 function routeByRole(sess){
-  if(!sess || !sess.role) return;
+  if(!sess) return;
 
   const role = String(sess.role || "").toLowerCase();
-  const x = Number(sess.xuong || 0);
   const u = String(sess.username || "").toLowerCase().trim();
+  const x = Number(sess.xuong || 0);
 
+  // TK/TO/GDX theo xưởng
   if(role === "tk"){
-    goto(`./tk/tk${x}.html`);
-    return;
+    location.href = `${BASE}/tk/tk${x}.html`; return;
   }
   if(role === "to"){
-    goto(`./to/to${x}.html`);
-    return;
+    location.href = `${BASE}/to/to${x}.html`; return;
   }
   if(role === "gdx"){
-    goto(`./gdx/gdx${x}.html`);
-    return;
+    location.href = `${BASE}/gdx/gdx${x}.html`; return;
   }
 
-  // ✅ GĐC: phân biệt theo username
+  // ✅ GDH group theo username (gdc1, gdc2, gs1...)
+  if(u === "gdc"){
+    location.href = `${BASE}/gdc/gdc.html`; return;
+  }
+  if(/^gdc\d+$/i.test(u)){
+    location.href = `${BASE}/gdh/${u}.html`; return;
+  }
+  if(/^gs\d+$/i.test(u)){
+    location.href = `${BASE}/gdh/${u}.html`; return;
+  }
+
+  // fallback an toàn
   if(role === "gdc"){
-    if(u === "gdc"){
-      // gdc -> gdc/gdc.html
-      goto(`./gdc/gdc.html`);
-      return;
-    }
-    if(/^gdc\d+$/.test(u)){
-      // gdc1, gdc2... -> gdh/gdc1.html, gdh/gdc2.html
-      goto(`./gdh/${u}.html`);
-      return;
-    }
-    // fallback
-    goto(`./gdc/gdc.html`);
-    return;
+    // nếu backend trả role=gdc nhưng username khác, ưu tiên gdc/gdc.html
+    location.href = `${BASE}/gdc/gdc.html`; return;
   }
 
-  document.getElementById("msg").innerText = "Role không hợp lệ: " + sess.role;
+  document.getElementById("msg").innerText =
+    `Không xác định đường dẫn cho tài khoản: ${sess.username} (role=${sess.role})`;
 }
 
 /* ========= API ========= */
@@ -166,7 +172,9 @@ async function apiPost(payload){
     headers: { "Content-Type":"application/json" },
     body: JSON.stringify(payload)
   });
-  return await r.json();
+  const t = await r.text();
+  try{ return JSON.parse(t); }
+  catch{ return { success:false, msg:"API không trả JSON", raw:t.slice(0,240) }; }
 }
 
 /* ========= UI ========= */
@@ -206,7 +214,7 @@ async function login(){
     renderInfo();
     routeByRole(res);
   }catch(e){
-    msg.innerText = "Lỗi kết nối: " + (e.message || e);
+    msg.innerText = "Lỗi kết nối: " + (e?.message || e);
   }finally{
     btn.disabled = false;
     btn.innerText = "Đăng nhập";
