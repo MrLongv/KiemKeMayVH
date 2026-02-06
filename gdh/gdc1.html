@@ -23,6 +23,7 @@
   .ctl select option{color:#111}
   .btn{border:none;background:var(--primary);color:#fff;padding:8px 10px;border-radius:12px;font-weight:800;cursor:pointer;font-size:12px}
   .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20)}
+  .btn.danger{background:#dc2626}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .status{font-size:12px;opacity:.95;padding:6px 10px;background:rgba(255,255,255,.10);border:1px dashed rgba(255,255,255,.25);border-radius:12px;max-width:520px}
 
@@ -124,6 +125,42 @@
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#fff}
   .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb}
   .bar>i{display:block;height:100%;background:#2563eb;width:0%}
+
+  /* ===== Panel Nguyên nhân ===== */
+  .reasonGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;align-items:start}
+  .reasonBox{
+    border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;
+  }
+  .reasonTop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .reasonTop b{font-size:14px}
+  .reasonMeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .hint{font-size:12px;color:var(--muted)}
+  .ta{
+    width:100%;min-height:120px;resize:vertical;
+    border:1px solid var(--line);border-radius:12px;padding:10px;
+    outline:none;font-size:13px;line-height:1.35;
+  }
+  .reasonActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .miniBtn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 10px;font-weight:900;font-size:12px;cursor:pointer}
+  .miniBtn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .miniBtn.danger{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+  .history{
+    border:1px dashed var(--line);border-radius:14px;padding:10px;background:#f8fafc;
+    display:none;
+  }
+  .histItem{
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px;
+  }
+  .histItem .hTop{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .histItem .hKey{font-weight:900;font-size:12px}
+  .histItem .hTime{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .histItem .hTxt{margin-top:6px;font-size:13px;white-space:pre-wrap;line-height:1.35}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:900}
+  .chip .dot{width:7px;height:7px;border-radius:999px;background:#0e2552}
+  @media (max-width: 980px){
+    .kpi{grid-template-columns:repeat(2,minmax(160px,1fr))}
+    .reasonGrid{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
@@ -196,6 +233,49 @@
     </div>
   </div>
 
+  <!-- ✅ PANEL NGUYÊN NHÂN (mới) -->
+  <div class="card" id="reasonBlock" style="margin-bottom:12px">
+    <div class="reasonTop">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <b>🧾 Panel Nguyên nhân</b>
+        <span class="chip" title="Scope đang nhập/đọc nguyên nhân">
+          <span class="dot"></span>
+          <span id="reasonScope">XN1</span>
+        </span>
+        <span class="pill" id="reasonRange">—</span>
+      </div>
+
+      <div class="reasonMeta">
+        <span class="hint" id="reasonSavedHint">Chưa có nội dung</span>
+        <button class="miniBtn" id="btnToggleHist" onclick="toggleHistory()">📚 Lịch sử</button>
+      </div>
+    </div>
+
+    <div class="reasonGrid" style="margin-top:10px">
+      <div class="reasonBox">
+        <div class="hint" style="margin-bottom:6px">
+          Nhập nguyên nhân ảnh hưởng năng suất (máy, chuyền, NPL, kỹ thuật, QC, nhân sự…). Nội dung lưu theo <b>Xưởng + khoảng thời gian</b>.
+        </div>
+        <textarea class="ta" id="reasonText" placeholder="Ví dụ:
+- Thiếu NPL (chỉ dây kéo) 2 giờ
+- Đổi mã hàng, set up chuyền
+- Máy 1 kim lỗi, chờ bảo trì
+- LĐ thiếu do nghỉ đột xuất..."></textarea>
+
+        <div class="reasonActions">
+          <button class="miniBtn primary" onclick="saveReason()">💾 Lưu nguyên nhân</button>
+          <button class="miniBtn danger" onclick="clearReason()">🗑️ Xóa nội dung</button>
+          <button class="miniBtn" onclick="copyReason()">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="history" id="reasonHistory">
+        <div class="hint"><b>Lịch sử</b> (lọc theo Xưởng đang chọn)</div>
+        <div id="histList"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ✅ BẢNG GIỜ THEO TK1 (bấm tab chọn XN) -->
   <div class="card" id="dayBlock" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -244,14 +324,11 @@
         <tbody id="tbody"></tbody>
 
         <tfoot>
-          <!-- CỘNG USD: tổng USD/QT + tổng USD theo giờ -->
-          <!-- ✅ FIX: không dùng sticky + colspan lớn -->
           <tr>
             <td class="sticky1 left" style="padding-left:10px;">CỘNG USD</td>
             <td class="sticky2"></td>
             <td class="sticky3"></td>
 
-            <!-- bù đủ 6 cột đầu (SL KH, ĐM NGÀY, ĐM GIỜ) -->
             <td colspan="3"></td>
 
             <td id="usdQtSum" class="right">0.00</td>
@@ -262,7 +339,6 @@
             <td colspan="11"></td>
           </tr>
 
-          <!-- ƯỚC TÍNH USD TRONG NGÀY -->
           <tr class="strong">
             <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
             <td id="usdNgay" class="right">0.00</td>
@@ -277,7 +353,7 @@
     </div>
   </div>
 
-  <!-- ✅ SO SÁNH 3 XƯỞNG (đưa xuống dưới) -->
+  <!-- ✅ SO SÁNH 3 XƯỞNG -->
   <div class="card" id="compareBlock" style="margin-top:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <b>📌 Tổng hợp & so sánh 3 xưởng</b>
@@ -311,6 +387,9 @@
 /* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
+
+/* panel nguyên nhân */
+const REASON_KEY = "GDC1_REASONS_V1";
 
 const XUONGS = [1,2,3];
 const TO_BY_XUONG = {
@@ -414,7 +493,6 @@ async function loadGdcTicker(){
   if(!S || !S.token) return;
 
   try{
-    // ưu tiên theo xưởng đang xem
     const resX = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:activeXuong });
     const resAll = await apiPost({ action:"getDirectorMessage", token:S.token, xuong:"ALL" });
 
@@ -437,7 +515,6 @@ async function loadGdcTicker(){
     scopeEl.innerText = scope === "ALL" ? "ALL" : `XN${scope}`;
     timeEl.innerText = fmtTickerTime(picked.updated_at) || "—";
 
-    // reset animation để chạy lại mượt khi nội dung đổi
     textEl.style.animation = "none";
     textEl.offsetHeight;
     textEl.innerText = (scope === "ALL" ? "ALL: " : `XN${scope}: `) + msg;
@@ -452,6 +529,140 @@ function startGdcTicker(){
   gdcTimer = setInterval(loadGdcTicker, 30000);
 }
 window.addEventListener("beforeunload", ()=>{ if(gdcTimer) clearInterval(gdcTimer); });
+
+/* ================== PANEL NGUYÊN NHÂN (localStorage) ================== */
+function readReasons(){
+  try{ return JSON.parse(localStorage.getItem(REASON_KEY) || "{}"); }
+  catch{ return {}; }
+}
+function writeReasons(obj){
+  localStorage.setItem(REASON_KEY, JSON.stringify(obj || {}));
+}
+function nowISO(){
+  const d=new Date();
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  const hh=String(d.getHours()).padStart(2,"0");
+  const mi=String(d.getMinutes()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+function getReasonKey(){
+  const mode = document.getElementById("mode").value;
+  const date = document.getElementById("date").value;
+  const range = getRange(mode, date);
+  // key theo khoảng để nhất quán
+  return {
+    scope: `XN${activeXuong}`,
+    key: `${mode}|${range.from}|${range.to}`,
+    label: range.label
+  };
+}
+function updateReasonHeader(){
+  const { scope, label } = getReasonKey();
+  document.getElementById("reasonScope").innerText = scope;
+  document.getElementById("reasonRange").innerText = label;
+}
+function loadReasonToUI(){
+  updateReasonHeader();
+  const { scope, key } = getReasonKey();
+  const data = readReasons();
+  const item = data?.[scope]?.[key] || null;
+
+  const ta = document.getElementById("reasonText");
+  const hint = document.getElementById("reasonSavedHint");
+  ta.value = item?.text || "";
+
+  if(item?.text){
+    hint.innerText = `Đã lưu • ${item.updated_at || "—"}`;
+  }else{
+    hint.innerText = "Chưa có nội dung";
+  }
+
+  // nếu history đang mở -> refresh list
+  if(document.getElementById("reasonHistory").style.display === "block"){
+    renderHistory();
+  }
+}
+function saveReason(){
+  const { scope, key } = getReasonKey();
+  const text = (document.getElementById("reasonText").value || "").trim();
+
+  const data = readReasons();
+  if(!data[scope]) data[scope] = {};
+
+  if(!text){
+    // nếu rỗng thì coi như xóa
+    delete data[scope][key];
+    writeReasons(data);
+    loadReasonToUI();
+    return;
+  }
+
+  data[scope][key] = {
+    text,
+    updated_at: nowISO()
+  };
+  writeReasons(data);
+  loadReasonToUI();
+}
+function clearReason(){
+  document.getElementById("reasonText").value = "";
+}
+async function copyReason(){
+  const t = document.getElementById("reasonText").value || "";
+  try{
+    await navigator.clipboard.writeText(t);
+    setStatus("✅ Đã copy nguyên nhân");
+    setTimeout(()=>setStatus(""), 1200);
+  }catch{
+    // fallback
+    const ta = document.getElementById("reasonText");
+    ta.focus(); ta.select();
+    document.execCommand("copy");
+    setStatus("✅ Đã copy nguyên nhân");
+    setTimeout(()=>setStatus(""), 1200);
+  }
+}
+function toggleHistory(){
+  const box = document.getElementById("reasonHistory");
+  const btn = document.getElementById("btnToggleHist");
+  const open = box.style.display === "block";
+  box.style.display = open ? "none" : "block";
+  btn.innerText = open ? "📚 Lịch sử" : "📕 Đóng lịch sử";
+  if(!open) renderHistory();
+}
+function renderHistory(){
+  const list = document.getElementById("histList");
+  const { scope } = getReasonKey();
+  const data = readReasons();
+  const items = Object.entries(data?.[scope] || {})
+    .map(([k,v])=>({ k, v }))
+    .sort((a,b)=> (String(b.v?.updated_at||"").localeCompare(String(a.v?.updated_at||""))));
+
+  if(!items.length){
+    list.innerHTML = `<div class="hint" style="margin-top:8px">Chưa có lịch sử cho ${scope}.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.slice(0, 25).map(({k,v})=>{
+    const parts = String(k).split("|");
+    const mode = parts[0] || "—";
+    const from = parts[1] || "—";
+    const to = parts[2] || "—";
+    const label = (mode==="day") ? `Ngày ${from}` : `${mode.toUpperCase()} ${from} → ${to}`;
+
+    return `
+      <div class="histItem">
+        <div class="hTop">
+          <div class="hKey">${escapeHtml(label)}</div>
+          <div class="hTime">${escapeHtml(v?.updated_at || "")}</div>
+        </div>
+        <div class="hTxt">${escapeHtml(v?.text || "")}</div>
+      </div>
+    `;
+  }).join("");
+}
 
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
@@ -468,6 +679,7 @@ if(S){
     setStatus("Không đúng quyền");
   }else{
     startGdcTicker();
+    loadReasonToUI();
     reload();
   }
 }
@@ -479,9 +691,11 @@ function setTab(x){
   document.getElementById("tab2").classList.toggle("active", activeXuong===2);
   document.getElementById("tab3").classList.toggle("active", activeXuong===3);
   document.getElementById("dayTitle").innerText = `📊 NĂNG SUẤT GIỜ – XN${activeXuong}`;
-  loadGdcTicker(); // đổi scope ticker theo xưởng đang xem
+  loadGdcTicker();
 
-  // nếu đang mode day thì render theo xưởng đang chọn
+  // update nguyên nhân theo XN
+  loadReasonToUI();
+
   const mode = document.getElementById("mode").value;
   if(mode === "day") reloadDayOnly();
 }
@@ -497,6 +711,9 @@ async function reload(){
 
   document.getElementById("rangeInfo").innerText = range.label;
   document.getElementById("rangeInfo2").innerText = range.label;
+
+  // update panel nguyên nhân theo khoảng mới
+  loadReasonToUI();
 
   if(mode === "day"){
     document.getElementById("dayBlock").style.display = "";
@@ -515,7 +732,6 @@ async function reload(){
 let dayRowsByXuong = {1:[],2:[],3:[]};
 
 async function reloadDayAll(ngay){
-  // load each xuong rows (TK view)
   for(const x of XUONGS){
     const res = await apiPost({ action:"getTkXuongDay", token:S.token, ngay, xuong:x });
     const got = (res.success && Array.isArray(res.rows)) ? res.rows : [];
@@ -534,10 +750,8 @@ async function reloadDayAll(ngay){
     dayRowsByXuong[x] = rows;
   }
 
-  // render table for active xuong
   renderDayTable(dayRowsByXuong[activeXuong] || []);
 
-  // compare + KPI ALL (tính qua tất cả line)
   const agg = {};
   const usdGioAll = Array(HOURS.length).fill(0);
   let usdAll=0, spAll=0, dmAll=0;
@@ -562,26 +776,22 @@ async function reloadDayAll(ngay){
     const hs = dm>0 ? (sp/dm*100) : 0;
     agg[x] = { sp, dm, usd, hs };
 
-    // add ALL
     usdAll += usd;
     spAll += sp;
     dmAll += dm;
     for(let i=0;i<HOURS.length;i++) usdGioAll[i] += usdGio[i];
   }
 
-  // KPI ALL
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
   const maxUsdGioAll = usdGioAll.length ? Math.max(...usdGioAll) : 0;
   setKpi(usdAll, spAll, hsAll, maxUsdGioAll);
 
-  // compare
   renderCompare(agg);
   document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (qua tất cả line_no).";
 }
 
 async function reloadDayOnly(){
   const ngay = document.getElementById("date").value;
-  // nếu chưa có cache thì tải lại
   if(!dayRowsByXuong[activeXuong] || !dayRowsByXuong[activeXuong].length){
     await reloadDayAll(ngay);
     return;
@@ -589,7 +799,7 @@ async function reloadDayOnly(){
   renderDayTable(dayRowsByXuong[activeXuong] || []);
 }
 
-/* ================== NORMALIZE/RENDER table (y chang TK1 nhưng read-only) ================== */
+/* ================== NORMALIZE/RENDER table ================== */
 function normalizeRow(to, r){
   const out = { ...r };
   out.to_nhom = Number(to);
@@ -711,7 +921,6 @@ async function loadRangeAll(from, to){
   const dmAll = XUONGS.reduce((s,x)=>s+agg[x].dm,0);
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
 
-  // range mode: không có usd/day theo đơn giá -> để 0
   setKpi(0, spAll, hsAll, 0);
   document.getElementById("compareHint").innerText = "Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary (getDayRangeAll).";
 }
@@ -751,6 +960,10 @@ function setKpi(usd, sp, hs, max){
 /* ================== EVENTS ================== */
 document.getElementById("date").addEventListener("change", reload);
 document.getElementById("mode").addEventListener("change", reload);
+
+/* cập nhật panel nguyên nhân “mượt” khi người dùng sửa mode/date */
+document.getElementById("date").addEventListener("change", loadReasonToUI);
+document.getElementById("mode").addEventListener("change", loadReasonToUI);
 </script>
 </body>
 </html>
