@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC1 Mobile – Dashboard Năng suất</title>
+<title>GDC1 – Dashboard Năng suất</title>
 <style>
   :root{
     --bg:#003366;
@@ -72,6 +72,10 @@
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
   }
+  .btn.danger{
+    background:linear-gradient(180deg, rgba(239,68,68,.40), rgba(239,68,68,.18));
+    border:1px solid rgba(239,68,68,.45);
+  }
   .status{
     margin-top:8px;
     font-size:12px;
@@ -80,6 +84,42 @@
   }
   .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
   .wrap{padding:12px; max-width:1200px; margin:0 auto}
+
+  /* ticker chỉ đạo (read-only) */
+  .ticker{
+    display:none;
+    margin:10px 0 0;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .tickerTop{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    font-size:12px;
+    color:var(--muted);
+  }
+  .tickerTop b{color:var(--text)}
+  .tickerMarquee{
+    white-space:nowrap;
+    overflow:hidden;
+    position:relative;
+    height:36px;
+    display:flex; align-items:center;
+  }
+  .tickerMarquee .text{
+    display:inline-block;
+    padding-left:100%;
+    font-weight:900;
+    font-size:13px;
+    animation: marquee 18s linear infinite;
+  }
+  @keyframes marquee{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-100%); }
+  }
 
   /* tabs xưởng */
   .tabs{
@@ -178,7 +218,7 @@
     white-space:nowrap !important;
   }
 
-  /* convert modal */
+  /* floating convert */
   .fabRow{
     position:fixed;
     right:14px;
@@ -207,6 +247,8 @@
     font-weight:1000;
     border-radius:14px;
   }
+
+  /* modal convert */
   .modal{
     position:fixed; inset:0;
     background:rgba(0,0,0,.55);
@@ -239,8 +281,12 @@
     cursor:pointer;
     font-weight:900;
   }
-
-  /* convert table */
+  .field{
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    border-radius:16px;
+    padding:10px;
+  }
   .convertTitle{
     font-weight:1000;
     font-size:13px;
@@ -264,7 +310,7 @@
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>🏢 Giám Đốc – Theo dõi năng suất</b>
+      <b>🏢 Giám Đốc – Theo dõi năng suất (GDC1)</b>
       <span id="roleHint">—</span>
     </div>
 
@@ -281,6 +327,17 @@
   <div class="status">
     <span class="dot"></span>
     <span id="status">Đang khởi tạo…</span>
+  </div>
+
+  <!-- ✅ Ticker chỉ đạo: GDC1 chỉ XEM (read-only) -->
+  <div class="ticker" id="ticker">
+    <div class="tickerTop">
+      <div><b>📣 Chỉ đạo của Giám Đốc</b> • <span id="tickerScope">—</span></div>
+      <div id="tickerTime">—</div>
+    </div>
+    <div class="tickerMarquee">
+      <div class="text" id="tickerText">—</div>
+    </div>
   </div>
 </div>
 
@@ -394,7 +451,7 @@
   </div>
 </div>
 
-<!-- Floating buttons (chỉ còn Chuyển đổi) -->
+<!-- Floating buttons: chỉ còn Chuyển đổi -->
 <div class="fabRow">
   <div class="fab smallFab" id="fabConvert" title="Theo dõi năng suất - chuyển đổi">📊 Chuyển đổi</div>
 </div>
@@ -571,6 +628,64 @@ function pillHS(hs){
   return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
 }
 
+/* ================== TICKER (READ-ONLY) ================== */
+let tickerTimer=null;
+
+function fmtTickerTime(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mi = String(d.getMinutes()).padStart(2,"0");
+  const da = String(d.getDate()).padStart(2,"0");
+  const mo = String(d.getMonth()+1).padStart(2,"0");
+  return `${da}/${mo} ${hh}:${mi}`;
+}
+
+async function loadTicker(){
+  if(!S?.token) return;
+
+  const ngay = document.getElementById("date").value || todayISO();
+  let picked = null;
+
+  // Ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
+  const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
+  if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
+
+  if(!picked){
+    const resX = await apiPost({ action:"getDirectorMessage", scope:String(activeXuong), ngay });
+    if(resX?.success && String(resX.message||"").trim()) picked = resX;
+  }
+
+  const box = document.getElementById("ticker");
+  if(!box) return;
+  if(!picked){ box.style.display="none"; return; }
+
+  const scope = String(picked.scope||picked.xuong||"").toUpperCase();
+  const msg = String(picked.message||"").trim();
+  if(!msg){ box.style.display="none"; return; }
+
+  box.style.display="";
+  document.getElementById("tickerScope").innerText = (scope==="ALL") ? "ALL" : `XN${scope}`;
+  document.getElementById("tickerTime").innerText = fmtTickerTime(picked.updated_at) || "—";
+
+  const textEl = document.getElementById("tickerText");
+  textEl.style.animation="none"; textEl.offsetHeight;
+  textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
+  textEl.style.animation="marquee 18s linear infinite";
+}
+
+function startTicker(){
+  stopTicker();
+  loadTicker();
+  tickerTimer = setInterval(loadTicker, 30000);
+}
+function stopTicker(){
+  if(tickerTimer) clearInterval(tickerTimer);
+  tickerTimer=null;
+}
+window.addEventListener("beforeunload", stopTicker);
+
 /* ================== LOAD ================== */
 let REQ=0;
 
@@ -657,6 +772,7 @@ async function reload(){
 
     renderTabs();
     renderSelected();
+    await loadTicker();
 
     setStatus(`✅ Đã tải xong • ${new Date().toLocaleTimeString("vi-VN")}`);
   }catch(e){
@@ -701,6 +817,7 @@ function renderTabs(){
       activeXuong = Number(el.dataset.xuong||1);
       renderTabs();
       renderSelected();
+      loadTicker();
     });
   });
 }
@@ -712,7 +829,7 @@ function renderSelected(){
   document.getElementById("hourTitle").innerText = `⏱️ Năng suất theo giờ – XN${xuong}`;
   document.getElementById("dayTitle").innerText  = `📄 Năng suất ngày – XN${xuong}`;
 
-  renderHourTkStyle(xuong, ngay);
+  renderHourTkStyle(xuong);
   renderReasonTop(xuong);
   renderDayTable(xuong, ngay);
 }
@@ -913,7 +1030,7 @@ function groupPlanByXuongTo(rows, xuong){
       a.ma_hang = String(r.ma_hang||"");
       a.don_gia = dg;
       a.tgct = toNum(r.thoi_gian_giay); // TG/QT
-      a.ndsx = toNum(r.lao_dong_chuyen || 0);
+      a.ndsx = toNum(r.lao_dong_chuyen || 0); // giữ như gdc.html
     }
   }
   return map;
@@ -1060,6 +1177,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("date").value = todayISO();
   document.getElementById("date").addEventListener("change", async ()=>{
     await reload();
+    await loadTicker();
     if(document.getElementById("convertModal").style.display === "flex"){
       renderConvertTable();
     }
@@ -1068,15 +1186,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
   S = mustLogin();
   if(!S) return;
 
+  // ✅ GDC1: vẫn yêu cầu quyền gdc để xem (giống gdc.html)
   if(S.role !== "gdc"){
     document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc)`;
-    setStatus("⛔ Không đúng quyền để mở GDC");
+    setStatus("⛔ Không đúng quyền để mở GDC1");
     return;
   }
 
-  document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng`;
+  document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng (read-only chỉ đạo)`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
 
+  startTicker();
   reload();
 });
 </script>
