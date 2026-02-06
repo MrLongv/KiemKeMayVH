@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC1 – Theo dõi năng suất (có Chuyển đổi như GDC)</title>
+<title>GDC1 Mobile – Dashboard Năng suất</title>
 <style>
   :root{
     --bg:#003366;
@@ -72,10 +72,6 @@
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
   }
-  .btn.danger{
-    background:linear-gradient(180deg, rgba(239,68,68,.40), rgba(239,68,68,.18));
-    border:1px solid rgba(239,68,68,.45);
-  }
   .status{
     margin-top:8px;
     font-size:12px;
@@ -84,42 +80,6 @@
   }
   .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
   .wrap{padding:12px; max-width:1200px; margin:0 auto}
-
-  /* ticker chỉ đạo */
-  .ticker{
-    display:none;
-    margin:10px 0 0;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-    border-radius:16px;
-    overflow:hidden;
-  }
-  .tickerTop{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 10px;
-    border-bottom:1px solid var(--line);
-    font-size:12px;
-    color:var(--muted);
-  }
-  .tickerTop b{color:var(--text)}
-  .tickerMarquee{
-    white-space:nowrap;
-    overflow:hidden;
-    position:relative;
-    height:36px;
-    display:flex; align-items:center;
-  }
-  .tickerMarquee .text{
-    display:inline-block;
-    padding-left:100%;
-    font-weight:900;
-    font-size:13px;
-    animation: marquee 18s linear infinite;
-  }
-  @keyframes marquee{
-    from{ transform:translateX(0); }
-    to{ transform:translateX(-100%); }
-  }
 
   /* tabs xưởng */
   .tabs{
@@ -218,7 +178,7 @@
     white-space:nowrap !important;
   }
 
-  /* modal directive + convert */
+  /* convert modal */
   .fabRow{
     position:fixed;
     right:14px;
@@ -279,26 +239,8 @@
     cursor:pointer;
     font-weight:900;
   }
-  .formRow{display:grid; grid-template-columns:1fr; gap:10px}
-  @media(min-width:700px){ .formRow{grid-template-columns:1fr 1fr} }
-  .field{
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-    border-radius:16px;
-    padding:10px;
-  }
-  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
-  select, textarea{
-    width:100%;
-    border:none; outline:none;
-    background:transparent;
-    color:var(--text);
-    font-size:13px;
-  }
-  textarea{min-height:110px; resize:vertical; line-height:1.35}
-  .sheet .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap}
 
-  /* convert table (giống ảnh) */
+  /* convert table */
   .convertTitle{
     font-weight:1000;
     font-size:13px;
@@ -322,7 +264,7 @@
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>🏢 GDC1 – Theo dõi năng suất</b>
+      <b>🏢 Giám Đốc – Theo dõi năng suất</b>
       <span id="roleHint">—</span>
     </div>
 
@@ -339,16 +281,6 @@
   <div class="status">
     <span class="dot"></span>
     <span id="status">Đang khởi tạo…</span>
-  </div>
-
-  <div class="ticker" id="ticker">
-    <div class="tickerTop">
-      <div><b>📣 Chỉ đạo của Giám Đốc</b> • <span id="tickerScope">—</span></div>
-      <div id="tickerTime">—</div>
-    </div>
-    <div class="tickerMarquee">
-      <div class="text" id="tickerText">—</div>
-    </div>
   </div>
 </div>
 
@@ -462,99 +394,12 @@
   </div>
 </div>
 
-<!-- Floating buttons -->
+<!-- Floating buttons (chỉ còn Chuyển đổi) -->
 <div class="fabRow">
   <div class="fab smallFab" id="fabConvert" title="Theo dõi năng suất - chuyển đổi">📊 Chuyển đổi</div>
-  <div class="fab" title="Chỉ đạo" id="fabDir">✍️</div>
 </div>
 
-<!-- Modal: Directive -->
-<div class="modal" id="dirModal">
-  <div class="sheet">
-    <div class="titleRow">
-      <b>📣 Chỉ đạo Giám đốc</b>
-      <button class="close" id="btnDirClose">Đóng</button>
-    </div>
-
-    <div class="formRow">
-      <div class="field">
-        <label>Ngày</label>
-        <div id="dirDate" style="font-weight:900"></div>
-      </div>
-      <div class="field">
-        <label>Phạm vi</label>
-        <select id="dirScope">
-          <option value="ALL">ALL (Tất cả)</option>
-          <option value="1">XN1</option>
-          <option value="2">XN2</option>
-          <option value="3">XN3</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="field" style="margin-top:10px">
-      <label>Nội dung</label>
-      <textarea id="dirText" placeholder="Nhập chỉ đạo..."></textarea>
-    </div>
-
-    <div class="actions">
-      <button class="btn primary" id="btnDirSave">Lưu chỉ đạo</button>
-      <button class="btn danger" id="btnDirClearDay">🗑️ Xóa chỉ đạo (trong ngày)</button>
-      <button class="btn ghost" id="btnDirUseXuong">Lấy xưởng đang xem</button>
-      <button class="btn ghost" id="btnDirHistory">📜 Lịch sử</button>
-    </div>
-
-    <div class="field" id="dirHistoryBox" style="margin-top:12px; display:none;">
-      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <span>📜 Lịch sử chỉ đạo</span>
-        <span class="muted" id="dirHistoryMeta">—</span>
-      </label>
-
-      <div class="formRow" style="margin-top:8px;">
-        <div class="field" style="padding:10px;">
-          <label>Chọn ngày</label>
-          <input type="date" id="dirHistDate" style="width:100%;padding:6px 0;background:transparent;border:none;color:var(--text);" />
-        </div>
-        <div class="field" style="padding:10px;">
-          <label>Phạm vi</label>
-          <select id="dirHistScope">
-            <option value="ALL4">TẤT CẢ (ALL + XN1 + XN2 + XN3)</option>
-            <option value="ALL">ALL</option>
-            <option value="1">XN1</option>
-            <option value="2">XN2</option>
-            <option value="3">XN3</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="tableWrap" style="margin-top:10px;">
-        <table style="width:100%; min-width:760px;">
-          <thead>
-            <tr>
-              <th style="width:92px">Phạm vi</th>
-              <th style="width:120px">Cập nhật</th>
-              <th class="left">Nội dung</th>
-              <th style="width:90px">Xóa</th>
-            </tr>
-          </thead>
-          <tbody id="dirHistTbody">
-            <tr><td colspan="4" class="left">Chưa tải.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="hint" style="margin-top:8px;">
-        * “TẤT CẢ” sẽ gọi 4 scope và ghép lại theo thời gian (mới nhất lên trên).
-      </div>
-    </div>
-
-    <div class="hint">
-      * TO/TK/GĐX sẽ thấy chỉ đạo (ALL + theo xưởng) đúng như worker.js đã ghép.
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Convert -->
+<!-- Modal: Convert (Theo dõi năng suất - chuyển đổi) -->
 <div class="modal" id="convertModal">
   <div class="sheet">
     <div class="titleRow">
@@ -726,63 +571,6 @@ function pillHS(hs){
   return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
 }
 
-/* ================== TICKER ================== */
-let tickerTimer=null;
-
-function fmtTickerTime(iso){
-  if(!iso) return "";
-  const d = new Date(iso);
-  if(Number.isNaN(d.getTime())) return "";
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mi = String(d.getMinutes()).padStart(2,"0");
-  const da = String(d.getDate()).padStart(2,"0");
-  const mo = String(d.getMonth()+1).padStart(2,"0");
-  return `${da}/${mo} ${hh}:${mi}`;
-}
-
-async function loadTicker(){
-  if(!S?.token) return;
-
-  const ngay = document.getElementById("date").value || todayISO();
-  let picked = null;
-
-  // Ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
-  const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
-  if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
-
-  if(!picked){
-    const resX = await apiPost({ action:"getDirectorMessage", scope:String(activeXuong), ngay });
-    if(resX?.success && String(resX.message||"").trim()) picked = resX;
-  }
-
-  const box = document.getElementById("ticker");
-  if(!picked){ box.style.display="none"; return; }
-
-  const scope = String(picked.scope||picked.xuong||"").toUpperCase();
-  const msg = String(picked.message||"").trim();
-  if(!msg){ box.style.display="none"; return; }
-
-  box.style.display="";
-  document.getElementById("tickerScope").innerText = (scope==="ALL") ? "ALL" : `XN${scope}`;
-  document.getElementById("tickerTime").innerText = fmtTickerTime(picked.updated_at) || "—";
-
-  const textEl = document.getElementById("tickerText");
-  textEl.style.animation="none"; textEl.offsetHeight;
-  textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
-  textEl.style.animation="marquee 18s linear infinite";
-}
-
-function startTicker(){
-  stopTicker();
-  loadTicker();
-  tickerTimer = setInterval(loadTicker, 30000);
-}
-function stopTicker(){
-  if(tickerTimer) clearInterval(tickerTimer);
-  tickerTimer=null;
-}
-window.addEventListener("beforeunload", stopTicker);
-
 /* ================== LOAD ================== */
 let REQ=0;
 
@@ -869,7 +657,6 @@ async function reload(){
 
     renderTabs();
     renderSelected();
-    await loadTicker();
 
     setStatus(`✅ Đã tải xong • ${new Date().toLocaleTimeString("vi-VN")}`);
   }catch(e){
@@ -914,7 +701,6 @@ function renderTabs(){
       activeXuong = Number(el.dataset.xuong||1);
       renderTabs();
       renderSelected();
-      loadTicker();
     });
   });
 }
@@ -1073,188 +859,6 @@ function renderDayTable(xuong, ngay){
     `Ngày ${ngay} • USD <b>${fmtMoney(usdSum)}</b> • HS <b>${fmtPct1(hsAll)}%</b> • SP <b>${fmtInt(spSum)}</b>`;
 }
 
-/* ================== DIRECTIVE MODAL ================== */
-function openDir(){
-  const ngay = document.getElementById("date").value || todayISO();
-  document.getElementById("dirDate").innerText = ngay;
-
-  const box = document.getElementById("dirHistoryBox");
-  if(box) box.style.display="none";
-  const d = document.getElementById("dirHistDate");
-  if(d) d.value = ngay;
-
-  document.getElementById("dirModal").style.display="flex";
-}
-function closeDir(){ document.getElementById("dirModal").style.display="none"; }
-function fillScopeFromSelected(){ document.getElementById("dirScope").value = String(activeXuong); }
-
-async function saveDir(){
-  const ngay = document.getElementById("date").value || todayISO();
-  const scope = document.getElementById("dirScope").value;
-  const message = String(document.getElementById("dirText").value||"").trim();
-  if(!message){ alert("Nội dung chỉ đạo trống"); return; }
-
-  const btn = document.getElementById("btnDirSave");
-  btn.disabled = true;
-  try{
-    const res = await apiPost({ action:"setDirectorMessage", ngay, scope, message });
-    if(!res.success){
-      alert("Lỗi lưu chỉ đạo: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
-      return;
-    }
-    document.getElementById("dirText").value = "";
-    closeDir();
-    await loadTicker();
-    alert("✅ Đã lưu chỉ đạo");
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-async function clearDirInDay(){
-  const ngay = document.getElementById("date").value || todayISO();
-  const ok = confirm(
-    `XÓA TOÀN BỘ chỉ đạo của ngày ${ngay}?\n\n` +
-    `Sẽ xóa:\n- ALL\n- XN1\n- XN2\n- XN3\n\n` +
-    `Hành động không thể hoàn tác.`
-  );
-  if(!ok) return;
-
-  const btn = document.getElementById("btnDirClearDay");
-  btn.disabled = true;
-
-  try{
-    const scopes = ["ALL","1","2","3"];
-    for(const scope of scopes){
-      const res = await apiPost({ action:"clearDirectorMessage", ngay, scope });
-      if(!res?.success){
-        alert("Lỗi xóa chỉ đạo ("+scope+"): " + (res?.msg||"") + (res?.raw ? ("\n"+res.raw) : ""));
-        return;
-      }
-    }
-    document.getElementById("dirText").value = "";
-    closeDir();
-    await loadTicker();
-    alert("✅ Đã xóa chỉ đạo trong ngày");
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-/* ================== DIRECTIVE HISTORY ================== */
-function scopeLabel(sc){
-  sc = String(sc||"").toUpperCase();
-  if(sc==="ALL") return "ALL";
-  if(sc==="1") return "XN1";
-  if(sc==="2") return "XN2";
-  if(sc==="3") return "XN3";
-  return sc;
-}
-function fmtTimeHM(iso){
-  if(!iso) return "";
-  const d = new Date(iso);
-  if(Number.isNaN(d.getTime())) return "";
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mi = String(d.getMinutes()).padStart(2,"0");
-  return `${hh}:${mi}`;
-}
-async function loadDirHistory(){
-  const ngay = document.getElementById("dirHistDate").value || (document.getElementById("date").value || todayISO());
-  const pick = document.getElementById("dirHistScope").value || "ALL4";
-  const tbody = document.getElementById("dirHistTbody");
-  const meta = document.getElementById("dirHistoryMeta");
-
-  meta.innerText = "⏳ Đang tải...";
-  tbody.innerHTML = `<tr><td colspan="4" class="left">Đang tải...</td></tr>`;
-
-  const scopes = (pick === "ALL4") ? ["ALL","1","2","3"] : [pick];
-
-  let items = [];
-  for(const sc of scopes){
-    const res = await apiPost({ action:"listDirectorMessages", ngay, scope: sc });
-    if(!res?.success){ continue; }
-    const arr = Array.isArray(res.items) ? res.items : [];
-    for(const it of arr){
-      items.push({
-        id: it.id,
-        ngay: it.ngay || ngay,
-        scope: it.scope || sc,
-        message: it.message || "",
-        updated_at: it.updated_at || "",
-        updated_by: it.updated_by || ""
-      });
-    }
-  }
-
-  items.sort((a,b)=>{
-    const ta = Date.parse(a.updated_at||"") || 0;
-    const tb = Date.parse(b.updated_at||"") || 0;
-    return tb - ta;
-  });
-
-  meta.innerText = `Ngày ${ngay} • ${items.length} dòng`;
-
-  if(!items.length){
-    tbody.innerHTML = `<tr><td colspan="4" class="left">Không có chỉ đạo trong ngày này.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = items.map(it=>{
-    const sc = scopeLabel(it.scope);
-    const time = fmtTimeHM(it.updated_at);
-    const msg = escapeHtml(String(it.message||"").trim());
-    const by  = escapeHtml(String(it.updated_by||"").trim());
-
-    return `
-      <tr data-id="${escapeHtml(it.id)}" data-scope="${escapeHtml(it.scope)}" data-ngay="${escapeHtml(it.ngay)}">
-        <td><b>${sc}</b></td>
-        <td>${escapeHtml(time)}<div class="muted" style="font-size:11px">${by||""}</div></td>
-        <td class="left" style="white-space:normal; line-height:1.35;">${msg}</td>
-        <td>
-          <button class="btn danger" style="padding:8px 10px;border-radius:12px" data-del="1">Xóa</button>
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  tbody.querySelectorAll('button[data-del="1"]').forEach(btn=>{
-    btn.addEventListener("click", async (e)=>{
-      const tr = e.target.closest("tr");
-      const id = tr?.dataset?.id;
-      const scope = tr?.dataset?.scope;
-      const ngayRow = tr?.dataset?.ngay || ngay;
-      if(!id || !scope) return;
-
-      const ok = confirm(`Xóa chỉ đạo này?\n- Ngày: ${ngayRow}\n- Phạm vi: ${scopeLabel(scope)}\n\nKhông thể hoàn tác.`);
-      if(!ok) return;
-
-      e.target.disabled = true;
-      try{
-        const res = await apiPost({ action:"deleteDirectorMessage", id, ngay: ngayRow, scope });
-        if(!res?.success){
-          alert("Lỗi xóa: " + (res.msg||"") + (res.raw?("\n"+res.raw):""));
-          return;
-        }
-        await loadDirHistory();
-        await loadTicker();
-      }finally{
-        e.target.disabled = false;
-      }
-    });
-  });
-}
-function toggleDirHistory(){
-  const box = document.getElementById("dirHistoryBox");
-  const isOpen = box.style.display !== "none";
-  box.style.display = isOpen ? "none" : "block";
-
-  const ngay = document.getElementById("date").value || todayISO();
-  const dateEl = document.getElementById("dirHistDate");
-  if(!dateEl.value) dateEl.value = ngay;
-
-  if(!isOpen) loadDirHistory();
-}
-
 /* ================== CONVERT (CHUYỂN ĐỔI) ================== */
 const monthUsdCache = { 1:{}, 2:{}, 3:{} };
 
@@ -1270,16 +874,15 @@ function convertProgress(text){
   if(el) el.innerText = text || "—";
 }
 
-/* ✅ FIX: group theo TỔ, chọn “best line” theo TH lớn nhất trong tổ */
-function groupPlanByXuongTo(rows){
+function groupPlanByXuongTo(rows, xuong){
   const map = new Map();
   for(const r of rows){
     const to = Number(r.to_nhom);
     if(!map.has(to)){
       map.set(to, {
-        to, bestTh:-1, bestLine:null,
+        to, bestLine:null, bestTh:0,
         ma_hang:"", don_gia:0, tgct:0,
-        ndsx:0,   // nếu bạn có field chuẩn thì đổi ở đây
+        ndsx:0,
         ldtt:0, sdc:0, dm_ldtt:0,
         th:0, usd:0,
         so_ngay_sx:0,
@@ -1299,30 +902,23 @@ function groupPlanByXuongTo(rows){
     a.dm_ldtt += toNum(r.dinh_muc_ngay);
     a.th += th;
     a.usd += usd;
-
-    // ✅ “Số ngày SX” theo đúng gdc: lấy MAX chuyen_doi_ngay
     a.so_ngay_sx = Math.max(a.so_ngay_sx, toNum(r.chuyen_doi_ngay));
+    if(String(r.ghi_chu||"").trim()){
+      if(th >= a.bestTh) a.ghi_chu = String(r.ghi_chu||"").trim();
+    }
 
-    // lấy ghi chú của line có TH lớn nhất (cho hợp lý)
     if(th > a.bestTh){
       a.bestTh = th;
       a.bestLine = r;
       a.ma_hang = String(r.ma_hang||"");
       a.don_gia = dg;
-
-      // ✅ TGCT = TG/QT (thoi_gian_giay)
-      a.tgct = toNum(r.thoi_gian_giay);
-
-      // ⚠️ NĐSX: trong gdc.html bạn đang gán tạm; nếu có field đúng, thay tại đây
+      a.tgct = toNum(r.thoi_gian_giay); // TG/QT
       a.ndsx = toNum(r.lao_dong_chuyen || 0);
-
-      a.ghi_chu = String(r.ghi_chu||"").trim();
     }
   }
   return map;
 }
 
-/* ✅ Lũy kế USD tháng: sum từ 01 → ngày đang xem (cache theo tháng/xưởng) */
 async function ensureMonthUsdToDate(xuong, ngay){
   const ym = ymOf(ngay);
   const cache = monthUsdCache[xuong][ym];
@@ -1355,8 +951,10 @@ async function ensureMonthUsdToDate(xuong, ngay){
     convertProgress(`⏳ Đang tính lũy kế USD tháng… XN${xuong} • ${iso}`);
 
     const res = await apiPost({ action:"getTkXuongDay", ngay: iso, xuong });
-    if(!res?.success){ continue; }
-
+    if(!res?.success){
+      console.warn("Month load fail", xuong, iso, res);
+      continue;
+    }
     const rows = (res.rows || []).filter(r => allowTos.has(Number(r.to_nhom)));
 
     for(const r of rows){
@@ -1386,7 +984,7 @@ async function renderConvertTable(){
 
   convertProgress("⏳ Đang chuẩn bị dữ liệu…");
 
-  if(!dayRowsByXuong[1]?.length && !dayRowsByXuong[2]?.length && !dayRowsByXuong[3]?.length){
+  if(!dayRowsByXuong[1] || !dayRowsByXuong[2] || !dayRowsByXuong[3]){
     await reload();
   }
 
@@ -1399,7 +997,7 @@ async function renderConvertTable(){
     const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
     const filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-    const byToToday = groupPlanByXuongTo(filtered);
+    const byToToday = groupPlanByXuongTo(filtered, xuong);
     const mtd = await ensureMonthUsdToDate(xuong, ngay);
 
     html += `<tr class="xnSectionRow"><td colspan="14">XÍ NGHIỆP ${xuong}</td></tr>`;
@@ -1451,22 +1049,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnLogout").addEventListener("click", logout);
   document.getElementById("btnReload").addEventListener("click", reload);
 
-  // directive
-  document.getElementById("fabDir").addEventListener("click", openDir);
-  document.getElementById("btnDirClose").addEventListener("click", closeDir);
-  document.getElementById("btnDirUseXuong").addEventListener("click", fillScopeFromSelected);
-  document.getElementById("btnDirSave").addEventListener("click", saveDir);
-  document.getElementById("btnDirClearDay").addEventListener("click", clearDirInDay);
-
-  // history
-  document.getElementById("btnDirHistory").addEventListener("click", toggleDirHistory);
-  document.getElementById("dirHistDate").addEventListener("change", loadDirHistory);
-  document.getElementById("dirHistScope").addEventListener("change", loadDirHistory);
-
-  document.getElementById("dirModal").addEventListener("click", (e)=>{
-    if(e.target && e.target.id==="dirModal") closeDir();
-  });
-
   // convert
   document.getElementById("fabConvert").addEventListener("click", openConvert);
   document.getElementById("btnConvertClose").addEventListener("click", closeConvert);
@@ -1478,7 +1060,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("date").value = todayISO();
   document.getElementById("date").addEventListener("change", async ()=>{
     await reload();
-    await loadTicker();
     if(document.getElementById("convertModal").style.display === "flex"){
       renderConvertTable();
     }
@@ -1489,14 +1070,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   if(S.role !== "gdc"){
     document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc)`;
-    setStatus("⛔ Không đúng quyền để mở GDC1");
+    setStatus("⛔ Không đúng quyền để mở GDC");
     return;
   }
 
   document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
 
-  startTicker();
   reload();
 });
 </script>
