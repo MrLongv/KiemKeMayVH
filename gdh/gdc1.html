@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC1 – Dashboard Năng suất</title>
+<title>GDC1 Mobile – Phó Giám Đốc (Xem toàn bộ chỉ đạo)</title>
 <style>
   :root{
     --bg:#003366;
@@ -72,10 +72,6 @@
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
   }
-  .btn.danger{
-    background:linear-gradient(180deg, rgba(239,68,68,.40), rgba(239,68,68,.18));
-    border:1px solid rgba(239,68,68,.45);
-  }
   .status{
     margin-top:8px;
     font-size:12px;
@@ -85,7 +81,7 @@
   .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
   .wrap{padding:12px; max-width:1200px; margin:0 auto}
 
-  /* ticker chỉ đạo (read-only) */
+  /* ✅ ticker tổng hợp chỉ đạo (ALL + XN1 + XN2 + XN3) */
   .ticker{
     display:none;
     margin:10px 0 0;
@@ -114,12 +110,36 @@
     padding-left:100%;
     font-weight:900;
     font-size:13px;
-    animation: marquee 18s linear infinite;
+    animation: marquee 22s linear infinite;
   }
   @keyframes marquee{
     from{ transform:translateX(0); }
     to{ transform:translateX(-100%); }
   }
+  .tickerTools{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 10px;
+    border-top:1px solid var(--line);
+    background:rgba(0,0,0,.08);
+  }
+  .chip{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    color:var(--text);
+    cursor:pointer;
+    user-select:none;
+  }
+  .chip.active{
+    border-color:rgba(96,165,250,.55);
+    background:rgba(96,165,250,.16);
+    box-shadow:0 10px 22px rgba(96,165,250,.12);
+  }
+  .chip small{font-weight:800;color:var(--muted)}
 
   /* tabs xưởng */
   .tabs{
@@ -186,7 +206,7 @@
     border:1px solid var(--line);
     background:rgba(255,255,255,.05);
     border-radius:var(--radius);
-    box-shadow:var(--shadow);
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
     overflow:hidden;
   }
   .card .head{
@@ -218,7 +238,7 @@
     white-space:nowrap !important;
   }
 
-  /* floating convert */
+  /* Floating buttons: chỉ còn Chuyển đổi */
   .fabRow{
     position:fixed;
     right:14px;
@@ -248,7 +268,7 @@
     border-radius:14px;
   }
 
-  /* modal convert */
+  /* modal */
   .modal{
     position:fixed; inset:0;
     background:rgba(0,0,0,.55);
@@ -287,11 +307,7 @@
     border-radius:16px;
     padding:10px;
   }
-  .convertTitle{
-    font-weight:1000;
-    font-size:13px;
-    margin:2px 0 8px;
-  }
+  .convertTitle{font-weight:1000;font-size:13px;margin:2px 0 8px}
   .xnSectionRow td{
     background:rgba(255,255,255,.06) !important;
     font-weight:1000;
@@ -310,7 +326,7 @@
 <div class="topbar">
   <div class="row">
     <div class="brand">
-      <b>🏢 Giám Đốc – Theo dõi năng suất (GDC1)</b>
+      <b>🏢 Phó Giám Đốc – Theo dõi năng suất</b>
       <span id="roleHint">—</span>
     </div>
 
@@ -329,14 +345,22 @@
     <span id="status">Đang khởi tạo…</span>
   </div>
 
-  <!-- ✅ Ticker chỉ đạo: GDC1 chỉ XEM (read-only) -->
+  <!-- ✅ Ticker tổng hợp: ALL + XN1 + XN2 + XN3 (phó giám đốc thấy hết) -->
   <div class="ticker" id="ticker">
     <div class="tickerTop">
-      <div><b>📣 Chỉ đạo của Giám Đốc</b> • <span id="tickerScope">—</span></div>
+      <div><b>📣 Chỉ đạo Giám Đốc</b> • <span id="tickerScope">TẤT CẢ</span></div>
       <div id="tickerTime">—</div>
     </div>
     <div class="tickerMarquee">
       <div class="text" id="tickerText">—</div>
+    </div>
+    <div class="tickerTools" id="tickerTools">
+      <div class="chip active" data-filter="ALL4">Tất cả <small>(ALL+XN1+XN2+XN3)</small></div>
+      <div class="chip" data-filter="ALL">ALL</div>
+      <div class="chip" data-filter="1">XN1</div>
+      <div class="chip" data-filter="2">XN2</div>
+      <div class="chip" data-filter="3">XN3</div>
+      <div class="chip" id="btnTickerPause" title="Tạm dừng/Chạy">⏯️</div>
     </div>
   </div>
 </div>
@@ -451,12 +475,12 @@
   </div>
 </div>
 
-<!-- Floating buttons: chỉ còn Chuyển đổi -->
+<!-- Floating buttons -->
 <div class="fabRow">
   <div class="fab smallFab" id="fabConvert" title="Theo dõi năng suất - chuyển đổi">📊 Chuyển đổi</div>
 </div>
 
-<!-- Modal: Convert (Theo dõi năng suất - chuyển đổi) -->
+<!-- Modal: Convert -->
 <div class="modal" id="convertModal">
   <div class="sheet">
     <div class="titleRow">
@@ -628,9 +652,25 @@ function pillHS(hs){
   return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
 }
 
-/* ================== TICKER (READ-ONLY) ================== */
+/* ================== TICKER (TỔNG HỢP) ================== */
 let tickerTimer=null;
+let tickerPaused=false;
 
+// filter hiển thị ticker: ALL4 (tổng hợp) | ALL | 1 | 2 | 3
+let tickerFilter = "ALL4";
+
+// danh sách message đã ghép (để chạy marquee theo chuỗi)
+let tickerItems = []; // [{scope, message, updated_at}]
+let tickerIdx = 0;
+
+function scopeLabel(sc){
+  sc = String(sc||"").toUpperCase();
+  if(sc==="ALL") return "ALL";
+  if(sc==="1") return "XN1";
+  if(sc==="2") return "XN2";
+  if(sc==="3") return "XN3";
+  return sc;
+}
 function fmtTickerTime(iso){
   if(!iso) return "";
   const d = new Date(iso);
@@ -642,37 +682,89 @@ function fmtTickerTime(iso){
   return `${da}/${mo} ${hh}:${mi}`;
 }
 
+async function fetchDirectorOne(ngay, scope){
+  const res = await apiPost({ action:"getDirectorMessage", scope, ngay });
+  if(res?.success && String(res.message||"").trim()){
+    return {
+      scope: String(res.scope||scope).toUpperCase(),
+      message: String(res.message||"").trim(),
+      updated_at: res.updated_at || ""
+    };
+  }
+  return null;
+}
+
 async function loadTicker(){
   if(!S?.token) return;
 
   const ngay = document.getElementById("date").value || todayISO();
-  let picked = null;
-
-  // Ưu tiên ALL, nếu không có thì lấy theo xưởng đang xem
-  const resAll = await apiPost({ action:"getDirectorMessage", scope:"ALL", ngay });
-  if(resAll?.success && String(resAll.message||"").trim()) picked = resAll;
-
-  if(!picked){
-    const resX = await apiPost({ action:"getDirectorMessage", scope:String(activeXuong), ngay });
-    if(resX?.success && String(resX.message||"").trim()) picked = resX;
-  }
-
   const box = document.getElementById("ticker");
   if(!box) return;
-  if(!picked){ box.style.display="none"; return; }
 
-  const scope = String(picked.scope||picked.xuong||"").toUpperCase();
-  const msg = String(picked.message||"").trim();
-  if(!msg){ box.style.display="none"; return; }
+  // lấy ALL + 1 + 2 + 3 (đúng yêu cầu: phó giám đốc thấy hết)
+  const scopes = ["ALL","1","2","3"];
+  const got = [];
+  for(const sc of scopes){
+    const it = await fetchDirectorOne(ngay, sc);
+    if(it) got.push(it);
+  }
+
+  // nếu user đang chọn filter cụ thể thì lọc ở đây
+  let show = [];
+  if(tickerFilter === "ALL4"){
+    // giữ nguyên thứ tự ALL, XN1, XN2, XN3 (dễ đọc)
+    const order = new Map([["ALL",0],["1",1],["2",2],["3",3]]);
+    got.sort((a,b)=>(order.get(a.scope)||9)-(order.get(b.scope)||9));
+    show = got;
+  }else{
+    show = got.filter(x => String(x.scope) === String(tickerFilter).toUpperCase());
+  }
+
+  if(!show.length){
+    box.style.display="none";
+    tickerItems = [];
+    tickerIdx = 0;
+    return;
+  }
 
   box.style.display="";
-  document.getElementById("tickerScope").innerText = (scope==="ALL") ? "ALL" : `XN${scope}`;
-  document.getElementById("tickerTime").innerText = fmtTickerTime(picked.updated_at) || "—";
+  document.getElementById("tickerScope").innerText =
+    (tickerFilter==="ALL4") ? "TẤT CẢ" : scopeLabel(tickerFilter);
 
+  // hiển thị thời gian mới nhất trong các dòng đang hiển thị
+  const newest = show.reduce((best,cur)=>{
+    const tb = Date.parse(best?.updated_at||"") || 0;
+    const tc = Date.parse(cur?.updated_at||"") || 0;
+    return (tc>tb) ? cur : best;
+  }, show[0]);
+  document.getElementById("tickerTime").innerText = fmtTickerTime(newest?.updated_at) || "—";
+
+  tickerItems = show;
+  tickerIdx = 0;
+  renderTickerText(); // render ngay
+}
+
+function renderTickerText(){
   const textEl = document.getElementById("tickerText");
-  textEl.style.animation="none"; textEl.offsetHeight;
-  textEl.innerText = (scope==="ALL" ? "ALL: " : `XN${scope}: `) + msg;
-  textEl.style.animation="marquee 18s linear infinite";
+  if(!textEl) return;
+  if(!tickerItems.length){
+    textEl.innerText = "—";
+    return;
+  }
+
+  // ghép tất cả chỉ đạo thành 1 chuỗi chạy (đảm bảo “thấy tất cả”)
+  // Ví dụ: "ALL: ...   |   XN1: ...   |   XN2: ..."
+  const parts = tickerItems.map(it => `${scopeLabel(it.scope)}: ${it.message}`);
+  const joined = parts.join("   |   ");
+
+  textEl.style.animation = "none"; textEl.offsetHeight;
+  textEl.innerText = joined;
+  // chạy lại animation
+  if(!tickerPaused){
+    textEl.style.animation = "marquee 22s linear infinite";
+  }else{
+    textEl.style.animation = "none";
+  }
 }
 
 function startTicker(){
@@ -817,6 +909,8 @@ function renderTabs(){
       activeXuong = Number(el.dataset.xuong||1);
       renderTabs();
       renderSelected();
+      // ✅ phó GĐ vẫn xem ticker “tất cả”, không phụ thuộc tab xưởng
+      // nhưng nếu bạn muốn đổi tab thì tickerScope không đổi, chỉ refresh time/message
       loadTicker();
     });
   });
@@ -991,13 +1085,13 @@ function convertProgress(text){
   if(el) el.innerText = text || "—";
 }
 
-function groupPlanByXuongTo(rows, xuong){
+function groupPlanByXuongTo(rows){
   const map = new Map();
   for(const r of rows){
     const to = Number(r.to_nhom);
     if(!map.has(to)){
       map.set(to, {
-        to, bestLine:null, bestTh:0,
+        to, bestTh:0,
         ma_hang:"", don_gia:0, tgct:0,
         ndsx:0,
         ldtt:0, sdc:0, dm_ldtt:0,
@@ -1020,17 +1114,17 @@ function groupPlanByXuongTo(rows, xuong){
     a.th += th;
     a.usd += usd;
     a.so_ngay_sx = Math.max(a.so_ngay_sx, toNum(r.chuyen_doi_ngay));
+
     if(String(r.ghi_chu||"").trim()){
       if(th >= a.bestTh) a.ghi_chu = String(r.ghi_chu||"").trim();
     }
 
     if(th > a.bestTh){
       a.bestTh = th;
-      a.bestLine = r;
       a.ma_hang = String(r.ma_hang||"");
       a.don_gia = dg;
       a.tgct = toNum(r.thoi_gian_giay); // TG/QT
-      a.ndsx = toNum(r.lao_dong_chuyen || 0); // giữ như gdc.html
+      a.ndsx = toNum(r.lao_dong_chuyen || 0);
     }
   }
   return map;
@@ -1114,7 +1208,7 @@ async function renderConvertTable(){
     const allowTos = new Set((TO_BY_XUONG[xuong]||[]).map(Number));
     const filtered = rows.filter(r => allowTos.has(Number(r.to_nhom)));
 
-    const byToToday = groupPlanByXuongTo(filtered, xuong);
+    const byToToday = groupPlanByXuongTo(filtered);
     const mtd = await ensureMonthUsdToDate(xuong, ngay);
 
     html += `<tr class="xnSectionRow"><td colspan="14">XÍ NGHIỆP ${xuong}</td></tr>`;
@@ -1166,6 +1260,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnLogout").addEventListener("click", logout);
   document.getElementById("btnReload").addEventListener("click", reload);
 
+  // ticker filters
+  document.querySelectorAll('#tickerTools .chip[data-filter]').forEach(ch=>{
+    ch.addEventListener("click", async ()=>{
+      document.querySelectorAll('#tickerTools .chip[data-filter]').forEach(x=>x.classList.remove("active"));
+      ch.classList.add("active");
+      tickerFilter = String(ch.dataset.filter||"ALL4");
+      await loadTicker();
+      renderTickerText();
+    });
+  });
+
+  document.getElementById("btnTickerPause").addEventListener("click", ()=>{
+    tickerPaused = !tickerPaused;
+    renderTickerText();
+  });
+
   // convert
   document.getElementById("fabConvert").addEventListener("click", openConvert);
   document.getElementById("btnConvertClose").addEventListener("click", closeConvert);
@@ -1186,14 +1296,15 @@ document.addEventListener("DOMContentLoaded", ()=>{
   S = mustLogin();
   if(!S) return;
 
-  // ✅ GDC1: vẫn yêu cầu quyền gdc để xem (giống gdc.html)
-  if(S.role !== "gdc"){
-    document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc)`;
+  // ✅ role dành cho phó GĐ: "gdc1"
+  // (nếu backend bạn đang lưu role khác thì đổi string tại đây)
+  if(S.role !== "gdc1"){
+    document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc1)`;
     setStatus("⛔ Không đúng quyền để mở GDC1");
     return;
   }
 
-  document.getElementById("roleHint").innerText = `✅ GĐC: ${S.username} • xem 3 xưởng (read-only chỉ đạo)`;
+  document.getElementById("roleHint").innerText = `✅ Phó GĐ: ${S.username} • xem 3 xưởng • thấy TẤT CẢ chỉ đạo`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
 
   startTicker();
