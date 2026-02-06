@@ -56,7 +56,7 @@
   .gdc-ticker .time{opacity:.9;font-variant-numeric:tabular-nums}
 
   .wrap{padding:14px}
-  .kpi{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+  .kpi{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:10px;margin-bottom:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px}
   .card .label{font-size:12px;color:var(--muted)}
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
@@ -191,6 +191,11 @@
       <div class="value" id="kpiMax">0.00</div>
       <div class="sub">Trong 9 khung giờ</div>
     </div>
+    <div class="card">
+      <div class="label">Tổng SĐC (ALL)</div>
+      <div class="value" id="kpiSdc">0</div>
+      <div class="sub">Cộng SĐC (chuyển đổi/ngày)</div>
+    </div>
   </div>
 
   <!-- ✅ NGUYÊN NHÂN -->
@@ -252,7 +257,7 @@
             <th rowspan="2" style="min-width:90px;">ĐM GIỜ</th>
             <th rowspan="2" style="min-width:95px;">USD/QT</th>
 
-            <th colspan="9">SẢN LƯỢNG THEO GIỜ</th>
+            <th colspan="11">SẢN LƯỢNG THEO GIỜ</th>
 
             <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
             <th rowspan="2" style="min-width:110px;">USD/TH</th>
@@ -286,12 +291,22 @@
             <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
             <td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td><td class="usdGio right">0.00</td>
 
-            <td colspan="11"></td>
+            <!-- TT + SĐC (không cộng USD theo giờ) -->
+            <td></td><td></td>
+
+            <!-- còn lại sau nhóm giờ -->
+            <td colspan="12"></td>
           </tr>
 
           <tr class="strong">
-            <td class="left" colspan="25" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
+            <td class="left" colspan="28" style="padding-left:10px;">ƯỚC TÍNH USD TRONG NGÀY</td>
             <td id="usdNgay" class="right">0.00</td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td class="left" colspan="28" style="padding-left:10px;">TỔNG SĐC (CHUYỂN ĐỔI/NGÀY)</td>
+            <td id="sdcSum" class="right">0</td>
             <td></td>
           </tr>
         </tfoot>
@@ -300,6 +315,7 @@
 
     <div class="small">
       <b>Ghi chú:</b> Trang GDC chỉ xem (không nhập). Khi tổ đổi mã trong ngày, TK thêm line_no ở trang TKx.
+      <br>* Chuẩn TK1: sau 9 khung giờ có <b>TT</b> (tổng sản lượng) và <b>SĐC</b> (chuyển đổi/ngày).
     </div>
   </div>
 
@@ -341,7 +357,7 @@ const KEY="NS_SESSION";
 
 const XUONGS = [1,2,3];
 const TO_BY_XUONG = { 1:[1,3,5,7,9], 2:[11,13,15,17], 3:[19,21,23,25,27] };
-const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"];
+const HOURS = ["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"]; // 9 khung
 
 /* ================== FORMAT ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
@@ -499,6 +515,7 @@ window.addEventListener("beforeunload", ()=>{ if(gdcTimer) clearInterval(gdcTime
 
 /* ================== INIT ================== */
 document.getElementById("date").value = todayISO();
+/* ✅ 9 giờ + TT + SĐC */
 document.getElementById("hourHead").innerHTML =
   HOURS.map(h=>`<th>${h}</th>`).join("") + `<th>TT</th><th>SĐC</th>`;
 
@@ -540,10 +557,8 @@ function updateReasonHeader(){
 }
 
 async function loadReasonsRange(from, to){
-  // ✅ dùng y hệt gdc: getHourRange(xuong, from, to)
   for(const x of XUONGS){
     const hr = await apiPost({ action:"getHourRange", xuong:x, from, to });
-    // ✅ có worker trả data, có worker trả rows -> lấy cả 2
     const arr = (hr?.success && Array.isArray(hr.data)) ? hr.data
               : (hr?.success && Array.isArray(hr.rows)) ? hr.rows
               : [];
@@ -552,7 +567,6 @@ async function loadReasonsRange(from, to){
 }
 
 function collectReasonsSimple(){
-  // Gom theo: Xưởng + Tổ, unique text
   const map = new Map();
 
   for(const x of XUONGS){
@@ -583,7 +597,6 @@ function renderReasonsSimple(){
   const tbody = document.getElementById("reasonTbody");
   const list = collectReasonsSimple();
 
-  // debug meta: đếm raw từng xưởng để bạn biết API có trả gì không
   const c1 = (reasonRawByXuong[1]||[]).length;
   const c2 = (reasonRawByXuong[2]||[]).length;
   const c3 = (reasonRawByXuong[3]||[]).length;
@@ -652,7 +665,6 @@ async function reload(){
 }
 
 async function reloadDayAll(ngay){
-  // load rows
   for(const x of XUONGS){
     const res = await apiPost({ action:"getTkXuongDay", ngay, xuong:x });
     const got = (res?.success && Array.isArray(res.rows)) ? res.rows : [];
@@ -671,20 +683,17 @@ async function reloadDayAll(ngay){
     dayRowsByXuong[x] = rows;
   }
 
-  // ✅ reasons y hệt gdc
   await loadReasonsRange(ngay, ngay);
   renderReasonsSimple();
 
-  // render table active
   renderDayTable(dayRowsByXuong[activeXuong] || []);
 
-  // kpi+compare
   const agg = {};
   const usdGioAll = Array(HOURS.length).fill(0);
-  let usdAll=0, spAll=0, dmAll=0;
+  let usdAll=0, spAll=0, dmAll=0, sdcAll=0;
 
   for(const x of XUONGS){
-    let sp=0, dm=0, usd=0;
+    let sp=0, dm=0, usd=0, sdc=0;
     const usdGio = Array(HOURS.length).fill(0);
 
     for(const r of (dayRowsByXuong[x]||[])){
@@ -697,6 +706,9 @@ async function reloadDayAll(ngay){
       dm += dmNgay;
       usd += tongSP * dg;
 
+      /* ✅ SĐC lấy từ API */
+      sdc += toNum(r.chuyen_doi_ngay);
+
       hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
     }
 
@@ -706,15 +718,18 @@ async function reloadDayAll(ngay){
     usdAll += usd;
     spAll += sp;
     dmAll += dm;
+    sdcAll += sdc;
     for(let i=0;i<HOURS.length;i++) usdGioAll[i] += usdGio[i];
   }
 
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
   const maxUsdGioAll = usdGioAll.length ? Math.max(...usdGioAll) : 0;
-  setKpi(usdAll, spAll, hsAll, maxUsdGioAll);
 
+  setKpi(usdAll, spAll, hsAll, maxUsdGioAll, sdcAll);
   renderCompare(agg);
-  document.getElementById("compareHint").innerText = "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (qua tất cả line_no).";
+
+  document.getElementById("compareHint").innerText =
+    "Mode Ngày: so sánh dựa trên dữ liệu thực tế trong ngày (qua tất cả line_no).";
 }
 
 async function reloadDayOnly(){
@@ -754,6 +769,10 @@ function renderDayTable(rows){
     const usd100 = dmNgay * dg;
     const usd80 = usd100 * 0.8;
 
+    /* ✅ Chuẩn TK1: TT + SĐC */
+    const tt = tongSP;
+    const sdc = toNum(r.chuyen_doi_ngay);
+
     return `
       <tr data-to="${r.to_nhom}" data-line="${r.line_no}">
         <td class="sticky1"><b>${r.to_nhom}</b></td>
@@ -772,6 +791,10 @@ function renderDayTable(rows){
 
         ${hours.map(v=>`<td>${fmtInt(v||0)}</td>`).join("")}
 
+        <!-- ✅ TT + SĐC sau 9 khung -->
+        <td class="calc">${fmtInt(tt)}</td>
+        <td class="calc">${fmtInt(sdc)}</td>
+
         <td class="calc">${fmtInt(tongSP)}</td>
         <td class="calc right">${fmtMoney(usdTh)}</td>
         <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
@@ -785,7 +808,7 @@ function renderDayTable(rows){
         <td class="calc right">${fmtMoney(usd80)}</td>
         <td class="calc right">${fmtMoney(usd100)}</td>
 
-        <td>${fmtInt(r.chuyen_doi_ngay||0)}</td>
+        <td>${fmtInt(sdc)}</td>
 
         <td class="left" style="padding-left:6px;white-space:normal">${escapeHtml(r.ghi_chu||"")}</td>
 
@@ -800,6 +823,7 @@ function renderDayTable(rows){
 function calcFooterForActive(rows){
   let tongUsdNgay=0;
   let tongUsdQt=0;
+  let tongSdc=0;
   const usdGio = Array(HOURS.length).fill(0);
 
   rows.forEach(r=>{
@@ -813,11 +837,17 @@ function calcFooterForActive(rows){
 
     hours.forEach((v,i)=> usdGio[i] += toNum(v)*dg);
     tongUsdNgay += tongSP*dg;
+
+    tongSdc += toNum(r.chuyen_doi_ngay);
   });
 
   document.getElementById("usdQtSum").innerText = fmtMoney(tongUsdQt);
   document.querySelectorAll(".usdGio").forEach((td,i)=> td.innerText = fmtMoney(usdGio[i]||0));
   document.getElementById("usdNgay").innerText = fmtMoney(tongUsdNgay);
+  document.getElementById("sdcSum").innerText = fmtInt(tongSdc);
+
+  /* ✅ cập nhật KPI SĐC theo xưởng đang xem (để đỡ “lệch cảm giác”) */
+  // KPI ALL vẫn set ở reloadDayAll; nhưng nếu bạn đổi tab mà không reload ALL thì giữ lại ALL.
 }
 
 /* ================== RANGE: compare only ================== */
@@ -826,7 +856,7 @@ async function loadRangeAll(from, to){
   if(!res?.success){
     setStatus("Lỗi tải range: " + (res?.msg||""));
     renderCompare({1:{sp:0,dm:0,usd:0,hs:0},2:{sp:0,dm:0,usd:0,hs:0},3:{sp:0,dm:0,usd:0,hs:0}});
-    setKpi(0,0,0,0);
+    setKpi(0,0,0,0,0);
     return;
   }
 
@@ -847,7 +877,7 @@ async function loadRangeAll(from, to){
   const dmAll = XUONGS.reduce((s,x)=>s+agg[x].dm,0);
   const hsAll = dmAll>0 ? (spAll/dmAll*100) : 0;
 
-  setKpi(0, spAll, hsAll, 0);
+  setKpi(0, spAll, hsAll, 0, 0);
   document.getElementById("compareHint").innerText = "Mode Tuần/Tháng/Quý/Năm: so sánh dựa trên summary (getDayRangeAll).";
 }
 
@@ -876,11 +906,12 @@ function renderCompare(agg){
 }
 
 /* ================== KPI ================== */
-function setKpi(usd, sp, hs, max){
+function setKpi(usd, sp, hs, max, sdc){
   document.getElementById("kpiUsd").innerText = fmtMoney(usd);
   document.getElementById("kpiSp").innerText = fmtInt(sp);
   document.getElementById("kpiHs").innerText = fmtPct1(hs) + "%";
   document.getElementById("kpiMax").innerText = fmtMoney(max);
+  document.getElementById("kpiSdc").innerText = fmtInt(sdc);
 }
 
 /* ================== EVENTS ================== */
