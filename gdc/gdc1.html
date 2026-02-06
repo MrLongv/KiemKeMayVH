@@ -343,17 +343,27 @@
 </div>
 
 <script>
-/* ================== PATH SAFE (FIX 404) ================== */
-const BASE = new URL(".", window.location.href).href;       // thư mục chứa gdc1.html
-const URL_LOGIN = new URL("login.html", BASE).href;         // cùng thư mục
-const URL_GDC   = new URL("gdc.html", BASE).href;           // cùng thư mục
+/* ================== PATH FIX THEO CẤU TRÚC gdc/ ==================
+   - Trang hiện tại: .../gdc/gdc1.html
+   - Login:          .../login.html   (thường ở root)
+   - GDC:            .../gdc/gdc.html
+   - GDC1:           .../gdc/gdc1.html
+   Nếu login.html của bạn đang nằm ở root, dùng ROOT + "login.html".
+   Còn gdc.html/gdc1.html nằm trong folder gdc/.
+*/
+const HERE = new URL(window.location.href);
+const PATH = HERE.pathname;                      // ví dụ: /gdc/gdc1.html
+const ROOT = HERE.origin + PATH.replace(/\/gdc\/[^\/]+$/, "/"); // => https://domain.com/
+const URL_LOGIN = ROOT + "login.html";           // => /login.html
+const URL_GDC   = ROOT + "gdc/gdc.html";         // => /gdc/gdc.html
+const URL_GDC1  = ROOT + "gdc/gdc1.html";        // => /gdc/gdc1.html
 
 /* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 
-/* ✅ gdc1.html chỉ dành cho gdc1/gdch (alias thêm nếu bạn dùng) */
-const VIEW_ROLES = ["gdc1","gdch","gd_dieu_hanh","gddh"];
+/* ✅ gdc1.html chỉ dành cho gdc1/gdch (thêm alias nếu bạn dùng) */
+const VIEW_ROLES = ["gdc1","gdch","gd_dieu_hanh","gddh","gdc1_role"];
 
 /* ✅ Panel nguyên nhân: luôn ON */
 const PANEL_ALWAYS_ON = true;
@@ -440,6 +450,7 @@ function getRange(mode, dateStr){
 let S = mustLogin();
 let activeXuong = 1;
 let gdcTimer=null;
+let dayRowsByXuong={1:[],2:[],3:[]};
 
 document.getElementById("date").value = todayISO();
 document.getElementById("hourHead").innerHTML =
@@ -519,7 +530,6 @@ function setTab(x){
   document.getElementById("tab3").classList.toggle("active", activeXuong===3);
   document.getElementById("dayTitle").innerText = `📊 NĂNG SUẤT GIỜ – XN${activeXuong}`;
   document.getElementById("rx").innerText = String(activeXuong);
-
   loadGdcTicker();
 
   const mode=document.getElementById("mode").value;
@@ -528,8 +538,6 @@ function setTab(x){
 }
 
 /* ================== MAIN LOAD ================== */
-let dayRowsByXuong={1:[],2:[],3:[]};
-
 async function reload(){
   S = mustLogin(); if(!S) return;
   if(!gateRole()){ setStatus("Không đúng quyền"); return; }
