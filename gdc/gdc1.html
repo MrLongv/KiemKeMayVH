@@ -60,7 +60,7 @@
   .card .value{font-size:20px;font-weight:900;margin-top:4px}
   .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
 
-  /* ✅ PANEL NGUYÊN NHÂN (LUÔN ON TRÊN GDC1.HTML) */
+  /* ✅ PANEL NGUYÊN NHÂN (LUÔN ON) */
   .reasonPanel{margin-bottom:12px}
   .reasonBox{
     display:flex;gap:12px;align-items:flex-start;
@@ -111,7 +111,6 @@
   thead th{position:sticky;top:0;z-index:5}
   thead tr:nth-child(2) th{top:34px}
 
-  /* sticky cols giống TK1 */
   .sticky1{position:sticky;left:0;z-index:6;background:#fff}
   .sticky2{position:sticky;left:45px;z-index:6;background:#fff}
   .sticky3{position:sticky;left:85px;z-index:6;background:#fff}
@@ -134,11 +133,9 @@
     background:#0e2552;color:#fff;
   }
 
-  /* ✅ FIX footer sticky */
   tfoot .sticky1, tfoot .sticky2, tfoot .sticky3{background:#f1f5f9; z-index:8;}
   tfoot tr.strong .sticky1, tfoot tr.strong .sticky2, tfoot tr.strong .sticky3{background:#0e2552;color:#fff;}
 
-  /* compare */
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px;background:#fff}
   .bar{height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;border:1px solid #e5e7eb}
   .bar>i{display:block;height:100%;background:#2563eb;width:0%}
@@ -212,7 +209,6 @@
     </div>
   </div>
 
-  <!-- ✅ PANEL LUÔN ON -->
   <div class="card reasonPanel" id="reasonPanel">
     <div class="reasonBox">
       <div class="reasonIcon">🛠</div>
@@ -347,14 +343,19 @@
 </div>
 
 <script>
+/* ================== PATH SAFE (FIX 404) ================== */
+const BASE = new URL(".", window.location.href).href;       // thư mục chứa gdc1.html
+const URL_LOGIN = new URL("login.html", BASE).href;         // cùng thư mục
+const URL_GDC   = new URL("gdc.html", BASE).href;           // cùng thư mục
+
 /* ================== CONFIG ================== */
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 
-/* ✅ Trang này CHỈ dành cho gdc1 / gdch (bạn thêm alias nếu cần) */
+/* ✅ gdc1.html chỉ dành cho gdc1/gdch (alias thêm nếu bạn dùng) */
 const VIEW_ROLES = ["gdc1","gdch","gd_dieu_hanh","gddh"];
 
-/* ✅ Panel nguyên nhân: luôn ON trong gdc1.html */
+/* ✅ Panel nguyên nhân: luôn ON */
 const PANEL_ALWAYS_ON = true;
 
 /* ================== DATA ================== */
@@ -370,7 +371,6 @@ function fmtInt(n){ return NF_INT.format(Math.round(Number(n)||0)); }
 function fmtMoney(n){ return NF_MONEY.format(Number(n)||0); }
 function fmtDg(n){ return NF_DG.format(Number(n)||0); }
 function fmtPct1(n){ return (Number(n)||0).toFixed(1); }
-
 function toNum(v){
   let s=String(v??"").trim();
   if(!s) return 0;
@@ -392,8 +392,15 @@ function norm(s){ return String(s||"").trim().toLowerCase(); }
 
 /* ================== SESSION ================== */
 function sess(){ try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null} }
-function mustLogin(){ const s=sess(); if(!s||!s.token){ location.href="../login.html"; return null;} return s; }
-function logout(){ localStorage.removeItem(KEY); location.href="../login.html"; }
+function mustLogin(){
+  const s=sess();
+  if(!s||!s.token){ window.location.href=URL_LOGIN; return null; }
+  return s;
+}
+function logout(){
+  localStorage.removeItem(KEY);
+  window.location.href=URL_LOGIN;
+}
 
 /* ================== UTIL ================== */
 async function apiPost(payload){
@@ -406,7 +413,6 @@ function getRange(mode, dateStr){
   const d = new Date(dateStr+"T00:00:00");
   const yyyy=d.getFullYear(), mm=d.getMonth(), dd=d.getDate();
   const toISO=(x)=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
-
   if(mode==="day") return { from:dateStr, to:dateStr, label:`Ngày ${dateStr}` };
   if(mode==="week"){
     const day=(d.getDay()+6)%7;
@@ -447,19 +453,17 @@ function gateRole(){
   const ok = VIEW_ROLES.includes(role);
 
   document.getElementById("roleHint").innerText = ok
-    ? `✅ Role=${role} • ${username} • GDC1 dashboard • panel nguyên nhân: ON`
+    ? `✅ Role=${role} • ${username} • panel nguyên nhân: ON`
     : `⛔ Role=${role} • ${username} • Không đúng quyền (chuyển về gdc.html)`;
 
   if(!ok){
-    setTimeout(()=>{ location.href="../gdc.html"; }, 400);
+    setTimeout(()=>{ window.location.href = URL_GDC; }, 300);
     return false;
   }
 
-  // ✅ panel luôn on
   if(PANEL_ALWAYS_ON){
     document.getElementById("reasonPanel").style.display = "";
   }
-
   return true;
 }
 
@@ -530,7 +534,6 @@ async function reload(){
   S = mustLogin(); if(!S) return;
   if(!gateRole()){ setStatus("Không đúng quyền"); return; }
 
-  // ✅ panel luôn on (kể cả khi chưa load xong)
   if(PANEL_ALWAYS_ON){
     document.getElementById("reasonPanel").style.display = "";
   }
