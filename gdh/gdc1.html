@@ -238,7 +238,7 @@
     white-space:nowrap !important;
   }
 
-  /* Floating buttons: chỉ còn Chuyển đổi */
+  /* Floating buttons */
   .fabRow{
     position:fixed;
     right:14px;
@@ -541,6 +541,12 @@ const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
 
+/* ✅ ROLE cho Phó GĐ (GDC1)
+   - Bạn nói gdc1 nằm ở gdh/gdc1.html => thường role backend sẽ là "gdh"
+   - Để khỏi “đăng nhập sai role” nữa: chấp nhận nhiều biến thể role phó GĐ
+*/
+const ALLOWED_ROLES = new Set(["gdh","gdc1","pgd","pho_gd","phogd"]);
+
 // ✅ FIX khung giờ:
 // - XN1, XN2: KHÔNG có 11-12
 // - XN3: KHÔNG có 12-13
@@ -659,9 +665,8 @@ let tickerPaused=false;
 // filter hiển thị ticker: ALL4 (tổng hợp) | ALL | 1 | 2 | 3
 let tickerFilter = "ALL4";
 
-// danh sách message đã ghép (để chạy marquee theo chuỗi)
-let tickerItems = []; // [{scope, message, updated_at}]
-let tickerIdx = 0;
+// danh sách message đã ghép
+let tickerItems = [];
 
 function scopeLabel(sc){
   sc = String(sc||"").toUpperCase();
@@ -701,7 +706,7 @@ async function loadTicker(){
   const box = document.getElementById("ticker");
   if(!box) return;
 
-  // lấy ALL + 1 + 2 + 3 (đúng yêu cầu: phó giám đốc thấy hết)
+  // lấy ALL + 1 + 2 + 3 (phó giám đốc thấy hết)
   const scopes = ["ALL","1","2","3"];
   const got = [];
   for(const sc of scopes){
@@ -709,10 +714,9 @@ async function loadTicker(){
     if(it) got.push(it);
   }
 
-  // nếu user đang chọn filter cụ thể thì lọc ở đây
+  // lọc theo chip
   let show = [];
   if(tickerFilter === "ALL4"){
-    // giữ nguyên thứ tự ALL, XN1, XN2, XN3 (dễ đọc)
     const order = new Map([["ALL",0],["1",1],["2",2],["3",3]]);
     got.sort((a,b)=>(order.get(a.scope)||9)-(order.get(b.scope)||9));
     show = got;
@@ -723,7 +727,6 @@ async function loadTicker(){
   if(!show.length){
     box.style.display="none";
     tickerItems = [];
-    tickerIdx = 0;
     return;
   }
 
@@ -731,7 +734,6 @@ async function loadTicker(){
   document.getElementById("tickerScope").innerText =
     (tickerFilter==="ALL4") ? "TẤT CẢ" : scopeLabel(tickerFilter);
 
-  // hiển thị thời gian mới nhất trong các dòng đang hiển thị
   const newest = show.reduce((best,cur)=>{
     const tb = Date.parse(best?.updated_at||"") || 0;
     const tc = Date.parse(cur?.updated_at||"") || 0;
@@ -740,26 +742,24 @@ async function loadTicker(){
   document.getElementById("tickerTime").innerText = fmtTickerTime(newest?.updated_at) || "—";
 
   tickerItems = show;
-  tickerIdx = 0;
-  renderTickerText(); // render ngay
+  renderTickerText();
 }
 
 function renderTickerText(){
   const textEl = document.getElementById("tickerText");
   if(!textEl) return;
+
   if(!tickerItems.length){
     textEl.innerText = "—";
     return;
   }
 
-  // ghép tất cả chỉ đạo thành 1 chuỗi chạy (đảm bảo “thấy tất cả”)
-  // Ví dụ: "ALL: ...   |   XN1: ...   |   XN2: ..."
   const parts = tickerItems.map(it => `${scopeLabel(it.scope)}: ${it.message}`);
   const joined = parts.join("   |   ");
 
   textEl.style.animation = "none"; textEl.offsetHeight;
   textEl.innerText = joined;
-  // chạy lại animation
+
   if(!tickerPaused){
     textEl.style.animation = "marquee 22s linear infinite";
   }else{
@@ -909,8 +909,7 @@ function renderTabs(){
       activeXuong = Number(el.dataset.xuong||1);
       renderTabs();
       renderSelected();
-      // ✅ phó GĐ vẫn xem ticker “tất cả”, không phụ thuộc tab xưởng
-      // nhưng nếu bạn muốn đổi tab thì tickerScope không đổi, chỉ refresh time/message
+      // ticker độc lập, nhưng refresh để lấy time mới
       loadTicker();
     });
   });
@@ -1296,15 +1295,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
   S = mustLogin();
   if(!S) return;
 
-  // ✅ role dành cho phó GĐ: "gdc1"
-  // (nếu backend bạn đang lưu role khác thì đổi string tại đây)
-  if(S.role !== "gdc1"){
-    document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần gdc1)`;
+  // ✅ ROLE CHECK (FIX “đăng nhập sai role”)
+  const role = String(S.role||"").toLowerCase().trim();
+  if(!ALLOWED_ROLES.has(role)){
+    document.getElementById("roleHint").innerText =
+      `⛔ Sai quyền: role=${S.role} (cần 1 trong: ${[...ALLOWED_ROLES].join(", ")})`;
     setStatus("⛔ Không đúng quyền để mở GDC1");
     return;
   }
 
-  document.getElementById("roleHint").innerText = `✅ Phó GĐ: ${S.username} • xem 3 xưởng • thấy TẤT CẢ chỉ đạo`;
+  document.getElementById("roleHint").innerText =
+    `✅ Phó GĐ: ${S.username} • role=${S.role} • xem 3 xưởng • thấy TẤT CẢ chỉ đạo`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
 
   startTicker();
