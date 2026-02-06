@@ -238,7 +238,7 @@
     white-space:nowrap !important;
   }
 
-  /* Floating buttons */
+  /* Floating buttons: chỉ còn Chuyển đổi */
   .fabRow{
     position:fixed;
     right:14px;
@@ -541,11 +541,10 @@ const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
 
-/* ✅ ROLE cho Phó GĐ (GDC1)
-   - Bạn nói gdc1 nằm ở gdh/gdc1.html => thường role backend sẽ là "gdh"
-   - Để khỏi “đăng nhập sai role” nữa: chấp nhận nhiều biến thể role phó GĐ
-*/
-const ALLOWED_ROLES = new Set(["gdh","gdc1","pgd","pho_gd","phogd"]);
+// ✅ ROLE cho GDC1:
+// - Thực tế session của bạn đang là role=gdc
+// - Để gdh/gdc1.html mở được, phải cho phép role gdc vào đây
+const ALLOWED_ROLES = new Set(["gdh","gdc1","pgd","pho_gd","phogd","gdc"]);
 
 // ✅ FIX khung giờ:
 // - XN1, XN2: KHÔNG có 11-12
@@ -909,7 +908,6 @@ function renderTabs(){
       activeXuong = Number(el.dataset.xuong||1);
       renderTabs();
       renderSelected();
-      // ticker độc lập, nhưng refresh để lấy time mới
       loadTicker();
     });
   });
@@ -1295,7 +1293,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   S = mustLogin();
   if(!S) return;
 
-  // ✅ ROLE CHECK (FIX “đăng nhập sai role”)
+  // ✅ ROLE CHECK (đã cho phép role=gdc để mở GDC1)
   const role = String(S.role||"").toLowerCase().trim();
   if(!ALLOWED_ROLES.has(role)){
     document.getElementById("roleHint").innerText =
@@ -1304,6 +1302,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     return;
   }
 
+  // ✅ vẫn ghi “Phó GĐ” theo đúng file gdc1
   document.getElementById("roleHint").innerText =
     `✅ Phó GĐ: ${S.username} • role=${S.role} • xem 3 xưởng • thấy TẤT CẢ chỉ đạo`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
