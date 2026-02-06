@@ -65,7 +65,8 @@
 
     <div class="pill">
       <span>📁 Cấu trúc:</span>
-      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> · <span>gdc/gdc</span> · <span>gdh/gdc1..2</span>
+      <span>tk/tk1..3</span> · <span>to/to1..3</span> · <span>gdx/gdx1..3</span> ·
+      <span>gdc/gdc</span> · <span>gdh/gdc1..2</span>
     </div>
 
     <div class="small">
@@ -77,7 +78,7 @@
     <h2>Đăng nhập</h2>
 
     <label>Tài khoản</label>
-    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc1 / gdc2 ..." />
+    <input id="lgUser" autocomplete="username" placeholder="vd: tk1 / gdx1 / gdc / gdc1 ..." />
 
     <label>Mật khẩu</label>
     <input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••" />
@@ -96,7 +97,7 @@
 
 <script>
 /* ========= CONFIG ========= */
-const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev"; // ✅ sửa Worker URL
+const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 
 /* ========= SESSION ========= */
 const KEY = "NS_SESSION";
@@ -109,26 +110,27 @@ function clearSession(){
 }
 
 /* ========= PATH BASE (GH Pages safe) =========
-   Ví dụ: /KiemKeMayVH
-   - Nếu chạy ở localhost hoặc domain riêng không có repo prefix, base sẽ là "".
+   Ví dụ: https://mrlongv.github.io/KiemKeMayVH/login.html
+   -> BASE = /KiemKeMayVH
 */
 function getBasePath(){
   const parts = location.pathname.split("/").filter(Boolean);
-  // GitHub Pages kiểu: /<repo>/...
-  // Nếu không có parts thì base=""
   if(!parts.length) return "";
-  // nếu đang ở root domain mà không phải GH pages repo, vẫn ok (base = "")
-  // nhưng với mrlongv.github.io/<repo>/... thì base luôn là "/<repo>"
   return "/" + parts[0];
 }
 const BASE = getBasePath();
 
-/* ========= ROUTE ========= */
+/* ========= ROUTE (đúng như bạn nói) =========
+   - gdc -> /gdc/gdc.html
+   - gdc1,gdc2,... -> /gdh/gdc1.html, /gdh/gdc2.html...
+   - tk/to/gdx theo xuong như cũ
+*/
 function routeByRole(sess){
   if(!sess || !sess.role) return;
 
-  const x = Number(sess.xuong || 0);
   const role = String(sess.role || "").toLowerCase();
+  const x = Number(sess.xuong || 0);
+  const u = String(sess.username || "").toLowerCase().trim();
 
   if(role === "tk"){
     location.href = `${BASE}/tk/tk${x}.html`;
@@ -143,16 +145,19 @@ function routeByRole(sess){
     return;
   }
 
-  // ✅ GĐC: chuyển sang thư mục /gdh (gdc1.html, gdc2.html)
   if(role === "gdc"){
-    const u = String(sess.username || "").toLowerCase().trim();
-
-    // gdc1 → /gdh/gdc1.html, gdc2 → /gdh/gdc2.html
-    if(u.startsWith("gdc")){
-      location.href = `${BASE}/gdh/${u}.html`;
-    }else{
-      location.href = `${BASE}/gdh/gdc1.html`; // fallback
+    // ✅ gdc (dashboard chính)
+    if(u === "gdc"){
+      location.href = `${BASE}/gdc/gdc.html`;
+      return;
     }
+    // ✅ gdc1, gdc2... (thư mục gdh)
+    if(/^gdc\d+$/.test(u)){
+      location.href = `${BASE}/gdh/${u}.html`;
+      return;
+    }
+    // fallback an toàn
+    location.href = `${BASE}/gdc/gdc.html`;
     return;
   }
 
@@ -192,8 +197,9 @@ async function login(){
     return;
   }
 
-  document.getElementById("btnLogin").disabled = true;
-  document.getElementById("btnLogin").innerText = "Đang đăng nhập...";
+  const btn = document.getElementById("btnLogin");
+  btn.disabled = true;
+  btn.innerText = "Đang đăng nhập...";
 
   try{
     const res = await apiPost({ action:"login", user, pass });
@@ -207,8 +213,8 @@ async function login(){
   }catch(e){
     msg.innerText = "Lỗi kết nối: " + (e.message || e);
   }finally{
-    document.getElementById("btnLogin").disabled = false;
-    document.getElementById("btnLogin").innerText = "Đăng nhập";
+    btn.disabled = false;
+    btn.innerText = "Đăng nhập";
   }
 }
 
