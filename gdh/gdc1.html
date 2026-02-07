@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GDC1 Mobile – Phó Giám Đốc (Xem toàn bộ chỉ đạo)</title>
+<title>GDC1 – Phó Giám Đốc (Theo dõi năng suất)</title>
 <style>
   :root{
     --bg:#003366;
-    --card:#111a2e;
-    --card2:#0f172a;
     --line:rgba(255,255,255,.10);
     --text:#e5e7eb;
     --muted:rgba(229,231,235,.72);
@@ -29,6 +27,8 @@
       var(--bg);
     color:var(--text);
   }
+
+  /* ===== Topbar ===== */
   .topbar{
     position:sticky; top:0; z-index:50;
     background:linear-gradient(180deg, rgba(24,45,88,.92), rgba(16,34,68,.88));
@@ -49,10 +49,8 @@
   }
   .ctl label{font-size:12px; color:var(--muted)}
   input[type="date"]{
-    background:transparent;
-    border:none; outline:none;
-    color:var(--text);
-    font-size:12px;
+    background:transparent; border:none; outline:none;
+    color:var(--text); font-size:12px;
   }
   .btn{
     border:none; outline:none; cursor:pointer;
@@ -73,6 +71,7 @@
     background:rgba(255,255,255,.06);
     border:1px solid var(--line);
   }
+
   .status{
     margin-top:8px;
     font-size:12px;
@@ -82,66 +81,87 @@
   .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 5px rgba(34,197,94,.12)}
   .wrap{padding:12px; max-width:1200px; margin:0 auto}
 
-  /* ✅ ticker tổng hợp chỉ đạo (ALL + XN1 + XN2 + XN3) */
+  /* ===== iOS-like ticker (height 30px) ===== */
   .ticker{
-    margin:10px 0 0;            /* ✅ KHÔNG ẨN NỮA */
-    border:1px solid var(--line);
+    margin:10px 0 0;
+    border:1px solid rgba(255,255,255,.12);
     background:rgba(255,255,255,.06);
-    border-radius:16px;
+    border-radius:14px;
     overflow:hidden;
   }
-  .tickerTop{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 10px;
-    border-bottom:1px solid var(--line);
-    font-size:12px;
-    color:var(--muted);
+  .tickerRow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px; /* total height ~30px */
   }
-  .tickerTop b{color:var(--text)}
+  .iosPill{
+    height:20px;
+    padding:0 8px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:11px;
+    font-weight:900;
+    color:rgba(255,255,255,.92);
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.16);
+  }
+  .iosPill .badge{
+    width:14px;height:14px;border-radius:6px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(96,165,250,.22);
+    border:1px solid rgba(96,165,250,.35);
+    font-size:11px;
+    line-height:1;
+  }
+
   .tickerMarquee{
-    white-space:nowrap;
+    flex:1;
+    height:20px;
     overflow:hidden;
     position:relative;
-    height:36px;
-    display:flex; align-items:center;
+    display:flex;
+    align-items:center;
+    min-width:0;
   }
   .tickerMarquee .text{
     display:inline-block;
     padding-left:100%;
-    font-weight:900;
-    font-size:13px;
-    animation: marquee 22s linear infinite;
+    font-size:11px;
+    font-weight:800;
+    color:rgba(229,231,235,.92);
+    white-space:nowrap;
+    animation: marquee 26s linear infinite;
   }
   @keyframes marquee{
     from{ transform:translateX(0); }
     to{ transform:translateX(-100%); }
   }
-  .tickerTools{
-    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-    padding:8px 10px;
-    border-top:1px solid var(--line);
-    background:rgba(0,0,0,.08);
+  .tickerMeta{
+    font-size:11px;
+    color:rgba(229,231,235,.68);
+    white-space:nowrap;
   }
-  .chip{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:6px 10px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:900;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.06);
-    color:var(--text);
+  .tbtn{
+    width:28px; height:22px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.14);
+    color:rgba(255,255,255,.92);
     cursor:pointer;
-    user-select:none;
+    font-weight:900;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
   }
-  .chip.active{
-    border-color:rgba(96,165,250,.55);
+  .tbtn:hover{
     background:rgba(96,165,250,.16);
-    box-shadow:0 10px 22px rgba(96,165,250,.12);
+    border-color:rgba(96,165,250,.35);
   }
-  .chip small{font-weight:800;color:var(--muted)}
 
-  /* tabs xưởng */
+  /* ===== Tabs ===== */
   .tabs{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -192,21 +212,14 @@
     line-height:1.35;
   }
 
-  /* section cards */
-  .grid2{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:12px;
-    margin-top:12px;
-  }
-  @media(min-width:980px){
-    .grid2{ grid-template-columns:1.25fr .75fr; }
-  }
+  /* ===== Cards ===== */
+  .grid2{display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px}
+  @media(min-width:980px){ .grid2{ grid-template-columns:1.25fr .75fr; } }
   .card{
     border:1px solid var(--line);
     background:rgba(255,255,255,.05);
     border-radius:var(--radius);
-    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    box-shadow:var(--shadow);
     overflow:hidden;
   }
   .card .head{
@@ -217,7 +230,7 @@
   .card .head b{font-size:13px}
   .card .body{padding:10px 12px}
 
-  /* table */
+  /* ===== Table ===== */
   .tableWrap{overflow:auto}
   table{width:max(900px,100%); border-collapse:collapse; font-size:12px}
   th,td{border:1px solid rgba(255,255,255,.10); padding:7px 8px; text-align:center; white-space:nowrap}
@@ -227,18 +240,11 @@
   .right{text-align:right}
   .pct{font-weight:1000}
   .pct.good{color:var(--good)} .pct.warn{color:var(--warn)} .pct.bad{color:var(--bad)}
+  .mhShort{max-width:140px; width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap !important;}
+
   .hint{font-size:12px; color:var(--muted); line-height:1.45; margin-top:8px}
 
-  /* ✅ CẮT NGẮN CỘT MÃ HÀNG TRONG BẢNG THEO GIỜ */
-  .mhShort{
-    max-width:140px;
-    width:140px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap !important;
-  }
-
-  /* Floating buttons: chỉ còn Chuyển đổi */
+  /* Floating buttons */
   .fabRow{
     position:fixed;
     right:14px;
@@ -322,6 +328,9 @@
     <div class="brand">
       <b>🏢 Phó Giám Đốc – Theo dõi năng suất</b>
       <span id="roleHint">—</span>
+      <span style="color:rgba(229,231,235,.7);font-size:11px;margin-top:2px">
+        ✅ VERSION: <b style="color:#fff">GDC1-iOS-TICKER-30PX</b>
+      </span>
     </div>
 
     <div class="ctlRow">
@@ -339,23 +348,22 @@
     <span id="status">Đang khởi tạo…</span>
   </div>
 
-  <!-- ✅ Ticker tổng hợp: ALL + XN1 + XN2 + XN3 -->
+  <!-- ✅ iOS-like ticker: cao ~30px -->
   <div class="ticker" id="ticker">
-    <div class="tickerTop">
-      <div><b>📣 Chỉ đạo Giám Đốc</b> • <span id="tickerScope">TẤT CẢ</span></div>
-      <div id="tickerTime">—</div>
-    </div>
-    <div class="tickerMarquee">
-      <div class="text" id="tickerText">Đang tải chỉ đạo…</div>
-    </div>
-    <div class="tickerTools" id="tickerTools">
-      <div class="chip active" data-filter="ALL4">Tất cả <small>(ALL+XN1+XN2+XN3)</small></div>
-      <div class="chip" data-filter="ALL">ALL</div>
-      <div class="chip" data-filter="1">XN1</div>
-      <div class="chip" data-filter="2">XN2</div>
-      <div class="chip" data-filter="3">XN3</div>
-      <div class="chip" id="btnTickerPause" title="Tạm dừng/Chạy">⏯️</div>
-      <div class="chip" id="btnTickerRefresh" title="Tải lại chỉ đạo">🔄</div>
+    <div class="tickerRow">
+      <div class="iosPill" title="Chỉ đạo Giám Đốc">
+        <span class="badge">📣</span>
+        <span>Chỉ đạo</span>
+      </div>
+
+      <div class="tickerMarquee" aria-label="Nội dung chỉ đạo chạy">
+        <div class="text" id="tickerText">Đang tải chỉ đạo…</div>
+      </div>
+
+      <div class="tickerMeta" id="tickerTime">—</div>
+
+      <button class="tbtn" id="btnTickerPause" title="Tạm dừng/Chạy">⏯</button>
+      <button class="tbtn" id="btnTickerRefresh" title="Tải lại">🔄</button>
     </div>
   </div>
 </div>
@@ -535,26 +543,52 @@
 const API_URL = "https://nang-suat-may.hoalangiongxoai.workers.dev";
 const KEY="NS_SESSION";
 const XUONGS = [1,2,3];
-
-// ✅ role cho phép mở gdh/gdc1.html
 const ALLOWED_ROLES = new Set(["gdh","gdc1","pgd","pho_gd","phogd","gdc"]);
 
 // ✅ FIX khung giờ:
+// - XN1, XN2: KHÔNG có 11-12
+// - XN3: KHÔNG có 12-13
 const HOURS_BY_XUONG = {
   1:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   2:["7-8","8-9","9-10","10-11","12-13","13-14","14-15","15-16","16-17"],
   3:["7-8","8-9","9-10","10-11","11-12","13-14","14-15","15-16","16-17"]
 };
-
 const TO_BY_XUONG = {
   1:[1,3,5,7,9],
   2:[11,13,15,17],
   3:[19,21,23,25,27]
 };
 
-// ✅ cache chỉ đạo (để gdc1 vẫn thấy nếu API bị chặn role)
+/* ================== DIRECTIVE CACHE ================== */
 const DIR_CACHE_KEY = "NS_DIRECTOR_CACHE_V1";
 const DIR_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+
+function readDirCache(){
+  try{
+    const raw = localStorage.getItem(DIR_CACHE_KEY);
+    if(!raw) return {};
+    const obj = JSON.parse(raw);
+    if(!obj || typeof obj!=="object") return {};
+    const now = Date.now();
+    for(const k of Object.keys(obj)){
+      if(!obj[k] || !obj[k].ts || (now - obj[k].ts) > DIR_CACHE_TTL_MS) delete obj[k];
+    }
+    return obj;
+  }catch{ return {}; }
+}
+function writeDirCache(scope, ngay, data){
+  try{
+    const cache = readDirCache();
+    const key = `${String(ngay||"")}|${String(scope||"").toUpperCase()}`;
+    cache[key] = { ts: Date.now(), data };
+    localStorage.setItem(DIR_CACHE_KEY, JSON.stringify(cache));
+  }catch{}
+}
+function getCachedDirective(scope, ngay){
+  const cache = readDirCache();
+  const key = `${String(ngay||"")}|${String(scope||"").toUpperCase()}`;
+  return cache[key]?.data || null;
+}
 
 /* ================== FORMAT ================== */
 const NF_INT   = new Intl.NumberFormat("en-US", { useGrouping:true, minimumFractionDigits:0, maximumFractionDigits:0 });
@@ -591,7 +625,6 @@ function toNum(v){
   return Number.isFinite(n) ? n : 0;
 }
 function todayISO(){
-  // ✅ DÙNG GIỜ VIỆT NAM 00:00 – tránh lệch ngày
   const now = new Date();
   const vn = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
   const y = vn.getFullYear();
@@ -657,39 +690,9 @@ function pillHS(hs){
   return `<span class="pill ${cls}">${icon} ${fmtPct1(hs)}%</span>`;
 }
 
-/* ================== DIRECTIVE CACHE ================== */
-function readDirCache(){
-  try{
-    const raw = localStorage.getItem(DIR_CACHE_KEY);
-    if(!raw) return {};
-    const obj = JSON.parse(raw);
-    if(!obj || typeof obj!=="object") return {};
-    // dọn rác TTL
-    const now = Date.now();
-    for(const k of Object.keys(obj)){
-      if(!obj[k] || !obj[k].ts || (now - obj[k].ts) > DIR_CACHE_TTL_MS) delete obj[k];
-    }
-    return obj;
-  }catch{ return {}; }
-}
-function writeDirCache(scope, ngay, data){
-  try{
-    const cache = readDirCache();
-    const key = `${String(ngay||"")}|${String(scope||"").toUpperCase()}`;
-    cache[key] = { ts: Date.now(), data };
-    localStorage.setItem(DIR_CACHE_KEY, JSON.stringify(cache));
-  }catch{}
-}
-function getCachedDirective(scope, ngay){
-  const cache = readDirCache();
-  const key = `${String(ngay||"")}|${String(scope||"").toUpperCase()}`;
-  return cache[key]?.data || null;
-}
-
 /* ================== TICKER ================== */
 let tickerTimer=null;
 let tickerPaused=false;
-let tickerFilter = "ALL4";
 let tickerItems = [];
 
 function scopeLabel(sc){
@@ -710,53 +713,37 @@ function fmtTickerTime(iso){
   const mo = String(d.getMonth()+1).padStart(2,"0");
   return `${da}/${mo} ${hh}:${mi}`;
 }
-
 function normalizeDirectorRes(res, scopeFallback){
-  if(!res) return null;
-  const ok = !!res.success;
-  if(!ok) return null;
-
-  const msg =
-    String(res.message ?? res.noi_dung ?? res.content ?? res.chi_dao ?? "").trim();
+  if(!res || !res.success) return null;
+  const msg = String(res.message ?? res.noi_dung ?? res.content ?? res.chi_dao ?? "").trim();
   if(!msg) return null;
-
   const sc = String(res.scope ?? res.xuong ?? scopeFallback ?? "").trim();
   const updated = res.updated_at || res.updatedAt || res.time || res.updated || "";
-
-  return {
-    scope: String(sc||scopeFallback||"").toUpperCase(),
-    message: msg,
-    updated_at: updated
-  };
+  return { scope: String(sc||scopeFallback||"").toUpperCase(), message: msg, updated_at: updated };
 }
-
-// ✅ gọi nhiều biến thể để hợp với backend (ngay/date + scope/xuong)
 async function fetchDirectorOne(ngay, scope){
   const tries = [
     { action:"getDirectorMessage", scope, ngay },
     { action:"getDirectorMessage", scope, date:ngay },
     { action:"getDirectorMessage", xuong:scope, ngay },
     { action:"getDirectorMessage", xuong:scope, date:ngay },
-
-    // fallback action tên khác (nếu backend bạn đặt khác)
     { action:"getDirective", scope, ngay },
     { action:"getDirective", xuong:scope, ngay },
     { action:"getChiDao", scope, ngay },
     { action:"getChiDao", xuong:scope, ngay },
   ];
-
   for(const p of tries){
     const res = await apiPost(p);
     const norm = normalizeDirectorRes(res, scope);
     if(norm) return norm;
   }
-
-  // fallback cache
   const cached = getCachedDirective(scope, ngay);
-  if(cached?.message){
-    return { ...cached, _cached:true };
-  }
+  if(cached?.message) return { ...cached, _cached:true };
   return null;
+}
+function orderScopes(list){
+  const order = new Map([["ALL",0],["1",1],["2",2],["3",3]]);
+  return [...list].sort((a,b)=>(order.get(String(a.scope).toUpperCase())??9)-(order.get(String(b.scope).toUpperCase())??9));
 }
 
 async function loadTicker(){
@@ -765,83 +752,60 @@ async function loadTicker(){
   const ngay = document.getElementById("date").value || todayISO();
   const scopes = ["ALL","1","2","3"];
 
-  // render cache trước cho “có gì hiện liền”
   const cachedList = scopes
     .map(sc => getCachedDirective(sc, ngay))
     .filter(x => x && x.message)
     .map(x => ({...x, _cached:true}));
+
   if(cachedList.length){
-    tickerItems = applyTickerFilter(cachedList);
-    renderTickerText(true);
+    tickerItems = orderScopes(cachedList);
+    renderTickerText();
   }else{
-    // nếu chưa có cache, vẫn phải có chữ
     tickerItems = [];
-    renderTickerText(true);
+    renderTickerText();
   }
 
-  // fetch thật
   const got = [];
   for(const sc of scopes){
     const it = await fetchDirectorOne(ngay, sc);
     if(it){
       got.push(it);
-      // cache lại (kể cả cache source cũng ghi, không sao)
       writeDirCache(it.scope || sc, ngay, { scope: it.scope||sc, message: it.message, updated_at: it.updated_at || "" });
     }
   }
 
-  // nếu fetch được thì render lại
   if(got.length){
-    const show = applyTickerFilter(got);
-    tickerItems = show;
-    renderTickerText(false);
+    tickerItems = orderScopes(got);
+    renderTickerText();
 
-    const newest = show.reduce((best,cur)=>{
+    const newest = tickerItems.reduce((best,cur)=>{
       const tb = Date.parse(best?.updated_at||"") || 0;
       const tc = Date.parse(cur?.updated_at||"") || 0;
       return (tc>tb) ? cur : best;
-    }, show[0]);
+    }, tickerItems[0]);
+
     document.getElementById("tickerTime").innerText = fmtTickerTime(newest?.updated_at) || "—";
   }else{
-    // không fetch được -> giữ cache đang có, hoặc placeholder
-    document.getElementById("tickerTime").innerText = "—";
+    document.getElementById("tickerTime").innerText = document.getElementById("tickerTime").innerText || "—";
   }
-
-  document.getElementById("tickerScope").innerText =
-    (tickerFilter==="ALL4") ? "TẤT CẢ" : scopeLabel(tickerFilter);
 }
 
-function applyTickerFilter(list){
-  let show = [];
-  if(tickerFilter === "ALL4"){
-    const order = new Map([["ALL",0],["1",1],["2",2],["3",3]]);
-    show = [...list].sort((a,b)=>(order.get(a.scope)||9)-(order.get(b.scope)||9));
-  }else{
-    show = list.filter(x => String(x.scope).toUpperCase() === String(tickerFilter).toUpperCase());
-  }
-  return show;
-}
-
-function renderTickerText(isTemp){
+function renderTickerText(){
   const textEl = document.getElementById("tickerText");
   if(!textEl) return;
 
   let joined = "";
   if(!tickerItems.length){
-    joined = "Chưa có chỉ đạo (hoặc API đang chặn quyền của role hiện tại).";
+    joined = "Chưa có chỉ đạo (hoặc API đang chặn quyền).";
   }else{
-    const parts = tickerItems.map(it => `${scopeLabel(it.scope)}: ${it.message}${it._cached ? " (cache)" : ""}`);
-    joined = parts.join("   |   ");
+    joined = tickerItems.map(it => `${scopeLabel(it.scope)}: ${it.message}`).join("   |   ");
   }
 
   textEl.style.animation = "none"; textEl.offsetHeight;
   textEl.innerText = joined;
 
-  if(!tickerPaused && !isTemp){
-    textEl.style.animation = "marquee 22s linear infinite";
-  }else if(!tickerPaused && isTemp){
-    // tạm thời cũng cho chạy để nhìn “sống”
-    textEl.style.animation = "marquee 22s linear infinite";
+  if(!tickerPaused){
+    textEl.style.animation = "marquee 26s linear infinite";
   }else{
     textEl.style.animation = "none";
   }
@@ -858,7 +822,7 @@ function stopTicker(){
 }
 window.addEventListener("beforeunload", stopTicker);
 
-/* ================== LOAD DATA (năng suất) ================== */
+/* ================== LOAD (năng suất) ================== */
 let REQ=0;
 
 async function reload(){
@@ -1155,7 +1119,6 @@ function convertProgress(text){
   const el = document.getElementById("convertProgress");
   if(el) el.innerText = text || "—";
 }
-
 function groupPlanByXuongTo(rows){
   const map = new Map();
   for(const r of rows){
@@ -1200,7 +1163,6 @@ function groupPlanByXuongTo(rows){
   }
   return map;
 }
-
 async function ensureMonthUsdToDate(xuong, ngay){
   const ym = ymOf(ngay);
   const cache = monthUsdCache[xuong][ym];
@@ -1256,7 +1218,6 @@ async function ensureMonthUsdToDate(xuong, ngay){
   monthUsdCache[xuong][ym] = out;
   return out;
 }
-
 async function renderConvertTable(){
   const ngay = document.getElementById("date").value || todayISO();
   document.getElementById("convertDate").innerText = ngay;
@@ -1329,24 +1290,15 @@ async function renderConvertTable(){
 /* ================== EVENTS / BOOTSTRAP ================== */
 document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnLogout").addEventListener("click", logout);
+
   document.getElementById("btnReload").addEventListener("click", async ()=>{
     await reload();
     await loadTicker();
   });
 
-  // ticker filters
-  document.querySelectorAll('#tickerTools .chip[data-filter]').forEach(ch=>{
-    ch.addEventListener("click", async ()=>{
-      document.querySelectorAll('#tickerTools .chip[data-filter]').forEach(x=>x.classList.remove("active"));
-      ch.classList.add("active");
-      tickerFilter = String(ch.dataset.filter||"ALL4");
-      await loadTicker();
-    });
-  });
-
   document.getElementById("btnTickerPause").addEventListener("click", ()=>{
     tickerPaused = !tickerPaused;
-    renderTickerText(false);
+    renderTickerText();
   });
   document.getElementById("btnTickerRefresh").addEventListener("click", loadTicker);
 
@@ -1372,19 +1324,67 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   const role = String(S.role||"").toLowerCase().trim();
   if(!ALLOWED_ROLES.has(role)){
-    document.getElementById("roleHint").innerText =
-      `⛔ Sai quyền: role=${S.role} (cần 1 trong: ${[...ALLOWED_ROLES].join(", ")})`;
+    document.getElementById("roleHint").innerText = `⛔ Sai quyền: role=${S.role} (cần 1 trong: ${[...ALLOWED_ROLES].join(", ")})`;
     setStatus("⛔ Không đúng quyền để mở GDC1");
     return;
   }
 
-  document.getElementById("roleHint").innerText =
-    `✅ Phó GĐ: ${S.username} • role=${S.role} • xem 3 xưởng • thấy TẤT CẢ chỉ đạo`;
-
+  document.getElementById("roleHint").innerText = `✅ Phó GĐ: ${S.username} • role=${S.role} • xem 3 xưởng • thấy TẤT CẢ chỉ đạo`;
   setStatus("⏳ Đang tải dữ liệu lần đầu…");
+
   startTicker();
   reload();
 });
+
+/* ================== TICKER TIMER ================== */
+function startTicker(){
+  stopTicker();
+  loadTicker();
+  tickerTimer = setInterval(loadTicker, 30000);
+}
+function stopTicker(){
+  if(tickerTimer) clearInterval(tickerTimer);
+  tickerTimer=null;
+}
+</script>
+
+<script>
+/* ===== Tabs render (phần tách ra để dễ đọc) ===== */
+function renderTabs(){
+  const wrap = document.getElementById("tabs");
+  wrap.innerHTML = XUONGS.map(x=>{
+    const a = dayAggByXuong[x] || {usd:0,hs:0,sp:0,dm:0, topReasons:[]};
+    const top = (a.topReasons||[]).slice(0,2);
+    const reasons = top.length
+      ? top.map(t=>`• ${escapeHtml(t.k)} (${fmtInt(t.c)})`).join("<br/>")
+      : "• (Chưa có nguyên nhân)";
+
+    return `
+      <div class="tab ${activeXuong===x?'active':''}" data-xuong="${x}">
+        <div class="t1">
+          <div class="name">XN${x}</div>
+          ${pillHS(a.hs)}
+        </div>
+        <div class="kpis">
+          <div>USD đạt: <b>${fmtMoney(a.usd)}</b></div>
+          <div>SP: <b>${fmtInt(a.sp)}</b> • ĐM: <b>${fmtInt(a.dm)}</b></div>
+        </div>
+        <div class="reasons">
+          <b style="color:var(--text);font-size:12px">Top nguyên nhân</b><br/>
+          ${reasons}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  wrap.querySelectorAll(".tab").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      activeXuong = Number(el.dataset.xuong||1);
+      renderTabs();
+      renderSelected();
+    });
+  });
+}
 </script>
 
 </body>
