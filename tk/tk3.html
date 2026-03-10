@@ -972,22 +972,25 @@ async function captureTable(){
     const date = document.getElementById("date")?.value || "";
     const fileName = `TK3_XN3_${mode}_${date || "capture"}_HD.png`;
 
-    await new Promise((resolve, reject)=>{
-      canvas.toBlob((blob)=>{
-        if(!blob){ reject(new Error("toBlob failed")); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        resolve();
-      }, "image/png");
-    });
+   await new Promise((resolve, reject)=>{
+  canvas.toBlob(async (blob)=>{
+    if(!blob){ reject(new Error("toBlob failed")); return; }
 
-    status.innerText = "✅ Đã chụp đủ dòng CỘNG USD: " + fileName;
+    try{
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "image/png": blob
+        })
+      ]);
+      resolve();
+    }catch(err){
+      reject(err);
+    }
+
+  }, "image/png");
+});
+
+    status.innerText = "✅ Đã copy ảnh HD vào clipboard (Ctrl+V để dán) " + fileName;
     setTimeout(()=>{ status.innerText = oldStatus; }, 2500);
 
   }catch(err){
