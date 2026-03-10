@@ -1500,6 +1500,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
   startTicker();
   reload();
 });
+
+  /* ⭐ Auto reload khi quay lại app (Safari iPhone shortcut) */
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden){
+    reload();
+  }
+});
+  
 </script>
 
 </body>
