@@ -1079,17 +1079,32 @@ function exportExcelFixed(){
   const colHieuSuat = 23;   // cột hiệu suất (sửa nếu lệch)
 
   // ===== format % cho hiệu suất =====
-  for(let r = firstDataRow; r <= lastDataRow; r++){
+const colHieuSuat = 23; // chỉnh đúng vị trí cột hiệu suất
 
-    const addr = XLSX.utils.encode_cell({r:r,c:colHieuSuat});
-    const cell = ws[addr];
+for(let r = firstDataRow; r <= lastDataRow; r++){
 
-    if(cell && !isNaN(cell.v)){
+  const addr = XLSX.utils.encode_cell({r:r,c:colHieuSuat});
+  const cell = ws[addr];
+
+  if(cell){
+
+    let v = cell.v;
+
+    // nếu là text thì chuyển sang number
+    if(typeof v === "string"){
+      v = v.replace("%","").trim();
+      v = parseFloat(v);
+    }
+
+    if(!isNaN(v)){
       cell.t = "n";
+      cell.v = v;
       cell.z = "0.0%";
     }
 
   }
+
+}
 
   // ===== SUM Tổng SP =====
   ws[XLSX.utils.encode_cell({r:sumRow,c:colTongSP})] = {
