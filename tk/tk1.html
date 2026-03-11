@@ -1036,7 +1036,7 @@ function exportExcelFixed(){
     input.replaceWith(span);
   });
 
-  // sửa lỗi 7-8h
+  // sửa lỗi 7-8h thành date
   clone.querySelectorAll("td,th").forEach(cell=>{
     let t = cell.innerText.trim();
     if(/^\d+-\d+/.test(t)){
@@ -1046,7 +1046,7 @@ function exportExcelFixed(){
 
   const date = document.getElementById("date")?.value || "";
 
-  // ===== tạo sheet mới =====
+  // ===== tạo sheet =====
   const ws = XLSX.utils.aoa_to_sheet([
     ["CÔNG TY VIỆT HỒNG"],
     ["BÁO CÁO NĂNG SUẤT XN1"],
@@ -1054,18 +1054,41 @@ function exportExcelFixed(){
     []
   ]);
 
-  // ===== thêm bảng vào dòng 5 =====
+  // ===== thêm bảng =====
   XLSX.utils.sheet_add_dom(ws, clone, {origin:4});
 
-  // merge tiêu đề
+  // ===== merge tiêu đề =====
   ws["!merges"] = [
     {s:{r:0,c:0},e:{r:0,c:25}},
     {s:{r:1,c:0},e:{r:1,c:25}},
     {s:{r:2,c:0},e:{r:2,c:25}}
   ];
 
-  // width cột
+  // ===== width cột =====
   ws["!cols"] = new Array(30).fill({wch:12});
+
+  // ===== THÊM DÒNG SUM =====
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  const firstDataRow = 7;         // dòng dữ liệu đầu của bảng
+  const lastDataRow  = range.e.r; // dòng cuối dữ liệu
+  const sumRow       = lastDataRow + 1;
+
+  // vị trí cột (có thể chỉnh nếu lệch)
+  const colTongSP = 20; 
+  const colUSDTH  = 22;
+
+  // SUM Tổng SP
+  ws[XLSX.utils.encode_cell({r:sumRow,c:colTongSP})] = {
+    t:"n",
+    f:`SUM(${XLSX.utils.encode_col(colTongSP)}${firstDataRow}:${XLSX.utils.encode_col(colTongSP)}${lastDataRow})`
+  };
+
+  // SUM USD/TH
+  ws[XLSX.utils.encode_cell({r:sumRow,c:colUSDTH})] = {
+    t:"n",
+    f:`SUM(${XLSX.utils.encode_col(colUSDTH)}${firstDataRow}:${XLSX.utils.encode_col(colUSDTH)}${lastDataRow})`
+  };
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Dashboard");
