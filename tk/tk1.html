@@ -188,7 +188,7 @@
 
       <!-- ✅ NÚT CHỤP FULL BẢNG -->
       <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
-      <button class="btn" onclick="exportExcelERP()">📊 Xuất Excel ERP</button>
+      <button class="btn" onclick="exportExcelFixed()">📊 Xuất Excel ERP</button>
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -1020,69 +1020,61 @@ async function captureTable(){
     btn.disabled = false;
   }
 }
-function exportExcelERP(){
+
+function exportExcelFixed(){
 
   const table = document.getElementById("tbl");
+
+  // clone bảng
   const clone = table.cloneNode(true);
 
-  // ===== bỏ button =====
+  // bỏ button
   clone.querySelectorAll("button").forEach(e=>e.remove());
 
-  // ===== chuyển input thành text =====
+  // input -> text
   clone.querySelectorAll("input").forEach(input=>{
     const span = document.createElement("span");
     span.textContent = input.value;
-    input.parentNode.replaceChild(span,input);
+    input.replaceWith(span);
   });
 
-  // ===== sửa lỗi giờ thành date =====
+  // sửa lỗi 7-8h
   clone.querySelectorAll("td,th").forEach(cell=>{
-    let txt = cell.innerText.trim();
-
-    if(/^\d+\-\d+/.test(txt)){
-      cell.innerText = "'" + txt;
+    let t = cell.innerText.trim();
+    if(/^\d+-\d+/.test(t)){
+      cell.innerText = "'" + t;
     }
   });
 
-  // ===== convert table =====
+  // convert table
   const ws = XLSX.utils.table_to_sheet(clone,{raw:true});
 
   const date = document.getElementById("date")?.value || "";
 
-  // ===== thêm header =====
+  // thêm header công ty
   XLSX.utils.sheet_add_aoa(ws,[
     ["CÔNG TY VIỆT HỒNG"],
-    ["BÁO CÁO NĂNG SUẤT XƯỞNG"],
-    ["Ngày: "+date],
-    []
+    ["BÁO CÁO NĂNG SUẤT XN1"],
+    ["Ngày: "+date]
   ],{origin:"A1"});
 
-  // ===== dời bảng xuống =====
+  // dời bảng xuống 3 dòng
   const range = XLSX.utils.decode_range(ws['!ref']);
-  range.s.r += 4;
-  range.e.r += 4;
+  range.s.r += 3;
+  range.e.r += 3;
   ws['!ref'] = XLSX.utils.encode_range(range);
 
-  // ===== merge tiêu đề =====
-  ws["!merges"] = [
+  // merge tiêu đề
+  ws["!merges"]=[
     {s:{r:0,c:0},e:{r:0,c:25}},
     {s:{r:1,c:0},e:{r:1,c:25}},
     {s:{r:2,c:0},e:{r:2,c:25}}
   ];
 
-  // ===== width cột =====
-  ws["!cols"] = new Array(30).fill({wch:12});
+  // width cột
+  ws["!cols"]=new Array(30).fill({wch:12});
 
-  // ===== freeze header =====
-  ws["!freeze"] = {xSplit:0,ySplit:5};
-
-  // ===== filter =====
-  ws["!autofilter"] = {
-    ref: ws['!ref']
-  };
-
-  const wb = XLSX.utils.book_new();
-
+  const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,"Dashboard");
 
   XLSX.writeFile(wb,"BaoCao_XN1_"+date+".xlsx");
