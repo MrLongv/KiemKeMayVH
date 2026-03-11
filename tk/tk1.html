@@ -1067,24 +1067,37 @@ function exportExcelFixed(){
   // ===== width cột =====
   ws["!cols"] = new Array(30).fill({wch:12});
 
-  // ===== THÊM DÒNG SUM =====
   const range = XLSX.utils.decode_range(ws['!ref']);
 
-  const firstDataRow = 7;         // dòng dữ liệu đầu của bảng
-  const lastDataRow  = range.e.r; // dòng cuối dữ liệu
+  const firstDataRow = 7;
+  const lastDataRow  = range.e.r;
   const sumRow       = lastDataRow + 1;
 
-  // vị trí cột (có thể chỉnh nếu lệch)
-  const colTongSP = 20; 
-  const colUSDTH  = 22;
+  // ===== vị trí cột =====
+  const colTongSP   = 20;
+  const colUSDTH    = 22;
+  const colHieuSuat = 23;   // cột hiệu suất (sửa nếu lệch)
 
-  // SUM Tổng SP
+  // ===== format % cho hiệu suất =====
+  for(let r = firstDataRow; r <= lastDataRow; r++){
+
+    const addr = XLSX.utils.encode_cell({r:r,c:colHieuSuat});
+    const cell = ws[addr];
+
+    if(cell && !isNaN(cell.v)){
+      cell.t = "n";
+      cell.z = "0.0%";
+    }
+
+  }
+
+  // ===== SUM Tổng SP =====
   ws[XLSX.utils.encode_cell({r:sumRow,c:colTongSP})] = {
     t:"n",
     f:`SUM(${XLSX.utils.encode_col(colTongSP)}${firstDataRow}:${XLSX.utils.encode_col(colTongSP)}${lastDataRow})`
   };
 
-  // SUM USD/TH
+  // ===== SUM USD/TH =====
   ws[XLSX.utils.encode_cell({r:sumRow,c:colUSDTH})] = {
     t:"n",
     f:`SUM(${XLSX.utils.encode_col(colUSDTH)}${firstDataRow}:${XLSX.utils.encode_col(colUSDTH)}${lastDataRow})`
