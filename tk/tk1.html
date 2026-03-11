@@ -7,7 +7,7 @@
 
 <!-- ✅ html2canvas: load sớm để bấm nút là dùng được -->
 <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -188,7 +188,7 @@
 
       <!-- ✅ NÚT CHỤP FULL BẢNG -->
       <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
-
+      <button class="btn" onclick="exportExcel()">📥 Tải Excel</button>
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -1019,6 +1019,21 @@ async function captureTable(){
   }finally{
     btn.disabled = false;
   }
+}
+  function exportExcel(){
+
+  const table = document.getElementById("tbl");
+
+  const wb = XLSX.utils.table_to_book(table, {
+    sheet: "TK1_XN1"
+  });
+
+  const date = document.getElementById("date").value || "data";
+
+  const filename = "TK1_XN1_" + date + ".xlsx";
+
+  XLSX.writeFile(wb, filename);
+
 }
 </script>
 
