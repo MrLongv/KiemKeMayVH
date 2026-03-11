@@ -188,7 +188,7 @@
 
       <!-- ✅ NÚT CHỤP FULL BẢNG -->
       <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
-      <button class="btn" onclick="exportExcel()">📥 Tải Excel</button>
+      <button class="btn" onclick="exportDashboardExcel()">📊 Xuất Excel PRO</button>
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -1020,35 +1020,39 @@ async function captureTable(){
     btn.disabled = false;
   }
 }
-function exportExcelERP(){
+function exportDashboardExcel(){
 
   const table = document.getElementById("tbl");
+  const rows = table.querySelectorAll("tr");
 
-  // clone bảng để tránh ảnh hưởng dashboard
-  const clone = table.cloneNode(true);
+  let data = [];
 
-  // bỏ cột thao tác (button)
-  clone.querySelectorAll("button").forEach(b=>b.remove());
+  rows.forEach(row=>{
+    let rowData = [];
 
-  // lấy toàn bộ cell
-  clone.querySelectorAll("td,th").forEach(cell=>{
-    
-    let txt = cell.innerText.trim();
+    row.querySelectorAll("th,td").forEach(cell=>{
 
-    // tránh excel hiểu là ngày
-    if(/^\d+-\d+/.test(txt)){
-      txt = "'" + txt; 
-    }
+      let txt = cell.innerText.trim();
 
-    cell.innerText = txt;
+      // tránh excel hiểu giờ thành date
+      if(/^\d+-\d+/.test(txt)){
+        txt = "'" + txt;
+      }
+
+      rowData.push(txt);
+
+    });
+
+    data.push(rowData);
+
   });
 
-  // chuyển thành sheet
-  const ws = XLSX.utils.table_to_sheet(clone,{raw:true});
+  const ws = XLSX.utils.aoa_to_sheet(data);
 
   const date = document.getElementById("date")?.value || "";
 
-  // thêm header
+  // ===== thêm header =====
+
   XLSX.utils.sheet_add_aoa(ws,[
     ["CÔNG TY VIỆT HỒNG"],
     ["BÁO CÁO NĂNG SUẤT XƯỞNG"],
@@ -1056,30 +1060,43 @@ function exportExcelERP(){
     []
   ],{origin:"A1"});
 
-  // dời bảng xuống
+  // ===== dời bảng xuống =====
+
   const range = XLSX.utils.decode_range(ws['!ref']);
   range.s.r += 4;
   range.e.r += 4;
   ws['!ref'] = XLSX.utils.encode_range(range);
 
-  // merge header
+  // ===== merge tiêu đề =====
+
   ws["!merges"] = [
-    {s:{r:0,c:0},e:{r:0,c:20}},
-    {s:{r:1,c:0},e:{r:1,c:20}},
-    {s:{r:2,c:0},e:{r:2,c:20}}
+    {s:{r:0,c:0},e:{r:0,c:30}},
+    {s:{r:1,c:0},e:{r:1,c:30}},
+    {s:{r:2,c:0},e:{r:2,c:30}}
   ];
 
-  // width cột
-  ws["!cols"] = new Array(20).fill({wch:12});
+  // ===== width cột =====
 
-  // freeze header
-  ws["!freeze"] = {xSplit:0,ySplit:5};
+  ws["!cols"] = new Array(30).fill({wch:12});
+
+  // ===== freeze cột giống dashboard =====
+
+  ws["!freeze"] = {
+    xSplit:3,
+    ySplit:5
+  };
+
+  // ===== filter header =====
+
+  ws["!autofilter"] = {
+    ref: "A5:Z5"
+  };
 
   const wb = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(wb,ws,"Dashboard");
 
-  XLSX.writeFile(wb,"BaoCaoSanXuat_"+date+".xlsx");
+  XLSX.writeFile(wb,"BaoCao_XN1_"+date+".xlsx");
 
 }
 </script>
