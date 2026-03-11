@@ -7,7 +7,7 @@
 
 <!-- ✅ html2canvas: load sớm để bấm nút là dùng được -->
 <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
   :root{
     --bg:#f3f4f6;--card:#fff;--line:#d1d5db;--text:#111827;--muted:#6b7280;
@@ -188,7 +188,7 @@
 
       <!-- ✅ NÚT CHỤP FULL BẢNG -->
       <button class="btn capture" id="btnCapture" onclick="captureTable()">📸 Chụp full bảng (HD)</button>
-      <button class="btn" onclick="exportExcelFixed()">📊 Xuất Excel ERP</button>
+
       <button class="btn warn" id="btnSaveAll" onclick="saveAll()">Lưu tất cả KH</button>
 
       <div class="status" id="status">Chưa tải dữ liệu</div>
@@ -1019,113 +1019,6 @@ async function captureTable(){
   }finally{
     btn.disabled = false;
   }
-}
-
-function exportExcelFixed(){
-
-  const table = document.getElementById("tbl");
-  const clone = table.cloneNode(true);
-
-  // bỏ button
-  clone.querySelectorAll("button").forEach(e=>e.remove());
-
-  // input -> text
-  clone.querySelectorAll("input").forEach(input=>{
-    const span = document.createElement("span");
-    span.textContent = input.value;
-    input.replaceWith(span);
-  });
-
-  // sửa lỗi 7-8h thành date
-  clone.querySelectorAll("td,th").forEach(cell=>{
-    let t = cell.innerText.trim();
-    if(/^\d+-\d+/.test(t)){
-      cell.innerText = "'" + t;
-    }
-  });
-
-  const date = document.getElementById("date")?.value || "";
-
-  // ===== tạo sheet =====
-  const ws = XLSX.utils.aoa_to_sheet([
-    ["CÔNG TY VIỆT HỒNG"],
-    ["BÁO CÁO NĂNG SUẤT XN1"],
-    ["Ngày: " + date],
-    []
-  ]);
-
-  // ===== thêm bảng =====
-  XLSX.utils.sheet_add_dom(ws, clone, {origin:4});
-
-  // ===== merge tiêu đề =====
-  ws["!merges"] = [
-    {s:{r:0,c:0},e:{r:0,c:25}},
-    {s:{r:1,c:0},e:{r:1,c:25}},
-    {s:{r:2,c:0},e:{r:2,c:25}}
-  ];
-
-  // ===== width cột =====
-  ws["!cols"] = new Array(30).fill({wch:12});
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-
-  const firstDataRow = 7;
-  const lastDataRow  = range.e.r;
-  const sumRow       = lastDataRow + 1;
-
-  // ===== vị trí cột =====
-  const colTongSP   = 20;
-  const colUSDTH    = 22;
-  const colHieuSuat = 23;
-
-  // ===== FORMAT HIỆU SUẤT % =====
-  for(let r = firstDataRow; r <= lastDataRow; r++){
-
-    const addr = XLSX.utils.encode_cell({r:r,c:colHieuSuat});
-    const cell = ws[addr];
-
-    if(cell){
-
-      let v = cell.v;
-
-      if(typeof v === "string"){
-        v = v.replace("%","").trim();
-        v = parseFloat(v);
-      }
-
-      if(!isNaN(v)){
-
-        // nếu số >1 nghĩa là 65.1 -> phải chia 100
-        if(v > 1){
-          v = v / 100;
-        }
-
-        cell.t = "n";
-        cell.v = v;
-        cell.z = "0.0%";
-      }
-
-    }
-
-  }
-
-  // ===== SUM Tổng SP =====
-  ws[XLSX.utils.encode_cell({r:sumRow,c:colTongSP})] = {
-    t:"n",
-    f:`SUM(${XLSX.utils.encode_col(colTongSP)}${firstDataRow}:${XLSX.utils.encode_col(colTongSP)}${lastDataRow})`
-  };
-
-  // ===== SUM USD/TH =====
-  ws[XLSX.utils.encode_cell({r:sumRow,c:colUSDTH})] = {
-    t:"n",
-    f:`SUM(${XLSX.utils.encode_col(colUSDTH)}${firstDataRow}:${XLSX.utils.encode_col(colUSDTH)}${lastDataRow})`
-  };
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Dashboard");
-
-  XLSX.writeFile(wb, "BaoCao_XN1_" + date + ".xlsx");
-
 }
 </script>
 
