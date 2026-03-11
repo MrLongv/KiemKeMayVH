@@ -1024,8 +1024,6 @@ async function captureTable(){
 function exportExcelFixed(){
 
   const table = document.getElementById("tbl");
-
-  // clone bảng
   const clone = table.cloneNode(true);
 
   // bỏ button
@@ -1046,38 +1044,33 @@ function exportExcelFixed(){
     }
   });
 
-  // convert table
-  const ws = XLSX.utils.table_to_sheet(clone,{raw:true});
-
   const date = document.getElementById("date")?.value || "";
 
-  // thêm header công ty
-  XLSX.utils.sheet_add_aoa(ws,[
+  // ===== tạo sheet mới =====
+  const ws = XLSX.utils.aoa_to_sheet([
     ["CÔNG TY VIỆT HỒNG"],
     ["BÁO CÁO NĂNG SUẤT XN1"],
-    ["Ngày: "+date]
-  ],{origin:"A1"});
+    ["Ngày: " + date],
+    []
+  ]);
 
-  // dời bảng xuống 3 dòng
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  range.s.r += 3;
-  range.e.r += 3;
-  ws['!ref'] = XLSX.utils.encode_range(range);
+  // ===== thêm bảng vào dòng 5 =====
+  XLSX.utils.sheet_add_dom(ws, clone, {origin:4});
 
   // merge tiêu đề
-  ws["!merges"]=[
+  ws["!merges"] = [
     {s:{r:0,c:0},e:{r:0,c:25}},
     {s:{r:1,c:0},e:{r:1,c:25}},
     {s:{r:2,c:0},e:{r:2,c:25}}
   ];
 
   // width cột
-  ws["!cols"]=new Array(30).fill({wch:12});
+  ws["!cols"] = new Array(30).fill({wch:12});
 
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"Dashboard");
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Dashboard");
 
-  XLSX.writeFile(wb,"BaoCao_XN1_"+date+".xlsx");
+  XLSX.writeFile(wb, "BaoCao_XN1_" + date + ".xlsx");
 
 }
 </script>
