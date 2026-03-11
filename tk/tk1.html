@@ -1076,35 +1076,38 @@ function exportExcelFixed(){
   // ===== vị trí cột =====
   const colTongSP   = 20;
   const colUSDTH    = 22;
-  const colHieuSuat = 23;   // cột hiệu suất (sửa nếu lệch)
+  const colHieuSuat = 23;
 
-  // ===== format % cho hiệu suất =====
-const colHieuSuat = 23; // chỉnh đúng vị trí cột hiệu suất
+  // ===== FORMAT HIỆU SUẤT % =====
+  for(let r = firstDataRow; r <= lastDataRow; r++){
 
-for(let r = firstDataRow; r <= lastDataRow; r++){
+    const addr = XLSX.utils.encode_cell({r:r,c:colHieuSuat});
+    const cell = ws[addr];
 
-  const addr = XLSX.utils.encode_cell({r:r,c:colHieuSuat});
-  const cell = ws[addr];
+    if(cell){
 
-  if(cell){
+      let v = cell.v;
 
-    let v = cell.v;
+      if(typeof v === "string"){
+        v = v.replace("%","").trim();
+        v = parseFloat(v);
+      }
 
-    // nếu là text thì chuyển sang number
-    if(typeof v === "string"){
-      v = v.replace("%","").trim();
-      v = parseFloat(v);
-    }
+      if(!isNaN(v)){
 
-    if(!isNaN(v)){
-      cell.t = "n";
-      cell.v = v;
-      cell.z = "0.0%";
+        // nếu số >1 nghĩa là 65.1 -> phải chia 100
+        if(v > 1){
+          v = v / 100;
+        }
+
+        cell.t = "n";
+        cell.v = v;
+        cell.z = "0.0%";
+      }
+
     }
 
   }
-
-}
 
   // ===== SUM Tổng SP =====
   ws[XLSX.utils.encode_cell({r:sumRow,c:colTongSP})] = {
