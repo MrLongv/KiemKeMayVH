@@ -1020,19 +1020,66 @@ async function captureTable(){
     btn.disabled = false;
   }
 }
-  function exportExcel(){
+function exportExcelERP(){
 
   const table = document.getElementById("tbl");
 
-  const wb = XLSX.utils.table_to_book(table, {
-    sheet: "TK1_XN1"
+  // clone bảng để tránh ảnh hưởng dashboard
+  const clone = table.cloneNode(true);
+
+  // bỏ cột thao tác (button)
+  clone.querySelectorAll("button").forEach(b=>b.remove());
+
+  // lấy toàn bộ cell
+  clone.querySelectorAll("td,th").forEach(cell=>{
+    
+    let txt = cell.innerText.trim();
+
+    // tránh excel hiểu là ngày
+    if(/^\d+-\d+/.test(txt)){
+      txt = "'" + txt; 
+    }
+
+    cell.innerText = txt;
   });
 
-  const date = document.getElementById("date").value || "data";
+  // chuyển thành sheet
+  const ws = XLSX.utils.table_to_sheet(clone,{raw:true});
 
-  const filename = "TK1_XN1_" + date + ".xlsx";
+  const date = document.getElementById("date")?.value || "";
 
-  XLSX.writeFile(wb, filename);
+  // thêm header
+  XLSX.utils.sheet_add_aoa(ws,[
+    ["CÔNG TY VIỆT HỒNG"],
+    ["BÁO CÁO NĂNG SUẤT XƯỞNG"],
+    ["Ngày: "+date],
+    []
+  ],{origin:"A1"});
+
+  // dời bảng xuống
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  range.s.r += 4;
+  range.e.r += 4;
+  ws['!ref'] = XLSX.utils.encode_range(range);
+
+  // merge header
+  ws["!merges"] = [
+    {s:{r:0,c:0},e:{r:0,c:20}},
+    {s:{r:1,c:0},e:{r:1,c:20}},
+    {s:{r:2,c:0},e:{r:2,c:20}}
+  ];
+
+  // width cột
+  ws["!cols"] = new Array(20).fill({wch:12});
+
+  // freeze header
+  ws["!freeze"] = {xSplit:0,ySplit:5};
+
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb,ws,"Dashboard");
+
+  XLSX.writeFile(wb,"BaoCaoSanXuat_"+date+".xlsx");
 
 }
 </script>
