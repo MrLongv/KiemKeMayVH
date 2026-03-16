@@ -252,6 +252,7 @@
 
           <th rowspan="2" style="min-width:90px;">TỔNG SP</th>
           <th rowspan="2" style="min-width:110px;">USD/TH</th>
+          <th rowspan="2" style="min-width:110px;">USD/người</th>
           <th rowspan="2" style="min-width:105px;">HIỆU SUẤT</th>
 
           <th colspan="2">LAO ĐỘNG</th>
@@ -583,6 +584,9 @@ function renderDayRows(rows){
     const usdTh = tongSP * dg;
     const hs = dmNgay ? (tongSP/dmNgay*100) : 0;
 
+    const laoDong = toNum(r.lao_dong_thuc_te);
+    const usdNguoi = laoDong ? usdTh / laoDong : 0;
+
     // ✅ ĐÃ BỎ USD 80% — chỉ giữ USD 100%
     const usd100 = dmNgay * dg;
 
@@ -614,6 +618,7 @@ function renderDayRows(rows){
 
         <td class="calc">${fmtInt(tongSP)}</td>
         <td class="calc right">${fmtMoney(usdTh)}</td>
+        <td class="calc right">${fmtMoney(usdNguoi)}</td>
         <td class="pct ${pctClass(hs)}">${fmtPct1(hs)}%</td>
 
         <td><input class="cell ${ro} lao_dong_thuc_te" ${canEditPlan?"":"readonly"} inputmode="numeric" value="${fmtInt(r.lao_dong_thuc_te||0)}" /></td>
