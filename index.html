@@ -292,10 +292,64 @@ function openModal(index=null){
 function closeModal(){$('editModal').classList.remove('open');document.body.classList.remove('modal-open');state.editingIndex=null}
 function modalData(){return {sheetRow:state.editingIndex===null?'':state.allData[state.editingIndex].sheetRow,soThe:clean($('m_soThe').value),soMay:clean($('m_soMay').value),loaiMay:clean($('m_loaiMay').value),viTri:clean($('m_viTri').value),ngayMua:clean($('m_ngayMua').value),noiMua:clean($('m_noiMua').value),ghiChu:clean($('m_ghiChu').value),daKiemKe:$('m_daKiemKe').checked,chonIn:$('m_chonIn').checked,bdQ1:$('m_bdQ1').checked,bdNgayQ1:clean($('m_bdNgayQ1').value),bdQ2:$('m_bdQ2').checked,bdNgayQ2:clean($('m_bdNgayQ2').value),bdQ3:$('m_bdQ3').checked,bdNgayQ3:clean($('m_bdNgayQ3').value),bdQ4:$('m_bdQ4').checked,bdNgayQ4:clean($('m_bdNgayQ4').value),suaChua:clean($('m_suaChua').value),chiTietBaoDuong:clean($('m_chiTietBaoDuong').value),maMauBaoTri:clean($('m_maMauBaoTri').value),trangThaiPhanLoai:clean($('m_trangThaiPhanLoai').value),ghiChuPhanLoai:clean($('m_ghiChuPhanLoai').value)} }
 
-async function saveModal(event){event.preventDefault();const data=modalData();if(!data.soThe){alert('Số thẻ không được để trống');return}$('btnSave').disabled=true;setStatus('Đang lưu...');
-  try{await api('upsert',{data:JSON.stringify({mode:state.editingIndex===null?'add':'edit',originalSoThe:state.originalSoThe,data})});closeModal();await loadData();setStatus('Đã lưu máy '+displayTag(data.soThe),'ok')}
-  catch(error){alert(error.message);setStatus(error.message,'error')}
-  finally{$('btnSave').disabled=false}
+async function saveModal(event){
+  event.preventDefault();
+
+  const data = modalData();
+
+  if(!data.soThe){
+    alert('Số thẻ không được để trống');
+    $('m_soThe').focus();
+    return;
+  }
+
+  const editingIndex = state.editingIndex;
+  const isAdding = editingIndex === null;
+  const originalSoThe = state.originalSoThe;
+
+  $('btnSave').disabled = true;
+  $('btnSave').textContent = 'Đang lưu...';
+
+  setStatus('Đang lưu dữ liệu...');
+
+  try{
+    const result = await api('upsert',{
+      data:JSON.stringify({
+        mode:isAdding ? 'add' : 'edit',
+        originalSoThe:originalSoThe,
+        data:data
+      })
+    });
+
+    const savedRecord = result.record;
+
+    /*
+     * Không gọi loadData().
+     * Chỉ cập nhật dòng vừa lưu trên dữ liệu đang có.
+     */
+    if(isAdding){
+      state.allData.push(savedRecord);
+    }else{
+      state.allData[editingIndex] = savedRecord;
+    }
+
+    closeModal();
+    render();
+    highlightHashRow();
+
+    setStatus(
+      'Đã lưu máy ' + displayTag(savedRecord.soThe),
+      'ok'
+    );
+
+  }catch(error){
+    alert(error.message);
+    setStatus(error.message,'error');
+
+  }finally{
+    $('btnSave').disabled = false;
+    $('btnSave').textContent = 'Lưu';
+  }
 }
 
 async function patchCheckbox(input){const tr=input.closest('tr');const index=Number(tr.dataset.index);const row=state.allData[index];const field=input.dataset.field;const old=!!row[field];row[field]=input.checked;input.disabled=true;tr.classList.add('row-pending');
