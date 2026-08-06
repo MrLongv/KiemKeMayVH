@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Kiểm kê máy Việt Hồng</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <style>
 :root{
   --blue:#0b74d1;
@@ -100,7 +101,7 @@ body.modal-open{overflow:hidden}
     <label>Số thẻ cần in</label>
     <input id="reportTagInput" type="text" placeholder="VD: VH-500, 501 hoặc all">
     <button id="btnPrintHistory" class="btn btn-dark btn-full">In lý lịch máy</button>
-    <button id="btnPrintMaintenance" class="btn btn-primary btn-full">In phiếu bảo trì 16 CĐ</button>
+    <button id="btnPrintMaintenance" class="btn btn-primary btn-full">Xuất Excel phiếu bảo trì 16 CĐ</button>
     <div class="small-help">Có thể nhập nhiều số thẻ, cách nhau bằng dấu phẩy. Hệ thống sẽ đọc Mã mẫu bảo trì và chọn đúng nội dung cho từng máy.</div>
   </aside>
 
@@ -160,7 +161,7 @@ body.modal-open{overflow:hidden}
 'use strict';
 
 /* Giữ URL này nếu cập nhật đúng Deployment Apps Script cũ. Nếu tạo Deployment mới, thay URL bên dưới. */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbx_e5efB8vY7xAmV8LrgQNZImKZKbINXei8KR8PA4m0pwI5eJskjPSaOzBbjljO6K6F/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxHNfzlgPdoasMp2Q8i2ntsWlm6q8wCm3udisEydmTyFhr3o8vQvQg5akHaea33bFZG/exec';
 const TOKEN_KEY = 'vh_machine_auth_token_v4';
 const BATCH_SIZE = 50;
 
@@ -375,10 +376,449 @@ function printQr(){const rows=state.allData.filter(r=>r.chonIn);if(!rows.length)
 
 function printHistory(){const rows=selectedRowsFromInput();if(!rows?.length)return;const w=window.open('','_blank');if(!w){alert('Trình duyệt đang chặn cửa sổ in');return}w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lý lịch máy</title><style>@page{size:A4 portrait;margin:16mm}body{font-family:Arial;color:#222}.page{page-break-after:always}.page:last-child{page-break-after:auto}.company{font-size:18px;font-weight:700}.title{text-align:center;font-size:22px;font-weight:800;margin:25px 0 15px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}th{width:30%;background:#eee}.sign{text-align:right;margin-top:18px;line-height:1.7}</style></head><body>`);rows.forEach(r=>{const template=state.templateByCode[r.maMauBaoTri];const fields=[['Số thẻ',displayTag(r.soThe)],['Số máy',r.soMay],['Loại máy',r.loaiMay],['Vị trí',r.viTri],['Đơn vị mượn',r.ghiChu],['Ngày mua',r.ngayMua],['Nơi mua',r.noiMua],['Mã mẫu bảo trì',r.maMauBaoTri],['Nhóm máy bảo trì',r.nhomMayBaoTri],['Trạng thái phân loại',r.trangThaiPhanLoai],['Tên thiết bị trên phiếu',template?.reportEquipmentName||''],['Bảo dưỡng Q1',r.bdNgayQ1],['Bảo dưỡng Q2',r.bdNgayQ2],['Bảo dưỡng Q3',r.bdNgayQ3],['Bảo dưỡng Q4',r.bdNgayQ4],['Nội dung bảo dưỡng riêng',r.suaChua],['Chi tiết bảo dưỡng',r.chiTietBaoDuong]];w.document.write(`<section class="page"><div class="company">CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG</div><div class="title">LÝ LỊCH MÁY ${esc(displayTag(r.soThe))}</div><table>${fields.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table><div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:80px">Người lập</b></div></section>`)});w.document.write('</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},400)}
 
-function printMaintenance(){const rows=selectedRowsFromInput();if(!rows?.length)return;const unresolved=rows.filter(r=>!r.maMauBaoTri||!state.templateByCode[r.maMauBaoTri]);if(unresolved.length){alert('Các máy chưa có mẫu bảo trì hợp lệ:\n'+unresolved.map(r=>displayTag(r.soThe)+' — '+r.loaiMay).join('\n'));return}const unconfirmed=rows.filter(r=>r.trangThaiPhanLoai!=='Đã xác nhận');if(unconfirmed.length&&!confirm(`${unconfirmed.length} máy chưa có trạng thái “Đã xác nhận”. Vẫn in phiếu theo mẫu đang gợi ý?`))return;
-  const w=window.open('','_blank');if(!w){alert('Trình duyệt đang chặn cửa sổ in');return}w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Phiếu bảo trì 16 CĐ</title><style>@page{size:A4 landscape;margin:7mm}body{font-family:Arial;color:#111;margin:0}.page{page-break-after:always}.page:last-child{page-break-after:auto}.head{width:100%;border-collapse:collapse;margin-bottom:5px}.head td{border:1px solid #000;padding:5px;font-size:11px}.head .company{font-weight:700;font-size:13px}.title{text-align:center;font-weight:800;font-size:19px;border:1px solid #000;border-top:0;padding:7px}.info{width:100%;border-collapse:collapse}.info td{border:1px solid #000;padding:5px;font-size:11px}.label{font-weight:700;width:13%}.maintenance{width:100%;border-collapse:collapse;table-layout:fixed}.maintenance th,.maintenance td{border:1px solid #000;padding:5px;font-size:10.5px;text-align:center;vertical-align:middle}.maintenance th:nth-child(1){width:5%}.maintenance th:nth-child(2){width:34%}.maintenance th:nth-child(3),.maintenance th:nth-child(4),.maintenance th:nth-child(5),.maintenance th:nth-child(6){width:12%}.maintenance th:nth-child(7){width:13%}.maintenance td:nth-child(2){text-align:left}.mark-space{height:24px}.signature{border:1px solid #000;border-top:0;padding:7px;font-size:11px;min-height:35px}.notes{font-size:10px;line-height:1.45;margin-top:5px}.warning{font-size:9px;color:#8a5b00}.meta{font-size:9px;color:#444;text-align:right;margin-top:3px}</style></head><body>`);
-  rows.forEach(r=>{const t=state.templateByCode[r.maMauBaoTri];const qdate=q=>r['bdNgay'+q]||'...../...../..........';w.document.write(`<section class="page"><table class="head"><tr><td class="company" rowspan="2">CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG<br>Phòng: CƠ ĐIỆN</td><td style="width:22%">Mẫu số: 16 CĐ</td></tr><tr><td>Ban hành lần: 1/0</td></tr></table><div class="title">NỘI DUNG BẢO TRÌ, BẢO DƯỠNG MÁY</div><table class="info"><tr><td class="label">Tên thiết bị:</td><td colspan="3">${esc(t.reportEquipmentName||t.sourceEquipmentName||t.name)}</td><td class="label">Mã mẫu:</td><td>${esc(t.code)}</td></tr><tr><td class="label">Loại máy:</td><td colspan="5">${esc(r.loaiMay)}</td></tr><tr><td class="label">Số thẻ:</td><td>${esc(displayTag(r.soThe))}</td><td class="label">Số máy:</td><td>${esc(r.soMay)}</td><td class="label">Vị trí:</td><td>${esc(r.viTri)}</td></tr><tr><td class="label">Nhân viên bảo trì:</td><td>${esc(t.maintenanceStaff||'Nhân viên cơ điện')}</td><td class="label">Kiểm soát:</td><td>${esc(t.controller||'Trưởng Phòng Cơ điện')}</td><td class="label">Đơn vị mượn:</td><td>${esc(r.ghiChu)}</td></tr></table><table class="maintenance"><thead><tr><th>STT</th><th>NỘI DUNG BẢO TRÌ</th><th>Quý 1<br>Ngày: ${esc(qdate('Q1'))}</th><th>Quý 2<br>Ngày: ${esc(qdate('Q2'))}</th><th>Quý 3<br>Ngày: ${esc(qdate('Q3'))}</th><th>Quý 4<br>Ngày: ${esc(qdate('Q4'))}</th><th>GHI CHÚ</th></tr></thead><tbody>${t.details.map((d,i)=>`<tr><td>${d.no||i+1}</td><td>${esc(d.content)}</td><td class="mark-space"></td><td class="mark-space"></td><td class="mark-space"></td><td class="mark-space"></td><td></td></tr>`).join('')}</tbody></table><div class="signature"><b>Nhân viên bảo trì ký tên xác nhận:</b></div><div class="notes"><b>* Lưu ý:</b><br>- Nhân viên bảo trì tiến hành kiểm tra và đánh giá tình trạng máy 3 tháng/lần.<br>- Khi tiến hành bảo trì phải kiểm tra các nội dung trong danh mục có đạt yêu cầu hay không. Khi bảo trì xong, nhân viên thực hiện ký tên xác nhận.<br>☑ Đạt yêu cầu &nbsp;&nbsp;&nbsp; ☐ Không đạt yêu cầu${r.trangThaiPhanLoai!=='Đã xác nhận'?`<div class="warning">Mẫu đang ở trạng thái: ${esc(r.trangThaiPhanLoai)} — cần phòng Cơ điện xác nhận.</div>`:''}</div><div class="meta">Phiên bản mẫu: ${esc(t.version||r.phienBanMau||'16CD-1.0')}</div></section>`)});w.document.write('</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},500)}
+async function exportMaintenanceExcel(){
+  const rows = selectedRowsFromInput();
+  if(!rows?.length) return;
 
+  if(typeof ExcelJS === 'undefined'){
+    alert('Chưa tải được thư viện tạo Excel. Hãy kiểm tra kết nối mạng rồi tải lại trang.');
+    return;
+  }
+
+  const unresolved = rows.filter(r =>
+    !r.maMauBaoTri || !state.templateByCode[r.maMauBaoTri]
+  );
+
+  if(unresolved.length){
+    alert(
+      'Các máy chưa có mẫu bảo trì hợp lệ:\n' +
+      unresolved
+        .map(r => displayTag(r.soThe) + ' — ' + r.loaiMay)
+        .join('\n')
+    );
+    return;
+  }
+
+  const unconfirmed = rows.filter(
+    r => r.trangThaiPhanLoai !== 'Đã xác nhận'
+  );
+
+  if(
+    unconfirmed.length &&
+    !confirm(
+      `${unconfirmed.length} máy chưa có trạng thái “Đã xác nhận”. ` +
+      'Vẫn xuất Excel theo mẫu đang gợi ý?'
+    )
+  ){
+    return;
+  }
+
+  if(rows.length > 100){
+    alert(
+      'Mỗi lần chỉ nên xuất tối đa 100 máy để tránh trình duyệt bị treo.\n' +
+      'Hãy nhập các số thẻ theo từng nhóm nhỏ hơn.'
+    );
+    return;
+  }
+
+  const button = $('btnPrintMaintenance');
+  const oldButtonText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = 'Đang tạo Excel...';
+  setStatus(`Đang tạo file Excel cho ${rows.length} máy...`);
+
+  try{
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Công ty TNHH May Xuất khẩu Việt Hồng';
+    workbook.company = 'Công ty TNHH May Xuất khẩu Việt Hồng';
+    workbook.subject = 'Phiếu bảo trì, bảo dưỡng máy - Mẫu 16 CĐ';
+    workbook.title = 'Phiếu bảo trì 16 CĐ';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    const thinBorder = {
+      top:{style:'thin',color:{argb:'FF000000'}},
+      left:{style:'thin',color:{argb:'FF000000'}},
+      bottom:{style:'thin',color:{argb:'FF000000'}},
+      right:{style:'thin',color:{argb:'FF000000'}}
+    };
+
+    const center = {
+      vertical:'middle',
+      horizontal:'center',
+      wrapText:true
+    };
+
+    const leftWrap = {
+      vertical:'middle',
+      horizontal:'left',
+      wrapText:true
+    };
+
+    const fillBlue = {
+      type:'pattern',
+      pattern:'solid',
+      fgColor:{argb:'FF0B74D1'}
+    };
+
+    const fillLightBlue = {
+      type:'pattern',
+      pattern:'solid',
+      fgColor:{argb:'FFDDEEFF'}
+    };
+
+    const fillInput = {
+      type:'pattern',
+      pattern:'solid',
+      fgColor:{argb:'FFFFF2CC'}
+    };
+
+    const fillWarning = {
+      type:'pattern',
+      pattern:'solid',
+      fgColor:{argb:'FFFFE699'}
+    };
+
+    // Sheet tổng hợp để dễ kiểm tra các máy đã xuất.
+    const summary = workbook.addWorksheet('Danh sách', {
+      views:[{state:'frozen',ySplit:1}]
+    });
+
+    summary.columns = [
+      {header:'STT',key:'stt',width:7},
+      {header:'Số thẻ',key:'soThe',width:15},
+      {header:'Số máy',key:'soMay',width:18},
+      {header:'Loại máy',key:'loaiMay',width:48},
+      {header:'Vị trí',key:'viTri',width:20},
+      {header:'Mã mẫu',key:'maMau',width:20},
+      {header:'Tên mẫu bảo trì',key:'tenMau',width:28},
+      {header:'Trạng thái phân loại',key:'trangThai',width:30}
+    ];
+
+    summary.getRow(1).eachCell(cell => {
+      cell.font = {name:'Arial',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+      cell.fill = fillBlue;
+      cell.alignment = center;
+      cell.border = thinBorder;
+    });
+    summary.getRow(1).height = 28;
+
+    rows.forEach((r,index) => {
+      const t = state.templateByCode[r.maMauBaoTri];
+      const row = summary.addRow({
+        stt:index + 1,
+        soThe:displayTag(r.soThe),
+        soMay:r.soMay,
+        loaiMay:r.loaiMay,
+        viTri:r.viTri,
+        maMau:r.maMauBaoTri,
+        tenMau:t?.name || r.nhomMayBaoTri || '',
+        trangThai:r.trangThaiPhanLoai || ''
+      });
+
+      row.eachCell(cell => {
+        cell.font = {name:'Arial',size:10};
+        cell.alignment = leftWrap;
+        cell.border = thinBorder;
+      });
+      row.getCell(1).alignment = center;
+    });
+
+    summary.autoFilter = {
+      from:{row:1,column:1},
+      to:{row:Math.max(1,rows.length + 1),column:8}
+    };
+    summary.pageSetup = {
+      paperSize:9,
+      orientation:'landscape',
+      fitToPage:true,
+      fitToWidth:1,
+      fitToHeight:0,
+      margins:{left:0.25,right:0.25,top:0.4,bottom:0.4,header:0.2,footer:0.2}
+    };
+
+    const usedSheetNames = new Set(['Danh sách']);
+
+    rows.forEach((r,index) => {
+      const t = state.templateByCode[r.maMauBaoTri];
+      const details = Array.isArray(t.details) ? t.details : [];
+
+      let sheetName = displayTag(r.soThe)
+        .replace(/[\\/:?*\[\]]/g,'-')
+        .slice(0,31) || `Máy ${index + 1}`;
+
+      const baseName = sheetName;
+      let suffix = 2;
+      while(usedSheetNames.has(sheetName)){
+        const suffixText = '-' + suffix++;
+        sheetName = (baseName.slice(0,31 - suffixText.length) + suffixText);
+      }
+      usedSheetNames.add(sheetName);
+
+      const ws = workbook.addWorksheet(sheetName, {
+        views:[{state:'frozen',ySplit:8}]
+      });
+
+      ws.properties.defaultRowHeight = 20;
+      ws.columns = [
+        {key:'A',width:7},
+        {key:'B',width:46},
+        {key:'C',width:17},
+        {key:'D',width:17},
+        {key:'E',width:17},
+        {key:'F',width:17},
+        {key:'G',width:26}
+      ];
+
+      ws.pageSetup = {
+        paperSize:9,
+        orientation:'landscape',
+        fitToPage:true,
+        fitToWidth:1,
+        fitToHeight:1,
+        horizontalCentered:true,
+        verticalCentered:false,
+        margins:{left:0.25,right:0.25,top:0.3,bottom:0.3,header:0.15,footer:0.15}
+      };
+
+      ws.headerFooter.oddFooter =
+        '&LPhòng Cơ điện&CTrang &P / &N&R' + displayTag(r.soThe);
+
+      ws.mergeCells('A1:E2');
+      ws.getCell('A1').value =
+        'CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG\nPHÒNG CƠ ĐIỆN';
+      ws.getCell('A1').font = {name:'Arial',size:13,bold:true};
+      ws.getCell('A1').alignment = center;
+      ws.getCell('A1').border = thinBorder;
+
+      ws.mergeCells('F1:G1');
+      ws.getCell('F1').value = 'Mẫu số: 16 CĐ';
+      ws.getCell('F1').font = {name:'Arial',size:11,bold:true};
+      ws.getCell('F1').alignment = center;
+      ws.getCell('F1').border = thinBorder;
+
+      ws.mergeCells('F2:G2');
+      ws.getCell('F2').value = 'Ban hành lần: 1/0';
+      ws.getCell('F2').font = {name:'Arial',size:10};
+      ws.getCell('F2').alignment = center;
+      ws.getCell('F2').border = thinBorder;
+
+      ws.mergeCells('A3:G3');
+      ws.getCell('A3').value = 'NỘI DUNG BẢO TRÌ, BẢO DƯỠNG MÁY';
+      ws.getCell('A3').font = {name:'Arial',size:16,bold:true,color:{argb:'FFFFFFFF'}};
+      ws.getCell('A3').fill = fillBlue;
+      ws.getCell('A3').alignment = center;
+      ws.getCell('A3').border = thinBorder;
+      ws.getRow(3).height = 30;
+
+      const reportEquipmentName =
+        t.reportEquipmentName || t.sourceEquipmentName || t.name || '';
+
+      ws.getCell('A4').value = 'Tên thiết bị:';
+      ws.mergeCells('B4:D4');
+      ws.getCell('B4').value = reportEquipmentName;
+      ws.getCell('E4').value = 'Mã mẫu:';
+      ws.mergeCells('F4:G4');
+      ws.getCell('F4').value = t.code || r.maMauBaoTri;
+
+      ws.getCell('A5').value = 'Loại máy:';
+      ws.mergeCells('B5:G5');
+      ws.getCell('B5').value = r.loaiMay || '';
+
+      ws.getCell('A6').value = 'Số thẻ:';
+      ws.getCell('B6').value = displayTag(r.soThe);
+      ws.getCell('C6').value = 'Số máy:';
+      ws.getCell('D6').value = r.soMay || '';
+      ws.getCell('E6').value = 'Vị trí:';
+      ws.mergeCells('F6:G6');
+      ws.getCell('F6').value = r.viTri || '';
+
+      ws.getCell('A7').value = 'Nhân viên bảo trì:';
+      ws.getCell('B7').value = t.maintenanceStaff || 'Nhân viên cơ điện';
+      ws.getCell('C7').value = 'Kiểm soát:';
+      ws.getCell('D7').value = t.controller || 'Trưởng Phòng Cơ điện';
+      ws.getCell('E7').value = 'Đơn vị mượn:';
+      ws.mergeCells('F7:G7');
+      ws.getCell('F7').value = r.ghiChu || '';
+
+      for(let rowNo = 4; rowNo <= 7; rowNo++){
+        for(let colNo = 1; colNo <= 7; colNo++){
+          const cell = ws.getCell(rowNo,colNo);
+          cell.border = thinBorder;
+          cell.font = {name:'Arial',size:10,bold:[1,3,5].includes(colNo)};
+          cell.alignment = leftWrap;
+        }
+      }
+
+      ['A4','E4','A5','A6','C6','E6','A7','C7','E7'].forEach(address => {
+        ws.getCell(address).fill = fillLightBlue;
+        ws.getCell(address).font = {name:'Arial',size:10,bold:true};
+      });
+
+      const qDate = q => r['bdNgay' + q] || '...../...../..........';
+      const headerRow = 8;
+      const headers = [
+        'STT',
+        'NỘI DUNG BẢO TRÌ',
+        `Quý 1\nNgày: ${qDate('Q1')}`,
+        `Quý 2\nNgày: ${qDate('Q2')}`,
+        `Quý 3\nNgày: ${qDate('Q3')}`,
+        `Quý 4\nNgày: ${qDate('Q4')}`,
+        'GHI CHÚ'
+      ];
+
+      headers.forEach((value,colIndex) => {
+        const cell = ws.getCell(headerRow,colIndex + 1);
+        cell.value = value;
+        cell.font = {name:'Arial',size:10,bold:true,color:{argb:'FFFFFFFF'}};
+        cell.fill = fillBlue;
+        cell.alignment = center;
+        cell.border = thinBorder;
+      });
+      ws.getRow(headerRow).height = 38;
+
+      details.forEach((detail,detailIndex) => {
+        const excelRow = headerRow + 1 + detailIndex;
+        ws.getCell(excelRow,1).value = detail.no || detailIndex + 1;
+        ws.getCell(excelRow,2).value = detail.content || '';
+
+        for(let colNo = 1; colNo <= 7; colNo++){
+          const cell = ws.getCell(excelRow,colNo);
+          cell.border = thinBorder;
+          cell.font = {name:'Arial',size:10};
+          cell.alignment = colNo === 2 || colNo === 7 ? leftWrap : center;
+        }
+
+        for(let colNo = 3; colNo <= 6; colNo++){
+          const cell = ws.getCell(excelRow,colNo);
+          cell.fill = fillInput;
+          cell.dataValidation = {
+            type:'list',
+            allowBlank:true,
+            showErrorMessage:true,
+            errorTitle:'Giá trị không hợp lệ',
+            error:'Chọn Đạt yêu cầu, Không đạt yêu cầu hoặc N/A.',
+            formulae:['"Đạt yêu cầu,Không đạt yêu cầu,N/A"']
+          };
+        }
+
+        ws.getCell(excelRow,7).fill = fillInput;
+        ws.getRow(excelRow).height = 27;
+      });
+
+      const lastDetailRow = headerRow + Math.max(details.length,1);
+      if(!details.length){
+        for(let colNo = 1; colNo <= 7; colNo++){
+          const cell = ws.getCell(headerRow + 1,colNo);
+          cell.border = thinBorder;
+        }
+        ws.getCell(headerRow + 1,2).value = 'Chưa có nội dung bảo trì trong mẫu.';
+      }
+
+      let currentRow = lastDetailRow + 2;
+
+      ws.mergeCells(currentRow,1,currentRow,2);
+      ws.getCell(currentRow,1).value = 'Nội dung bảo dưỡng riêng của máy:';
+      ws.getCell(currentRow,1).font = {name:'Arial',size:10,bold:true};
+      ws.getCell(currentRow,1).fill = fillLightBlue;
+      ws.mergeCells(currentRow,3,currentRow,7);
+      ws.getCell(currentRow,3).value = r.suaChua || '';
+
+      for(let colNo = 1; colNo <= 7; colNo++){
+        ws.getCell(currentRow,colNo).border = thinBorder;
+        ws.getCell(currentRow,colNo).alignment = leftWrap;
+      }
+      ws.getRow(currentRow).height = 35;
+      currentRow++;
+
+      ws.mergeCells(currentRow,1,currentRow,2);
+      ws.getCell(currentRow,1).value = 'Chi tiết bảo dưỡng:';
+      ws.getCell(currentRow,1).font = {name:'Arial',size:10,bold:true};
+      ws.getCell(currentRow,1).fill = fillLightBlue;
+      ws.mergeCells(currentRow,3,currentRow,7);
+      ws.getCell(currentRow,3).value = r.chiTietBaoDuong || '';
+
+      for(let colNo = 1; colNo <= 7; colNo++){
+        ws.getCell(currentRow,colNo).border = thinBorder;
+        ws.getCell(currentRow,colNo).alignment = leftWrap;
+      }
+      ws.getRow(currentRow).height = 35;
+      currentRow += 2;
+
+      ws.mergeCells(currentRow,1,currentRow,7);
+      ws.getCell(currentRow,1).value = 'Nhân viên bảo trì ký tên xác nhận: ................................................................................';
+      ws.getCell(currentRow,1).font = {name:'Arial',size:10,bold:true};
+      ws.getCell(currentRow,1).alignment = leftWrap;
+      ws.getCell(currentRow,1).border = thinBorder;
+      ws.getRow(currentRow).height = 32;
+      currentRow++;
+
+      ws.mergeCells(currentRow,1,currentRow + 2,7);
+      ws.getCell(currentRow,1).value =
+        '* Lưu ý:\n' +
+        '- Nhân viên bảo trì tiến hành kiểm tra và đánh giá tình trạng máy 3 tháng/lần.\n' +
+        '- Các ô Quý 1–Quý 4 có danh sách chọn: Đạt yêu cầu / Không đạt yêu cầu / N/A.\n' +
+        '- Sau khi bảo trì xong, nhân viên thực hiện ký tên xác nhận.';
+      ws.getCell(currentRow,1).font = {name:'Arial',size:9};
+      ws.getCell(currentRow,1).alignment = leftWrap;
+      ws.getCell(currentRow,1).border = thinBorder;
+      ws.getRow(currentRow).height = 20;
+      ws.getRow(currentRow + 1).height = 20;
+      ws.getRow(currentRow + 2).height = 20;
+      currentRow += 3;
+
+      ws.mergeCells(currentRow,1,currentRow,5);
+      ws.getCell(currentRow,1).value =
+        'Phiên bản mẫu: ' + (t.version || r.phienBanMau || '16CD-1.0');
+      ws.getCell(currentRow,1).font = {name:'Arial',size:9,italic:true};
+      ws.getCell(currentRow,1).alignment = leftWrap;
+
+      ws.mergeCells(currentRow,6,currentRow,7);
+      ws.getCell(currentRow,6).value =
+        'Trạng thái: ' + (r.trangThaiPhanLoai || 'Cần phân loại');
+      ws.getCell(currentRow,6).font = {name:'Arial',size:9,bold:true};
+      ws.getCell(currentRow,6).alignment = center;
+
+      if(r.trangThaiPhanLoai !== 'Đã xác nhận'){
+        ws.getCell(currentRow,6).fill = fillWarning;
+      }
+
+      ws.printArea = `A1:G${currentRow}`;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob(
+      [buffer],
+      {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
+    );
+
+    const firstTag = displayTag(rows[0].soThe)
+      .replace(/[^A-Za-z0-9_-]/g,'-');
+    const fileName = rows.length === 1
+      ? `Phieu_bao_tri_16CD_${firstTag}.xlsx`
+      : `Phieu_bao_tri_16CD_${rows.length}_may.xlsx`;
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(link.href),1500);
+    setStatus(`Đã xuất Excel ${rows.length} máy: ${fileName}`,'ok');
+
+  }catch(error){
+    console.error(error);
+    alert('Không tạo được file Excel: ' + error.message);
+    setStatus(error.message,'error');
+
+  }finally{
+    button.disabled = false;
+    button.textContent = oldButtonText;
+  }
+}
 function focusFromHash(){let tag=location.hash.slice(1);if(!tag)return;try{tag=decodeURIComponent(tag)}catch(_){}const row=state.allData.find(r=>comparableTag(r.soThe)===comparableTag(tag));if(!row)return;$('searchBox').value='';$('filterBox').value='all';state.filtered=state.allData.slice();const index=state.filtered.indexOf(row);state.page=Math.floor(index/state.pageSize)+1;render();setTimeout(highlightHashRow,100)}
 function highlightHashRow(){let tag=location.hash.slice(1);if(!tag)return;try{tag=decodeURIComponent(tag)}catch(_){}document.querySelectorAll('.row-highlight').forEach(x=>x.classList.remove('row-highlight'));const tr=Array.from(document.querySelectorAll('#dataTable tbody tr')).find(x=>comparableTag(x.dataset.tag)===comparableTag(tag));if(tr){tr.classList.add('row-highlight');tr.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'})}}
 
@@ -386,7 +826,7 @@ function changePage(delta){const max=Math.max(1,Math.ceil(state.filtered.length/
 
 $('btnLogin').onclick=login;$('passwordInput').onkeydown=e=>{if(e.key==='Enter')login()};$('btnLogout').onclick=()=>logout(true);$('btnRefresh').onclick=loadData;$('btnAdd').onclick=()=>openModal(null);$('btnSyncTemplates').onclick=syncTemplates;$('searchBox').oninput=()=>{state.page=1;render()};$('filterBox').onchange=()=>{state.page=1;render()};$('pageSizeBox').value=String(state.pageSize);$('pageSizeBox').onchange=()=>{state.pageSize=Number($('pageSizeBox').value);state.page=1;render()};
 ['btnPrev','btnPrevBottom'].forEach(id=>$(id).onclick=()=>changePage(-1));['btnNext','btnNextBottom'].forEach(id=>$(id).onclick=()=>changePage(1));
-$('btnSelectQrFiltered').onclick=()=>batchFiltered('chonIn',true);$('btnUnselectQrFiltered').onclick=()=>batchFiltered('chonIn',false);$('btnPrintQr').onclick=printQr;$('btnPrintHistory').onclick=printHistory;$('btnPrintMaintenance').onclick=printMaintenance;
+$('btnSelectQrFiltered').onclick=()=>batchFiltered('chonIn',true);$('btnUnselectQrFiltered').onclick=()=>batchFiltered('chonIn',false);$('btnPrintQr').onclick=printQr;$('btnPrintHistory').onclick=printHistory;$('btnPrintMaintenance').onclick=exportMaintenanceExcel;
 $('btnCloseModal').onclick=closeModal;$('btnCancel').onclick=closeModal;$('editModal').onclick=e=>{if(e.target.id==='editModal')closeModal()};$('editForm').onsubmit=saveModal;
 $('dataTable').querySelector('tbody').onclick=e=>{const btn=e.target.closest('[data-edit]');if(btn)openModal(Number(btn.dataset.edit))};$('dataTable').querySelector('tbody').onchange=e=>{const input=e.target.closest('.row-check');if(input)patchCheckbox(input)};
 ['Q1','Q2','Q3','Q4'].forEach(q=>$('m_bd'+q).onchange=()=>{if(!$('m_bd'+q).checked)$('m_bdNgay'+q).value='';else if(!clean($('m_bdNgay'+q).value))$('m_bdNgay'+q).value=todayText()});
