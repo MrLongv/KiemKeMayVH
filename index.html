@@ -853,14 +853,19 @@ async function exportMaintenanceExcel(){
       });
 
       ws.properties.defaultRowHeight = 20;
+      /*
+       * Chiều rộng được cân lại cho khổ A4 ngang.
+       * Cột nội dung và 4 cột quý rộng hơn để sau khi co vừa 1 trang,
+       * biểu mẫu không bị nhỏ và không còn khoảng trắng lớn hai bên.
+       */
       ws.columns = [
-        {key:'A',width:7},
-        {key:'B',width:46},
-        {key:'C',width:17},
-        {key:'D',width:17},
-        {key:'E',width:17},
-        {key:'F',width:17},
-        {key:'G',width:26}
+        {key:'A',width:9},
+        {key:'B',width:60},
+        {key:'C',width:22},
+        {key:'D',width:22},
+        {key:'E',width:22},
+        {key:'F',width:22},
+        {key:'G',width:31}
       ];
 
       /*
@@ -880,12 +885,12 @@ async function exportMaintenanceExcel(){
         firstPageNumber:1,
         useFirstPageNumber:true,
         margins:{
-          left:0.18,
-          right:0.18,
-          top:0.25,
-          bottom:0.25,
-          header:0.05,
-          footer:0.08
+          left:0.10,
+          right:0.10,
+          top:0.18,
+          bottom:0.18,
+          header:0.03,
+          footer:0.05
         }
       };
 
@@ -899,12 +904,21 @@ async function exportMaintenanceExcel(){
       ws.headerFooter.evenFooter = '&CTrang &P / &N';
       ws.headerFooter.firstFooter = '&CTrang &P / &N';
 
-      ws.mergeCells('A1:E2');
+      /*
+       * Tách thành hai hàng độc lập để chữ không bị dính khi in.
+       */
+      ws.mergeCells('A1:E1');
       ws.getCell('A1').value =
-        'CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG\nPHÒNG CƠ ĐIỆN';
+        'CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG';
       ws.getCell('A1').font = {name:'Arial',size:13,bold:true};
       ws.getCell('A1').alignment = center;
       ws.getCell('A1').border = thinBorder;
+
+      ws.mergeCells('A2:E2');
+      ws.getCell('A2').value = 'PHÒNG CƠ ĐIỆN';
+      ws.getCell('A2').font = {name:'Arial',size:12,bold:true};
+      ws.getCell('A2').alignment = center;
+      ws.getCell('A2').border = thinBorder;
 
       ws.mergeCells('F1:G1');
       ws.getCell('F1').value = 'Mẫu số: 16 CĐ';
@@ -918,18 +932,21 @@ async function exportMaintenanceExcel(){
       ws.getCell('F2').alignment = center;
       ws.getCell('F2').border = thinBorder;
 
+      ws.getRow(1).height = 23;
+      ws.getRow(2).height = 22;
+
       ws.mergeCells('A3:G3');
       ws.getCell('A3').value = 'NỘI DUNG BẢO TRÌ, BẢO DƯỠNG MÁY';
       ws.getCell('A3').font = {name:'Arial',size:16,bold:true,color:{argb:'FFFFFFFF'}};
       ws.getCell('A3').fill = fillBlue;
       ws.getCell('A3').alignment = center;
       ws.getCell('A3').border = thinBorder;
-      ws.getRow(3).height = 30;
+      ws.getRow(3).height = 28;
 
       const reportEquipmentName =
         t.reportEquipmentName || t.sourceEquipmentName || t.name || '';
 
-      ws.getCell('A4').value = 'Tên thiết bị:';
+      ws.getCell('A4').value = 'Thiết bị:';
       ws.mergeCells('B4:D4');
       ws.getCell('B4').value = reportEquipmentName;
       ws.getCell('E4').value = 'Mã mẫu:';
@@ -948,7 +965,7 @@ async function exportMaintenanceExcel(){
       ws.mergeCells('F6:G6');
       ws.getCell('F6').value = r.viTri || '';
 
-      ws.getCell('A7').value = 'Nhân viên bảo trì:';
+      ws.getCell('A7').value = 'NV bảo trì:';
       ws.getCell('B7').value = t.maintenanceStaff || 'Nhân viên cơ điện';
       ws.getCell('C7').value = 'Kiểm soát:';
       ws.getCell('D7').value = t.controller || 'Trưởng Phòng Cơ điện';
@@ -960,10 +977,19 @@ async function exportMaintenanceExcel(){
         for(let colNo = 1; colNo <= 7; colNo++){
           const cell = ws.getCell(rowNo,colNo);
           cell.border = thinBorder;
-          cell.font = {name:'Arial',size:10,bold:[1,3,5].includes(colNo)};
+          cell.font = {
+            name:'Arial',
+            size:9.5,
+            bold:[1,3,5].includes(colNo)
+          };
           cell.alignment = leftWrap;
         }
       }
+
+      ws.getRow(4).height = 25;
+      ws.getRow(5).height = 24;
+      ws.getRow(6).height = 24;
+      ws.getRow(7).height = 30;
 
       ['A4','E4','A5','A6','C6','E6','A7','C7','E7'].forEach(address => {
         ws.getCell(address).fill = fillLightBlue;
@@ -990,7 +1016,7 @@ async function exportMaintenanceExcel(){
         cell.alignment = center;
         cell.border = thinBorder;
       });
-      ws.getRow(headerRow).height = 38;
+      ws.getRow(headerRow).height = 40;
 
       details.forEach((detail,detailIndex) => {
         const excelRow = headerRow + 1 + detailIndex;
@@ -1018,7 +1044,7 @@ async function exportMaintenanceExcel(){
 
         ws.getCell(excelRow,7).value=excelMaintenanceNote(r,detail,detailIndex);
         ws.getCell(excelRow,7).fill=fillInput;
-        ws.getRow(excelRow).height=36;
+        ws.getRow(excelRow).height=33;
       });
 
       const lastDetailRow = headerRow + Math.max(details.length,1);
@@ -1030,7 +1056,7 @@ async function exportMaintenanceExcel(){
         ws.getCell(headerRow + 1,2).value = 'Chưa có nội dung bảo trì trong mẫu.';
       }
 
-      let currentRow = lastDetailRow + 2;
+      let currentRow = lastDetailRow + 1;
 
       // Khu vực ký tên của Phòng Cơ điện
       ws.mergeCells(currentRow,1,currentRow,7);
@@ -1043,7 +1069,7 @@ async function exportMaintenanceExcel(){
       currentRow++;
 
       const signatureTopRow = currentRow;
-      const signatureBottomRow = currentRow + 3;
+      const signatureBottomRow = currentRow + 2;
 
       ws.mergeCells(signatureTopRow,1,signatureBottomRow,3);
       ws.getCell(signatureTopRow,1).value =
@@ -1062,23 +1088,23 @@ async function exportMaintenanceExcel(){
         for(let colNo=1;colNo<=7;colNo++){
           ws.getCell(rowNo,colNo).border = thinBorder;
         }
-        ws.getRow(rowNo).height = rowNo===signatureTopRow ? 28 : 24;
+        ws.getRow(rowNo).height =
+          rowNo===signatureTopRow ? 27 : 23;
       }
-      currentRow = signatureBottomRow + 2;
+      currentRow = signatureBottomRow + 1;
 
-      ws.mergeCells(currentRow,1,currentRow + 2,7);
+      ws.mergeCells(currentRow,1,currentRow + 1,7);
       ws.getCell(currentRow,1).value =
         '* Lưu ý:\n' +
-        '- Nhân viên bảo trì tiến hành kiểm tra và đánh giá tình trạng máy 3 tháng/lần.\n' +
-        '- Kết quả Đạt / Không đạt được lấy từ phần đánh giá chi tiết khi chỉnh sửa máy.\n' +
-        '- Sau khi bảo trì xong, Nhân viên Cơ điện và Người kiểm soát ký tên xác nhận.';
-      ws.getCell(currentRow,1).font = {name:'Arial',size:9};
+        '- Nhân viên bảo trì kiểm tra và đánh giá tình trạng máy 3 tháng/lần.\n' +
+        '- Kết quả Đạt / Không đạt lấy từ phần đánh giá chi tiết.\n' +
+        '- Nhân viên Cơ điện và Người kiểm soát ký tên sau khi hoàn tất.';
+      ws.getCell(currentRow,1).font = {name:'Arial',size:8.5};
       ws.getCell(currentRow,1).alignment = leftWrap;
       ws.getCell(currentRow,1).border = thinBorder;
-      ws.getRow(currentRow).height = 20;
-      ws.getRow(currentRow + 1).height = 20;
-      ws.getRow(currentRow + 2).height = 20;
-      currentRow += 3;
+      ws.getRow(currentRow).height = 27;
+      ws.getRow(currentRow + 1).height = 27;
+      currentRow += 2;
 
       ws.mergeCells(currentRow,1,currentRow,5);
       ws.getCell(currentRow,1).value =
