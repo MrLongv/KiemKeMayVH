@@ -68,7 +68,7 @@ table{border-collapse:separate;border-spacing:0;width:max-content;min-width:2050
 .maintenance-item-no{flex:0 0 27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#e8f2ff;color:#075da8;font-weight:900}
 .maintenance-result-options{display:flex;gap:6px;flex-wrap:wrap}
 .maintenance-result-option{display:inline-flex;align-items:center;gap:5px;border:1px solid #ccd6e2;border-radius:8px;padding:6px 8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer}
-.maintenance-result-option input{width:auto;margin:0}.maintenance-result-option.pass:has(input:checked){background:#dcfce7;border-color:#22c55e;color:#166534}.maintenance-result-option.fail:has(input:checked){background:#fee2e2;border-color:#ef4444;color:#991b1b}.maintenance-result-option.na:has(input:checked){background:#e5e7eb;border-color:#94a3b8;color:#334155}
+.maintenance-result-option input{width:auto;margin:0}.maintenance-result-option.pass:has(input:checked){background:#dcfce7;border-color:#22c55e;color:#166534}.maintenance-result-option.fail:has(input:checked){background:#fee2e2;border-color:#ef4444;color:#991b1b}
 .maintenance-result-note{width:100%!important;padding:7px 8px!important;font-size:12px}.maintenance-eval-empty{padding:18px;text-align:center;border:1px dashed #b9c6d5;border-radius:10px;background:#fff;color:#64748b;font-size:13px;line-height:1.5}
 .maintenance-eval-summary{font-size:12px;color:#475569;margin-bottom:8px}.maintenance-eval-summary b{color:#0f2f55}
 body.modal-open{overflow:hidden}
@@ -119,7 +119,7 @@ body.modal-open{overflow:hidden}
     <input id="reportTagInput" type="text" placeholder="VD: VH-500, 501 hoặc all">
     <button id="btnPrintHistory" class="btn btn-dark btn-full">In lý lịch máy</button>
     <button id="btnPrintMaintenance" class="btn btn-primary btn-full">Xuất Excel phiếu bảo trì CĐ</button>
-    <div class="small-help">Có thể nhập nhiều số thẻ, cách nhau bằng dấu phẩy. Hệ thống sẽ đọc Mã mẫu bảo trì và chọn đúng nội dung cho từng máy.</div>
+    <div class="small-help">Có thể nhập nhiều số thẻ, cách nhau bằng dấu phẩy. Hệ thống sẽ đọc Mã mẫu bảo trì, đưa kết quả Đạt/Không đạt vào đúng quý và tạo khu vực ký tên của Phòng Cơ điện.</div>
   </aside>
 
   <main class="content">
@@ -130,7 +130,7 @@ body.modal-open{overflow:hidden}
       <div class="table-wrap">
         <table id="dataTable">
           <thead><tr>
-            <th>STT</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú / ĐV mượn</th><th>Mẫu bảo trì</th><th>Phân loại</th><th>Hành động</th><th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Nội dung bảo dưỡng</th>
+            <th>STT</th><th>Số thẻ</th><th>Số máy</th><th>Loại máy</th><th>Vị trí</th><th>Ghi chú / ĐV mượn</th><th>Mẫu bảo trì</th><th>Phân loại</th><th>Hành động</th><th>Đã KK</th><th>In QR</th><th>Ngày mua</th><th>Nơi mua</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -155,8 +155,6 @@ body.modal-open{overflow:hidden}
         <div class="field"><label>Mã mẫu bảo trì</label><select id="m_maMauBaoTri"></select></div>
         <div class="field"><label>Trạng thái phân loại</label><select id="m_trangThaiPhanLoai"><option>Gợi ý tự động - cần xác nhận</option><option>Đã xác nhận</option><option>Cần phân loại</option><option>Không áp dụng</option></select></div>
         <div class="field wide"><label>Ghi chú phân loại</label><textarea id="m_ghiChuPhanLoai" rows="2"></textarea></div>
-        <div class="field wide"><label>Nội dung bảo dưỡng riêng</label><textarea id="m_suaChua" rows="3" placeholder="Ghi chú riêng của máy; không thay thế danh mục trong mẫu 16 CĐ"></textarea></div>
-        <div class="field wide"><label>Chi tiết bảo dưỡng</label><textarea id="m_chiTietBaoDuong" rows="3"></textarea></div>
       </div>
       <div class="checkbox-row"><label><input id="m_daKiemKe" type="checkbox"> Đã kiểm kê</label><label><input id="m_chonIn" type="checkbox"> Chọn in QR</label></div>
       <div class="quarter-grid">
@@ -170,7 +168,7 @@ body.modal-open{overflow:hidden}
         <div class="maintenance-eval-head">
           <div>
             <h3>Đánh giá từng nội dung bảo dưỡng</h3>
-            <p id="maintenanceEvalHint">Chọn quý đã bảo dưỡng để đánh dấu Đạt, Không đạt hoặc N/A cho từng nội dung.</p>
+            <p id="maintenanceEvalHint">Chọn quý đã bảo dưỡng để đánh dấu Đạt hoặc Không đạt cho từng nội dung.</p>
           </div>
           <div id="maintenanceQuarterTabs" class="maintenance-quarter-tabs"></div>
         </div>
@@ -190,7 +188,7 @@ body.modal-open{overflow:hidden}
 'use strict';
 
 /* Giữ URL này nếu cập nhật đúng Deployment Apps Script cũ. Nếu tạo Deployment mới, thay URL bên dưới. */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzZJCuihbzChfts7RsrH2zi2YhG1hZjP8uyw1uM73BMH7y1kWPnTJxAzMRCBskDhEqZ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwQUi_pnR92pVQi7XytUDR6yHOMi0M8ygMNVAQXsUee8kCxCrioiLi4WCvhOUSbed4o/exec';
 const TOKEN_KEY = 'vh_machine_auth_token_v4';
 const BATCH_SIZE = 50;
 
@@ -274,7 +272,7 @@ function rowMatches(row,filter,search){
   if(filter==='daXacNhanMau'&&row.trangThaiPhanLoai!=='Đã xác nhận')return false;
   if(filter==='canXacNhanMau'&&!/Gợi ý|cần xác nhận/i.test(row.trangThaiPhanLoai||''))return false;
   if(filter==='chuaCoMau'&&row.maMauBaoTri)return false;
-  if(search){const hay=[row.soThe,row.soMay,row.loaiMay,row.viTri,row.ghiChu,row.noiMua,row.maMauBaoTri,row.nhomMayBaoTri,row.trangThaiPhanLoai,row.suaChua].join(' ').toLowerCase();if(!hay.includes(search))return false}
+  if(search){const hay=[row.soThe,row.soMay,row.loaiMay,row.viTri,row.ghiChu,row.noiMua,row.maMauBaoTri,row.nhomMayBaoTri,row.trangThaiPhanLoai].join(' ').toLowerCase();if(!hay.includes(search))return false}
   return true;
 }
 
@@ -301,7 +299,7 @@ function rowHtml(row,filteredIndex){
     <td><button class="action-btn" data-edit="${globalIndex}">Sửa</button></td>
     <td><input class="small-check row-check" data-field="daKiemKe" type="checkbox" ${row.daKiemKe?'checked':''}></td>
     <td><input class="small-check row-check" data-field="chonIn" type="checkbox" ${row.chonIn?'checked':''}></td>
-    <td>${esc(row.ngayMua)}</td><td><div class="cell-wrap">${esc(row.noiMua)}</div></td><td>${q(row.bdQ1,row.bdNgayQ1)}</td><td>${q(row.bdQ2,row.bdNgayQ2)}</td><td>${q(row.bdQ3,row.bdNgayQ3)}</td><td>${q(row.bdQ4,row.bdNgayQ4)}</td><td><div class="cell-wrap col-maint">${formatLines(row.suaChua)}</div></td>
+    <td>${esc(row.ngayMua)}</td><td><div class="cell-wrap">${esc(row.noiMua)}</div></td><td>${q(row.bdQ1,row.bdNgayQ1)}</td><td>${q(row.bdQ2,row.bdNgayQ2)}</td><td>${q(row.bdQ3,row.bdNgayQ3)}</td><td>${q(row.bdQ4,row.bdNgayQ4)}</td>
   </tr>`;
 }
 
@@ -367,7 +365,6 @@ function normalizeMaintenanceResultCode(value){
   const text=clean(value).toUpperCase();
   if(['D','DAT','ĐẠT','ĐẠT YÊU CẦU'].includes(text))return'D';
   if(['K','KD','KHONG_DAT','KHÔNG ĐẠT','KHÔNG ĐẠT YÊU CẦU'].includes(text))return'K';
-  if(['N','NA','N/A','KHÔNG ÁP DỤNG'].includes(text))return'N';
   return'';
 }
 
@@ -395,7 +392,7 @@ function ensureQuarterEvaluation(quarter){
 }
 
 function maintenanceResultLabel(code){
-  return code==='D'?'Đạt':code==='K'?'Không đạt':code==='N'?'N/A':'Chưa đánh giá';
+  return code==='D'?'Đạt':code==='K'?'Không đạt':'Chưa đánh giá';
 }
 
 function renderMaintenanceEvaluation(){
@@ -446,7 +443,6 @@ function renderMaintenanceEvaluation(){
         <div class="maintenance-result-options">
           <label class="maintenance-result-option pass"><input type="radio" name="${radioName}" data-maint-result="1" data-quarter="${quarter}" data-no="${esc(no)}" value="D" ${result==='D'?'checked':''}>✓ Đạt</label>
           <label class="maintenance-result-option fail"><input type="radio" name="${radioName}" data-maint-result="1" data-quarter="${quarter}" data-no="${esc(no)}" value="K" ${result==='K'?'checked':''}>✕ Không đạt</label>
-          <label class="maintenance-result-option na"><input type="radio" name="${radioName}" data-maint-result="1" data-quarter="${quarter}" data-no="${esc(no)}" value="N" ${result==='N'?'checked':''}>N/A</label>
         </div>
         <input class="maintenance-result-note" type="text" data-maint-note="1" data-quarter="${quarter}" data-no="${esc(no)}" value="${esc(note)}" placeholder="Ghi chú cho nội dung này">
       </div>`;
@@ -463,7 +459,7 @@ async function openModal(index=null){
   state.activeMaintenanceQuarter=['Q1','Q2','Q3','Q4'].find(q=>row['bd'+q])||'Q1';
 
   $('modalTitle').textContent=index===null?'Thêm máy':'Chỉnh sửa '+displayTag(row.soThe);
-  ['soThe','soMay','loaiMay','viTri','ngayMua','noiMua','ghiChu','suaChua','chiTietBaoDuong','ghiChuPhanLoai','bdNgayQ1','bdNgayQ2','bdNgayQ3','bdNgayQ4'].forEach(name=>{$('m_'+name).value=row[name]||''});
+  ['soThe','soMay','loaiMay','viTri','ngayMua','noiMua','ghiChu','ghiChuPhanLoai','bdNgayQ1','bdNgayQ2','bdNgayQ3','bdNgayQ4'].forEach(name=>{$('m_'+name).value=row[name]||''});
   $('m_daKiemKe').checked=!!row.daKiemKe;
   $('m_chonIn').checked=!!row.chonIn;
   ['Q1','Q2','Q3','Q4'].forEach(q=>$('m_bd'+q).checked=!!row['bd'+q]);
@@ -533,7 +529,6 @@ function modalData(){
     bdQ2:$('m_bdQ2').checked,bdNgayQ2:clean($('m_bdNgayQ2').value),
     bdQ3:$('m_bdQ3').checked,bdNgayQ3:clean($('m_bdNgayQ3').value),
     bdQ4:$('m_bdQ4').checked,bdNgayQ4:clean($('m_bdNgayQ4').value),
-    suaChua:clean($('m_suaChua').value),chiTietBaoDuong:clean($('m_chiTietBaoDuong').value),
     maMauBaoTri:clean($('m_maMauBaoTri').value),trangThaiPhanLoai:clean($('m_trangThaiPhanLoai').value),
     ghiChuPhanLoai:clean($('m_ghiChuPhanLoai').value),
     ketQuaBaoDuongChiTiet:maintenanceResultsForSave()
@@ -621,7 +616,7 @@ function selectedRowsFromInput(){const input=clean($('reportTagInput').value);if
 
 function printQr(){const rows=state.allData.filter(r=>r.chonIn);if(!rows.length){alert('Chưa có máy nào được chọn In QR');return}const w=window.open('','_blank');if(!w){alert('Trình duyệt đang chặn cửa sổ in');return}w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>In QR</title><style>@page{size:A4 portrait;margin:4mm}body{font-family:Arial;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:2mm}.tem{width:32mm;height:34mm;border:.1px solid #000;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-inside:avoid}.top{font-size:12px}.bottom{font-size:10px;white-space:nowrap}canvas,img{width:76px!important;height:76px!important}</style></head><body>`);rows.forEach((r,i)=>w.document.write(`<div class="tem"><div class="top">${esc(displayTag(r.soThe))}</div><div id="qr_${i}"></div><div class="bottom">SM: ${esc(r.soMay)}</div></div>`));w.document.write('</body></html>');w.document.close();w.onload=()=>{rows.forEach((r,i)=>new QRCode(w.document.getElementById('qr_'+i),{text:currentBaseUrl()+'#'+encodeURIComponent(r.soThe),width:90,height:90}));setTimeout(()=>{w.focus();w.print()},650)}}
 
-function printHistory(){const rows=selectedRowsFromInput();if(!rows?.length)return;const w=window.open('','_blank');if(!w){alert('Trình duyệt đang chặn cửa sổ in');return}w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lý lịch máy</title><style>@page{size:A4 portrait;margin:16mm}body{font-family:Arial;color:#222}.page{page-break-after:always}.page:last-child{page-break-after:auto}.company{font-size:18px;font-weight:700}.title{text-align:center;font-size:22px;font-weight:800;margin:25px 0 15px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}th{width:30%;background:#eee}.sign{text-align:right;margin-top:18px;line-height:1.7}</style></head><body>`);rows.forEach(r=>{const template=state.templateByCode[r.maMauBaoTri];const fields=[['Số thẻ',displayTag(r.soThe)],['Số máy',r.soMay],['Loại máy',r.loaiMay],['Vị trí',r.viTri],['Đơn vị mượn',r.ghiChu],['Ngày mua',r.ngayMua],['Nơi mua',r.noiMua],['Mã mẫu bảo trì',r.maMauBaoTri],['Nhóm máy bảo trì',r.nhomMayBaoTri],['Trạng thái phân loại',r.trangThaiPhanLoai],['Tên thiết bị trên phiếu',template?.reportEquipmentName||''],['Bảo dưỡng Q1',r.bdNgayQ1],['Bảo dưỡng Q2',r.bdNgayQ2],['Bảo dưỡng Q3',r.bdNgayQ3],['Bảo dưỡng Q4',r.bdNgayQ4],['Nội dung bảo dưỡng riêng',r.suaChua],['Chi tiết bảo dưỡng',r.chiTietBaoDuong]];w.document.write(`<section class="page"><div class="company">CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG</div><div class="title">LÝ LỊCH MÁY ${esc(displayTag(r.soThe))}</div><table>${fields.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table><div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:80px">Người lập</b></div></section>`)});w.document.write('</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},400)}
+function printHistory(){const rows=selectedRowsFromInput();if(!rows?.length)return;const w=window.open('','_blank');if(!w){alert('Trình duyệt đang chặn cửa sổ in');return}w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lý lịch máy</title><style>@page{size:A4 portrait;margin:16mm}body{font-family:Arial;color:#222}.page{page-break-after:always}.page:last-child{page-break-after:auto}.company{font-size:18px;font-weight:700}.title{text-align:center;font-size:22px;font-weight:800;margin:25px 0 15px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}th{width:30%;background:#eee}.sign{text-align:right;margin-top:18px;line-height:1.7}</style></head><body>`);rows.forEach(r=>{const template=state.templateByCode[r.maMauBaoTri];const fields=[['Số thẻ',displayTag(r.soThe)],['Số máy',r.soMay],['Loại máy',r.loaiMay],['Vị trí',r.viTri],['Đơn vị mượn',r.ghiChu],['Ngày mua',r.ngayMua],['Nơi mua',r.noiMua],['Mã mẫu bảo trì',r.maMauBaoTri],['Nhóm máy bảo trì',r.nhomMayBaoTri],['Trạng thái phân loại',r.trangThaiPhanLoai],['Tên thiết bị trên phiếu',template?.reportEquipmentName||''],['Bảo dưỡng Q1',r.bdNgayQ1],['Bảo dưỡng Q2',r.bdNgayQ2],['Bảo dưỡng Q3',r.bdNgayQ3],['Bảo dưỡng Q4',r.bdNgayQ4]];w.document.write(`<section class="page"><div class="company">CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG</div><div class="title">LÝ LỊCH MÁY ${esc(displayTag(r.soThe))}</div><table>${fields.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table><div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:80px">Người lập</b></div></section>`)});w.document.write('</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},400)}
 
 function maintenanceQuarterData(row,quarter){
   const all=normalizeMaintenanceResults(row.ketQuaBaoDuongChiTiet);
@@ -635,10 +630,9 @@ function maintenanceResultForDetail(row,quarter,detail,index){
 }
 
 function excelMaintenanceMark(code){
-  if(code==='D')return '☑ Đạt\n☐ Không đạt\n☐ N/A';
-  if(code==='K')return '☐ Đạt\n☑ Không đạt\n☐ N/A';
-  if(code==='N')return '☐ Đạt\n☐ Không đạt\n☑ N/A';
-  return '☐ Đạt\n☐ Không đạt\n☐ N/A';
+  if(code==='D')return '☑ Đạt\n☐ Không đạt';
+  if(code==='K')return '☐ Đạt\n☑ Không đạt';
+  return '☐ Đạt\n☐ Không đạt';
 }
 
 function excelMaintenanceNote(row,detail,index){
@@ -648,7 +642,7 @@ function excelMaintenanceNote(row,detail,index){
     const key=String(detail.no||index+1);
     const result=normalizeMaintenanceResultCode(data.r?.[key]);
     const note=clean(data.n?.[key]);
-    if(result==='K'||result==='N'||note){
+    if(result==='K'||note){
       const label=maintenanceResultLabel(result);
       notes.push(`${q}: ${label}${note?' - '+note:''}`);
     }
@@ -991,15 +985,13 @@ async function exportMaintenanceExcel(){
             ? {type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}}
             : resultCode==='K'
               ? {type:'pattern',pattern:'solid',fgColor:{argb:'FFF4CCCC'}}
-              : resultCode==='N'
-                ? {type:'pattern',pattern:'solid',fgColor:{argb:'FFE7E6E6'}}
-                : fillInput;
+              : fillInput;
           cell.alignment={vertical:'middle',horizontal:'left',wrapText:true};
         });
 
         ws.getCell(excelRow,7).value=excelMaintenanceNote(r,detail,detailIndex);
         ws.getCell(excelRow,7).fill=fillInput;
-        ws.getRow(excelRow).height=46;
+        ws.getRow(excelRow).height=36;
       });
 
       const lastDetailRow = headerRow + Math.max(details.length,1);
@@ -1013,48 +1005,46 @@ async function exportMaintenanceExcel(){
 
       let currentRow = lastDetailRow + 2;
 
-      ws.mergeCells(currentRow,1,currentRow,2);
-      ws.getCell(currentRow,1).value = 'Nội dung bảo dưỡng riêng của máy:';
-      ws.getCell(currentRow,1).font = {name:'Arial',size:10,bold:true};
-      ws.getCell(currentRow,1).fill = fillLightBlue;
-      ws.mergeCells(currentRow,3,currentRow,7);
-      ws.getCell(currentRow,3).value = r.suaChua || '';
-
-      for(let colNo = 1; colNo <= 7; colNo++){
-        ws.getCell(currentRow,colNo).border = thinBorder;
-        ws.getCell(currentRow,colNo).alignment = leftWrap;
-      }
-      ws.getRow(currentRow).height = 35;
-      currentRow++;
-
-      ws.mergeCells(currentRow,1,currentRow,2);
-      ws.getCell(currentRow,1).value = 'Chi tiết bảo dưỡng:';
-      ws.getCell(currentRow,1).font = {name:'Arial',size:10,bold:true};
-      ws.getCell(currentRow,1).fill = fillLightBlue;
-      ws.mergeCells(currentRow,3,currentRow,7);
-      ws.getCell(currentRow,3).value = r.chiTietBaoDuong || '';
-
-      for(let colNo = 1; colNo <= 7; colNo++){
-        ws.getCell(currentRow,colNo).border = thinBorder;
-        ws.getCell(currentRow,colNo).alignment = leftWrap;
-      }
-      ws.getRow(currentRow).height = 35;
-      currentRow += 2;
-
+      // Khu vực ký tên của Phòng Cơ điện
       ws.mergeCells(currentRow,1,currentRow,7);
-      ws.getCell(currentRow,1).value = 'Nhân viên bảo trì ký tên xác nhận: ................................................................................';
-      ws.getCell(currentRow,1).font = {name:'Arial',size:10,bold:true};
-      ws.getCell(currentRow,1).alignment = leftWrap;
+      ws.getCell(currentRow,1).value = 'XÁC NHẬN CỦA PHÒNG CƠ ĐIỆN';
+      ws.getCell(currentRow,1).font = {name:'Arial',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+      ws.getCell(currentRow,1).fill = fillBlue;
+      ws.getCell(currentRow,1).alignment = center;
       ws.getCell(currentRow,1).border = thinBorder;
-      ws.getRow(currentRow).height = 32;
+      ws.getRow(currentRow).height = 24;
       currentRow++;
+
+      const signatureTopRow = currentRow;
+      const signatureBottomRow = currentRow + 3;
+
+      ws.mergeCells(signatureTopRow,1,signatureBottomRow,3);
+      ws.getCell(signatureTopRow,1).value =
+        'NHÂN VIÊN CƠ ĐIỆN THỰC HIỆN\n(Ký và ghi rõ họ tên)';
+
+      ws.mergeCells(signatureTopRow,4,signatureBottomRow,7);
+      ws.getCell(signatureTopRow,4).value =
+        'TRƯỞNG PHÒNG CƠ ĐIỆN / NGƯỜI KIỂM SOÁT\n(Ký và ghi rõ họ tên)';
+
+      [ws.getCell(signatureTopRow,1),ws.getCell(signatureTopRow,4)].forEach(cell=>{
+        cell.font = {name:'Arial',size:10,bold:true};
+        cell.alignment = {vertical:'top',horizontal:'center',wrapText:true};
+      });
+
+      for(let rowNo=signatureTopRow;rowNo<=signatureBottomRow;rowNo++){
+        for(let colNo=1;colNo<=7;colNo++){
+          ws.getCell(rowNo,colNo).border = thinBorder;
+        }
+        ws.getRow(rowNo).height = rowNo===signatureTopRow ? 28 : 24;
+      }
+      currentRow = signatureBottomRow + 2;
 
       ws.mergeCells(currentRow,1,currentRow + 2,7);
       ws.getCell(currentRow,1).value =
         '* Lưu ý:\n' +
         '- Nhân viên bảo trì tiến hành kiểm tra và đánh giá tình trạng máy 3 tháng/lần.\n' +
-        '- Kết quả Đạt / Không đạt / N/A được lấy từ phần đánh giá chi tiết khi chỉnh sửa máy.\n' +
-        '- Sau khi bảo trì xong, nhân viên thực hiện ký tên xác nhận.';
+        '- Kết quả Đạt / Không đạt được lấy từ phần đánh giá chi tiết khi chỉnh sửa máy.\n' +
+        '- Sau khi bảo trì xong, Nhân viên Cơ điện và Người kiểm soát ký tên xác nhận.';
       ws.getCell(currentRow,1).font = {name:'Arial',size:9};
       ws.getCell(currentRow,1).alignment = leftWrap;
       ws.getCell(currentRow,1).border = thinBorder;
