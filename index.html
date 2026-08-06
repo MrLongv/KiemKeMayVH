@@ -845,7 +845,11 @@ async function exportMaintenanceExcel(){
       usedSheetNames.add(sheetName);
 
       const ws = workbook.addWorksheet(sheetName, {
-        views:[{state:'frozen',ySplit:8}]
+        views:[{
+          state:'frozen',
+          ySplit:8,
+          showGridLines:false
+        }]
       });
 
       ws.properties.defaultRowHeight = 20;
@@ -859,6 +863,12 @@ async function exportMaintenanceExcel(){
         {key:'G',width:26}
       ];
 
+      /*
+       * Thiết lập in A4 ngang:
+       * - Vừa đúng 1 trang.
+       * - Căn giữa phần biểu mẫu.
+       * - Bỏ chữ ở hai mép chân trang để không làm lệch/giãn khung in.
+       */
       ws.pageSetup = {
         paperSize:9,
         orientation:'landscape',
@@ -867,11 +877,27 @@ async function exportMaintenanceExcel(){
         fitToHeight:1,
         horizontalCentered:true,
         verticalCentered:false,
-        margins:{left:0.25,right:0.25,top:0.3,bottom:0.3,header:0.15,footer:0.15}
+        firstPageNumber:1,
+        useFirstPageNumber:true,
+        margins:{
+          left:0.18,
+          right:0.18,
+          top:0.25,
+          bottom:0.25,
+          header:0.05,
+          footer:0.08
+        }
       };
 
-      ws.headerFooter.oddFooter =
-        '&LPhòng Cơ điện&CTrang &P / &N&R' + displayTag(r.soThe);
+      /*
+       * Chỉ để số trang ở giữa.
+       * Đã bỏ:
+       * - “Phòng Cơ điện” bên trái.
+       * - Số thẻ máy bên phải.
+       */
+      ws.headerFooter.oddFooter = '&CTrang &P / &N';
+      ws.headerFooter.evenFooter = '&CTrang &P / &N';
+      ws.headerFooter.firstFooter = '&CTrang &P / &N';
 
       ws.mergeCells('A1:E2');
       ws.getCell('A1').value =
@@ -1070,7 +1096,11 @@ async function exportMaintenanceExcel(){
         ws.getCell(currentRow,6).fill = fillWarning;
       }
 
-      ws.printArea = `A1:G${currentRow}`;
+      /*
+       * Khóa vùng in chính xác trong khung A:G.
+       * Dùng pageSetup.printArea để Excel nhận đúng khi mở Print Preview.
+       */
+      ws.pageSetup.printArea = `A1:G${currentRow}`;
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
