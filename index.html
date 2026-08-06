@@ -54,18 +54,35 @@ table{border-collapse:separate;border-spacing:0;width:max-content;min-width:2050
 .pager{display:flex;justify-content:center;align-items:center;gap:9px;padding:10px;border-top:1px solid var(--line);background:#fff}.pager span{font-size:13px;color:var(--muted);min-width:130px;text-align:center}
 
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.58);z-index:120;align-items:center;justify-content:center;padding:12px}.modal.open{display:flex}.modal-card{width:min(850px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:16px;box-shadow:0 25px 80px rgba(0,0,0,.28)}.modal-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:11px}.modal-head h2{font-size:19px;margin:0}.icon-btn{border:0;border-radius:9px;width:38px;height:38px;background:#eef2f7;font-size:20px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-weight:700;font-size:13px;margin-bottom:5px}.field.wide{grid-column:1/-1}.checkbox-row{display:flex;gap:20px;flex-wrap:wrap;margin:12px 0;padding:10px;border:1px solid var(--line);border-radius:10px}.quarter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.quarter{border:1px solid var(--line);padding:9px;border-radius:9px}.quarter label{font-weight:700}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.readonly-box{padding:9px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;font-size:13px;color:#475569}
+
+.maintenance-eval{margin-top:14px;border:1px solid var(--line);border-radius:13px;background:#f8fafc;padding:12px}
+.maintenance-eval-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.maintenance-eval-head h3{margin:0;font-size:16px}.maintenance-eval-head p{margin:4px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+.maintenance-quarter-tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.maintenance-quarter-tab{border:1px solid #b8c7d9;background:#fff;color:#334155;border-radius:8px;padding:7px 11px;font-weight:800}
+.maintenance-quarter-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.maintenance-quarter-tab:disabled{background:#e5e7eb;color:#94a3b8;border-color:#d7dde5}
+.maintenance-checklist{display:grid;gap:8px}
+.maintenance-item{display:grid;grid-template-columns:minmax(230px,1.3fr) minmax(260px,1fr) minmax(180px,.8fr);gap:10px;align-items:center;background:#fff;border:1px solid #dbe3ec;border-radius:10px;padding:9px}
+.maintenance-item-title{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:700;line-height:1.35}
+.maintenance-item-no{flex:0 0 27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#e8f2ff;color:#075da8;font-weight:900}
+.maintenance-result-options{display:flex;gap:6px;flex-wrap:wrap}
+.maintenance-result-option{display:inline-flex;align-items:center;gap:5px;border:1px solid #ccd6e2;border-radius:8px;padding:6px 8px;background:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.maintenance-result-option input{width:auto;margin:0}.maintenance-result-option.pass:has(input:checked){background:#dcfce7;border-color:#22c55e;color:#166534}.maintenance-result-option.fail:has(input:checked){background:#fee2e2;border-color:#ef4444;color:#991b1b}.maintenance-result-option.na:has(input:checked){background:#e5e7eb;border-color:#94a3b8;color:#334155}
+.maintenance-result-note{width:100%!important;padding:7px 8px!important;font-size:12px}.maintenance-eval-empty{padding:18px;text-align:center;border:1px dashed #b9c6d5;border-radius:10px;background:#fff;color:#64748b;font-size:13px;line-height:1.5}
+.maintenance-eval-summary{font-size:12px;color:#475569;margin-bottom:8px}.maintenance-eval-summary b{color:#0f2f55}
 body.modal-open{overflow:hidden}
 
 .login-overlay{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,rgba(15,47,85,.96),rgba(11,116,209,.9));display:flex;align-items:center;justify-content:center;padding:16px}.login-card{width:min(390px,100%);background:#fff;border-radius:18px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.3)}.login-logo{width:68px;height:68px;border-radius:20px;background:#e9f3ff;color:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;font-weight:900}.login-card h2{margin:0 0 7px}.login-card p{font-size:13px;color:var(--muted);line-height:1.5}.login-card input{width:100%;padding:11px;border:1px solid #bdc9d8;border-radius:9px;margin-top:8px}.login-card .btn{width:100%;margin-top:10px}.login-error{min-height:19px;color:var(--red);font-size:13px;margin-top:7px}
 
 @media(max-width:1100px){.app-shell{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.sidebar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sidebar-grid>div{min-width:0}.kpi-grid{grid-template-columns:repeat(3,1fr)}.table-wrap{height:calc(100vh - 330px)}}
-@media(max-width:680px){.topbar{align-items:flex-start;flex-direction:column;padding:10px 12px}.brand h1{font-size:18px}.top-actions{width:100%;justify-content:space-between}.app-shell{padding:7px}.sidebar-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}.notice{flex-direction:column}.table-head{align-items:flex-start;flex-direction:column}.table-actions{width:100%}.table-actions .btn{flex:1}.table-wrap{height:calc(100vh - 365px);min-height:300px}.form-grid{grid-template-columns:1fr}.quarter-grid{grid-template-columns:repeat(2,1fr)}.field.wide{grid-column:auto}.modal-actions .btn{flex:1}}
+@media(max-width:680px){.topbar{align-items:flex-start;flex-direction:column;padding:10px 12px}.brand h1{font-size:18px}.top-actions{width:100%;justify-content:space-between}.app-shell{padding:7px}.sidebar-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}.notice{flex-direction:column}.table-head{align-items:flex-start;flex-direction:column}.table-actions{width:100%}.table-actions .btn{flex:1}.table-wrap{height:calc(100vh - 365px);min-height:300px}.form-grid{grid-template-columns:1fr}.quarter-grid{grid-template-columns:repeat(2,1fr)}.field.wide{grid-column:auto}.maintenance-eval-head{flex-direction:column}.maintenance-quarter-tabs{justify-content:flex-start}.maintenance-item{grid-template-columns:1fr}.modal-actions .btn{flex:1}}
 @media print{.no-print{display:none!important}}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><div class="brand-mark">VH</div><div><h1>Kiểm kê máy Việt Hồng</h1><p>Google Sheet · QR cũ · Phiếu bảo trì cơ điện tự chọn theo loại máy</p></div></div>
+  <div class="brand"><div class="brand-mark">VH</div><div><h1>Kiểm kê máy Việt Hồng</h1><p>Google Sheet · QR cũ · Phiếu bảo trì 16 CĐ tự chọn theo loại máy</p></div></div>
   <div class="top-actions"><span id="rolePill" class="pill">Chưa đăng nhập</span><button id="btnLogout" class="btn btn-light hidden">Đăng xuất</button></div>
 </header>
 
@@ -101,7 +118,7 @@ body.modal-open{overflow:hidden}
     <label>Số thẻ cần in</label>
     <input id="reportTagInput" type="text" placeholder="VD: VH-500, 501 hoặc all">
     <button id="btnPrintHistory" class="btn btn-dark btn-full">In lý lịch máy</button>
-    <button id="btnPrintMaintenance" class="btn btn-primary btn-full">Xuất Excel phiếu bảo trì CĐ</button>
+    <button id="btnPrintMaintenance" class="btn btn-primary btn-full">Xuất Excel phiếu bảo trì 16 CĐ</button>
     <div class="small-help">Có thể nhập nhiều số thẻ, cách nhau bằng dấu phẩy. Hệ thống sẽ đọc Mã mẫu bảo trì và chọn đúng nội dung cho từng máy.</div>
   </aside>
 
@@ -148,6 +165,18 @@ body.modal-open{overflow:hidden}
         <div class="quarter"><label><input id="m_bdQ3" type="checkbox"> Q3</label><input id="m_bdNgayQ3" placeholder="Ngày Q3"></div>
         <div class="quarter"><label><input id="m_bdQ4" type="checkbox"> Q4</label><input id="m_bdNgayQ4" placeholder="Ngày Q4"></div>
       </div>
+
+      <section class="maintenance-eval">
+        <div class="maintenance-eval-head">
+          <div>
+            <h3>Đánh giá từng nội dung bảo dưỡng</h3>
+            <p id="maintenanceEvalHint">Chọn quý đã bảo dưỡng để đánh dấu Đạt, Không đạt hoặc N/A cho từng nội dung.</p>
+          </div>
+          <div id="maintenanceQuarterTabs" class="maintenance-quarter-tabs"></div>
+        </div>
+        <div id="maintenanceChecklist" class="maintenance-checklist"></div>
+      </section>
+
       <div class="modal-actions"><button type="button" id="btnCancel" class="btn btn-muted">Đóng</button><button type="submit" id="btnSave" class="btn btn-primary">Lưu</button></div>
     </form>
   </div>
@@ -161,7 +190,7 @@ body.modal-open{overflow:hidden}
 'use strict';
 
 /* Giữ URL này nếu cập nhật đúng Deployment Apps Script cũ. Nếu tạo Deployment mới, thay URL bên dưới. */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxHNfzlgPdoasMp2Q8i2ntsWlm6q8wCm3udisEydmTyFhr3o8vQvQg5akHaea33bFZG/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzZJCuihbzChfts7RsrH2zi2YhG1hZjP8uyw1uM73BMH7y1kWPnTJxAzMRCBskDhEqZ/exec';
 const TOKEN_KEY = 'vh_machine_auth_token_v4';
 const BATCH_SIZE = 50;
 
@@ -178,7 +207,9 @@ const state = {
   token: localStorage.getItem(TOKEN_KEY) || '',
   allData: [], filtered: [], templates: [], templateByCode: {},
   page: 1, pageSize: window.innerWidth <= 680 ? 50 : 100,
-  editingIndex: null, originalSoThe: '', loading: false
+  editingIndex: null, originalSoThe: '', loading: false,
+  editingMaintenanceResults: {}, activeMaintenanceQuarter: 'Q1',
+  editingTemplateCode: '', maintenanceDetailsLoaded: false
 };
 
 function setStatus(text,type='info'){
@@ -283,15 +314,231 @@ function renderKpis(){
 
 function formatLines(value){const lines=clean(value).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);return lines.length?`<ol style="margin:0;padding-left:20px">${lines.map(x=>`<li>${esc(x.replace(/^(?:\d+[.)-]|[-•])\s*/,''))}</li>`).join('')}</ol>`:''}
 
-function openModal(index=null){
-  state.editingIndex=index;const row=index===null?{}:state.allData[index];state.originalSoThe=row.soThe||'';$('modalTitle').textContent=index===null?'Thêm máy':'Chỉnh sửa '+displayTag(row.soThe);
-  ['soThe','soMay','loaiMay','viTri','ngayMua','noiMua','ghiChu','suaChua','chiTietBaoDuong','ghiChuPhanLoai','bdNgayQ1','bdNgayQ2','bdNgayQ3','bdNgayQ4'].forEach(name=>{$('m_'+name).value=row[name]||''});
-  $('m_daKiemKe').checked=!!row.daKiemKe;$('m_chonIn').checked=!!row.chonIn;['Q1','Q2','Q3','Q4'].forEach(q=>$('m_bd'+q).checked=!!row['bd'+q]);
-  $('m_maMauBaoTri').value=row.maMauBaoTri||'';$('m_trangThaiPhanLoai').value=row.trangThaiPhanLoai||'Gợi ý tự động - cần xác nhận';
-  $('editModal').classList.add('open');document.body.classList.add('modal-open');setTimeout(()=>$('m_soThe').focus(),60)
+function normalizeMaintenanceResults(value){
+  let source=value;
+  if(!source)return {};
+  if(typeof source==='string'){
+    try{source=JSON.parse(source)}catch(_){return {}}
+  }
+  if(!source||typeof source!=='object'||Array.isArray(source))return {};
+
+  const output={};
+  ['Q1','Q2','Q3','Q4'].forEach(q=>{
+    const item=source[q];
+    if(!item||typeof item!=='object')return;
+    const results={};
+    const notes={};
+
+    if(item.r&&typeof item.r==='object'){
+      Object.keys(item.r).forEach(key=>{
+        const code=normalizeMaintenanceResultCode(item.r[key]);
+        if(code)results[String(key)]=code;
+      });
+    }
+    if(item.n&&typeof item.n==='object'){
+      Object.keys(item.n).forEach(key=>{
+        const note=clean(item.n[key]);
+        if(note)notes[String(key)]=note;
+      });
+    }
+
+    // Hỗ trợ cấu trúc cũ dạng items[] nếu từng dùng thử trước đó.
+    if(Array.isArray(item.items)){
+      item.items.forEach((detail,index)=>{
+        const key=String(detail.no||index+1);
+        const code=normalizeMaintenanceResultCode(detail.result);
+        const note=clean(detail.note);
+        if(code)results[key]=code;
+        if(note)notes[key]=note;
+      });
+    }
+
+    output[q]={
+      d:clean(item.d||item.date),
+      m:clean(item.m||item.templateCode),
+      r:results,
+      n:notes
+    };
+  });
+  return output;
 }
-function closeModal(){$('editModal').classList.remove('open');document.body.classList.remove('modal-open');state.editingIndex=null}
-function modalData(){return {sheetRow:state.editingIndex===null?'':state.allData[state.editingIndex].sheetRow,soThe:clean($('m_soThe').value),soMay:clean($('m_soMay').value),loaiMay:clean($('m_loaiMay').value),viTri:clean($('m_viTri').value),ngayMua:clean($('m_ngayMua').value),noiMua:clean($('m_noiMua').value),ghiChu:clean($('m_ghiChu').value),daKiemKe:$('m_daKiemKe').checked,chonIn:$('m_chonIn').checked,bdQ1:$('m_bdQ1').checked,bdNgayQ1:clean($('m_bdNgayQ1').value),bdQ2:$('m_bdQ2').checked,bdNgayQ2:clean($('m_bdNgayQ2').value),bdQ3:$('m_bdQ3').checked,bdNgayQ3:clean($('m_bdNgayQ3').value),bdQ4:$('m_bdQ4').checked,bdNgayQ4:clean($('m_bdNgayQ4').value),suaChua:clean($('m_suaChua').value),chiTietBaoDuong:clean($('m_chiTietBaoDuong').value),maMauBaoTri:clean($('m_maMauBaoTri').value),trangThaiPhanLoai:clean($('m_trangThaiPhanLoai').value),ghiChuPhanLoai:clean($('m_ghiChuPhanLoai').value)} }
+
+function normalizeMaintenanceResultCode(value){
+  const text=clean(value).toUpperCase();
+  if(['D','DAT','ĐẠT','ĐẠT YÊU CẦU'].includes(text))return'D';
+  if(['K','KD','KHONG_DAT','KHÔNG ĐẠT','KHÔNG ĐẠT YÊU CẦU'].includes(text))return'K';
+  if(['N','NA','N/A','KHÔNG ÁP DỤNG'].includes(text))return'N';
+  return'';
+}
+
+function currentModalTemplate(){
+  const code=clean($('m_maMauBaoTri').value)||state.editingTemplateCode;
+  return state.templateByCode[code]||null;
+}
+
+function checkedModalQuarters(){
+  return ['Q1','Q2','Q3','Q4'].filter(q=>$('m_bd'+q).checked);
+}
+
+function ensureQuarterEvaluation(quarter){
+  const template=currentModalTemplate();
+  if(!template)return null;
+  if(!state.editingMaintenanceResults[quarter]){
+    state.editingMaintenanceResults[quarter]={d:'',m:template.code,r:{},n:{}};
+  }
+  const data=state.editingMaintenanceResults[quarter];
+  data.d=clean($('m_bdNgay'+quarter).value)||clean(data.d);
+  data.m=template.code;
+  data.r=data.r&&typeof data.r==='object'?data.r:{};
+  data.n=data.n&&typeof data.n==='object'?data.n:{};
+  return data;
+}
+
+function maintenanceResultLabel(code){
+  return code==='D'?'Đạt':code==='K'?'Không đạt':code==='N'?'N/A':'Chưa đánh giá';
+}
+
+function renderMaintenanceEvaluation(){
+  const template=currentModalTemplate();
+  const checked=checkedModalQuarters();
+  const tabs=$('maintenanceQuarterTabs');
+  const checklist=$('maintenanceChecklist');
+  const hint=$('maintenanceEvalHint');
+
+  tabs.innerHTML=['Q1','Q2','Q3','Q4'].map(q=>{
+    const enabled=checked.includes(q);
+    const active=enabled&&state.activeMaintenanceQuarter===q;
+    return `<button type="button" class="maintenance-quarter-tab ${active?'active':''}" data-maint-quarter="${q}" ${enabled?'':'disabled'}>${q}</button>`;
+  }).join('');
+
+  if(!template){
+    hint.textContent='Máy chưa có Mã mẫu bảo trì. Hãy chọn Mã mẫu trước.';
+    checklist.innerHTML='<div class="maintenance-eval-empty">Chưa có mẫu để hiển thị danh sách nội dung bảo dưỡng.</div>';
+    return;
+  }
+
+  if(!checked.length){
+    hint.textContent=`Mẫu ${template.code} — ${template.name}. Hãy đánh dấu một quý bên trên.`;
+    checklist.innerHTML='<div class="maintenance-eval-empty">Chưa chọn quý bảo dưỡng. Khi chọn Q1, Q2, Q3 hoặc Q4, danh sách nội dung của đúng loại máy sẽ xuất hiện tại đây.</div>';
+    return;
+  }
+
+  if(!checked.includes(state.activeMaintenanceQuarter))state.activeMaintenanceQuarter=checked[0];
+  const quarter=state.activeMaintenanceQuarter;
+  const quarterData=ensureQuarterEvaluation(quarter);
+  const details=Array.isArray(template.details)?template.details:[];
+  const answered=details.filter((d,i)=>quarterData.r[String(d.no||i+1)]).length;
+  hint.textContent=`${template.code} — ${template.name} · ${quarter} · Đã đánh giá ${answered}/${details.length} nội dung.`;
+
+  if(!details.length){
+    checklist.innerHTML='<div class="maintenance-eval-empty">Mẫu này chưa có nội dung trong sheet CT_MAU_BAO_TRI.</div>';
+    return;
+  }
+
+  checklist.innerHTML=`<div class="maintenance-eval-summary"><b>${quarter}</b> — Ngày: ${esc(clean($('m_bdNgay'+quarter).value)||'chưa nhập')}</div>`+
+    details.map((detail,index)=>{
+      const no=String(detail.no||index+1);
+      const result=quarterData.r[no]||'';
+      const note=quarterData.n[no]||'';
+      const radioName=`maint_${quarter}_${no.replace(/[^A-Za-z0-9_-]/g,'_')}`;
+      return `<div class="maintenance-item">
+        <div class="maintenance-item-title"><span class="maintenance-item-no">${esc(no)}</span><span>${esc(detail.content||'')}</span></div>
+        <div class="maintenance-result-options">
+          <label class="maintenance-result-option pass"><input type="radio" name="${radioName}" data-maint-result="1" data-quarter="${quarter}" data-no="${esc(no)}" value="D" ${result==='D'?'checked':''}>✓ Đạt</label>
+          <label class="maintenance-result-option fail"><input type="radio" name="${radioName}" data-maint-result="1" data-quarter="${quarter}" data-no="${esc(no)}" value="K" ${result==='K'?'checked':''}>✕ Không đạt</label>
+          <label class="maintenance-result-option na"><input type="radio" name="${radioName}" data-maint-result="1" data-quarter="${quarter}" data-no="${esc(no)}" value="N" ${result==='N'?'checked':''}>N/A</label>
+        </div>
+        <input class="maintenance-result-note" type="text" data-maint-note="1" data-quarter="${quarter}" data-no="${esc(no)}" value="${esc(note)}" placeholder="Ghi chú cho nội dung này">
+      </div>`;
+    }).join('');
+}
+
+async function openModal(index=null){
+  state.editingIndex=index;
+  const row=index===null?{}:state.allData[index];
+  state.originalSoThe=row.soThe||'';
+  state.editingTemplateCode=row.maMauBaoTri||'';
+  state.editingMaintenanceResults=normalizeMaintenanceResults(row.ketQuaBaoDuongChiTiet);
+  state.maintenanceDetailsLoaded=index===null;
+  state.activeMaintenanceQuarter=['Q1','Q2','Q3','Q4'].find(q=>row['bd'+q])||'Q1';
+
+  $('modalTitle').textContent=index===null?'Thêm máy':'Chỉnh sửa '+displayTag(row.soThe);
+  ['soThe','soMay','loaiMay','viTri','ngayMua','noiMua','ghiChu','suaChua','chiTietBaoDuong','ghiChuPhanLoai','bdNgayQ1','bdNgayQ2','bdNgayQ3','bdNgayQ4'].forEach(name=>{$('m_'+name).value=row[name]||''});
+  $('m_daKiemKe').checked=!!row.daKiemKe;
+  $('m_chonIn').checked=!!row.chonIn;
+  ['Q1','Q2','Q3','Q4'].forEach(q=>$('m_bd'+q).checked=!!row['bd'+q]);
+  $('m_maMauBaoTri').value=row.maMauBaoTri||'';
+  $('m_trangThaiPhanLoai').value=row.trangThaiPhanLoai||'Gợi ý tự động - cần xác nhận';
+
+  $('editModal').classList.add('open');
+  document.body.classList.add('modal-open');
+  renderMaintenanceEvaluation();
+  setTimeout(()=>$('m_soThe').focus(),60);
+
+  // Dữ liệu đánh giá chi tiết được tải riêng theo một máy để trang chính không bị nặng.
+  if(index!==null&&row.soThe){
+    $('btnSave').disabled=true;
+    $('maintenanceEvalHint').textContent='Đang tải kết quả bảo dưỡng chi tiết của máy...';
+    try{
+      const result=await api('getOne',{soThe:row.soThe});
+      if(state.editingIndex!==index)return;
+      const fullRecord={...row,...result.record};
+      state.allData[index]=fullRecord;
+      state.editingTemplateCode=fullRecord.maMauBaoTri||state.editingTemplateCode;
+      state.editingMaintenanceResults=normalizeMaintenanceResults(fullRecord.ketQuaBaoDuongChiTiet);
+      state.maintenanceDetailsLoaded=true;
+      $('m_maMauBaoTri').value=fullRecord.maMauBaoTri||'';
+      renderMaintenanceEvaluation();
+    }catch(error){
+      state.maintenanceDetailsLoaded=false;
+      $('maintenanceChecklist').innerHTML='<div class="maintenance-eval-empty">Không tải được kết quả chi tiết: '+esc(error.message)+'</div>';
+    }finally{
+      $('btnSave').disabled=false;
+    }
+  }
+}
+
+function closeModal(){
+  $('editModal').classList.remove('open');
+  document.body.classList.remove('modal-open');
+  state.editingIndex=null;
+  state.editingMaintenanceResults={};
+}
+
+function maintenanceResultsForSave(){
+  const template=currentModalTemplate();
+  const output=normalizeMaintenanceResults(state.editingMaintenanceResults);
+  ['Q1','Q2','Q3','Q4'].forEach(q=>{
+    if(!$('m_bd'+q).checked){
+      delete output[q];
+      return;
+    }
+    if(!template)return;
+    if(!output[q])output[q]={d:'',m:template.code,r:{},n:{}};
+    output[q].d=clean($('m_bdNgay'+q).value);
+    output[q].m=template.code;
+    output[q].r=output[q].r||{};
+    output[q].n=output[q].n||{};
+  });
+  return output;
+}
+
+function modalData(){
+  return {
+    sheetRow:state.editingIndex===null?'':state.allData[state.editingIndex].sheetRow,
+    soThe:clean($('m_soThe').value),soMay:clean($('m_soMay').value),loaiMay:clean($('m_loaiMay').value),viTri:clean($('m_viTri').value),
+    ngayMua:clean($('m_ngayMua').value),noiMua:clean($('m_noiMua').value),ghiChu:clean($('m_ghiChu').value),
+    daKiemKe:$('m_daKiemKe').checked,chonIn:$('m_chonIn').checked,
+    bdQ1:$('m_bdQ1').checked,bdNgayQ1:clean($('m_bdNgayQ1').value),
+    bdQ2:$('m_bdQ2').checked,bdNgayQ2:clean($('m_bdNgayQ2').value),
+    bdQ3:$('m_bdQ3').checked,bdNgayQ3:clean($('m_bdNgayQ3').value),
+    bdQ4:$('m_bdQ4').checked,bdNgayQ4:clean($('m_bdNgayQ4').value),
+    suaChua:clean($('m_suaChua').value),chiTietBaoDuong:clean($('m_chiTietBaoDuong').value),
+    maMauBaoTri:clean($('m_maMauBaoTri').value),trangThaiPhanLoai:clean($('m_trangThaiPhanLoai').value),
+    ghiChuPhanLoai:clean($('m_ghiChuPhanLoai').value),
+    ketQuaBaoDuongChiTiet:maintenanceResultsForSave()
+  };
+}
 
 async function saveModal(event){
   event.preventDefault();
@@ -376,8 +623,41 @@ function printQr(){const rows=state.allData.filter(r=>r.chonIn);if(!rows.length)
 
 function printHistory(){const rows=selectedRowsFromInput();if(!rows?.length)return;const w=window.open('','_blank');if(!w){alert('Trình duyệt đang chặn cửa sổ in');return}w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lý lịch máy</title><style>@page{size:A4 portrait;margin:16mm}body{font-family:Arial;color:#222}.page{page-break-after:always}.page:last-child{page-break-after:auto}.company{font-size:18px;font-weight:700}.title{text-align:center;font-size:22px;font-weight:800;margin:25px 0 15px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top}th{width:30%;background:#eee}.sign{text-align:right;margin-top:18px;line-height:1.7}</style></head><body>`);rows.forEach(r=>{const template=state.templateByCode[r.maMauBaoTri];const fields=[['Số thẻ',displayTag(r.soThe)],['Số máy',r.soMay],['Loại máy',r.loaiMay],['Vị trí',r.viTri],['Đơn vị mượn',r.ghiChu],['Ngày mua',r.ngayMua],['Nơi mua',r.noiMua],['Mã mẫu bảo trì',r.maMauBaoTri],['Nhóm máy bảo trì',r.nhomMayBaoTri],['Trạng thái phân loại',r.trangThaiPhanLoai],['Tên thiết bị trên phiếu',template?.reportEquipmentName||''],['Bảo dưỡng Q1',r.bdNgayQ1],['Bảo dưỡng Q2',r.bdNgayQ2],['Bảo dưỡng Q3',r.bdNgayQ3],['Bảo dưỡng Q4',r.bdNgayQ4],['Nội dung bảo dưỡng riêng',r.suaChua],['Chi tiết bảo dưỡng',r.chiTietBaoDuong]];w.document.write(`<section class="page"><div class="company">CÔNG TY TNHH MAY XUẤT KHẨU VIỆT HỒNG</div><div class="title">LÝ LỊCH MÁY ${esc(displayTag(r.soThe))}</div><table>${fields.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table><div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:80px">Người lập</b></div></section>`)});w.document.write('</body></html>');w.document.close();setTimeout(()=>{w.focus();w.print()},400)}
 
+function maintenanceQuarterData(row,quarter){
+  const all=normalizeMaintenanceResults(row.ketQuaBaoDuongChiTiet);
+  return all[quarter]||{d:'',m:'',r:{},n:{}};
+}
+
+function maintenanceResultForDetail(row,quarter,detail,index){
+  const data=maintenanceQuarterData(row,quarter);
+  const key=String(detail.no||index+1);
+  return normalizeMaintenanceResultCode(data.r?.[key]);
+}
+
+function excelMaintenanceMark(code){
+  if(code==='D')return '☑ Đạt\n☐ Không đạt\n☐ N/A';
+  if(code==='K')return '☐ Đạt\n☑ Không đạt\n☐ N/A';
+  if(code==='N')return '☐ Đạt\n☐ Không đạt\n☑ N/A';
+  return '☐ Đạt\n☐ Không đạt\n☐ N/A';
+}
+
+function excelMaintenanceNote(row,detail,index){
+  const notes=[];
+  ['Q1','Q2','Q3','Q4'].forEach(q=>{
+    const data=maintenanceQuarterData(row,q);
+    const key=String(detail.no||index+1);
+    const result=normalizeMaintenanceResultCode(data.r?.[key]);
+    const note=clean(data.n?.[key]);
+    if(result==='K'||result==='N'||note){
+      const label=maintenanceResultLabel(result);
+      notes.push(`${q}: ${label}${note?' - '+note:''}`);
+    }
+  });
+  return notes.join('\n');
+}
+
 async function exportMaintenanceExcel(){
-  const rows = selectedRowsFromInput();
+  let rows = selectedRowsFromInput();
   if(!rows?.length) return;
 
   if(typeof ExcelJS === 'undefined'){
@@ -429,6 +709,19 @@ async function exportMaintenanceExcel(){
   setStatus(`Đang tạo file Excel cho ${rows.length} máy...`);
 
   try{
+    // Chỉ tải kết quả đánh giá chi tiết của đúng các máy cần xuất.
+    const reportResult=await api('getReportData',{
+      data:JSON.stringify({keys:rows.map(r=>r.soThe)})
+    },120000);
+    const detailedByTag={};
+    (reportResult.records||[]).forEach(record=>{
+      detailedByTag[comparableTag(record.soThe)]=record;
+    });
+    rows=rows.map(row=>({
+      ...row,
+      ...(detailedByTag[comparableTag(row.soThe)]||{})
+    }));
+
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Công ty TNHH May Xuất khẩu Việt Hồng';
     workbook.company = 'Công ty TNHH May Xuất khẩu Việt Hồng';
@@ -690,21 +983,23 @@ async function exportMaintenanceExcel(){
           cell.alignment = colNo === 2 || colNo === 7 ? leftWrap : center;
         }
 
-        for(let colNo = 3; colNo <= 6; colNo++){
-          const cell = ws.getCell(excelRow,colNo);
-          cell.fill = fillInput;
-          cell.dataValidation = {
-            type:'list',
-            allowBlank:true,
-            showErrorMessage:true,
-            errorTitle:'Giá trị không hợp lệ',
-            error:'Chọn Đạt yêu cầu, Không đạt yêu cầu hoặc N/A.',
-            formulae:['"Đạt yêu cầu,Không đạt yêu cầu,N/A"']
-          };
-        }
+        ['Q1','Q2','Q3','Q4'].forEach((quarter,qIndex)=>{
+          const cell=ws.getCell(excelRow,3+qIndex);
+          const resultCode=maintenanceResultForDetail(r,quarter,detail,detailIndex);
+          cell.value=excelMaintenanceMark(resultCode);
+          cell.fill=resultCode==='D'
+            ? {type:'pattern',pattern:'solid',fgColor:{argb:'FFE2F0D9'}}
+            : resultCode==='K'
+              ? {type:'pattern',pattern:'solid',fgColor:{argb:'FFF4CCCC'}}
+              : resultCode==='N'
+                ? {type:'pattern',pattern:'solid',fgColor:{argb:'FFE7E6E6'}}
+                : fillInput;
+          cell.alignment={vertical:'middle',horizontal:'left',wrapText:true};
+        });
 
-        ws.getCell(excelRow,7).fill = fillInput;
-        ws.getRow(excelRow).height = 27;
+        ws.getCell(excelRow,7).value=excelMaintenanceNote(r,detail,detailIndex);
+        ws.getCell(excelRow,7).fill=fillInput;
+        ws.getRow(excelRow).height=46;
       });
 
       const lastDetailRow = headerRow + Math.max(details.length,1);
@@ -758,7 +1053,7 @@ async function exportMaintenanceExcel(){
       ws.getCell(currentRow,1).value =
         '* Lưu ý:\n' +
         '- Nhân viên bảo trì tiến hành kiểm tra và đánh giá tình trạng máy 3 tháng/lần.\n' +
-        '- Các ô Quý 1–Quý 4 có danh sách chọn: Đạt yêu cầu / Không đạt yêu cầu / N/A.\n' +
+        '- Kết quả Đạt / Không đạt / N/A được lấy từ phần đánh giá chi tiết khi chỉnh sửa máy.\n' +
         '- Sau khi bảo trì xong, nhân viên thực hiện ký tên xác nhận.';
       ws.getCell(currentRow,1).font = {name:'Arial',size:9};
       ws.getCell(currentRow,1).alignment = leftWrap;
@@ -829,7 +1124,74 @@ $('btnLogin').onclick=login;$('passwordInput').onkeydown=e=>{if(e.key==='Enter')
 $('btnSelectQrFiltered').onclick=()=>batchFiltered('chonIn',true);$('btnUnselectQrFiltered').onclick=()=>batchFiltered('chonIn',false);$('btnPrintQr').onclick=printQr;$('btnPrintHistory').onclick=printHistory;$('btnPrintMaintenance').onclick=exportMaintenanceExcel;
 $('btnCloseModal').onclick=closeModal;$('btnCancel').onclick=closeModal;$('editModal').onclick=e=>{if(e.target.id==='editModal')closeModal()};$('editForm').onsubmit=saveModal;
 $('dataTable').querySelector('tbody').onclick=e=>{const btn=e.target.closest('[data-edit]');if(btn)openModal(Number(btn.dataset.edit))};$('dataTable').querySelector('tbody').onchange=e=>{const input=e.target.closest('.row-check');if(input)patchCheckbox(input)};
-['Q1','Q2','Q3','Q4'].forEach(q=>$('m_bd'+q).onchange=()=>{if(!$('m_bd'+q).checked)$('m_bdNgay'+q).value='';else if(!clean($('m_bdNgay'+q).value))$('m_bdNgay'+q).value=todayText()});
+$('maintenanceQuarterTabs').onclick=e=>{
+  const button=e.target.closest('[data-maint-quarter]');
+  if(!button||button.disabled)return;
+  state.activeMaintenanceQuarter=button.dataset.maintQuarter;
+  renderMaintenanceEvaluation();
+};
+
+$('maintenanceChecklist').onchange=e=>{
+  const input=e.target.closest('[data-maint-result]');
+  if(!input)return;
+  const quarter=input.dataset.quarter;
+  const no=input.dataset.no;
+  const data=ensureQuarterEvaluation(quarter);
+  if(!data)return;
+  data.r[no]=normalizeMaintenanceResultCode(input.value);
+  renderMaintenanceEvaluation();
+};
+
+$('maintenanceChecklist').oninput=e=>{
+  const input=e.target.closest('[data-maint-note]');
+  if(!input)return;
+  const data=ensureQuarterEvaluation(input.dataset.quarter);
+  if(!data)return;
+  const note=clean(input.value);
+  if(note)data.n[input.dataset.no]=note;
+  else delete data.n[input.dataset.no];
+};
+
+$('m_maMauBaoTri').onchange=()=>{
+  const newCode=clean($('m_maMauBaoTri').value);
+  const hasEvaluation=Object.values(state.editingMaintenanceResults).some(q=>
+    Object.keys(q.r||{}).length||Object.keys(q.n||{}).length
+  );
+  if(hasEvaluation&&state.editingTemplateCode&&newCode!==state.editingTemplateCode){
+    if(!confirm('Đổi Mã mẫu sẽ xóa các đánh giá chi tiết đã nhập trong cửa sổ này. Tiếp tục?')){
+      $('m_maMauBaoTri').value=state.editingTemplateCode;
+      return;
+    }
+    state.editingMaintenanceResults={};
+  }
+  state.editingTemplateCode=newCode;
+  renderMaintenanceEvaluation();
+};
+
+['Q1','Q2','Q3','Q4'].forEach(q=>{
+  $('m_bd'+q).onchange=()=>{
+    if(!$('m_bd'+q).checked){
+      const old=state.editingMaintenanceResults[q];
+      const hasData=old&&(Object.keys(old.r||{}).length||Object.keys(old.n||{}).length);
+      if(hasData&&!confirm(`Bỏ ${q} sẽ xóa kết quả đánh giá chi tiết của ${q}. Tiếp tục?`)){
+        $('m_bd'+q).checked=true;
+        return;
+      }
+      delete state.editingMaintenanceResults[q];
+      $('m_bdNgay'+q).value='';
+    }else{
+      if(!clean($('m_bdNgay'+q).value))$('m_bdNgay'+q).value=todayText();
+      state.activeMaintenanceQuarter=q;
+      ensureQuarterEvaluation(q);
+    }
+    renderMaintenanceEvaluation();
+  };
+  $('m_bdNgay'+q).oninput=()=>{
+    const data=state.editingMaintenanceResults[q];
+    if(data)data.d=clean($('m_bdNgay'+q).value);
+    if(state.activeMaintenanceQuarter===q)renderMaintenanceEvaluation();
+  };
+});
 window.addEventListener('hashchange',()=>state.allData.length?focusFromHash():null);
 
 if(state.token){$('loginOverlay').style.display='none';$('appRoot').classList.remove('hidden');$('btnLogout').classList.remove('hidden');$('rolePill').textContent='Đã đăng nhập';loadData()}else{logout(false)}
