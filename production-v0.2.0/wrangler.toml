@@ -1,0 +1,16 @@
+name = "viethong-thongke-sanxuat"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "viethong-thongke-sanxuat-db"
+database_id = "PUT_YOUR_EXISTING_D1_DATABASE_ID_HERE"
+
+# BẮT BUỘC trước khi deploy:
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put BOOTSTRAP_KEY
