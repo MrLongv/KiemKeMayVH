@@ -198,7 +198,7 @@ body.modal-open{overflow:hidden}
 
 /* Giữ URL này nếu cập nhật đúng Deployment Apps Script cũ. Nếu tạo Deployment mới, thay URL bên dưới. */
 /* Mật khẩu không lưu trong HTML; việc kiểm tra được thực hiện trong Code.gs. */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxQRcQaUFMPBafD6jeeZ-BYu3ubjAuTMmey0IzK-JsieNIDkz8iPnfB68D1C25qUzct/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw6UJdnhlBClknxCDCOoqnSE5txxxqPBWkv4og5A1ez_emoqgBWPU0tCIgLPnZxU_OW/exec';
 const TOKEN_KEY = 'vh_machine_auth_token_v4';
 const BATCH_SIZE = 50;
 const DEFAULT_SIGNATURE_NAME = '[THAY TÊN TẠI ĐÂY]';
@@ -226,7 +226,7 @@ function setStatus(text,type='info'){
   if(type==='ok')el.classList.add('status-ok');if(type==='error')el.classList.add('status-error');
 }
 
-function jsonpRequest(params,timeoutMs=40000){
+function jsonpRequest(params,timeoutMs=90000){
   return new Promise((resolve,reject)=>{
     const callback='__gas_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     const script=document.createElement('script');let done=false;
@@ -235,12 +235,12 @@ function jsonpRequest(params,timeoutMs=40000){
     const query=new URLSearchParams({...params,callback,_:String(Date.now())});
     script.src=GAS_URL+'?'+query.toString();
     script.onerror=()=>{cleanup();reject(new Error('Không kết nối được Google Apps Script'))};
-    const timer=setTimeout(()=>{cleanup();reject(new Error('Quá thời gian chờ Google Apps Script'))},timeoutMs);
+    const timer=setTimeout(()=>{cleanup();reject(new Error(`Google Apps Script phản hồi quá chậm (${Math.round(timeoutMs/1000)} giây). Hãy tải lại trang; nếu vừa deploy Code.gs, kiểm tra lại URL Deployment.`))},timeoutMs);
     document.head.appendChild(script);
   });
 }
 
-async function api(action,params={},timeoutMs=40000){
+async function api(action,params={},timeoutMs=90000){
   try{return await jsonpRequest({action,token:state.token,...params},timeoutMs)}
   catch(error){
     if(/đăng nhập|token|hết hạn|chữ ký/i.test(error.message)){logout(false)}
@@ -263,7 +263,7 @@ function logout(clearHash=false){
 async function loadData(){
   if(state.loading)return;state.loading=true;$('btnRefresh').disabled=true;setStatus('Đang tải dữ liệu...');
   try{
-    const result=await api('load');
+    const result=await api('load',{},120000);
     state.allData=Array.isArray(result.data)?result.data:[];
     state.templates=Array.isArray(result.templates)?result.templates:[];
     state.templateByCode={};state.templates.forEach(t=>state.templateByCode[t.code]=t);
@@ -668,7 +668,7 @@ function printHistory(){
       ['Số máy',r.soMay],
       ['Loại máy',r.loaiMay],
       ['Vị trí',r.viTri],
-      ['Đơn vị mượn',r.ghiChu],
+      ['Ghi chú',r.ghiChu],
       ['Ngày mua',r.ngayMua],
       ['Nơi mua',r.noiMua],
       ['Tình trạng thiết bị',
@@ -705,7 +705,7 @@ function printHistory(){
         `</div>`+
         `<div class="title">LÝ LỊCH MÁY ${esc(displayTag(r.soThe))}</div>`+
         `<table>${fields.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${renderHistoryValue(k,v)}</td></tr>`).join('')}</table>`+
-        `<div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:80px">Người lập</b></div>`+
+        `<div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:62px">Người lập</b><br><b>Trần Mai Đôn Hậu</b></div>`+
       `</section>`
     );
   });
@@ -1366,7 +1366,7 @@ $('m_maMauBaoTri').onchange=()=>{
       state.activeMaintenanceQuarter=q;
       ensureQuarterEvaluation(q);
     }
-    renderMaintenanceEvaluation();
+    renderMaintenanceEvaluation();f
   };
   $('m_bdNgay'+q).oninput=()=>{
     const data=state.editingMaintenanceResults[q];
