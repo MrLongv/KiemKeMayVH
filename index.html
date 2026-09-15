@@ -659,7 +659,11 @@ function printHistory(){
     table{border-collapse:collapse;width:100%}
     th,td{border:1px solid #888;padding:8px;text-align:left;vertical-align:top;line-height:1.45}
     th{width:30%;background:#eee}
-    .sign{text-align:right;margin-top:18px;line-height:1.7}
+    .sign{width:260px;margin:18px 0 0 auto;text-align:center;line-height:1.45}
+    .sign-date{white-space:nowrap;font-size:13px}
+    .sign-title{font-weight:700;margin-top:6px}
+    .sign-space{height:58px}
+    .sign-name{font-weight:700}
   </style></head><body>`);
 
   rows.forEach((r,index)=>{
@@ -705,7 +709,7 @@ function printHistory(){
         `</div>`+
         `<div class="title">LÝ LỊCH MÁY ${esc(displayTag(r.soThe))}</div>`+
         `<table>${fields.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${renderHistoryValue(k,v)}</td></tr>`).join('')}</table>`+
-        `<div class="sign">Vĩnh Long, ngày ..... tháng ..... năm .....<br><b style="margin-right:62px">Người lập</b><br><b>Trần Mai Đôn Hậu</b></div>`+
+        `<div class="sign"><div class="sign-date">Vĩnh Long, ngày ..... tháng ..... năm .....</div><div class="sign-title">Người lập</div><div class="sign-space"></div><div class="sign-name">Trần Mai Đôn Hậu</div></div>`+
       `</section>`
     );
   });
@@ -1366,7 +1370,7 @@ $('m_maMauBaoTri').onchange=()=>{
       state.activeMaintenanceQuarter=q;
       ensureQuarterEvaluation(q);
     }
-    renderMaintenanceEvaluation();f
+    renderMaintenanceEvaluation();
   };
   $('m_bdNgay'+q).oninput=()=>{
     const data=state.editingMaintenanceResults[q];
