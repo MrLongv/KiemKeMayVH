@@ -201,11 +201,11 @@ body.modal-open{overflow:hidden}
 
 <script>
 'use strict';
-// Việt Hồng V3.9: CheckAll Q1-Q4 được điều khiển trực tiếp từ Google Sheet, không thêm nút/cột trên giao diện web.
+// Việt Hồng V3.9.1: CheckAll Q1-Q4 từ Google Sheet; backend chỉ tính các dòng có Số thẻ là máy hợp lệ.
 
 /* Giữ URL này nếu cập nhật đúng Deployment Apps Script cũ. Nếu tạo Deployment mới, thay URL bên dưới. */
 /* Mật khẩu không lưu trong HTML; việc kiểm tra được thực hiện trong Code.gs. */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWcKQWznt82qXhdi86Z1BBeU4fm4A7pxNBiDiWICbab3Z1aUrusfvmxxiHZQUH-jk/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxv2so98GOYbMh33F-OT_FavdqzRNcUHKpzJn5ldJf_RcPFtojz4MlKaYLZXndKhNd1/exec';
 const TOKEN_KEY = 'vh_machine_auth_token_v4';
 const BATCH_SIZE = 50;
 const DEFAULT_SIGNATURE_NAME = '[THAY TÊN TẠI ĐÂY]';
